@@ -157,6 +157,8 @@ export class Home implements OnInit, OnDestroy {
             await this.profileService.scanProfiles(path);
             this.settingsService.setProfilesPath(path);
             this.messageService.add({ severity: 'success', summary: 'Success', detail: `Found ${this.profiles().length} profiles` });
+            // Load sizes in background (don't await)
+            this.profileService.loadProfileSizes();
         } catch (e) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
         }

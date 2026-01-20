@@ -167,4 +167,15 @@ export class ProfileService {
             return ['chrome'];
         }
     }
+
+    async loadProfileSizes(): Promise<void> {
+        const current = this.profiles();
+        // Load sizes one by one to avoid blocking
+        for (const profile of current) {
+            const size = await this.getProfileSize(profile.path);
+            this.profiles.update((profiles) =>
+                profiles.map((p) => (p.path === profile.path ? { ...p, size } : p))
+            );
+        }
+    }
 }
