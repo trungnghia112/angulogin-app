@@ -92,3 +92,51 @@ pub fn rename_profile(old_path: String, new_name: String) -> Result<String, Stri
     
     Ok(new_path.to_string_lossy().to_string())
 }
+
+#[derive(serde::Serialize, serde::Deserialize, Default)]
+pub struct ProfileMetadata {
+    pub emoji: Option<String>,
+    pub notes: Option<String>,
+}
+
+#[tauri::command]
+pub fn get_profile_metadata(profile_path: String) -> Result<ProfileMetadata, String> {
+    let meta_file = format!("{}/.profile-meta.json", profile_path);
+    
+    if !std::path::Path::new(&meta_file).exists() {
+        return Ok(ProfileMetadata::default());
+    }
+    
+    let content = fs::read_to_string(&meta_file)
+        .map_err(|e| format!("Failed to read metadata: {}", e))?;
+    
+    serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse metadata: {}", e))
+}
+
+#[tauri::command]
+pub fn save_profile_metadata(profile_path: String, emoji: Option<String>, notes: Option<String>) -> Result<(), String> {
+    let meta_file = format!("{}/.profile-meta.json", profile_path);
+    
+    let metadata = ProfileMetadata { emoji, notes };
+    
+    let content = serde_json::to_string_pretty(&metadata)
+        .map_err(|e| format!("Failed to serialize metadata: {}", e))?;
+    
+    fs::write(&meta_file, content)
+        .map_err(|e| format!("Failed to write metadata: {}", e))?;
+    
+    Ok(())
+}
+
+#[tauri::command]
+pub fn is_chrome_running_for_profile(profile_path: String) -> bool {
+    let output = Command::new("pgrep")
+        .args(["-f", &format!("--user-data-dir={}", profile_path)])
+        .output();
+    
+    match output {
+        Ok(out) => !out.stdout.is_empty(),
+        Err(_) => false,
+    }
+}

@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { invoke } from '@tauri-apps/api/core';
-import { Profile } from '../models/profile.model';
+import { Profile, ProfileMetadata } from '../models/profile.model';
 
 @Injectable({
     providedIn: 'root',
@@ -16,10 +16,19 @@ export class ProfileService {
 
         try {
             const names = await invoke<string[]>('scan_profiles', { path });
-            const profiles: Profile[] = names.map((name) => ({
-                name,
-                path: `${path}/${name}`,
-            }));
+
+            // Build profiles with metadata and running status
+            const profiles: Profile[] = await Promise.all(
+                names.map(async (name) => {
+                    const profilePath = `${path}/${name}`;
+                    const [metadata, isRunning] = await Promise.all([
+                        this.getProfileMetadata(profilePath),
+                        this.isProfileRunning(profilePath),
+                    ]);
+                    return { name, path: profilePath, metadata, isRunning };
+                })
+            );
+
             this.profiles.set(profiles);
             return profiles;
         } catch (e) {
@@ -52,7 +61,6 @@ export class ProfileService {
     async createProfile(basePath: string, name: string): Promise<string> {
         try {
             const newPath = await invoke<string>('create_profile', { basePath, name });
-            // Refresh profiles list
             await this.scanProfiles(basePath);
             return newPath;
         } catch (e) {
@@ -65,7 +73,6 @@ export class ProfileService {
     async deleteProfile(profilePath: string, basePath: string): Promise<void> {
         try {
             await invoke('delete_profile', { profilePath });
-            // Refresh profiles list
             await this.scanProfiles(basePath);
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
@@ -77,7 +84,6 @@ export class ProfileService {
     async renameProfile(oldPath: string, newName: string, basePath: string): Promise<string> {
         try {
             const newPath = await invoke<string>('rename_profile', { oldPath, newName });
-            // Refresh profiles list
             await this.scanProfiles(basePath);
             return newPath;
         } catch (e) {
@@ -86,4 +92,48 @@ export class ProfileService {
             throw e;
         }
     }
+
+    async getProfileMetadata(profilePath: string): Promise<ProfileMetadata> {
+        try {
+            return await invoke<ProfileMetadata>('get_profile_metadata', { profilePath });
+        } catch {
+            return { emoji: null, notes: null };
+        }
+    }
+
+    async saveProfileMetadata(profilePath: string, emoji: string | null, notes: string | null): Promise<void> {
+        try {
+            await invoke('save_profile_metadata', { profilePath, emoji, notes });
+            // Update local state
+            this.profiles.update((profiles) =>
+                profiles.map((p) =>
+                    p.path === profilePath ? { ...p, metadata: { emoji, notes } } : p
+                )
+            );
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
+
+    async isProfileRunning(profilePath: string): Promise<boolean> {
+        try {
+            return await invoke<boolean>('is_chrome_running_for_profile', { profilePath });
+        } catch {
+            return false;
+        }
+    }
+
+    async refreshProfileStatus(): Promise<void> {
+        const current = this.profiles();
+        const updated = await Promise.all(
+            current.map(async (p) => ({
+                ...p,
+                isRunning: await this.isProfileRunning(p.path),
+            }))
+        );
+        this.profiles.set(updated);
+    }
 }
+

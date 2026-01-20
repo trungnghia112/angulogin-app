@@ -67,15 +67,25 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @for (profile of profiles(); track profile.name; let i = $index) {
-                <div class="flex items-center gap-4 bg-surface border border-border rounded-xl p-4 transition-all duration-200 hover:border-primary hover:shadow-lg hover:shadow-black/40 group"
-                    [id]="'home-profile-card-' + i">
-                    <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold text-white shrink-0"
-                        [style.background]="getAvatarGradient(i)">
-                        <span>{{ profile.name.charAt(0).toUpperCase() }}</span>
+                <div class="flex items-center gap-4 bg-surface border border-border rounded-xl p-4 transition-all duration-200 hover:border-primary hover:shadow-lg hover:shadow-black/40 cursor-pointer group"
+                    [id]="'home-profile-card-' + i" (click)="openEditDialog(profile, $event)">
+                    <!-- Avatar with running indicator -->
+                    <div class="relative">
+                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold text-white shrink-0"
+                            [style.background]="getAvatarGradient(i)">
+                            <span>{{ getProfileDisplay(profile) }}</span>
+                        </div>
+                        @if (profile.isRunning) {
+                        <div class="absolute -top-1 -right-1 w-4 h-4 bg-success rounded-full border-2 border-surface animate-pulse"
+                            title="Running"></div>
+                        }
                     </div>
                     <div class="flex-1 min-w-0">
-                        <h3 class="text-[15px] font-semibold text-zinc-50 mb-1">{{ profile.name }}</h3>
-                        <p class="text-xs text-zinc-500 truncate">{{ profile.path }}</p>
+                        <h3 class="text-[15px] font-semibold text-zinc-50 mb-0.5">{{ profile.name }}</h3>
+                        @if (profile.metadata?.notes) {
+                        <p class="text-xs text-zinc-400 truncate mb-0.5">{{ profile.metadata?.notes }}</p>
+                        }
+                        <p class="text-xs text-zinc-600 truncate">{{ profile.path }}</p>
                     </div>
                     <div class="flex gap-2 shrink-0">
                         <button
@@ -114,21 +124,17 @@
     <div class="py-2">
         <label for="new-profile-name" class="block text-xs font-medium text-zinc-500 mb-2">Profile Name</label>
         <input pInputText id="new-profile-name" type="text" [ngModel]="newProfileName()"
-            (ngModelChange)="newProfileName.set($event)" placeholder="e.g., Work, Personal, Dev"
-            class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
+            (ngModelChange)="newProfileName.set($event)" placeholder="e.g., Work, Personal"
+            class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none" />
     </div>
     <ng-template #footer>
         <div class="flex justify-end gap-3 pt-2">
             <button pButton
-                class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer transition-all duration-150 hover:bg-border"
-                (click)="showCreateDialog.set(false)">
-                Cancel
-            </button>
+                class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
+                (click)="showCreateDialog.set(false)">Cancel</button>
             <button pButton
-                class="px-5 py-2.5 bg-primary border-none rounded-lg text-white text-sm font-medium cursor-pointer transition-all duration-150 hover:bg-primary-hover"
-                (click)="createProfile()">
-                Create
-            </button>
+                class="px-5 py-2.5 bg-primary border-none rounded-lg text-white text-sm font-medium cursor-pointer"
+                (click)="createProfile()">Create</button>
         </div>
     </ng-template>
 </p-dialog>
@@ -140,20 +146,52 @@
         <label for="rename-profile-name" class="block text-xs font-medium text-zinc-500 mb-2">New Name</label>
         <input pInputText id="rename-profile-name" type="text" [ngModel]="renameProfileName()"
             (ngModelChange)="renameProfileName.set($event)"
-            class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
+            class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none" />
     </div>
     <ng-template #footer>
         <div class="flex justify-end gap-3 pt-2">
             <button pButton
-                class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer transition-all duration-150 hover:bg-border"
-                (click)="showRenameDialog.set(false)">
-                Cancel
-            </button>
+                class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
+                (click)="showRenameDialog.set(false)">Cancel</button>
             <button pButton
-                class="px-5 py-2.5 bg-primary border-none rounded-lg text-white text-sm font-medium cursor-pointer transition-all duration-150 hover:bg-primary-hover"
-                (click)="renameProfile()">
-                Rename
-            </button>
+                class="px-5 py-2.5 bg-primary border-none rounded-lg text-white text-sm font-medium cursor-pointer"
+                (click)="renameProfile()">Rename</button>
+        </div>
+    </ng-template>
+</p-dialog>
+
+<!-- Edit Profile Dialog (Emoji + Notes) -->
+<p-dialog header="Edit Profile" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '450px' }"
+    [draggable]="false" [resizable]="false">
+    <div class="py-2 space-y-4">
+        <div>
+            <label class="block text-xs font-medium text-zinc-500 mb-2">Icon</label>
+            <div class="flex flex-wrap gap-2">
+                @for (emoji of emojiOptions; track emoji) {
+                <button
+                    class="w-10 h-10 rounded-lg border flex items-center justify-center text-xl cursor-pointer transition-all duration-150"
+                    [class]="editEmoji() === emoji ? 'bg-primary border-primary' : 'bg-surface-hover border-border hover:border-primary'"
+                    (click)="selectEmoji(emoji)">
+                    {{ emoji }}
+                </button>
+                }
+            </div>
+        </div>
+        <div>
+            <label for="edit-notes" class="block text-xs font-medium text-zinc-500 mb-2">Notes</label>
+            <textarea pInputTextarea id="edit-notes" [ngModel]="editNotes()" (ngModelChange)="editNotes.set($event)"
+                placeholder="What is this profile for?" rows="3"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none resize-none"></textarea>
+        </div>
+    </div>
+    <ng-template #footer>
+        <div class="flex justify-end gap-3 pt-2">
+            <button pButton
+                class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
+                (click)="showEditDialog.set(false)">Cancel</button>
+            <button pButton
+                class="px-5 py-2.5 bg-primary border-none rounded-lg text-white text-sm font-medium cursor-pointer"
+                (click)="saveProfileEdit()">Save</button>
         </div>
     </ng-template>
 </p-dialog>

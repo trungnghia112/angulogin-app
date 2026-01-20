@@ -21,7 +21,10 @@ pub fn run() {
             commands::check_path_exists,
             commands::create_profile,
             commands::delete_profile,
-            commands::rename_profile
+            commands::rename_profile,
+            commands::get_profile_metadata,
+            commands::save_profile_metadata,
+            commands::is_chrome_running_for_profile
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
