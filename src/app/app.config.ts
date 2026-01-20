@@ -12,6 +12,7 @@ import { getAuth, provideAuth, connectAuthEmulator } from '@angular/fire/auth';
 import { getFirestore, provideFirestore, connectFirestoreEmulator } from '@angular/fire/firestore';
 import { getFunctions, provideFunctions, connectFunctionsEmulator } from '@angular/fire/functions';
 import { getStorage, provideStorage, connectStorageEmulator } from '@angular/fire/storage';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -30,6 +31,8 @@ export const appConfig: ApplicationConfig = {
         }
       }
     }),
+    ConfirmationService,
+    MessageService,
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideAuth(() => {
       const auth = getAuth();
