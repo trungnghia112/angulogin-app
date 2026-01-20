@@ -18,7 +18,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::scan_profiles,
             commands::launch_chrome,
-            commands::check_path_exists
+            commands::check_path_exists,
+            commands::create_profile,
+            commands::delete_profile,
+            commands::rename_profile
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

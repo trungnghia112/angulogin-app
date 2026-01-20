@@ -11,6 +11,12 @@
                     <span class="version">v1.0.0</span>
                 </div>
             </div>
+            @if (profilesPath()) {
+            <button pButton id="home-create-btn" class="create-btn" (click)="openCreateDialog()">
+                <i class="pi pi-plus"></i>
+                <span>New Profile</span>
+            </button>
+            }
         </div>
     </header>
 
@@ -55,7 +61,7 @@
             </div>
             <div class="profiles-grid">
                 @for (profile of profiles(); track profile.name; let i = $index) {
-                <div class="profile-card" [id]="'home-profile-card-' + i" (click)="launchProfile(profile)">
+                <div class="profile-card" [id]="'home-profile-card-' + i">
                     <div class="profile-avatar" [style.background]="getAvatarGradient(i)">
                         <span>{{ profile.name.charAt(0).toUpperCase() }}</span>
                     </div>
@@ -63,9 +69,20 @@
                         <h3 class="profile-name">{{ profile.name }}</h3>
                         <p class="profile-path">{{ profile.path }}</p>
                     </div>
-                    <button class="launch-btn" [id]="'home-launch-btn-' + i">
-                        <i class="pi pi-play-circle"></i>
-                    </button>
+                    <div class="profile-actions">
+                        <button class="action-btn launch" [id]="'home-launch-btn-' + i"
+                            (click)="launchProfile(profile, $event)" title="Launch Chrome">
+                            <i class="pi pi-play-circle"></i>
+                        </button>
+                        <button class="action-btn edit" [id]="'home-rename-btn-' + i"
+                            (click)="openRenameDialog(profile, $event)" title="Rename">
+                            <i class="pi pi-pencil"></i>
+                        </button>
+                        <button class="action-btn delete" [id]="'home-delete-btn-' + i"
+                            (click)="deleteProfile(profile, $event)" title="Delete">
+                            <i class="pi pi-trash"></i>
+                        </button>
+                    </div>
                 </div>
                 }
             </div>
@@ -78,3 +95,43 @@
         <span>Chrome profiles stored on external drive</span>
     </footer>
 </div>
+
+<!-- Create Profile Dialog -->
+<p-dialog header="Create New Profile" [(visible)]="showCreateDialog" [modal]="true" [style]="{ width: '400px' }"
+    [draggable]="false" [resizable]="false">
+    <div class="dialog-content">
+        <label for="new-profile-name" class="dialog-label">Profile Name</label>
+        <input pInputText id="new-profile-name" type="text" [ngModel]="newProfileName()"
+            (ngModelChange)="newProfileName.set($event)" placeholder="e.g., Work, Personal, Dev" class="dialog-input" />
+    </div>
+    <ng-template #footer>
+        <div class="dialog-footer">
+            <button pButton class="cancel-btn" (click)="showCreateDialog.set(false)">
+                Cancel
+            </button>
+            <button pButton class="confirm-btn" (click)="createProfile()">
+                Create
+            </button>
+        </div>
+    </ng-template>
+</p-dialog>
+
+<!-- Rename Profile Dialog -->
+<p-dialog header="Rename Profile" [(visible)]="showRenameDialog" [modal]="true" [style]="{ width: '400px' }"
+    [draggable]="false" [resizable]="false">
+    <div class="dialog-content">
+        <label for="rename-profile-name" class="dialog-label">New Name</label>
+        <input pInputText id="rename-profile-name" type="text" [ngModel]="renameProfileName()"
+            (ngModelChange)="renameProfileName.set($event)" class="dialog-input" />
+    </div>
+    <ng-template #footer>
+        <div class="dialog-footer">
+            <button pButton class="cancel-btn" (click)="showRenameDialog.set(false)">
+                Cancel
+            </button>
+            <button pButton class="confirm-btn" (click)="renameProfile()">
+                Rename
+            </button>
+        </div>
+    </ng-template>
+</p-dialog>

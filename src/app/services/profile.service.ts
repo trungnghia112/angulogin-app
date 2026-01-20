@@ -48,4 +48,42 @@ export class ProfileService {
             return false;
         }
     }
+
+    async createProfile(basePath: string, name: string): Promise<string> {
+        try {
+            const newPath = await invoke<string>('create_profile', { basePath, name });
+            // Refresh profiles list
+            await this.scanProfiles(basePath);
+            return newPath;
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
+
+    async deleteProfile(profilePath: string, basePath: string): Promise<void> {
+        try {
+            await invoke('delete_profile', { profilePath });
+            // Refresh profiles list
+            await this.scanProfiles(basePath);
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
+
+    async renameProfile(oldPath: string, newName: string, basePath: string): Promise<string> {
+        try {
+            const newPath = await invoke<string>('rename_profile', { oldPath, newName });
+            // Refresh profiles list
+            await this.scanProfiles(basePath);
+            return newPath;
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
 }

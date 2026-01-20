@@ -43,3 +43,52 @@ pub fn launch_chrome(profile_path: String) -> Result<(), String> {
 pub fn check_path_exists(path: String) -> bool {
     std::path::Path::new(&path).exists()
 }
+
+#[tauri::command]
+pub fn create_profile(base_path: String, name: String) -> Result<String, String> {
+    let profile_path = format!("{}/{}", base_path, name);
+    
+    if std::path::Path::new(&profile_path).exists() {
+        return Err(format!("Profile '{}' already exists", name));
+    }
+    
+    fs::create_dir_all(&profile_path)
+        .map_err(|e| format!("Failed to create profile: {}", e))?;
+    
+    Ok(profile_path)
+}
+
+#[tauri::command]
+pub fn delete_profile(profile_path: String) -> Result<(), String> {
+    if !std::path::Path::new(&profile_path).exists() {
+        return Err("Profile does not exist".to_string());
+    }
+    
+    fs::remove_dir_all(&profile_path)
+        .map_err(|e| format!("Failed to delete profile: {}", e))?;
+    
+    Ok(())
+}
+
+#[tauri::command]
+pub fn rename_profile(old_path: String, new_name: String) -> Result<String, String> {
+    let old_path_obj = std::path::Path::new(&old_path);
+    
+    if !old_path_obj.exists() {
+        return Err("Profile does not exist".to_string());
+    }
+    
+    let parent = old_path_obj.parent()
+        .ok_or("Cannot get parent directory")?;
+    
+    let new_path = parent.join(&new_name);
+    
+    if new_path.exists() {
+        return Err(format!("Profile '{}' already exists", new_name));
+    }
+    
+    fs::rename(&old_path, &new_path)
+        .map_err(|e| format!("Failed to rename profile: {}", e))?;
+    
+    Ok(new_path.to_string_lossy().to_string())
+}
