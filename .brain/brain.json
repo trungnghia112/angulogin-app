@@ -3,17 +3,26 @@
         "schema_version": "1.1.0",
         "awf_version": "3.3.0",
         "created_at": "2026-01-20T12:36:00Z",
-        "last_updated": "2026-01-20T12:36:00Z"
+        "last_updated": "2026-01-21T03:34:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
         "type": "desktop-app",
         "status": "production-ready",
-        "description": "Tauri desktop app for managing Chrome profiles stored on external drives"
+        "description": "Tauri desktop app for managing Chrome profiles stored on external drives",
+        "commercial_target": {
+            "niche": [
+                "Freelancers/Agencies",
+                "Social Media Managers"
+            ],
+            "pricing_model": "one-time",
+            "price_point": "<$10",
+            "competitor": "GoLogin ($49/month)"
+        }
     },
     "tech_stack": {
         "frontend": {
-            "framework": "Angular 20",
+            "framework": "Angular 21",
             "ui_library": "PrimeNG",
             "styling": "Tailwind CSS v4",
             "language": "TypeScript"
@@ -25,7 +34,10 @@
         "build": {
             "bundler": "Tauri bundler",
             "output": ".dmg (macOS)"
-        }
+        },
+        "unused": [
+            "Firebase (configured but not used - ~100KB bundle waste)"
+        ]
     },
     "features": [
         {
@@ -72,6 +84,38 @@
             "name": "Running Status",
             "status": "complete",
             "description": "Green dot when Chrome is running"
+        }
+    ],
+    "features_planned": [
+        {
+            "name": "Profile Lock/Password",
+            "status": "planned",
+            "priority": "high",
+            "description": "Protect profiles with password"
+        },
+        {
+            "name": "Export/Import Profiles",
+            "status": "planned",
+            "priority": "high",
+            "description": "Backup and restore profiles"
+        },
+        {
+            "name": "Profile Clone",
+            "status": "planned",
+            "priority": "medium",
+            "description": "Duplicate profile as template"
+        },
+        {
+            "name": "Cookie Import",
+            "status": "planned",
+            "priority": "medium",
+            "description": "Import cookies to skip login"
+        },
+        {
+            "name": "Proxy per Profile",
+            "status": "planned",
+            "priority": "low",
+            "description": "Set proxy for each profile"
         }
     ],
     "api_commands": [
@@ -132,13 +176,25 @@
             "Restart Tauri after Rust changes",
             "Use $any() for template type casting",
             "BrowserType must be cast from string",
-            "Profile metadata stored in .profile-meta.json per profile"
+            "Profile metadata stored in .profile-meta.json per profile",
+            "Firebase is configured but NOT USED - can remove to save ~100KB",
+            "Bundle size exceeds 750KB budget (currently 856KB)"
         ],
         "conventions": [
             "Component files: name.ts, name.html, name.css",
             "No .component suffix in class names",
             "Use inject() instead of constructor injection",
-            "Use @if/@for instead of *ngIf/*ngFor"
+            "Use @if/@for instead of *ngIf/*ngFor",
+            "Use host binding instead of @HostListener"
         ]
+    },
+    "code_health": {
+        "last_audit": "2026-01-21",
+        "critical_issues": 0,
+        "warnings": 5,
+        "suggestions": 4,
+        "security": "clean",
+        "performance": "good",
+        "notes": "See docs/reports/audit_2026-01-21.md for full report"
     }
 }
