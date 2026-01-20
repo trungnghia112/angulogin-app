@@ -101,9 +101,21 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <h3 class="text-[15px] font-semibold text-zinc-50 truncate">{{ profile.name }}</h3>
-                        <!-- Badges row -->
-                        @if (profile.metadata?.shortcut || profile.metadata?.group || profile.size) {
-                        <div class="flex items-center gap-1.5 mt-1">
+                        <!-- Info row: size + notes -->
+                        <div class="flex items-center gap-2 mt-1 text-xs text-zinc-500">
+                            @if (profile.size) {
+                            <span class="shrink-0">{{ formatSize(profile.size) }}</span>
+                            }
+                            @if (profile.size && profile.metadata?.notes) {
+                            <span>•</span>
+                            }
+                            @if (profile.metadata?.notes) {
+                            <span class="truncate">{{ profile.metadata?.notes }}</span>
+                            }
+                        </div>
+                        <!-- Badges row: shortcut + group -->
+                        @if (profile.metadata?.shortcut || profile.metadata?.group) {
+                        <div class="flex items-center gap-1.5 mt-1.5">
                             @if (profile.metadata?.shortcut) {
                             <span class="text-[10px] bg-surface-hover text-zinc-400 px-1.5 py-0.5 rounded font-mono">⌘{{
                                 profile.metadata?.shortcut }}</span>
@@ -112,14 +124,7 @@
                             <span class="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded">{{
                                 profile.metadata?.group }}</span>
                             }
-                            @if (profile.size) {
-                            <span class="text-[10px] bg-zinc-700/50 text-zinc-400 px-1.5 py-0.5 rounded">{{
-                                formatSize(profile.size) }}</span>
-                            }
                         </div>
-                        }
-                        @if (profile.metadata?.notes) {
-                        <p class="text-xs text-zinc-400 truncate mt-1">{{ profile.metadata?.notes }}</p>
                         }
                     </div>
                     <div class="flex gap-2 shrink-0">
