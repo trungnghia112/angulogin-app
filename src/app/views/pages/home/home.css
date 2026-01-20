@@ -1,0 +1,128 @@
+.home-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.home-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.home-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--p-primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.home-subtitle {
+    color: var(--p-text-muted-color);
+    margin-top: 0.5rem;
+}
+
+.path-section {
+    background: var(--p-surface-card);
+    border-radius: var(--p-border-radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--p-surface-border);
+}
+
+.path-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--p-text-color);
+}
+
+.path-input-group {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.path-input {
+    flex: 1;
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    color: var(--p-text-muted-color);
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    color: var(--p-text-muted-color);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-hint {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+.profiles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.profile-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--p-primary-color), var(--p-primary-600));
+    border-radius: var(--p-border-radius) var(--p-border-radius) 0 0;
+}
+
+.profile-icon {
+    font-size: 3rem;
+    color: white;
+}
+
+.profile-content {
+    padding: 1rem 0;
+}
+
+.profile-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    color: var(--p-text-color);
+}
+
+.profile-path {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+    word-break: break-all;
+    margin: 0;
+}

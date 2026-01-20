@@ -1,11 +1,13 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "enables the default permissions",
+  "description": "Capability for the main window - Chrome Profile Manager",
   "windows": [
     "main"
   ],
   "permissions": [
-    "core:default"
+    "core:default",
+    "fs:default",
+    "shell:default"
   ]
 }

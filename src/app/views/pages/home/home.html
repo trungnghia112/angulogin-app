@@ -1,0 +1,56 @@
+<div class="home-container">
+    <header class="home-header">
+        <h1 class="home-title">
+            <i class="pi pi-chrome"></i>
+            Chrome Profile Manager
+        </h1>
+        <p class="home-subtitle">Manage Chrome profiles on external drives</p>
+    </header>
+
+    <section class="path-section">
+        <label for="home-path-input" class="path-label">
+            <i class="pi pi-folder"></i>
+            Profiles Path
+        </label>
+        <div class="path-input-group">
+            <input pInputText id="home-path-input" type="text" [ngModel]="profilesPath()"
+                (ngModelChange)="onPathChange($event)" placeholder="/Volumes/ExternalDrive/ChromeProfiles"
+                class="path-input" />
+            <p-button id="home-scan-btn" icon="pi pi-search" label="Scan" [loading]="loading()"
+                (onClick)="scanProfiles()" />
+        </div>
+    </section>
+
+    @if (loading()) {
+    <div class="loading-container">
+        <p-progressSpinner strokeWidth="4" />
+        <p>Scanning profiles...</p>
+    </div>
+    } @else if (profiles().length === 0) {
+    <div class="empty-state">
+        <i class="pi pi-inbox empty-icon"></i>
+        <p>No profiles found</p>
+        <p class="empty-hint">Enter the path to your Chrome profiles folder and click Scan</p>
+    </div>
+    } @else {
+    <section class="profiles-grid">
+        @for (profile of profiles(); track profile.name; let i = $index) {
+        <p-card [id]="'home-profile-card-' + i" class="profile-card">
+            <ng-template #header>
+                <div class="profile-header">
+                    <i class="pi pi-user profile-icon"></i>
+                </div>
+            </ng-template>
+            <div class="profile-content">
+                <h3 class="profile-name">{{ profile.name }}</h3>
+                <p class="profile-path">{{ profile.path }}</p>
+            </div>
+            <ng-template #footer>
+                <p-button [id]="'home-launch-btn-' + i" icon="pi pi-play" label="Launch" severity="success"
+                    class="w-full" (onClick)="launchProfile(profile)" />
+            </ng-template>
+        </p-card>
+        }
+    </section>
+    }
+</div>
