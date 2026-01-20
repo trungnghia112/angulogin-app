@@ -240,6 +240,22 @@
             </div>
         </div>
 
+        <!-- Browser -->
+        <div>
+            <label class="block text-xs font-medium text-zinc-500 mb-2">Default Browser</label>
+            <div class="flex flex-wrap gap-2">
+                @for (browser of availableBrowsers(); track browser) {
+                <button
+                    class="px-3 py-2 rounded-lg border text-sm cursor-pointer transition-all duration-150 flex items-center gap-2"
+                    [class]="editBrowser() === browser ? 'bg-primary border-primary text-white' : 'bg-surface-hover border-border text-zinc-400 hover:border-primary'"
+                    (click)="selectBrowser($any(browser))">
+                    <i [class]="'pi ' + browserInfo[browser].icon"></i>
+                    {{ browserInfo[browser].name }}
+                </button>
+                }
+            </div>
+        </div>
+
         <!-- Notes -->
         <div>
             <label for="edit-notes" class="block text-xs font-medium text-zinc-500 mb-2">Notes</label>

@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { invoke } from '@tauri-apps/api/core';
-import { Profile, ProfileMetadata } from '../models/profile.model';
+import { BrowserType, Profile, ProfileMetadata } from '../models/profile.model';
 
 @Injectable({
     providedIn: 'root',
@@ -97,7 +97,7 @@ export class ProfileService {
         try {
             return await invoke<ProfileMetadata>('get_profile_metadata', { profilePath });
         } catch {
-            return { emoji: null, notes: null, group: null, shortcut: null };
+            return { emoji: null, notes: null, group: null, shortcut: null, browser: null };
         }
     }
 
@@ -107,13 +107,13 @@ export class ProfileService {
         notes: string | null,
         group: string | null,
         shortcut: number | null,
+        browser: string | null,
     ): Promise<void> {
         try {
-            await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut });
-            // Update local state
+            await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut, browser });
             this.profiles.update((profiles) =>
                 profiles.map((p) =>
-                    p.path === profilePath ? { ...p, metadata: { emoji, notes, group, shortcut } } : p
+                    p.path === profilePath ? { ...p, metadata: { emoji, notes, group, shortcut, browser: browser as BrowserType | null } } : p
                 )
             );
         } catch (e) {
@@ -141,5 +141,30 @@ export class ProfileService {
         );
         this.profiles.set(updated);
     }
-}
 
+    async launchBrowser(profilePath: string, browser: string): Promise<void> {
+        try {
+            await invoke('launch_browser', { profilePath, browser });
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
+
+    async getProfileSize(profilePath: string): Promise<number> {
+        try {
+            return await invoke<number>('get_profile_size', { profilePath });
+        } catch {
+            return 0;
+        }
+    }
+
+    async listAvailableBrowsers(): Promise<string[]> {
+        try {
+            return await invoke<string[]>('list_available_browsers');
+        } catch {
+            return ['chrome'];
+        }
+    }
+}

@@ -98,7 +98,8 @@ pub struct ProfileMetadata {
     pub emoji: Option<String>,
     pub notes: Option<String>,
     pub group: Option<String>,
-    pub shortcut: Option<u8>,  // 1-9 for Cmd+1 through Cmd+9
+    pub shortcut: Option<u8>,
+    pub browser: Option<String>,
 }
 
 #[tauri::command]
@@ -123,10 +124,11 @@ pub fn save_profile_metadata(
     notes: Option<String>,
     group: Option<String>,
     shortcut: Option<u8>,
+    browser: Option<String>,
 ) -> Result<(), String> {
     let meta_file = format!("{}/.profile-meta.json", profile_path);
     
-    let metadata = ProfileMetadata { emoji, notes, group, shortcut };
+    let metadata = ProfileMetadata { emoji, notes, group, shortcut, browser };
     
     let content = serde_json::to_string_pretty(&metadata)
         .map_err(|e| format!("Failed to serialize metadata: {}", e))?;
@@ -147,4 +149,67 @@ pub fn is_chrome_running_for_profile(profile_path: String) -> bool {
         Ok(out) => !out.stdout.is_empty(),
         Err(_) => false,
     }
+}
+
+#[tauri::command]
+pub fn launch_browser(profile_path: String, browser: String) -> Result<(), String> {
+    let user_data_arg = format!("--user-data-dir={}", profile_path);
+    
+    let app_name = match browser.as_str() {
+        "chrome" => "Google Chrome",
+        "brave" => "Brave Browser",
+        "edge" => "Microsoft Edge",
+        "arc" => "Arc",
+        _ => return Err(format!("Unknown browser: {}", browser)),
+    };
+    
+    Command::new("open")
+        .args(["-n", "-a", app_name, "--args", &user_data_arg])
+        .spawn()
+        .map_err(|e| format!("Failed to launch {}: {}", app_name, e))?;
+    
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_profile_size(profile_path: String) -> Result<u64, String> {
+    fn dir_size(path: &std::path::Path) -> u64 {
+        let mut size: u64 = 0;
+        if path.is_dir() {
+            if let Ok(entries) = fs::read_dir(path) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        size += dir_size(&path);
+                    } else if let Ok(meta) = path.metadata() {
+                        size += meta.len();
+                    }
+                }
+            }
+        }
+        size
+    }
+    
+    let path = std::path::Path::new(&profile_path);
+    if !path.exists() {
+        return Err("Profile does not exist".to_string());
+    }
+    
+    Ok(dir_size(path))
+}
+
+#[tauri::command]
+pub fn list_available_browsers() -> Vec<String> {
+    let browsers = vec![
+        ("chrome", "/Applications/Google Chrome.app"),
+        ("brave", "/Applications/Brave Browser.app"),
+        ("edge", "/Applications/Microsoft Edge.app"),
+        ("arc", "/Applications/Arc.app"),
+    ];
+    
+    browsers
+        .into_iter()
+        .filter(|(_, path)| std::path::Path::new(path).exists())
+        .map(|(name, _)| name.to_string())
+        .collect()
 }

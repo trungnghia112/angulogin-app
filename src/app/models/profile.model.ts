@@ -1,8 +1,11 @@
+export type BrowserType = 'chrome' | 'brave' | 'edge' | 'arc';
+
 export interface ProfileMetadata {
     emoji: string | null;
     notes: string | null;
     group: string | null;
-    shortcut: number | null;  // 1-9 for Cmd+1 through Cmd+9
+    shortcut: number | null;
+    browser: BrowserType | null;
 }
 
 export interface Profile {
@@ -10,8 +13,10 @@ export interface Profile {
     path: string;
     metadata?: ProfileMetadata;
     isRunning?: boolean;
+    size?: number;  // Size in bytes
 }
 
 export interface AppSettings {
     profilesPath: string | null;
 }
+

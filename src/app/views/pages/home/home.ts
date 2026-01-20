@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, OnDestroy, HostListener, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, OnDestroy, HostListener, computed, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -7,10 +7,17 @@ import { DialogModule } from 'primeng/dialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ProfileService } from '../../../services/profile.service';
 import { SettingsService } from '../../../services/settings.service';
-import { Profile } from '../../../models/profile.model';
+import { BrowserType, Profile } from '../../../models/profile.model';
 
 const EMOJI_OPTIONS = ['💼', '🏠', '🛠️', '🎮', '📱', '💻', '🔒', '🌐', '📧', '🛒'];
 const GROUP_OPTIONS = ['Work', 'Personal', 'Development', 'Social', 'Shopping', 'Other'];
+
+const BROWSER_INFO: Record<string, { name: string; icon: string }> = {
+    chrome: { name: 'Chrome', icon: 'pi-google' },
+    brave: { name: 'Brave', icon: 'pi-shield' },
+    edge: { name: 'Edge', icon: 'pi-microsoft' },
+    arc: { name: 'Arc', icon: 'pi-circle' },
+};
 
 @Component({
     selector: 'app-home',
@@ -25,7 +32,7 @@ const GROUP_OPTIONS = ['Work', 'Personal', 'Development', 'Social', 'Shopping', 
         DialogModule,
     ],
 })
-export class Home implements OnDestroy {
+export class Home implements OnInit, OnDestroy {
     private readonly profileService = inject(ProfileService);
     private readonly settingsService = inject(SettingsService);
     private readonly messageService = inject(MessageService);
@@ -38,6 +45,8 @@ export class Home implements OnDestroy {
     protected readonly emojiOptions = EMOJI_OPTIONS;
     protected readonly groupOptions = GROUP_OPTIONS;
     protected readonly shortcutOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    protected readonly browserInfo = BROWSER_INFO;
+    protected readonly availableBrowsers = signal<string[]>(['chrome']);
 
     // Group filter
     protected readonly filterGroup = signal<string | null>(null);
@@ -66,6 +75,12 @@ export class Home implements OnDestroy {
     protected readonly editNotes = signal<string | null>(null);
     protected readonly editGroup = signal<string | null>(null);
     protected readonly editShortcut = signal<number | null>(null);
+    protected readonly editBrowser = signal<BrowserType | null>(null);
+
+    async ngOnInit(): Promise<void> {
+        const browsers = await this.profileService.listAvailableBrowsers();
+        this.availableBrowsers.set(browsers);
+    }
 
     constructor() {
         const savedPath = this.settingsService.getProfilesPath();
@@ -80,10 +95,8 @@ export class Home implements OnDestroy {
         }, 10000);
     }
 
-    // Keyboard shortcut listener
     @HostListener('window:keydown', ['$event'])
     handleKeyboard(event: KeyboardEvent): void {
-        // Check for Cmd/Ctrl + number (1-9)
         if ((event.metaKey || event.ctrlKey) && event.key >= '1' && event.key <= '9') {
             const shortcutNum = parseInt(event.key, 10);
             const profile = this.profiles().find(p => p.metadata?.shortcut === shortcutNum);
@@ -104,6 +117,11 @@ export class Home implements OnDestroy {
         return profile.metadata?.emoji || profile.name.charAt(0).toUpperCase();
     }
 
+    getBrowserName(browser: string | null | undefined): string {
+        if (!browser) return 'Chrome';
+        return BROWSER_INFO[browser]?.name || browser;
+    }
+
     getAvatarGradient(index: number): string {
         const gradients = [
             'linear-gradient(135deg, #6366F1, #8B5CF6)',
@@ -114,6 +132,14 @@ export class Home implements OnDestroy {
             'linear-gradient(135deg, #3B82F6, #1D4ED8)',
         ];
         return gradients[index % gradients.length];
+    }
+
+    formatSize(bytes: number | undefined): string {
+        if (!bytes) return '';
+        const gb = bytes / (1024 * 1024 * 1024);
+        if (gb >= 1) return `${gb.toFixed(1)} GB`;
+        const mb = bytes / (1024 * 1024);
+        return `${mb.toFixed(0)} MB`;
     }
 
     async scanProfiles(): Promise<void> {
@@ -138,8 +164,9 @@ export class Home implements OnDestroy {
 
     async launchProfileDirect(profile: Profile): Promise<void> {
         try {
-            await this.profileService.launchChrome(profile.path);
-            this.messageService.add({ severity: 'info', summary: 'Launched', detail: `Chrome: ${profile.name}` });
+            const browser = profile.metadata?.browser || 'chrome';
+            await this.profileService.launchBrowser(profile.path, browser);
+            this.messageService.add({ severity: 'info', summary: 'Launched', detail: `${this.getBrowserName(browser)}: ${profile.name}` });
             setTimeout(() => this.profileService.refreshProfileStatus(), 2000);
         } catch (e) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
@@ -159,7 +186,6 @@ export class Home implements OnDestroy {
         this.filterGroup.set(this.filterGroup() === group ? null : group);
     }
 
-    // Create Profile
     openCreateDialog(): void {
         this.newProfileName.set('');
         this.showCreateDialog.set(true);
@@ -177,7 +203,6 @@ export class Home implements OnDestroy {
         }
     }
 
-    // Rename Profile
     openRenameDialog(profile: Profile, event: Event): void {
         event.stopPropagation();
         this.selectedProfile.set(profile);
@@ -201,7 +226,6 @@ export class Home implements OnDestroy {
         }
     }
 
-    // Edit Profile
     openEditDialog(profile: Profile, event: Event): void {
         event.stopPropagation();
         this.selectedProfile.set(profile);
@@ -209,6 +233,7 @@ export class Home implements OnDestroy {
         this.editNotes.set(profile.metadata?.notes || null);
         this.editGroup.set(profile.metadata?.group || null);
         this.editShortcut.set(profile.metadata?.shortcut || null);
+        this.editBrowser.set(profile.metadata?.browser || null);
         this.showEditDialog.set(true);
     }
 
@@ -221,7 +246,6 @@ export class Home implements OnDestroy {
     }
 
     selectShortcut(num: number): void {
-        // Check if shortcut is already used by another profile
         const profile = this.selectedProfile();
         const existing = this.profiles().find(p => p.metadata?.shortcut === num && p.path !== profile?.path);
         if (existing) {
@@ -229,6 +253,10 @@ export class Home implements OnDestroy {
             return;
         }
         this.editShortcut.set(this.editShortcut() === num ? null : num);
+    }
+
+    selectBrowser(browser: BrowserType): void {
+        this.editBrowser.set(this.editBrowser() === browser ? null : browser);
     }
 
     async saveProfileEdit(): Promise<void> {
@@ -241,6 +269,7 @@ export class Home implements OnDestroy {
                 this.editNotes(),
                 this.editGroup(),
                 this.editShortcut(),
+                this.editBrowser(),
             );
             this.showEditDialog.set(false);
             this.messageService.add({ severity: 'success', summary: 'Saved', detail: 'Profile updated' });
@@ -249,7 +278,6 @@ export class Home implements OnDestroy {
         }
     }
 
-    // Delete Profile
     deleteProfile(profile: Profile, event: Event): void {
         event.stopPropagation();
         this.confirmationService.confirm({
