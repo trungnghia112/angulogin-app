@@ -39,3 +39,40 @@ body {
 ::selection {
     @apply bg-primary text-white;
 }
+
+/* PrimeNG Dark Mode Overrides */
+.p-dialog {
+    background-color: #1A1A1A !important;
+    border: 1px solid #2E2E2E !important;
+    color: #FAFAFA !important;
+}
+
+.p-dialog-header {
+    background-color: #1A1A1A !important;
+    border-bottom: 1px solid #2E2E2E !important;
+    color: #FAFAFA !important;
+}
+
+.p-dialog-content {
+    background-color: #1A1A1A !important;
+    color: #FAFAFA !important;
+}
+
+.p-dialog-footer {
+    background-color: #1A1A1A !important;
+    border-top: 1px solid #2E2E2E !important;
+}
+
+.p-confirmdialog {
+    background-color: #1A1A1A !important;
+    border: 1px solid #2E2E2E !important;
+}
+
+.p-confirmdialog-message {
+    color: #A1A1AA !important;
+}
+
+.p-dialog-mask {
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(4px) !important;
+}
