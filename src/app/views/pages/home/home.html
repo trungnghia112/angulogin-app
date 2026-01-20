@@ -100,8 +100,10 @@
                         }
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-0.5">
-                            <h3 class="text-[15px] font-semibold text-zinc-50">{{ profile.name }}</h3>
+                        <h3 class="text-[15px] font-semibold text-zinc-50 truncate">{{ profile.name }}</h3>
+                        <!-- Badges row -->
+                        @if (profile.metadata?.shortcut || profile.metadata?.group) {
+                        <div class="flex items-center gap-1.5 mt-1">
                             @if (profile.metadata?.shortcut) {
                             <span class="text-[10px] bg-surface-hover text-zinc-400 px-1.5 py-0.5 rounded font-mono">⌘{{
                                 profile.metadata?.shortcut }}</span>
@@ -111,10 +113,10 @@
                                 profile.metadata?.group }}</span>
                             }
                         </div>
-                        @if (profile.metadata?.notes) {
-                        <p class="text-xs text-zinc-400 truncate mb-0.5">{{ profile.metadata?.notes }}</p>
                         }
-                        <p class="text-xs text-zinc-600 truncate">{{ profile.path }}</p>
+                        @if (profile.metadata?.notes) {
+                        <p class="text-xs text-zinc-400 truncate mt-1">{{ profile.metadata?.notes }}</p>
+                        }
                     </div>
                     <div class="flex gap-2 shrink-0">
                         <button
