@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, OnDestroy, HostListener, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -10,6 +10,7 @@ import { SettingsService } from '../../../services/settings.service';
 import { Profile } from '../../../models/profile.model';
 
 const EMOJI_OPTIONS = ['💼', '🏠', '🛠️', '🎮', '📱', '💻', '🔒', '🌐', '📧', '🛒'];
+const GROUP_OPTIONS = ['Work', 'Personal', 'Development', 'Social', 'Shopping', 'Other'];
 
 @Component({
     selector: 'app-home',
@@ -35,6 +36,24 @@ export class Home implements OnDestroy {
     protected readonly profiles = this.profileService.profiles;
     protected readonly loading = this.profileService.loading;
     protected readonly emojiOptions = EMOJI_OPTIONS;
+    protected readonly groupOptions = GROUP_OPTIONS;
+    protected readonly shortcutOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    // Group filter
+    protected readonly filterGroup = signal<string | null>(null);
+    protected readonly filteredProfiles = computed(() => {
+        const group = this.filterGroup();
+        const all = this.profiles();
+        if (!group) return all;
+        return all.filter(p => p.metadata?.group === group);
+    });
+
+    protected readonly uniqueGroups = computed(() => {
+        const groups = this.profiles()
+            .map(p => p.metadata?.group)
+            .filter((g): g is string => !!g);
+        return [...new Set(groups)];
+    });
 
     // Dialog states
     protected readonly showCreateDialog = signal(false);
@@ -45,6 +64,8 @@ export class Home implements OnDestroy {
     protected readonly selectedProfile = signal<Profile | null>(null);
     protected readonly editEmoji = signal<string | null>(null);
     protected readonly editNotes = signal<string | null>(null);
+    protected readonly editGroup = signal<string | null>(null);
+    protected readonly editShortcut = signal<number | null>(null);
 
     constructor() {
         const savedPath = this.settingsService.getProfilesPath();
@@ -52,12 +73,25 @@ export class Home implements OnDestroy {
             this.profilesPath.set(savedPath);
             this.scanProfiles();
         }
-        // Refresh status every 10 seconds
         this.statusInterval = setInterval(() => {
             if (this.profiles().length > 0) {
                 this.profileService.refreshProfileStatus();
             }
         }, 10000);
+    }
+
+    // Keyboard shortcut listener
+    @HostListener('window:keydown', ['$event'])
+    handleKeyboard(event: KeyboardEvent): void {
+        // Check for Cmd/Ctrl + number (1-9)
+        if ((event.metaKey || event.ctrlKey) && event.key >= '1' && event.key <= '9') {
+            const shortcutNum = parseInt(event.key, 10);
+            const profile = this.profiles().find(p => p.metadata?.shortcut === shortcutNum);
+            if (profile) {
+                event.preventDefault();
+                this.launchProfileDirect(profile);
+            }
+        }
     }
 
     ngOnDestroy(): void {
@@ -88,7 +122,6 @@ export class Home implements OnDestroy {
             this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'Please enter a profiles path' });
             return;
         }
-
         try {
             const exists = await this.profileService.checkPathExists(path);
             if (!exists) {
@@ -103,20 +136,27 @@ export class Home implements OnDestroy {
         }
     }
 
-    async launchProfile(profile: Profile, event: Event): Promise<void> {
-        event.stopPropagation();
+    async launchProfileDirect(profile: Profile): Promise<void> {
         try {
             await this.profileService.launchChrome(profile.path);
-            this.messageService.add({ severity: 'info', summary: 'Launched', detail: `Chrome opened: ${profile.name}` });
-            // Refresh status after launch
+            this.messageService.add({ severity: 'info', summary: 'Launched', detail: `Chrome: ${profile.name}` });
             setTimeout(() => this.profileService.refreshProfileStatus(), 2000);
         } catch (e) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
         }
     }
 
+    async launchProfile(profile: Profile, event: Event): Promise<void> {
+        event.stopPropagation();
+        await this.launchProfileDirect(profile);
+    }
+
     onPathChange(value: string): void {
         this.profilesPath.set(value);
+    }
+
+    setFilterGroup(group: string | null): void {
+        this.filterGroup.set(this.filterGroup() === group ? null : group);
     }
 
     // Create Profile
@@ -161,12 +201,14 @@ export class Home implements OnDestroy {
         }
     }
 
-    // Edit Profile (Emoji + Notes)
+    // Edit Profile
     openEditDialog(profile: Profile, event: Event): void {
         event.stopPropagation();
         this.selectedProfile.set(profile);
         this.editEmoji.set(profile.metadata?.emoji || null);
         this.editNotes.set(profile.metadata?.notes || null);
+        this.editGroup.set(profile.metadata?.group || null);
+        this.editShortcut.set(profile.metadata?.shortcut || null);
         this.showEditDialog.set(true);
     }
 
@@ -174,11 +216,32 @@ export class Home implements OnDestroy {
         this.editEmoji.set(this.editEmoji() === emoji ? null : emoji);
     }
 
+    selectGroup(group: string): void {
+        this.editGroup.set(this.editGroup() === group ? null : group);
+    }
+
+    selectShortcut(num: number): void {
+        // Check if shortcut is already used by another profile
+        const profile = this.selectedProfile();
+        const existing = this.profiles().find(p => p.metadata?.shortcut === num && p.path !== profile?.path);
+        if (existing) {
+            this.messageService.add({ severity: 'warn', summary: 'Warning', detail: `Shortcut Cmd+${num} already used by "${existing.name}"` });
+            return;
+        }
+        this.editShortcut.set(this.editShortcut() === num ? null : num);
+    }
+
     async saveProfileEdit(): Promise<void> {
         const profile = this.selectedProfile();
         if (!profile) return;
         try {
-            await this.profileService.saveProfileMetadata(profile.path, this.editEmoji(), this.editNotes());
+            await this.profileService.saveProfileMetadata(
+                profile.path,
+                this.editEmoji(),
+                this.editNotes(),
+                this.editGroup(),
+                this.editShortcut(),
+            );
             this.showEditDialog.set(false);
             this.messageService.add({ severity: 'success', summary: 'Saved', detail: 'Profile updated' });
         } catch (e) {

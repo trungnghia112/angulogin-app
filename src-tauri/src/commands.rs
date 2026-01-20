@@ -97,6 +97,8 @@ pub fn rename_profile(old_path: String, new_name: String) -> Result<String, Stri
 pub struct ProfileMetadata {
     pub emoji: Option<String>,
     pub notes: Option<String>,
+    pub group: Option<String>,
+    pub shortcut: Option<u8>,  // 1-9 for Cmd+1 through Cmd+9
 }
 
 #[tauri::command]
@@ -115,10 +117,16 @@ pub fn get_profile_metadata(profile_path: String) -> Result<ProfileMetadata, Str
 }
 
 #[tauri::command]
-pub fn save_profile_metadata(profile_path: String, emoji: Option<String>, notes: Option<String>) -> Result<(), String> {
+pub fn save_profile_metadata(
+    profile_path: String, 
+    emoji: Option<String>, 
+    notes: Option<String>,
+    group: Option<String>,
+    shortcut: Option<u8>,
+) -> Result<(), String> {
     let meta_file = format!("{}/.profile-meta.json", profile_path);
     
-    let metadata = ProfileMetadata { emoji, notes };
+    let metadata = ProfileMetadata { emoji, notes, group, shortcut };
     
     let content = serde_json::to_string_pretty(&metadata)
         .map_err(|e| format!("Failed to serialize metadata: {}", e))?;

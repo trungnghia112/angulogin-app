@@ -97,17 +97,23 @@ export class ProfileService {
         try {
             return await invoke<ProfileMetadata>('get_profile_metadata', { profilePath });
         } catch {
-            return { emoji: null, notes: null };
+            return { emoji: null, notes: null, group: null, shortcut: null };
         }
     }
 
-    async saveProfileMetadata(profilePath: string, emoji: string | null, notes: string | null): Promise<void> {
+    async saveProfileMetadata(
+        profilePath: string,
+        emoji: string | null,
+        notes: string | null,
+        group: string | null,
+        shortcut: number | null,
+    ): Promise<void> {
         try {
-            await invoke('save_profile_metadata', { profilePath, emoji, notes });
+            await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut });
             // Update local state
             this.profiles.update((profiles) =>
                 profiles.map((p) =>
-                    p.path === profilePath ? { ...p, metadata: { emoji, notes } } : p
+                    p.path === profilePath ? { ...p, metadata: { emoji, notes, group, shortcut } } : p
                 )
             );
         } catch (e) {
