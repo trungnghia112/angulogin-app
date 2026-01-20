@@ -1,0 +1,144 @@
+{
+    "meta": {
+        "schema_version": "1.1.0",
+        "awf_version": "3.3.0",
+        "created_at": "2026-01-20T12:36:00Z",
+        "last_updated": "2026-01-20T12:36:00Z"
+    },
+    "project": {
+        "name": "Chrome Profile Manager",
+        "type": "desktop-app",
+        "status": "production-ready",
+        "description": "Tauri desktop app for managing Chrome profiles stored on external drives"
+    },
+    "tech_stack": {
+        "frontend": {
+            "framework": "Angular 20",
+            "ui_library": "PrimeNG",
+            "styling": "Tailwind CSS v4",
+            "language": "TypeScript"
+        },
+        "backend": {
+            "framework": "Tauri v2",
+            "language": "Rust"
+        },
+        "build": {
+            "bundler": "Tauri bundler",
+            "output": ".dmg (macOS)"
+        }
+    },
+    "features": [
+        {
+            "name": "Profile Scanning",
+            "status": "complete",
+            "description": "Scan external drive for Chrome profile folders"
+        },
+        {
+            "name": "Profile CRUD",
+            "status": "complete",
+            "description": "Create, rename, delete profiles"
+        },
+        {
+            "name": "Profile Launch",
+            "status": "complete",
+            "description": "Launch Chrome with --user-data-dir"
+        },
+        {
+            "name": "Multi-Browser",
+            "status": "complete",
+            "description": "Support Chrome, Brave, Edge, Arc"
+        },
+        {
+            "name": "Emoji Avatar",
+            "status": "complete",
+            "description": "Custom emoji for each profile"
+        },
+        {
+            "name": "Profile Groups",
+            "status": "complete",
+            "description": "Categorize profiles: Work, Personal, etc."
+        },
+        {
+            "name": "Keyboard Shortcuts",
+            "status": "complete",
+            "description": "Cmd+1-9 for quick launch"
+        },
+        {
+            "name": "Profile Stats",
+            "status": "complete",
+            "description": "Display folder size on cards"
+        },
+        {
+            "name": "Running Status",
+            "status": "complete",
+            "description": "Green dot when Chrome is running"
+        }
+    ],
+    "api_commands": [
+        {
+            "name": "scan_profiles",
+            "description": "Scan directory for profile folders"
+        },
+        {
+            "name": "launch_chrome",
+            "description": "Launch Chrome with profile"
+        },
+        {
+            "name": "launch_browser",
+            "description": "Launch any browser with profile"
+        },
+        {
+            "name": "create_profile",
+            "description": "Create new profile folder"
+        },
+        {
+            "name": "delete_profile",
+            "description": "Delete profile folder"
+        },
+        {
+            "name": "rename_profile",
+            "description": "Rename profile folder"
+        },
+        {
+            "name": "get_profile_metadata",
+            "description": "Read .profile-meta.json"
+        },
+        {
+            "name": "save_profile_metadata",
+            "description": "Save .profile-meta.json"
+        },
+        {
+            "name": "get_profile_size",
+            "description": "Calculate folder size"
+        },
+        {
+            "name": "is_chrome_running_for_profile",
+            "description": "Check if Chrome is running"
+        },
+        {
+            "name": "list_available_browsers",
+            "description": "Detect installed browsers"
+        }
+    ],
+    "knowledge_items": {
+        "patterns": [
+            "Use Angular signals for state management",
+            "Standalone components only (no NgModules)",
+            "Tailwind CSS for styling - no custom CSS",
+            "PrimeNG for UI components",
+            "Async profile loading for better UX"
+        ],
+        "gotchas": [
+            "Restart Tauri after Rust changes",
+            "Use $any() for template type casting",
+            "BrowserType must be cast from string",
+            "Profile metadata stored in .profile-meta.json per profile"
+        ],
+        "conventions": [
+            "Component files: name.ts, name.html, name.css",
+            "No .component suffix in class names",
+            "Use inject() instead of constructor injection",
+            "Use @if/@for instead of *ngIf/*ngFor"
+        ]
+    }
+}
