@@ -2,12 +2,20 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { CardModule } from 'primeng/card';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageService } from 'primeng/api';
 import { ProfileService } from '../../../services/profile.service';
 import { SettingsService } from '../../../services/settings.service';
 import { Profile } from '../../../models/profile.model';
+
+const AVATAR_GRADIENTS = [
+    'linear-gradient(135deg, #6366F1, #8B5CF6)',
+    'linear-gradient(135deg, #22D3EE, #06B6D4)',
+    'linear-gradient(135deg, #F59E0B, #EF4444)',
+    'linear-gradient(135deg, #22C55E, #10B981)',
+    'linear-gradient(135deg, #EC4899, #8B5CF6)',
+    'linear-gradient(135deg, #3B82F6, #1D4ED8)',
+];
 
 @Component({
     selector: 'app-home',
@@ -18,7 +26,6 @@ import { Profile } from '../../../models/profile.model';
         FormsModule,
         ButtonModule,
         InputTextModule,
-        CardModule,
         ProgressSpinnerModule,
     ],
 })
@@ -37,6 +44,10 @@ export class Home {
             this.profilesPath.set(savedPath);
             this.scanProfiles();
         }
+    }
+
+    getAvatarGradient(index: number): string {
+        return AVATAR_GRADIENTS[index % AVATAR_GRADIENTS.length];
     }
 
     async scanProfiles(): Promise<void> {
