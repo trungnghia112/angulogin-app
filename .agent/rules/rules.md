@@ -1,7 +1,3 @@
----
-trigger: always_on
----
-
 # Operational Rules
 
 ## 1. Memory Trigger
