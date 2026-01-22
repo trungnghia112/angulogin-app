@@ -5,7 +5,7 @@
             <div class="flex items-center gap-3">
                 <div
                     class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-xl text-white">
-                    <i class="pi pi-chrome"></i>
+                    <i class="pi pi-window-maximize"></i>
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-zinc-50">Profile Manager</h1>
@@ -14,10 +14,10 @@
             </div>
             @if (profilesPath()) {
             <button pButton id="home-create-btn"
-                class="flex items-center gap-2 px-4 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm font-medium cursor-pointer transition-all duration-150 hover:bg-primary hover:border-primary hover:text-white"
-                (click)="openCreateDialog()">
+                class="flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-primary/10 border border-primary/30 rounded-lg text-primary text-sm font-medium cursor-pointer transition-all duration-150 hover:bg-primary hover:border-primary hover:text-white"
+                (click)="openCreateDialog()" aria-label="Create new profile">
                 <i class="pi pi-plus"></i>
-                <span>New Profile</span>
+                <span class="hidden sm:inline">New Profile</span>
             </button>
             }
         </div>
@@ -31,13 +31,14 @@
                 <i class="pi pi-folder text-sm"></i>
                 <span>Profiles Directory</span>
             </div>
-            <div class="flex gap-3">
+            <div class="flex flex-col sm:flex-row gap-3">
                 <input pInputText id="home-path-input" type="text" [ngModel]="profilesPath()"
                     (ngModelChange)="onPathChange($event)" placeholder="/Volumes/ExternalDrive/ChromeProfiles"
-                    class="flex-1 bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm placeholder-zinc-500 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-150" />
+                    aria-label="Chrome profiles directory path"
+                    class="w-full sm:flex-1 bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm placeholder-zinc-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-150" />
                 <button pButton id="home-scan-btn"
-                    class="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-primary to-indigo-600 border-none rounded-lg text-white text-sm font-medium cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/40"
-                    [loading]="loading()" (click)="scanProfiles()">
+                    class="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-primary to-primary-hover border-none rounded-lg text-white text-sm font-medium cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+                    [loading]="loading()" (click)="scanProfiles()" aria-label="Scan for Chrome profiles">
                     <i class="pi pi-search"></i>
                     <span>Scan</span>
                 </button>
@@ -127,21 +128,23 @@
                         </div>
                         }
                     </div>
-                    <div class="flex gap-2 shrink-0">
+                    <div class="flex gap-1.5 sm:gap-2 shrink-0">
                         <button
-                            class="w-9 h-9 rounded-lg bg-transparent border border-border text-secondary text-base cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-secondary hover:border-secondary hover:text-bg"
+                            class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-transparent border border-border text-secondary text-sm sm:text-base cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-secondary hover:border-secondary hover:text-bg focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                             [id]="'home-launch-btn-' + i" (click)="launchProfile(profile, $event)"
-                            title="Launch Chrome">
+                            [attr.aria-label]="'Launch ' + profile.name + ' profile'">
                             <i class="pi pi-play-circle"></i>
                         </button>
                         <button
-                            class="w-9 h-9 rounded-lg bg-transparent border border-border text-zinc-500 text-base cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-primary hover:border-primary hover:text-white"
-                            [id]="'home-rename-btn-' + i" (click)="openRenameDialog(profile, $event)" title="Rename">
+                            class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-transparent border border-border text-zinc-500 text-sm sm:text-base cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-primary hover:border-primary hover:text-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                            [id]="'home-rename-btn-' + i" (click)="openRenameDialog(profile, $event)"
+                            [attr.aria-label]="'Rename ' + profile.name + ' profile'">
                             <i class="pi pi-pencil"></i>
                         </button>
                         <button
-                            class="w-9 h-9 rounded-lg bg-transparent border border-border text-zinc-500 text-base cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-error hover:border-error hover:text-white"
-                            [id]="'home-delete-btn-' + i" (click)="deleteProfile(profile, $event)" title="Delete">
+                            class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-transparent border border-border text-zinc-500 text-sm sm:text-base cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-error hover:border-error hover:text-white focus-visible:ring-2 focus-visible:ring-error focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                            [id]="'home-delete-btn-' + i" (click)="deleteProfile(profile, $event)"
+                            [attr.aria-label]="'Delete ' + profile.name + ' profile'">
                             <i class="pi pi-trash"></i>
                         </button>
                     </div>
@@ -153,9 +156,10 @@
     </main>
 
     <!-- Footer -->
-    <footer class="px-6 py-4 text-center text-xs text-zinc-500 border-t border-border">
-        <span>Chrome profiles stored on external drive • </span>
-        <span class="text-zinc-600">Press ⌘1-9 to quick launch</span>
+    <footer class="px-4 sm:px-6 py-4 text-center text-xs text-zinc-500 border-t border-border">
+        <span class="hidden sm:inline">Chrome profiles stored on external drive • </span>
+        <span class="text-zinc-600">Press <kbd class="font-mono bg-surface-hover px-1 py-0.5 rounded">⌘1-9</kbd> to
+            quick launch</span>
     </footer>
 </div>
 
