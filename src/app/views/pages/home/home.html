@@ -127,7 +127,7 @@
         </div>
         } @else if (activeTab() === 'profiles') {
         <!-- Profiles Table -->
-        <div id="home-profiles-table" class="bg-surface border border-border rounded-xl overflow-hidden">
+        <div id="home-profiles-table" class="bg-surface border border-border rounded-xl">
             <p-table [value]="filteredProfiles()" [(selection)]="selectedProfiles"
                 (selectionChange)="onSelectionChange($event)" [first]="first()" [rows]="rowsPerPage()" dataKey="path"
                 [tableStyle]="{ 'min-width': '60rem' }" class="profile-table">

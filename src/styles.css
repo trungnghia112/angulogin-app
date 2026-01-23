@@ -133,6 +133,12 @@ body {
     border-color: #2E2E2E !important;
 }
 
+/* Disable internal scroll wrapper - scroll should be on home-content */
+.profile-table .p-datatable-table-container {
+    overflow: visible !important;
+    overflow-x: visible !important;
+}
+
 /* Checkbox Dark Mode Overrides */
 .p-checkbox .p-checkbox-box {
     background-color: #1A1A1A !important;
