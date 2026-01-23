@@ -102,6 +102,20 @@ export class Home implements OnInit, OnDestroy {
     protected readonly filterGroup = signal<string | null>(null);
     protected readonly showFiltersDropdown = signal(false);
 
+    // Sorting
+    protected readonly sortBy = signal<'name' | 'size' | 'lastOpened'>('name');
+    protected readonly sortOrder = signal<'asc' | 'desc'>('asc');
+    protected readonly showSortDropdown = signal(false);
+    protected readonly sortOptions = [
+        { label: 'Name', value: 'name' as const },
+        { label: 'Size', value: 'size' as const },
+        { label: 'Last Used', value: 'lastOpened' as const },
+    ];
+    protected readonly currentSortLabel = computed(() => {
+        const option = this.sortOptions.find(o => o.value === this.sortBy());
+        return option?.label || 'Sort';
+    });
+
     protected readonly filteredProfiles = computed(() => {
         let result = this.profiles();
         const search = this.searchText().toLowerCase().trim();
@@ -122,12 +136,27 @@ export class Home implements OnInit, OnDestroy {
             result = result.filter((p) => p.metadata?.group === group);
         }
 
-        // Sort: pinned profiles first, then by name
+        // Sort: pinned profiles first, then by selected criteria
+        const sortByValue = this.sortBy();
+        const sortOrderValue = this.sortOrder();
+        const multiplier = sortOrderValue === 'asc' ? 1 : -1;
+
         return result.sort((a, b) => {
             const aPinned = a.metadata?.isPinned ? 1 : 0;
             const bPinned = b.metadata?.isPinned ? 1 : 0;
             if (bPinned !== aPinned) return bPinned - aPinned;
-            return a.name.localeCompare(b.name);
+
+            switch (sortByValue) {
+                case 'size':
+                    return ((a.size || 0) - (b.size || 0)) * multiplier;
+                case 'lastOpened':
+                    const aDate = a.metadata?.lastOpened ? new Date(a.metadata.lastOpened).getTime() : 0;
+                    const bDate = b.metadata?.lastOpened ? new Date(b.metadata.lastOpened).getTime() : 0;
+                    return (bDate - aDate) * multiplier; // Most recent first by default
+                case 'name':
+                default:
+                    return a.name.localeCompare(b.name) * multiplier;
+            }
         });
     });
 
@@ -367,6 +396,17 @@ export class Home implements OnInit, OnDestroy {
         this.searchText.set('');
         this.filterGroup.set(null);
         this.showFiltersDropdown.set(false);
+    }
+
+    setSortBy(value: 'name' | 'size' | 'lastOpened'): void {
+        if (this.sortBy() === value) {
+            // Toggle order if same field
+            this.sortOrder.set(this.sortOrder() === 'asc' ? 'desc' : 'asc');
+        } else {
+            this.sortBy.set(value);
+            this.sortOrder.set('asc');
+        }
+        this.showSortDropdown.set(false);
     }
 
     // Dialog methods

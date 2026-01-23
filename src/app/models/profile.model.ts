@@ -18,6 +18,7 @@ export interface ProfileMetadata {
     tags?: string[];
     launchUrl?: string | null;
     isPinned?: boolean;
+    lastOpened?: string | null;
 }
 
 export interface Profile {
