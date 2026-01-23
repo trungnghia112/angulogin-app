@@ -193,7 +193,7 @@ pub fn is_chrome_running_for_profile(profile_path: String) -> bool {
 }
 
 #[tauri::command]
-pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>) -> Result<(), String> {
+pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>) -> Result<(), String> {
     let user_data_arg = format!("--user-data-dir={}", profile_path);
     
     let app_name = match browser.as_str() {
@@ -223,6 +223,13 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
     if let Some(flag) = incognito_flag {
         incognito_owned = flag.to_string();
         args.push(&incognito_owned);
+    }
+    
+    // Add proxy server if provided
+    let proxy_owned: String;
+    if let Some(proxy) = proxy_server {
+        proxy_owned = format!("--proxy-server={}", proxy);
+        args.push(&proxy_owned);
     }
     
     // Add URL if provided

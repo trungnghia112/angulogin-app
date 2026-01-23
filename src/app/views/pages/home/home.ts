@@ -356,11 +356,12 @@ export class Home implements OnInit, OnDestroy {
         try {
             const browser = profile.metadata?.browser || 'chrome';
             const url = profile.metadata?.launchUrl || undefined;
-            await this.profileService.launchBrowser(profile.path, browser, url);
+            const proxy = profile.metadata?.proxyServer || undefined;
+            await this.profileService.launchBrowser(profile.path, browser, url, false, proxy);
             this.messageService.add({
                 severity: 'info',
                 summary: 'Launched',
-                detail: `${this.getBrowserName(browser)}: ${profile.name}${url ? ' → ' + url : ''}`,
+                detail: `${this.getBrowserName(browser)}: ${profile.name}${url ? ' → ' + url : ''}${proxy ? ' (Proxy)' : ''}`,
             });
             setTimeout(() => this.profileService.refreshProfileStatus(), 2000);
         } catch (e) {

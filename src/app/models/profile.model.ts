@@ -19,6 +19,7 @@ export interface ProfileMetadata {
     launchUrl?: string | null;
     isPinned?: boolean;
     lastOpened?: string | null;
+    proxyServer?: string | null;
 }
 
 export interface Profile {
