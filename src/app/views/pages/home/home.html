@@ -10,20 +10,6 @@
             </div>
         </div>
 
-        <!-- Path Input (collapsible) -->
-        @if (!profiles().length) {
-        <div class="flex items-center gap-2 flex-1">
-            <input id="home-header-path-input" pInputText type="text" [ngModel]="profilesPath()"
-                (ngModelChange)="onPathChange($event)" placeholder="/Volumes/ExternalDrive/ChromeProfiles"
-                class="flex-1 bg-surface border border-border rounded-lg px-4 py-2.5 text-zinc-50 text-sm placeholder-zinc-600 focus:border-primary outline-none transition-all" />
-            <button id="home-header-scan-btn" pButton [loading]="loading()" (click)="scanProfiles()"
-                class="flex items-center gap-2 px-4 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer hover:bg-primary-hover transition-colors">
-                <i class="pi pi-search"></i>
-                <span>Scan</span>
-            </button>
-        </div>
-        }
-
         <!-- Actions -->
         <div id="home-header-actions" class="flex items-center gap-2">
             <button id="home-header-refresh-btn"
