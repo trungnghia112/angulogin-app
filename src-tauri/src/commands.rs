@@ -100,6 +100,10 @@ pub struct ProfileMetadata {
     pub group: Option<String>,
     pub shortcut: Option<u8>,
     pub browser: Option<String>,
+    // New fields
+    pub tags: Option<Vec<String>>,
+    pub launch_url: Option<String>,
+    pub is_pinned: Option<bool>,
 }
 
 #[tauri::command]
@@ -125,10 +129,13 @@ pub fn save_profile_metadata(
     group: Option<String>,
     shortcut: Option<u8>,
     browser: Option<String>,
+    tags: Option<Vec<String>>,
+    launch_url: Option<String>,
+    is_pinned: Option<bool>,
 ) -> Result<(), String> {
     let meta_file = format!("{}/.profile-meta.json", profile_path);
     
-    let metadata = ProfileMetadata { emoji, notes, group, shortcut, browser };
+    let metadata = ProfileMetadata { emoji, notes, group, shortcut, browser, tags, launch_url, is_pinned };
     
     let content = serde_json::to_string_pretty(&metadata)
         .map_err(|e| format!("Failed to serialize metadata: {}", e))?;
@@ -152,7 +159,7 @@ pub fn is_chrome_running_for_profile(profile_path: String) -> bool {
 }
 
 #[tauri::command]
-pub fn launch_browser(profile_path: String, browser: String) -> Result<(), String> {
+pub fn launch_browser(profile_path: String, browser: String, url: Option<String>) -> Result<(), String> {
     let user_data_arg = format!("--user-data-dir={}", profile_path);
     
     let app_name = match browser.as_str() {
@@ -163,8 +170,17 @@ pub fn launch_browser(profile_path: String, browser: String) -> Result<(), Strin
         _ => return Err(format!("Unknown browser: {}", browser)),
     };
     
+    let mut args = vec!["-n", "-a", app_name, "--args", &user_data_arg];
+    
+    // Add URL if provided
+    let url_owned: String;
+    if let Some(u) = url {
+        url_owned = u;
+        args.push(&url_owned);
+    }
+    
     Command::new("open")
-        .args(["-n", "-a", app_name, "--args", &user_data_arg])
+        .args(&args)
         .spawn()
         .map_err(|e| format!("Failed to launch {}: {}", app_name, e))?;
     

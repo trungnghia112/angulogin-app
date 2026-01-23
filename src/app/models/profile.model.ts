@@ -14,6 +14,10 @@ export interface ProfileMetadata {
     proxyId?: string | null;
     tagIds?: string[];
     profileNotes?: ProfileNote[];
+    // New fields for Tags, Launch URL, Pinning features
+    tags?: string[];
+    launchUrl?: string | null;
+    isPinned?: boolean;
 }
 
 export interface Profile {

@@ -120,7 +120,13 @@ export class Home implements OnInit, OnDestroy {
             result = result.filter((p) => p.metadata?.group === group);
         }
 
-        return result;
+        // Sort: pinned profiles first, then by name
+        return result.sort((a, b) => {
+            const aPinned = a.metadata?.isPinned ? 1 : 0;
+            const bPinned = b.metadata?.isPinned ? 1 : 0;
+            if (bPinned !== aPinned) return bPinned - aPinned;
+            return a.name.localeCompare(b.name);
+        });
     });
 
     protected readonly uniqueGroups = computed(() => {
@@ -156,6 +162,16 @@ export class Home implements OnInit, OnDestroy {
     protected readonly editGroup = signal<string | null>(null);
     protected readonly editShortcut = signal<number | null>(null);
     protected readonly editBrowser = signal<BrowserType | null>(null);
+    // New edit signals for Tags, Launch URL, Pinning
+    protected readonly editTags = signal<string[]>([]);
+    protected readonly editLaunchUrl = signal<string | null>(null);
+    protected readonly editIsPinned = signal<boolean>(false);
+
+    // Available tags from all profiles
+    protected readonly availableTags = computed(() => {
+        const all = this.profiles().flatMap((p) => p.metadata?.tags || []);
+        return [...new Set(all)];
+    });
 
     async ngOnInit(): Promise<void> {
         const browsers = await this.profileService.listAvailableBrowsers();
@@ -277,11 +293,12 @@ export class Home implements OnInit, OnDestroy {
     async launchProfileDirect(profile: Profile): Promise<void> {
         try {
             const browser = profile.metadata?.browser || 'chrome';
-            await this.profileService.launchBrowser(profile.path, browser);
+            const url = profile.metadata?.launchUrl || undefined;
+            await this.profileService.launchBrowser(profile.path, browser, url);
             this.messageService.add({
                 severity: 'info',
                 summary: 'Launched',
-                detail: `${this.getBrowserName(browser)}: ${profile.name}`,
+                detail: `${this.getBrowserName(browser)}: ${profile.name}${url ? ' → ' + url : ''}`,
             });
             setTimeout(() => this.profileService.refreshProfileStatus(), 2000);
         } catch (e) {
@@ -377,6 +394,10 @@ export class Home implements OnInit, OnDestroy {
         this.editGroup.set(profile.metadata?.group || null);
         this.editShortcut.set(profile.metadata?.shortcut || null);
         this.editBrowser.set(profile.metadata?.browser || null);
+        // New fields
+        this.editTags.set(profile.metadata?.tags || []);
+        this.editLaunchUrl.set(profile.metadata?.launchUrl || null);
+        this.editIsPinned.set(profile.metadata?.isPinned || false);
         this.showEditDialog.set(true);
     }
 
@@ -408,6 +429,20 @@ export class Home implements OnInit, OnDestroy {
         this.editBrowser.set(this.editBrowser() === browser ? null : browser);
     }
 
+    addTag(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        const tag = input.value.trim();
+        if (tag && !this.editTags().includes(tag)) {
+            this.editTags.update((tags) => [...tags, tag]);
+            input.value = '';
+        }
+        event.preventDefault();
+    }
+
+    removeTag(index: number): void {
+        this.editTags.update((tags) => tags.filter((_, i) => i !== index));
+    }
+
     async saveProfileEdit(): Promise<void> {
         const profile = this.selectedProfile();
         if (!profile) return;
@@ -418,13 +453,41 @@ export class Home implements OnInit, OnDestroy {
                 this.editNotes(),
                 this.editGroup(),
                 this.editShortcut(),
-                this.editBrowser()
+                this.editBrowser(),
+                this.editTags().length > 0 ? this.editTags() : null,
+                this.editLaunchUrl(),
+                this.editIsPinned() || null
             );
             this.showEditDialog.set(false);
             this.messageService.add({
                 severity: 'success',
                 summary: 'Saved',
                 detail: 'Profile updated',
+            });
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+        }
+    }
+
+    async togglePin(profile: Profile, event: Event): Promise<void> {
+        event.stopPropagation();
+        const newPinned = !profile.metadata?.isPinned;
+        try {
+            await this.profileService.saveProfileMetadata(
+                profile.path,
+                profile.metadata?.emoji || null,
+                profile.metadata?.notes || null,
+                profile.metadata?.group || null,
+                profile.metadata?.shortcut || null,
+                profile.metadata?.browser || null,
+                profile.metadata?.tags || null,
+                profile.metadata?.launchUrl || null,
+                newPinned
+            );
+            this.messageService.add({
+                severity: 'success',
+                summary: newPinned ? 'Pinned' : 'Unpinned',
+                detail: `${profile.name} ${newPinned ? 'pinned to top' : 'unpinned'}`,
             });
         } catch (e) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });

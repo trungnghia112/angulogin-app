@@ -168,23 +168,30 @@ export class ProfileService {
         group: string | null,
         shortcut: number | null,
         browser: string | null,
+        tags: string[] | null = null,
+        launchUrl: string | null = null,
+        isPinned: boolean | null = null,
     ): Promise<void> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            console.log('[Mock] saveProfileMetadata:', profilePath, { emoji, notes, group, shortcut, browser });
+            console.log('[Mock] saveProfileMetadata:', profilePath, { emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned });
             this.profiles.update((profiles) =>
                 profiles.map((p) =>
-                    p.path === profilePath ? { ...p, metadata: { emoji, notes, group, shortcut, browser: browser as BrowserType | null } } : p
+                    p.path === profilePath
+                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined } }
+                        : p
                 )
             );
             return;
         }
 
         try {
-            await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut, browser });
+            await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned });
             this.profiles.update((profiles) =>
                 profiles.map((p) =>
-                    p.path === profilePath ? { ...p, metadata: { emoji, notes, group, shortcut, browser: browser as BrowserType | null } } : p
+                    p.path === profilePath
+                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined } }
+                        : p
                 )
             );
         } catch (e) {
@@ -219,10 +226,10 @@ export class ProfileService {
         this.profiles.set(updated);
     }
 
-    async launchBrowser(profilePath: string, browser: string): Promise<void> {
+    async launchBrowser(profilePath: string, browser: string, url?: string): Promise<void> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            console.log('[Mock] launchBrowser:', profilePath, browser);
+            console.log('[Mock] launchBrowser:', profilePath, browser, url);
             // Simulate running state change
             this.profiles.update(profiles =>
                 profiles.map(p => p.path === profilePath ? { ...p, isRunning: true } : p)
@@ -231,7 +238,7 @@ export class ProfileService {
         }
 
         try {
-            await invoke('launch_browser', { profilePath, browser });
+            await invoke('launch_browser', { profilePath, browser, url: url || null });
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
             this.error.set(errorMsg);

@@ -19,57 +19,57 @@
                 <i class="pi pi-refresh text-sm"></i>
                 <span>Refresh</span>
             </button>
-            
+
             <!-- Filters Button with Dropdown -->
             <div class="relative">
                 <button id="home-header-filters-btn" (click)="toggleFiltersDropdown()"
-                    class="flex items-center gap-2 px-3 py-2.5 border rounded-lg text-sm transition-colors"
-                    [class]="hasActiveFilters() 
+                    class="flex items-center gap-2 px-3 py-2.5 border rounded-lg text-sm transition-colors" [class]="hasActiveFilters() 
                         ? 'bg-primary/20 border-primary text-primary' 
                         : 'bg-surface border-border text-zinc-300 hover:bg-surface-hover'">
                     <i class="pi pi-filter text-sm"></i>
                     <span>Filters</span>
                     @if (activeFilterCount() > 0) {
-                        <span class="ml-1 px-1.5 py-0.5 bg-primary text-bg text-xs font-bold rounded-full min-w-[18px] text-center">
-                            {{ activeFilterCount() }}
-                        </span>
+                    <span
+                        class="ml-1 px-1.5 py-0.5 bg-primary text-bg text-xs font-bold rounded-full min-w-[18px] text-center">
+                        {{ activeFilterCount() }}
+                    </span>
                     }
                 </button>
-                
+
                 <!-- Filters Dropdown -->
                 @if (showFiltersDropdown()) {
-                    <div id="home-filters-dropdown" 
-                        class="absolute right-0 top-full mt-2 w-64 bg-surface border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
-                        <div class="p-4 border-b border-border">
-                            <div class="flex items-center justify-between mb-3">
-                                <h4 class="text-sm font-semibold text-zinc-50">Filter by Group</h4>
-                                @if (hasActiveFilters()) {
-                                    <button (click)="clearFilters()" 
-                                        class="text-xs text-primary hover:text-primary-hover transition-colors">
-                                        Clear all
-                                    </button>
-                                }
-                            </div>
-                            <div class="flex flex-wrap gap-2">
-                                @if (uniqueGroups().length === 0) {
-                                    <p class="text-xs text-zinc-500">No groups available</p>
-                                } @else {
-                                    @for (group of uniqueGroups(); track group) {
-                                        <button (click)="setFilterGroup(group)"
-                                            class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                                            [class]="filterGroup() === group 
+                <div id="home-filters-dropdown"
+                    class="absolute right-0 top-full mt-2 w-64 bg-surface border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <div class="p-4 border-b border-border">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-semibold text-zinc-50">Filter by Group</h4>
+                            @if (hasActiveFilters()) {
+                            <button (click)="clearFilters()"
+                                class="text-xs text-primary hover:text-primary-hover transition-colors">
+                                Clear all
+                            </button>
+                            }
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            @if (uniqueGroups().length === 0) {
+                            <p class="text-xs text-zinc-500">No groups available</p>
+                            } @else {
+                            @for (group of uniqueGroups(); track group) {
+                            <button (click)="setFilterGroup(group)"
+                                class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                                [class]="filterGroup() === group 
                                                 ? 'bg-primary text-bg' 
                                                 : 'bg-surface-hover border border-border text-zinc-400 hover:border-primary hover:text-primary'">
-                                            {{ group }}
-                                        </button>
-                                    }
-                                }
-                            </div>
+                                {{ group }}
+                            </button>
+                            }
+                            }
                         </div>
                     </div>
+                </div>
                 }
             </div>
-            
+
             <button id="home-header-create-btn" pButton (click)="openCreateDialog()"
                 class="flex items-center gap-2 px-4 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-semibold cursor-pointer hover:bg-primary-hover transition-colors">
                 <i class="pi pi-plus"></i>
@@ -139,6 +139,9 @@
                         <th class="w-12 bg-surface-hover/50 p-4">
                             <p-tableHeaderCheckbox />
                         </th>
+                        <th class="w-10 bg-surface-hover/50 p-4 text-center">
+                            <i class="pi pi-star text-zinc-500 text-xs"></i>
+                        </th>
                         <th
                             class="bg-surface-hover/50 p-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">
                             Name</th>
@@ -168,6 +171,16 @@
                         <!-- Checkbox -->
                         <td class="p-4">
                             <p-tableCheckbox [value]="profile" />
+                        </td>
+
+                        <!-- Pin -->
+                        <td class="p-4 text-center">
+                            <button [id]="'home-profile-' + i + '-pin-btn'" (click)="togglePin(profile, $event)"
+                                class="w-7 h-7 rounded-md transition-colors flex items-center justify-center" [class]="profile.metadata?.isPinned 
+                                    ? 'text-yellow-400 hover:text-yellow-300' 
+                                    : 'text-zinc-600 hover:text-zinc-400'">
+                                <i [class]="profile.metadata?.isPinned ? 'pi pi-star-fill' : 'pi pi-star'"></i>
+                            </button>
                         </td>
 
                         <!-- Name with Start button -->
@@ -201,10 +214,27 @@
 
                         <!-- Tags -->
                         <td class="p-4">
+                            @if (profile.metadata?.tags && profile.metadata.tags.length > 0) {
+                            <div class="flex flex-wrap gap-1">
+                                @for (tag of profile.metadata.tags.slice(0, 3); track tag) {
+                                <span
+                                    class="px-2 py-0.5 bg-primary/20 border border-primary/40 rounded text-xs text-primary">
+                                    {{ tag }}
+                                </span>
+                                }
+                                @if (profile.metadata.tags.length > 3) {
+                                <span
+                                    class="px-2 py-0.5 bg-surface-hover border border-border rounded text-xs text-zinc-500">
+                                    +{{ profile.metadata.tags.length - 3 }}
+                                </span>
+                                }
+                            </div>
+                            } @else {
                             <button [id]="'home-profile-' + i + '-tags-btn'"
                                 class="w-7 h-7 rounded-md border border-border text-zinc-500 hover:border-primary hover:text-primary transition-colors flex items-center justify-center">
                                 <i class="pi pi-plus text-xs"></i>
                             </button>
+                            }
                         </td>
 
                         <!-- Notes -->
@@ -236,7 +266,7 @@
                 <!-- Empty state -->
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td colspan="7" class="p-8 text-center text-zinc-500">
+                        <td colspan="8" class="p-8 text-center text-zinc-500">
                             No profiles in this folder
                         </td>
                     </tr>
@@ -424,6 +454,53 @@
                 </button>
                 }
             </div>
+        </div>
+
+        <!-- Tags -->
+        <div id="home-edit-dialog-tags-section">
+            <label class="block text-xs font-medium text-zinc-500 mb-2">Tags</label>
+            <div class="flex flex-wrap gap-2">
+                <input id="home-edit-dialog-tags-input" pInputText type="text"
+                    placeholder="Type and press Enter to add tags"
+                    class="flex-1 min-w-[200px] bg-bg border border-border rounded-lg px-4 py-2.5 text-zinc-50 text-sm focus:border-primary outline-none"
+                    (keydown.enter)="addTag($event)" />
+            </div>
+            @if (editTags().length > 0) {
+            <div class="flex flex-wrap gap-2 mt-2">
+                @for (tag of editTags(); track tag; let i = $index) {
+                <span
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/20 border border-primary/40 rounded-lg text-xs text-primary">
+                    {{ tag }}
+                    <button (click)="removeTag(i)" class="hover:text-white transition-colors">
+                        <i class="pi pi-times text-[10px]"></i>
+                    </button>
+                </span>
+                }
+            </div>
+            }
+        </div>
+
+        <!-- Launch URL -->
+        <div id="home-edit-dialog-url-section">
+            <label for="home-edit-dialog-url-input" class="block text-xs font-medium text-zinc-500 mb-2">Launch
+                URL</label>
+            <input id="home-edit-dialog-url-input" pInputText type="url" [ngModel]="editLaunchUrl()"
+                (ngModelChange)="editLaunchUrl.set($event)" placeholder="https://example.com"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-zinc-50 text-sm focus:border-primary outline-none" />
+            <p class="text-xs text-zinc-600 mt-1">Browser will open this URL when starting the profile</p>
+        </div>
+
+        <!-- Pin to Top -->
+        <div id="home-edit-dialog-pin-section" class="flex items-center justify-between">
+            <div>
+                <label class="block text-xs font-medium text-zinc-500">Pin to Top</label>
+                <p class="text-xs text-zinc-600">Keep this profile at the top of the list</p>
+            </div>
+            <button (click)="editIsPinned.set(!editIsPinned())" class="w-12 h-7 rounded-full transition-colors relative"
+                [class]="editIsPinned() ? 'bg-primary' : 'bg-surface-hover border border-border'">
+                <span class="absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-all"
+                    [class]="editIsPinned() ? 'left-6' : 'left-1'"></span>
+            </button>
         </div>
 
         <!-- Notes -->
