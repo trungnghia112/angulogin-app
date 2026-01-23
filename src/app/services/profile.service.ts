@@ -217,13 +217,24 @@ export class ProfileService {
 
     async refreshProfileStatus(): Promise<void> {
         const current = this.profiles();
+        if (current.length === 0) return;
+
+        let hasChanges = false;
         const updated = await Promise.all(
-            current.map(async (p) => ({
-                ...p,
-                isRunning: await this.isProfileRunning(p.path),
-            }))
+            current.map(async (p) => {
+                const isRunning = await this.isProfileRunning(p.path);
+                if (p.isRunning !== isRunning) {
+                    hasChanges = true;
+                    return { ...p, isRunning };
+                }
+                return p; // Keep same reference if no change
+            })
         );
-        this.profiles.set(updated);
+
+        // Only trigger re-render if something actually changed
+        if (hasChanges) {
+            this.profiles.set(updated);
+        }
     }
 
     async launchBrowser(profilePath: string, browser: string, url?: string): Promise<void> {

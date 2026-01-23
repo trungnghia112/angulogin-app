@@ -187,11 +187,11 @@ export class Home implements OnInit, OnDestroy {
             }
         });
 
-        this.statusInterval = setInterval(() => {
-            if (this.profiles().length > 0) {
-                this.profileService.refreshProfileStatus();
-            }
-        }, 10000);
+        // Start status refresh interval (30s instead of 10s for better performance)
+        this.startStatusInterval();
+
+        // Pause refresh when tab is not visible
+        document.addEventListener('visibilitychange', this.handleVisibilityChange);
 
         // Debounced search
         this.searchSubject
@@ -199,6 +199,34 @@ export class Home implements OnInit, OnDestroy {
             .subscribe((value) => {
                 this.searchText.set(value);
             });
+    }
+
+    private handleVisibilityChange = (): void => {
+        if (document.hidden) {
+            this.stopStatusInterval();
+        } else {
+            this.startStatusInterval();
+            // Refresh immediately when tab becomes visible
+            if (this.profiles().length > 0) {
+                this.profileService.refreshProfileStatus();
+            }
+        }
+    };
+
+    private startStatusInterval(): void {
+        if (this.statusInterval) return;
+        this.statusInterval = setInterval(() => {
+            if (this.profiles().length > 0 && !document.hidden) {
+                this.profileService.refreshProfileStatus();
+            }
+        }, 30000); // 30 seconds instead of 10
+    }
+
+    private stopStatusInterval(): void {
+        if (this.statusInterval) {
+            clearInterval(this.statusInterval);
+            this.statusInterval = null;
+        }
     }
 
     @HostListener('window:keydown', ['$event'])
@@ -214,9 +242,8 @@ export class Home implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        if (this.statusInterval) {
-            clearInterval(this.statusInterval);
-        }
+        this.stopStatusInterval();
+        document.removeEventListener('visibilitychange', this.handleVisibilityChange);
     }
 
     // Tab methods
