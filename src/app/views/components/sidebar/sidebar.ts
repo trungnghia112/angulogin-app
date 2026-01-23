@@ -4,6 +4,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { Folder } from '../../../models/folder.model';
+import { isTauriAvailable } from '../../../core/utils/platform.util';
 
 @Component({
     selector: 'app-sidebar',
@@ -46,6 +47,31 @@ export class Sidebar {
 
     protected openProfilesDirectoryDialog(): void {
         this.showProfilesDirectoryDialog.set(true);
+    }
+
+    protected async browseFolder(): Promise<void> {
+        // Only works in Tauri environment
+        if (!isTauriAvailable()) {
+            console.log('[Mock] browseFolder - Tauri not available');
+            return;
+        }
+
+        try {
+            // Dynamic import to avoid errors in web mode
+            const { open } = await import('@tauri-apps/plugin-dialog');
+
+            const selected = await open({
+                directory: true,
+                multiple: false,
+                title: 'Select Chrome Profiles Directory',
+            });
+
+            if (selected && typeof selected === 'string') {
+                this.profilesDirectoryPath.set(selected);
+            }
+        } catch (error) {
+            console.error('Failed to open folder dialog:', error);
+        }
     }
 
     protected saveProfilesDirectory(): void {
