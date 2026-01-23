@@ -272,6 +272,51 @@
                 </ng-template>
             </p-table>
         </div>
+
+        <!-- Sticky Table Footer (Paginator + Actions) -->
+        @if (profiles().length > 0 && activeTab() === 'profiles') {
+        <div id="home-table-footer"
+            class="mt-4 bg-surface border border-border rounded-xl overflow-hidden sticky bottom-0 z-10 shadow-lg">
+            <!-- Paginator Row -->
+            <div id="home-paginator-container" class="px-4 py-1 border-b border-border/50">
+                <p-paginator [rows]="rowsPerPage()" [totalRecords]="filteredProfiles().length" [first]="first()"
+                    [rowsPerPageOptions]="[5, 10, 20]" (onPageChange)="onPaginatorChange($event)"
+                    [showCurrentPageReport]="true"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} profiles" />
+            </div>
+
+            <!-- Bulk Actions Row (Only visible when selected) -->
+            @if (selectedProfiles().length > 0) {
+            <div id="home-footer" class="flex items-center justify-between px-6 py-3 bg-surface-hover/30">
+                <div id="home-footer-actions" class="flex items-center gap-2">
+                    <button id="home-footer-clear-btn" (click)="clearSelection()"
+                        class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
+                        title="Clear selection">
+                        <i class="pi pi-times"></i>
+                    </button>
+                    <div class="w-px h-6 bg-border mx-2"></div>
+                    <button id="home-footer-start-all-btn" (click)="bulkLaunch()"
+                        class="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary text-primary hover:bg-primary hover:text-bg transition-colors"
+                        title="Launch all selected">
+                        <i class="pi pi-play"></i>
+                        <span class="text-sm font-medium">Launch All</span>
+                    </button>
+                    <button id="home-footer-delete-btn" (click)="bulkDelete()"
+                        class="flex items-center gap-2 px-3 py-2 rounded-lg border border-error text-error hover:bg-error hover:text-white transition-colors"
+                        title="Delete selected">
+                        <i class="pi pi-trash"></i>
+                        <span class="text-sm font-medium">Delete</span>
+                    </button>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="home-footer-selected-count" class="text-sm font-medium text-primary">
+                        {{ selectedProfiles().length }} profiles selected
+                    </span>
+                </div>
+            </div>
+            }
+        </div>
+        }
         } @else {
         <!-- Other tabs placeholder -->
         <div id="home-tab-placeholder" class="flex flex-col items-center justify-center py-16 text-center">
@@ -286,215 +331,180 @@
         }
     </div>
 
-    <!-- Sticky Paginator at the bottom -->
-    @if (profiles().length > 0 && activeTab() === 'profiles') {
-    <div id="home-paginator-container" class="bg-surface border-t border-border px-6 py-2 sticky bottom-0 z-10">
-        <p-paginator [rows]="rowsPerPage()" [totalRecords]="filteredProfiles().length" [first]="first()"
-            [rowsPerPageOptions]="[5, 10, 20]" (onPageChange)="onPaginatorChange($event)" [showCurrentPageReport]="true"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} profiles" />
-    </div>
-    }
-
-    <!-- Bottom Action Bar -->
-    @if (selectedProfiles().length > 0) {
-    <footer id="home-footer" class="flex items-center justify-between px-6 py-3 border-t border-border bg-surface z-20">
-        <div id="home-footer-actions" class="flex items-center gap-2">
-            <button id="home-footer-clear-btn" (click)="clearSelection()"
-                class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
-                title="Clear selection">
-                <i class="pi pi-times"></i>
-            </button>
-            <div class="w-px h-6 bg-border mx-2"></div>
-            <button id="home-footer-start-all-btn" (click)="bulkLaunch()"
-                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary text-primary hover:bg-primary hover:text-bg transition-colors"
-                title="Launch all selected">
-                <i class="pi pi-play"></i>
-                <span class="text-sm font-medium">Launch All</span>
-            </button>
-            <button id="home-footer-delete-btn" (click)="bulkDelete()"
-                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-error text-error hover:bg-error hover:text-white transition-colors"
-                title="Delete selected">
-                <i class="pi pi-trash"></i>
-                <span class="text-sm font-medium">Delete</span>
-            </button>
+    <!-- Create Profile Dialog -->
+    <p-dialog id="home-create-dialog" header="Create New Profile" [(visible)]="showCreateDialog" [modal]="true"
+        [style]="{ width: '400px' }" [draggable]="false" [resizable]="false">
+        <div id="home-create-dialog-content" class="py-2">
+            <label for="home-create-dialog-name-input" class="block text-xs font-medium text-zinc-500 mb-2">Profile
+                Name</label>
+            <input pInputText id="home-create-dialog-name-input" type="text" [ngModel]="newProfileName()"
+                (ngModelChange)="newProfileName.set($event)" placeholder="e.g., Work, Personal"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none" />
         </div>
-        <span id="home-footer-selected-count" class="text-sm text-zinc-500">{{ selectedProfiles().length }}
-            selected</span>
-    </footer>
-    }
-</div>
-
-<!-- Create Profile Dialog -->
-<p-dialog id="home-create-dialog" header="Create New Profile" [(visible)]="showCreateDialog" [modal]="true"
-    [style]="{ width: '400px' }" [draggable]="false" [resizable]="false">
-    <div id="home-create-dialog-content" class="py-2">
-        <label for="home-create-dialog-name-input" class="block text-xs font-medium text-zinc-500 mb-2">Profile
-            Name</label>
-        <input pInputText id="home-create-dialog-name-input" type="text" [ngModel]="newProfileName()"
-            (ngModelChange)="newProfileName.set($event)" placeholder="e.g., Work, Personal"
-            class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none" />
-    </div>
-    <ng-template #footer>
-        <div id="home-create-dialog-footer" class="flex justify-end gap-3 pt-2">
-            <button id="home-create-dialog-cancel-btn" pButton
-                class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
-                (click)="showCreateDialog.set(false)">Cancel</button>
-            <button id="home-create-dialog-submit-btn" pButton
-                class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
-                (click)="createProfile()">Create</button>
-        </div>
-    </ng-template>
-</p-dialog>
-
-<!-- Rename Profile Dialog -->
-<p-dialog id="home-rename-dialog" header="Rename Profile" [(visible)]="showRenameDialog" [modal]="true"
-    [style]="{ width: '400px' }" [draggable]="false" [resizable]="false">
-    <div id="home-rename-dialog-content" class="py-2">
-        <label for="home-rename-dialog-name-input" class="block text-xs font-medium text-zinc-500 mb-2">New Name</label>
-        <input pInputText id="home-rename-dialog-name-input" type="text" [ngModel]="renameProfileName()"
-            (ngModelChange)="renameProfileName.set($event)"
-            class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none" />
-    </div>
-    <ng-template #footer>
-        <div id="home-rename-dialog-footer" class="flex justify-end gap-3 pt-2">
-            <button id="home-rename-dialog-cancel-btn" pButton
-                class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
-                (click)="showRenameDialog.set(false)">Cancel</button>
-            <button id="home-rename-dialog-submit-btn" pButton
-                class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
-                (click)="renameProfile()">Rename</button>
-        </div>
-    </ng-template>
-</p-dialog>
-
-<!-- Edit Profile Dialog -->
-<p-dialog id="home-edit-dialog" header="Edit Profile" [(visible)]="showEditDialog" [modal]="true"
-    [style]="{ width: '500px' }" [draggable]="false" [resizable]="false">
-    <div id="home-edit-dialog-content" class="py-2 space-y-5">
-        <!-- Icon -->
-        <div id="home-edit-dialog-icon-section">
-            <label class="block text-xs font-medium text-zinc-500 mb-2">Icon</label>
-            <div id="home-edit-dialog-icon-options" class="flex flex-wrap gap-2">
-                @for (emoji of emojiOptions; track emoji; let i = $index) {
-                <button [id]="'home-edit-dialog-emoji-' + i"
-                    class="w-10 h-10 rounded-lg border flex items-center justify-center text-xl cursor-pointer transition-all duration-150"
-                    [class]="editEmoji() === emoji ? 'bg-primary border-primary' : 'bg-surface-hover border-border hover:border-primary'"
-                    (click)="selectEmoji(emoji)">
-                    {{ emoji }}
-                </button>
-                }
+        <ng-template #footer>
+            <div id="home-create-dialog-footer" class="flex justify-end gap-3 pt-2">
+                <button id="home-create-dialog-cancel-btn" pButton
+                    class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
+                    (click)="showCreateDialog.set(false)">Cancel</button>
+                <button id="home-create-dialog-submit-btn" pButton
+                    class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
+                    (click)="createProfile()">Create</button>
             </div>
-        </div>
+        </ng-template>
+    </p-dialog>
 
-        <!-- Group -->
-        <div id="home-edit-dialog-group-section">
-            <label class="block text-xs font-medium text-zinc-500 mb-2">Group</label>
-            <div id="home-edit-dialog-group-options" class="flex flex-wrap gap-2">
-                @for (group of groupOptions; track group; let i = $index) {
-                <button [id]="'home-edit-dialog-group-' + i"
-                    class="px-3 py-2 rounded-lg border text-sm cursor-pointer transition-all duration-150"
-                    [class]="editGroup() === group ? 'bg-primary border-primary text-bg' : 'bg-surface-hover border-border text-zinc-400 hover:border-primary'"
-                    (click)="selectGroup(group)">
-                    {{ group }}
-                </button>
-                }
-            </div>
+    <!-- Rename Profile Dialog -->
+    <p-dialog id="home-rename-dialog" header="Rename Profile" [(visible)]="showRenameDialog" [modal]="true"
+        [style]="{ width: '400px' }" [draggable]="false" [resizable]="false">
+        <div id="home-rename-dialog-content" class="py-2">
+            <label for="home-rename-dialog-name-input" class="block text-xs font-medium text-zinc-500 mb-2">New
+                Name</label>
+            <input pInputText id="home-rename-dialog-name-input" type="text" [ngModel]="renameProfileName()"
+                (ngModelChange)="renameProfileName.set($event)"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none" />
         </div>
-
-        <!-- Shortcut -->
-        <div id="home-edit-dialog-shortcut-section">
-            <label class="block text-xs font-medium text-zinc-500 mb-2">Keyboard Shortcut</label>
-            <div id="home-edit-dialog-shortcut-options" class="flex flex-wrap gap-2">
-                @for (num of shortcutOptions; track num; let i = $index) {
-                <button [id]="'home-edit-dialog-shortcut-' + i"
-                    class="w-10 h-10 rounded-lg border flex items-center justify-center text-sm font-mono cursor-pointer transition-all duration-150"
-                    [class]="editShortcut() === num ? 'bg-primary border-primary text-bg' : 'bg-surface-hover border-border text-zinc-400 hover:border-primary'"
-                    (click)="selectShortcut(num)">
-                    ⌘{{ num }}
-                </button>
-                }
+        <ng-template #footer>
+            <div id="home-rename-dialog-footer" class="flex justify-end gap-3 pt-2">
+                <button id="home-rename-dialog-cancel-btn" pButton
+                    class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
+                    (click)="showRenameDialog.set(false)">Cancel</button>
+                <button id="home-rename-dialog-submit-btn" pButton
+                    class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
+                    (click)="renameProfile()">Rename</button>
             </div>
-        </div>
+        </ng-template>
+    </p-dialog>
 
-        <!-- Browser -->
-        <div id="home-edit-dialog-browser-section">
-            <label class="block text-xs font-medium text-zinc-500 mb-2">Default Browser</label>
-            <div id="home-edit-dialog-browser-options" class="flex flex-wrap gap-2">
-                @for (browser of availableBrowsers(); track browser; let i = $index) {
-                <button [id]="'home-edit-dialog-browser-' + i"
-                    class="px-3 py-2 rounded-lg border text-sm cursor-pointer transition-all duration-150 flex items-center gap-2"
-                    [class]="editBrowser() === browser ? 'bg-primary border-primary text-bg' : 'bg-surface-hover border-border text-zinc-400 hover:border-primary'"
-                    (click)="selectBrowser($any(browser))">
-                    <i [class]="'pi ' + browserInfo[browser].icon"></i>
-                    {{ browserInfo[browser].name }}
-                </button>
-                }
-            </div>
-        </div>
-
-        <!-- Tags -->
-        <div id="home-edit-dialog-tags-section">
-            <label class="block text-xs font-medium text-zinc-500 mb-2">Tags</label>
-            <div class="flex flex-wrap gap-2">
-                <input id="home-edit-dialog-tags-input" pInputText type="text"
-                    placeholder="Type and press Enter to add tags"
-                    class="flex-1 min-w-[200px] bg-bg border border-border rounded-lg px-4 py-2.5 text-zinc-50 text-sm focus:border-primary outline-none"
-                    (keydown.enter)="addTag($event)" />
-            </div>
-            @if (editTags().length > 0) {
-            <div class="flex flex-wrap gap-2 mt-2">
-                @for (tag of editTags(); track tag; let i = $index) {
-                <span
-                    class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/20 border border-primary/40 rounded-lg text-xs text-primary">
-                    {{ tag }}
-                    <button (click)="removeTag(i)" class="hover:text-white transition-colors">
-                        <i class="pi pi-times text-[10px]"></i>
+    <!-- Edit Profile Dialog -->
+    <p-dialog id="home-edit-dialog" header="Edit Profile" [(visible)]="showEditDialog" [modal]="true"
+        [style]="{ width: '500px' }" [draggable]="false" [resizable]="false">
+        <div id="home-edit-dialog-content" class="py-2 space-y-5">
+            <!-- Icon -->
+            <div id="home-edit-dialog-icon-section">
+                <label class="block text-xs font-medium text-zinc-500 mb-2">Icon</label>
+                <div id="home-edit-dialog-icon-options" class="flex flex-wrap gap-2">
+                    @for (emoji of emojiOptions; track emoji; let i = $index) {
+                    <button [id]="'home-edit-dialog-emoji-' + i"
+                        class="w-10 h-10 rounded-lg border flex items-center justify-center text-xl cursor-pointer transition-all duration-150"
+                        [class]="editEmoji() === emoji ? 'bg-primary border-primary' : 'bg-surface-hover border-border hover:border-primary'"
+                        (click)="selectEmoji(emoji)">
+                        {{ emoji }}
                     </button>
-                </span>
+                    }
+                </div>
+            </div>
+
+            <!-- Group -->
+            <div id="home-edit-dialog-group-section">
+                <label class="block text-xs font-medium text-zinc-500 mb-2">Group</label>
+                <div id="home-edit-dialog-group-options" class="flex flex-wrap gap-2">
+                    @for (group of groupOptions; track group; let i = $index) {
+                    <button [id]="'home-edit-dialog-group-' + i"
+                        class="px-3 py-2 rounded-lg border text-sm cursor-pointer transition-all duration-150"
+                        [class]="editGroup() === group ? 'bg-primary border-primary text-bg' : 'bg-surface-hover border-border text-zinc-400 hover:border-primary'"
+                        (click)="selectGroup(group)">
+                        {{ group }}
+                    </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Shortcut -->
+            <div id="home-edit-dialog-shortcut-section">
+                <label class="block text-xs font-medium text-zinc-500 mb-2">Keyboard Shortcut</label>
+                <div id="home-edit-dialog-shortcut-options" class="flex flex-wrap gap-2">
+                    @for (num of shortcutOptions; track num; let i = $index) {
+                    <button [id]="'home-edit-dialog-shortcut-' + i"
+                        class="w-10 h-10 rounded-lg border flex items-center justify-center text-sm font-mono cursor-pointer transition-all duration-150"
+                        [class]="editShortcut() === num ? 'bg-primary border-primary text-bg' : 'bg-surface-hover border-border text-zinc-400 hover:border-primary'"
+                        (click)="selectShortcut(num)">
+                        ⌘{{ num }}
+                    </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Browser -->
+            <div id="home-edit-dialog-browser-section">
+                <label class="block text-xs font-medium text-zinc-500 mb-2">Default Browser</label>
+                <div id="home-edit-dialog-browser-options" class="flex flex-wrap gap-2">
+                    @for (browser of availableBrowsers(); track browser; let i = $index) {
+                    <button [id]="'home-edit-dialog-browser-' + i"
+                        class="px-3 py-2 rounded-lg border text-sm cursor-pointer transition-all duration-150 flex items-center gap-2"
+                        [class]="editBrowser() === browser ? 'bg-primary border-primary text-bg' : 'bg-surface-hover border-border text-zinc-400 hover:border-primary'"
+                        (click)="selectBrowser($any(browser))">
+                        <i [class]="'pi ' + browserInfo[browser].icon"></i>
+                        {{ browserInfo[browser].name }}
+                    </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Tags -->
+            <div id="home-edit-dialog-tags-section">
+                <label class="block text-xs font-medium text-zinc-500 mb-2">Tags</label>
+                <div class="flex flex-wrap gap-2">
+                    <input id="home-edit-dialog-tags-input" pInputText type="text"
+                        placeholder="Type and press Enter to add tags"
+                        class="flex-1 min-w-[200px] bg-bg border border-border rounded-lg px-4 py-2.5 text-zinc-50 text-sm focus:border-primary outline-none"
+                        (keydown.enter)="addTag($event)" />
+                </div>
+                @if (editTags().length > 0) {
+                <div class="flex flex-wrap gap-2 mt-2">
+                    @for (tag of editTags(); track tag; let i = $index) {
+                    <span
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/20 border border-primary/40 rounded-lg text-xs text-primary">
+                        {{ tag }}
+                        <button (click)="removeTag(i)" class="hover:text-white transition-colors">
+                            <i class="pi pi-times text-[10px]"></i>
+                        </button>
+                    </span>
+                    }
+                </div>
                 }
             </div>
-            }
-        </div>
 
-        <!-- Launch URL -->
-        <div id="home-edit-dialog-url-section">
-            <label for="home-edit-dialog-url-input" class="block text-xs font-medium text-zinc-500 mb-2">Launch
-                URL</label>
-            <input id="home-edit-dialog-url-input" pInputText type="url" [ngModel]="editLaunchUrl()"
-                (ngModelChange)="editLaunchUrl.set($event)" placeholder="https://example.com"
-                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-zinc-50 text-sm focus:border-primary outline-none" />
-            <p class="text-xs text-zinc-600 mt-1">Browser will open this URL when starting the profile</p>
-        </div>
-
-        <!-- Pin to Top -->
-        <div id="home-edit-dialog-pin-section" class="flex items-center justify-between">
-            <div>
-                <label class="block text-xs font-medium text-zinc-500">Pin to Top</label>
-                <p class="text-xs text-zinc-600">Keep this profile at the top of the list</p>
+            <!-- Launch URL -->
+            <div id="home-edit-dialog-url-section">
+                <label for="home-edit-dialog-url-input" class="block text-xs font-medium text-zinc-500 mb-2">Launch
+                    URL</label>
+                <input id="home-edit-dialog-url-input" pInputText type="url" [ngModel]="editLaunchUrl()"
+                    (ngModelChange)="editLaunchUrl.set($event)" placeholder="https://example.com"
+                    class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-zinc-50 text-sm focus:border-primary outline-none" />
+                <p class="text-xs text-zinc-600 mt-1">Browser will open this URL when starting the profile</p>
             </div>
-            <button (click)="editIsPinned.set(!editIsPinned())" class="w-12 h-7 rounded-full transition-colors relative"
-                [class]="editIsPinned() ? 'bg-primary' : 'bg-surface-hover border border-border'">
-                <span class="absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-all"
-                    [class]="editIsPinned() ? 'left-6' : 'left-1'"></span>
-            </button>
-        </div>
 
-        <!-- Notes -->
-        <div id="home-edit-dialog-notes-section">
-            <label for="home-edit-dialog-notes-input" class="block text-xs font-medium text-zinc-500 mb-2">Notes</label>
-            <textarea id="home-edit-dialog-notes-input" [ngModel]="editNotes()" (ngModelChange)="editNotes.set($event)"
-                placeholder="What is this profile for?" rows="2"
-                class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none resize-none"></textarea>
+            <!-- Pin to Top -->
+            <div id="home-edit-dialog-pin-section" class="flex items-center justify-between">
+                <div>
+                    <label class="block text-xs font-medium text-zinc-500">Pin to Top</label>
+                    <p class="text-xs text-zinc-600">Keep this profile at the top of the list</p>
+                </div>
+                <button (click)="editIsPinned.set(!editIsPinned())"
+                    class="w-12 h-7 rounded-full transition-colors relative"
+                    [class]="editIsPinned() ? 'bg-primary' : 'bg-surface-hover border border-border'">
+                    <span class="absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-all"
+                        [class]="editIsPinned() ? 'left-6' : 'left-1'"></span>
+                </button>
+            </div>
+
+            <!-- Notes -->
+            <div id="home-edit-dialog-notes-section">
+                <label for="home-edit-dialog-notes-input"
+                    class="block text-xs font-medium text-zinc-500 mb-2">Notes</label>
+                <textarea id="home-edit-dialog-notes-input" [ngModel]="editNotes()"
+                    (ngModelChange)="editNotes.set($event)" placeholder="What is this profile for?" rows="2"
+                    class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none resize-none"></textarea>
+            </div>
         </div>
-    </div>
-    <ng-template #footer>
-        <div id="home-edit-dialog-footer" class="flex justify-end gap-3 pt-2">
-            <button id="home-edit-dialog-cancel-btn" pButton
-                class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
-                (click)="showEditDialog.set(false)">Cancel</button>
-            <button id="home-edit-dialog-submit-btn" pButton
-                class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
-                (click)="saveProfileEdit()">Save</button>
-        </div>
-    </ng-template>
-</p-dialog>
+        <ng-template #footer>
+            <div id="home-edit-dialog-footer" class="flex justify-end gap-3 pt-2">
+                <button id="home-edit-dialog-cancel-btn" pButton
+                    class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
+                    (click)="showEditDialog.set(false)">Cancel</button>
+                <button id="home-edit-dialog-submit-btn" pButton
+                    class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
+                    (click)="saveProfileEdit()">Save</button>
+            </div>
+        </ng-template>
+    </p-dialog>

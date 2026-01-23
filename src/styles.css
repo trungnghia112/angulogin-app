@@ -142,6 +142,10 @@ body {
     min-width: 60rem;
 }
 
+#home-table-footer {
+    min-width: 60rem;
+}
+
 /* Checkbox Dark Mode Overrides */
 .p-checkbox .p-checkbox-box {
     background-color: #1A1A1A !important;
