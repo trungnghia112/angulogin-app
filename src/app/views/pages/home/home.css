@@ -1,1 +1,49 @@
-/* Empty - All styles are now in Tailwind classes */
+/* Profile Table Custom Styles */
+.profile-table .p-datatable-table {
+    background-color: transparent !important;
+}
+
+.profile-table .p-datatable-thead>tr>th {
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    color: #71717A !important;
+}
+
+.profile-table .p-datatable-tbody>tr {
+    background-color: transparent !important;
+    transition: background-color 0.15s ease;
+}
+
+.profile-table .p-datatable-tbody>tr:hover {
+    background-color: rgba(38, 38, 38, 0.3) !important;
+}
+
+.profile-table .p-datatable-tbody>tr>td {
+    border: none !important;
+    border-bottom: 1px solid var(--color-border) !important;
+}
+
+.profile-table .p-paginator {
+    background-color: transparent !important;
+    border: none !important;
+    padding: 1rem !important;
+}
+
+.profile-table .p-paginator-element {
+    color: #71717A !important;
+}
+
+.profile-table .p-paginator-element:hover {
+    color: #FAFAFA !important;
+    background-color: var(--color-surface-hover) !important;
+}
+
+.profile-table .p-checkbox .p-checkbox-box {
+    background-color: var(--color-surface-hover) !important;
+    border-color: var(--color-border) !important;
+}
+
+.profile-table .p-checkbox .p-checkbox-box.p-highlight {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+}

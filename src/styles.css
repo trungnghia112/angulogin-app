@@ -7,12 +7,16 @@
     --color-surface: #1A1A1A;
     --color-surface-hover: #262626;
     --color-border: #2E2E2E;
-    --color-primary: #6366F1;
-    --color-primary-hover: #818CF8;
+    --color-rail: #0A0A0A;
+    --color-sidebar: #161616;
+    --color-primary: #4ADE80;
+    --color-primary-hover: #22C55E;
     --color-secondary: #22D3EE;
     --color-error: #EF4444;
     --color-success: #22C55E;
     --color-warning: #F59E0B;
+    --color-note-yellow: #EAB308;
+    --color-note-red: #EF4444;
 }
 
 /* Base styles */

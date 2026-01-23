@@ -1,3 +1,5 @@
+import { ProfileNote, ProfileStatus } from './folder.model';
+
 export type BrowserType = 'chrome' | 'brave' | 'edge' | 'arc';
 
 export interface ProfileMetadata {
@@ -6,17 +8,25 @@ export interface ProfileMetadata {
     group: string | null;
     shortcut: number | null;
     browser: BrowserType | null;
+    // New optional fields for mockup UI
+    folderId?: string | null;
+    status?: ProfileStatus;
+    proxyId?: string | null;
+    tagIds?: string[];
+    profileNotes?: ProfileNote[];
 }
 
 export interface Profile {
+    id?: string; // Optional for backward compatibility
     name: string;
     path: string;
     metadata?: ProfileMetadata;
     isRunning?: boolean;
-    size?: number;  // Size in bytes
+    size?: number;
+    // Display fields from mockup
+    osIcon?: 'apple' | 'windows' | 'android';
 }
 
 export interface AppSettings {
     profilesPath: string | null;
 }
-
