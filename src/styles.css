@@ -17,6 +17,9 @@
     --color-warning: #F59E0B;
     --color-note-yellow: #EAB308;
     --color-note-red: #EF4444;
+    
+    /* Layout spacing */
+    --spacing-header: 56px;
 }
 
 /* Base styles */
