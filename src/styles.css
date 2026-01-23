@@ -22,6 +22,11 @@
     --spacing-header: 56px;
 }
 
+[data-tauri-drag-region] {
+    cursor: default;
+    user-select: none;
+}
+
 /* Base styles */
 body {
     @apply bg-bg text-zinc-50 font-sans antialiased;
