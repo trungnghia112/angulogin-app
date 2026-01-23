@@ -89,6 +89,7 @@ export class Home implements OnInit, OnDestroy {
     // Table config
     protected readonly rowsPerPage = signal(5);
     protected readonly first = signal(0);
+    protected readonly viewMode = signal<'table' | 'grid'>('table');
 
     // Options
     protected readonly emojiOptions = EMOJI_OPTIONS;

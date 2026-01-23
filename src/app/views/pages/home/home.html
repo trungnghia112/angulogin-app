@@ -96,6 +96,18 @@
                 }
             </div>
 
+            <!-- View Mode Toggle -->
+            <div class="flex items-center border border-border rounded-lg overflow-hidden">
+                <button id="home-header-table-view-btn" (click)="viewMode.set('table')" class="p-2.5 transition-colors"
+                    [class]="viewMode() === 'table' ? 'bg-primary text-bg' : 'bg-surface text-zinc-400 hover:text-zinc-200'">
+                    <i class="pi pi-list text-sm"></i>
+                </button>
+                <button id="home-header-grid-view-btn" (click)="viewMode.set('grid')" class="p-2.5 transition-colors"
+                    [class]="viewMode() === 'grid' ? 'bg-primary text-bg' : 'bg-surface text-zinc-400 hover:text-zinc-200'">
+                    <i class="pi pi-th-large text-sm"></i>
+                </button>
+            </div>
+
             <button id="home-header-create-btn" pButton (click)="openCreateDialog()"
                 class="flex items-center gap-2 px-4 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-semibold cursor-pointer hover:bg-primary-hover transition-colors">
                 <i class="pi pi-plus"></i>
@@ -153,6 +165,8 @@
             </button>
         </div>
         } @else if (activeTab() === 'profiles') {
+        <!-- Profiles View - Table or Grid -->
+        @if (viewMode() === 'table') {
         <!-- Profiles Table -->
         <div id="home-profiles-table" class="bg-surface border border-border rounded-xl">
             <p-table [value]="filteredProfiles()" [(selection)]="selectedProfiles"
@@ -355,6 +369,51 @@
         </div>
         }
         } @else {
+        <!-- Grid View -->
+        <div id="home-profiles-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            @for (profile of filteredProfiles(); track profile.path; let i = $index) {
+            <div [id]="'home-profile-card-' + i"
+                class="bg-surface border border-border rounded-xl p-4 hover:border-primary/50 transition-all cursor-pointer relative group"
+                (click)="openEditDialog(profile, $event)">
+                <!-- Pin indicator -->
+                @if (profile.metadata?.isPinned) {
+                <div class="absolute top-2 right-2">
+                    <i class="pi pi-star-fill text-yellow-400 text-xs"></i>
+                </div>
+                }
+                <!-- Avatar/Emoji -->
+                <div class="w-14 h-14 rounded-xl bg-surface-hover flex items-center justify-center mb-3 text-2xl">
+                    {{ getProfileDisplay(profile) }}
+                </div>
+                <!-- Name -->
+                <h3 class="text-sm font-semibold text-zinc-50 mb-1 truncate">{{ profile.name }}</h3>
+                <!-- Tags -->
+                @if (profile.metadata?.tags?.length) {
+                <div class="flex flex-wrap gap-1 mb-2">
+                    @for (tag of profile.metadata!.tags!.slice(0, 2); track tag) {
+                    <span class="px-2 py-0.5 bg-primary/20 text-primary text-xs rounded">{{ tag }}</span>
+                    }
+                </div>
+                }
+                <!-- Actions -->
+                <div class="flex items-center gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button (click)="launchProfile(profile, $event)"
+                        class="flex-1 py-1.5 bg-primary text-bg text-xs font-medium rounded-lg hover:bg-primary-hover transition-colors">
+                        Start
+                    </button>
+                    <button (click)="openDuplicateDialog(profile, $event)"
+                        class="p-1.5 text-zinc-500 hover:text-primary transition-colors" title="Duplicate">
+                        <i class="pi pi-copy text-sm"></i>
+                    </button>
+                    <button (click)="deleteProfile(profile, $event)"
+                        class="p-1.5 text-zinc-500 hover:text-error transition-colors" title="Delete">
+                        <i class="pi pi-trash text-sm"></i>
+                    </button>
+                </div>
+            </div>
+            }
+        </div>
+        }
         <!-- Other tabs placeholder -->
         <div id="home-tab-placeholder" class="flex flex-col items-center justify-center py-16 text-center">
             <div id="home-tab-placeholder-icon"
