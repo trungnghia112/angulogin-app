@@ -3,14 +3,18 @@
  * Used to determine if the app is running in Tauri (native) or browser (dev) mode.
  */
 
+import { isTauri } from '@tauri-apps/api/core';
+
 /**
  * Checks if the Tauri runtime is available.
- * Tauri injects `window.__TAURI__` when running in native mode.
+ * Uses the official Tauri API for reliable detection.
  *
  * @returns true if running in Tauri, false if running in browser
  */
 export function isTauriAvailable(): boolean {
-    return typeof window !== 'undefined' && '__TAURI__' in window;
+    const available = isTauri();
+    console.log('[Platform] isTauriAvailable:', available);
+    return available;
 }
 
 /**
