@@ -133,10 +133,13 @@ body {
     border-color: #2E2E2E !important;
 }
 
-/* Disable internal scroll wrapper - scroll should be on home-content */
-.profile-table .p-datatable-table-container {
-    overflow: visible !important;
-    overflow-x: visible !important;
+/* Make table wrapper expand to content width so home-content handles scroll */
+#home-profiles-table {
+    min-width: 60rem;
+}
+
+.profile-table {
+    min-width: 60rem;
 }
 
 /* Checkbox Dark Mode Overrides */
