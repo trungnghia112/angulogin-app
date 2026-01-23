@@ -8,7 +8,10 @@ import {
     computed,
     OnInit,
     effect,
+    DestroyRef,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { TitleCasePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
@@ -61,6 +64,8 @@ export class Home implements OnInit, OnDestroy {
     private readonly settingsService = inject(SettingsService);
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly searchSubject = new Subject<string>();
     private statusInterval: ReturnType<typeof setInterval> | null = null;
 
     // Tabs
@@ -90,13 +95,32 @@ export class Home implements OnInit, OnDestroy {
     protected readonly browserInfo = BROWSER_INFO;
     protected readonly availableBrowsers = signal<string[]>(['chrome']);
 
-    // Group filter
+    // Search & Filter
+    protected readonly searchText = signal('');
     protected readonly filterGroup = signal<string | null>(null);
+    protected readonly showFiltersDropdown = signal(false);
+
     protected readonly filteredProfiles = computed(() => {
+        let result = this.profiles();
+        const search = this.searchText().toLowerCase().trim();
         const group = this.filterGroup();
-        const all = this.profiles();
-        if (!group) return all;
-        return all.filter((p) => p.metadata?.group === group);
+
+        // Apply search filter
+        if (search) {
+            result = result.filter(
+                (p) =>
+                    p.name.toLowerCase().includes(search) ||
+                    p.metadata?.notes?.toLowerCase().includes(search) ||
+                    p.metadata?.group?.toLowerCase().includes(search)
+            );
+        }
+
+        // Apply group filter
+        if (group) {
+            result = result.filter((p) => p.metadata?.group === group);
+        }
+
+        return result;
     });
 
     protected readonly uniqueGroups = computed(() => {
@@ -104,6 +128,17 @@ export class Home implements OnInit, OnDestroy {
             .map((p) => p.metadata?.group)
             .filter((g): g is string => !!g);
         return [...new Set(groups)];
+    });
+
+    protected readonly hasActiveFilters = computed(
+        () => this.searchText().trim() !== '' || this.filterGroup() !== null
+    );
+
+    protected readonly activeFilterCount = computed(() => {
+        let count = 0;
+        if (this.searchText().trim() !== '') count++;
+        if (this.filterGroup() !== null) count++;
+        return count;
     });
 
     protected readonly profilesUsed = computed(() => this.profiles().length);
@@ -141,6 +176,13 @@ export class Home implements OnInit, OnDestroy {
                 this.profileService.refreshProfileStatus();
             }
         }, 10000);
+
+        // Debounced search
+        this.searchSubject
+            .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+            .subscribe((value) => {
+                this.searchText.set(value);
+            });
     }
 
     @HostListener('window:keydown', ['$event'])
@@ -258,6 +300,24 @@ export class Home implements OnInit, OnDestroy {
 
     setFilterGroup(group: string | null): void {
         this.filterGroup.set(this.filterGroup() === group ? null : group);
+    }
+
+    onSearchInput(value: string): void {
+        this.searchSubject.next(value);
+    }
+
+    toggleFiltersDropdown(): void {
+        this.showFiltersDropdown.update((v) => !v);
+    }
+
+    closeFiltersDropdown(): void {
+        this.showFiltersDropdown.set(false);
+    }
+
+    clearFilters(): void {
+        this.searchText.set('');
+        this.filterGroup.set(null);
+        this.showFiltersDropdown.set(false);
     }
 
     // Dialog methods

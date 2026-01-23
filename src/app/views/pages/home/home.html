@@ -6,23 +6,70 @@
         <div id="home-header-search" class="flex-1 max-w-md">
             <div class="relative">
                 <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
-                <input id="home-header-search-input" pInputText type="text" placeholder="Search"
+                <input id="home-header-search-input" pInputText type="text" placeholder="Search profiles..."
+                    [ngModel]="searchText()" (ngModelChange)="onSearchInput($event)"
                     class="w-full bg-surface border border-border rounded-lg pl-9 pr-4 py-2.5 text-zinc-50 text-sm placeholder-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none transition-all" />
             </div>
         </div>
 
         <!-- Actions -->
         <div id="home-header-actions" class="flex items-center gap-2 ml-auto">
-            <button id="home-header-refresh-btn"
+            <button id="home-header-refresh-btn" (click)="scanProfiles()"
                 class="flex items-center gap-2 px-3 py-2.5 bg-surface border border-border rounded-lg text-zinc-300 text-sm hover:bg-surface-hover transition-colors">
                 <i class="pi pi-refresh text-sm"></i>
                 <span>Refresh</span>
             </button>
-            <button id="home-header-filters-btn"
-                class="flex items-center gap-2 px-3 py-2.5 bg-surface border border-border rounded-lg text-zinc-300 text-sm hover:bg-surface-hover transition-colors">
-                <i class="pi pi-filter text-sm"></i>
-                <span>Filters</span>
-            </button>
+            
+            <!-- Filters Button with Dropdown -->
+            <div class="relative">
+                <button id="home-header-filters-btn" (click)="toggleFiltersDropdown()"
+                    class="flex items-center gap-2 px-3 py-2.5 border rounded-lg text-sm transition-colors"
+                    [class]="hasActiveFilters() 
+                        ? 'bg-primary/20 border-primary text-primary' 
+                        : 'bg-surface border-border text-zinc-300 hover:bg-surface-hover'">
+                    <i class="pi pi-filter text-sm"></i>
+                    <span>Filters</span>
+                    @if (activeFilterCount() > 0) {
+                        <span class="ml-1 px-1.5 py-0.5 bg-primary text-bg text-xs font-bold rounded-full min-w-[18px] text-center">
+                            {{ activeFilterCount() }}
+                        </span>
+                    }
+                </button>
+                
+                <!-- Filters Dropdown -->
+                @if (showFiltersDropdown()) {
+                    <div id="home-filters-dropdown" 
+                        class="absolute right-0 top-full mt-2 w-64 bg-surface border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <div class="p-4 border-b border-border">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-sm font-semibold text-zinc-50">Filter by Group</h4>
+                                @if (hasActiveFilters()) {
+                                    <button (click)="clearFilters()" 
+                                        class="text-xs text-primary hover:text-primary-hover transition-colors">
+                                        Clear all
+                                    </button>
+                                }
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                @if (uniqueGroups().length === 0) {
+                                    <p class="text-xs text-zinc-500">No groups available</p>
+                                } @else {
+                                    @for (group of uniqueGroups(); track group) {
+                                        <button (click)="setFilterGroup(group)"
+                                            class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                                            [class]="filterGroup() === group 
+                                                ? 'bg-primary text-bg' 
+                                                : 'bg-surface-hover border border-border text-zinc-400 hover:border-primary hover:text-primary'">
+                                            {{ group }}
+                                        </button>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            
             <button id="home-header-create-btn" pButton (click)="openCreateDialog()"
                 class="flex items-center gap-2 px-4 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-semibold cursor-pointer hover:bg-primary-hover transition-colors">
                 <i class="pi pi-plus"></i>
@@ -65,6 +112,19 @@
             <h3 id="home-empty-title" class="text-lg font-semibold text-zinc-50 mb-2">No Profiles Found</h3>
             <p id="home-empty-desc" class="text-sm text-zinc-500">Enter the path to your Chrome profiles folder and
                 click Scan</p>
+        </div>
+        } @else if (filteredProfiles().length === 0 && hasActiveFilters()) {
+        <!-- No search results -->
+        <div id="home-no-results" class="flex flex-col items-center justify-center py-16 text-center">
+            <div class="w-20 h-20 rounded-2xl bg-surface border border-border flex items-center justify-center mb-5">
+                <i class="pi pi-search text-3xl text-zinc-500"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-zinc-50 mb-2">No Matching Profiles</h3>
+            <p class="text-sm text-zinc-500 mb-4">Try adjusting your search or filters</p>
+            <button (click)="clearFilters()"
+                class="px-4 py-2 bg-primary text-bg text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors">
+                Clear filters
+            </button>
         </div>
         } @else if (activeTab() === 'profiles') {
         <!-- Profiles Table -->
