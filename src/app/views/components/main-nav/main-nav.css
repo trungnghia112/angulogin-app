@@ -1,1 +1,18 @@
 /* MainNav specific styles */
+
+/* Logo animation - slow color rotation */
+.logo-animated {
+    animation: logoColorShift 8s ease-in-out infinite;
+}
+
+@keyframes logoColorShift {
+
+    0%,
+    100% {
+        filter: hue-rotate(0deg);
+    }
+
+    50% {
+        filter: hue-rotate(45deg);
+    }
+}
