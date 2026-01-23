@@ -564,4 +564,69 @@ export class Home implements OnInit, OnDestroy {
             this.rowsPerPage.set(event.rows);
         }
     }
+
+    // ==== Bulk Actions ====
+
+    async bulkLaunch(): Promise<void> {
+        const profiles = this.selectedProfiles();
+        if (profiles.length === 0) return;
+
+        for (const profile of profiles) {
+            const browser = profile.metadata?.browser || 'chrome';
+            const url = profile.metadata?.launchUrl || undefined;
+            try {
+                await this.profileService.launchBrowser(profile.path, browser, url);
+            } catch (e) {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: `Failed to launch ${profile.name}`,
+                });
+            }
+        }
+
+        this.messageService.add({
+            severity: 'success',
+            summary: 'Launched',
+            detail: `${profiles.length} profiles launched`,
+        });
+    }
+
+    bulkDelete(): void {
+        const profiles = this.selectedProfiles();
+        if (profiles.length === 0) return;
+
+        this.confirmationService.confirm({
+            key: 'confirmDialog',
+            message: `Are you sure you want to delete ${profiles.length} profiles?`,
+            header: 'Delete Multiple Profiles',
+            icon: 'pi pi-exclamation-triangle',
+            acceptButtonStyleClass: 'p-button-danger',
+            accept: async () => {
+                let deleted = 0;
+                for (const profile of profiles) {
+                    try {
+                        await this.profileService.deleteProfile(profile.path, this.profilesPath());
+                        deleted++;
+                    } catch (e) {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Error',
+                            detail: `Failed to delete ${profile.name}`,
+                        });
+                    }
+                }
+                this.selectedProfiles.set([]);
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Deleted',
+                    detail: `${deleted} profiles deleted`,
+                });
+            },
+        });
+    }
+
+    clearSelection(): void {
+        this.selectedProfiles.set([]);
+    }
 }

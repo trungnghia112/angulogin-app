@@ -300,46 +300,23 @@
     @if (selectedProfiles().length > 0) {
     <footer id="home-footer" class="flex items-center justify-between px-6 py-3 border-t border-border bg-surface z-20">
         <div id="home-footer-actions" class="flex items-center gap-2">
-            <button id="home-footer-edit-btn"
+            <button id="home-footer-clear-btn" (click)="clearSelection()"
                 class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
-                title="Edit">
-                <i class="pi pi-pencil"></i>
-            </button>
-            <button id="home-footer-duplicate-btn"
-                class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
-                title="Duplicate">
-                <i class="pi pi-copy"></i>
-            </button>
-            <button id="home-footer-move-btn"
-                class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
-                title="Move to folder">
-                <i class="pi pi-folder"></i>
-            </button>
-            <button id="home-footer-sync-btn"
-                class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
-                title="Sync">
-                <i class="pi pi-sync"></i>
-            </button>
-            <button id="home-footer-refresh-btn"
-                class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
-                title="Refresh">
-                <i class="pi pi-refresh"></i>
+                title="Clear selection">
+                <i class="pi pi-times"></i>
             </button>
             <div class="w-px h-6 bg-border mx-2"></div>
-            <button id="home-footer-start-all-btn"
-                class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-primary hover:border-primary transition-colors flex items-center justify-center"
-                title="Start all">
+            <button id="home-footer-start-all-btn" (click)="bulkLaunch()"
+                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary text-primary hover:bg-primary hover:text-bg transition-colors"
+                title="Launch all selected">
                 <i class="pi pi-play"></i>
+                <span class="text-sm font-medium">Launch All</span>
             </button>
-            <button id="home-footer-stop-all-btn"
-                class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-warning hover:border-warning transition-colors flex items-center justify-center"
-                title="Stop all">
-                <i class="pi pi-pause"></i>
-            </button>
-            <button id="home-footer-delete-btn"
-                class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-error hover:border-error transition-colors flex items-center justify-center"
-                title="Delete">
+            <button id="home-footer-delete-btn" (click)="bulkDelete()"
+                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-error text-error hover:bg-error hover:text-white transition-colors"
+                title="Delete selected">
                 <i class="pi pi-trash"></i>
+                <span class="text-sm font-medium">Delete</span>
             </button>
         </div>
         <span id="home-footer-selected-count" class="text-sm text-zinc-500">{{ selectedProfiles().length }}
