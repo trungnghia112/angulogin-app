@@ -70,8 +70,7 @@
         <!-- Profiles Table -->
         <div id="home-profiles-table" class="bg-surface border border-border rounded-xl overflow-hidden">
             <p-table [value]="filteredProfiles()" [(selection)]="selectedProfiles"
-                (selectionChange)="onSelectionChange($event)" [paginator]="true" [rows]="rowsPerPage()"
-                [first]="first()" (onPage)="onPageChange($event)" [rowsPerPageOptions]="[5, 10, 20]" dataKey="path"
+                (selectionChange)="onSelectionChange($event)" [first]="first()" [rows]="rowsPerPage()" dataKey="path"
                 [tableStyle]="{ 'min-width': '60rem' }" class="profile-table">
 
                 <!-- Header -->
@@ -198,9 +197,18 @@
         }
     </div>
 
+    <!-- Sticky Paginator at the bottom -->
+    @if (profiles().length > 0 && activeTab() === 'profiles') {
+    <div id="home-paginator-container" class="bg-surface border-t border-border px-6 py-2 sticky bottom-0 z-10">
+        <p-paginator [rows]="rowsPerPage()" [totalRecords]="filteredProfiles().length" [first]="first()"
+            [rowsPerPageOptions]="[5, 10, 20]" (onPageChange)="onPaginatorChange($event)" [showCurrentPageReport]="true"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} profiles" />
+    </div>
+    }
+
     <!-- Bottom Action Bar -->
     @if (selectedProfiles().length > 0) {
-    <footer id="home-footer" class="flex items-center justify-between px-6 py-3 border-t border-border bg-surface">
+    <footer id="home-footer" class="flex items-center justify-between px-6 py-3 border-t border-border bg-surface z-20">
         <div id="home-footer-actions" class="flex items-center gap-2">
             <button id="home-footer-edit-btn"
                 class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"

@@ -15,6 +15,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
+import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ProfileService } from '../../../services/profile.service';
 import { SettingsService } from '../../../services/settings.service';
@@ -51,6 +52,7 @@ interface Tab {
         ProgressSpinnerModule,
         DialogModule,
         TableModule,
+        PaginatorModule,
     ],
 })
 export class Home implements OnInit, OnDestroy {
@@ -397,5 +399,14 @@ export class Home implements OnInit, OnDestroy {
     onPageChange(event: { first: number; rows: number }): void {
         this.first.set(event.first);
         this.rowsPerPage.set(event.rows);
+    }
+
+    onPaginatorChange(event: PaginatorState): void {
+        if (event.first !== undefined) {
+            this.first.set(event.first);
+        }
+        if (event.rows !== undefined) {
+            this.rowsPerPage.set(event.rows);
+        }
     }
 }

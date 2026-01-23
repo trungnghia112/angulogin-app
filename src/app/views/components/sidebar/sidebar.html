@@ -62,8 +62,9 @@
 </aside>
 
 <!-- Profiles Directory Dialog -->
-<p-dialog id="sidebar-profiles-dir-dialog" header="Profiles Directory" [(visible)]="showProfilesDirectoryDialog"
-    [modal]="true" [style]="{ width: '480px' }" [draggable]="false" [resizable]="false">
+<p-dialog id="sidebar-profiles-dir-dialog" header="Profiles Directory" [visible]="showProfilesDirectoryDialog()"
+    (visibleChange)="showProfilesDirectoryDialog.set($event)" [modal]="true" [style]="{ width: '480px' }"
+    [draggable]="false" [resizable]="false">
     <div id="sidebar-profiles-dir-dialog-content" class="py-2 space-y-4">
         <p class="text-sm text-zinc-400">
             Set the directory where your Chrome profiles are stored. This path will be used to scan and manage your

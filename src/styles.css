@@ -27,6 +27,11 @@
     user-select: none;
 }
 
+#main-nav-logo {
+    /* Safe area for Mac traffic lights on transparent title bar */
+    padding-top: 12px;
+}
+
 /* Base styles */
 body {
     @apply bg-bg text-zinc-50 font-sans antialiased;
@@ -88,6 +93,125 @@ body {
 .p-dialog-mask {
     background-color: rgba(0, 0, 0, 0.6) !important;
     backdrop-filter: blur(4px) !important;
+}
+
+/* Table Dark Mode Overrides */
+.profile-table .p-datatable-header {
+    background-color: transparent !important;
+    border-color: #2E2E2E !important;
+}
+
+.profile-table .p-datatable-thead>tr>th {
+    background-color: rgba(38, 38, 38, 0.5) !important;
+    color: #A1A1AA !important;
+    border-color: #2E2E2E !important;
+}
+
+.profile-table .p-datatable-tbody>tr {
+    background-color: transparent !important;
+    color: #FAFAFA !important;
+    border-color: #2E2E2E !important;
+}
+
+.profile-table .p-datatable-tbody>tr:hover {
+    background-color: rgba(38, 38, 38, 0.3) !important;
+}
+
+.profile-table .p-datatable-tfoot>tr>td {
+    background-color: transparent !important;
+    border-color: #2E2E2E !important;
+}
+
+/* Paginator Dark Mode Overrides */
+.p-paginator {
+    background-color: transparent !important;
+    color: #A1A1AA !important;
+    border: none !important;
+}
+
+.p-paginator .p-paginator-pages .p-paginator-page {
+    color: #A1A1AA !important;
+}
+
+.p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+    background-color: rgba(246, 55, 227, 0.1) !important;
+    color: #f637e3 !important;
+}
+
+.p-paginator .p-paginator-page:not(.p-highlight):hover,
+.p-paginator .p-paginator-first:not(.p-disabled):hover,
+.p-paginator .p-paginator-prev:not(.p-disabled):hover,
+.p-paginator .p-paginator-next:not(.p-disabled):hover,
+.p-paginator .p-paginator-last:not(.p-disabled):hover {
+    background-color: #262626 !important;
+    color: #FAFAFA !important;
+}
+
+.p-paginator .p-dropdown {
+    background-color: #1A1A1A !important;
+    border-color: #2E2E2E !important;
+}
+
+.p-paginator .p-dropdown-label {
+    color: #FAFAFA !important;
+}
+
+.p-paginator .p-dropdown-trigger {
+    color: #A1A1AA !important;
+}
+
+.p-paginator .p-dropdown-panel {
+    background-color: #1A1A1A !important;
+    border-color: #2E2E2E !important;
+    color: #FAFAFA !important;
+}
+
+.p-paginator .p-dropdown-item {
+    color: #FAFAFA !important;
+}
+
+.p-paginator .p-dropdown-item:hover {
+    background-color: #262626 !important;
+}
+
+.p-paginator .p-select {
+    background-color: #1A1A1A !important;
+    border-color: #2E2E2E !important;
+}
+
+.p-paginator .p-select-label {
+    color: #FAFAFA !important;
+    font-size: 13px !important;
+}
+
+.p-paginator .p-select-dropdown {
+    color: #A1A1AA !important;
+}
+
+.p-select-overlay {
+    background-color: #1A1A1A !important;
+    border: 1px solid #2E2E2E !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.p-select-list {
+    padding: 4px !important;
+}
+
+.p-select-option {
+    color: #FAFAFA !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    border-radius: 6px !important;
+}
+
+.p-select-option:hover {
+    background-color: #262626 !important;
+}
+
+.p-select-option.p-selected {
+    background-color: rgba(246, 55, 227, 0.1) !important;
+    color: #f637e3 !important;
 }
 
 /* Toast Dark Mode */
