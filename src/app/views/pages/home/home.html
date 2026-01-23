@@ -1,4 +1,4 @@
-<div id="home-container" class="flex flex-col h-full min-h-0 overflow-hidden bg-bg">
+<div id="home-container" class="flex flex-col h-screen min-h-0 bg-bg">
     <!-- Header Toolbar - matches header height -->
     <header id="home-header" data-tauri-drag-region
         class="flex items-center gap-4 px-6 h-(--spacing-header) shrink-0 border-b border-border">
@@ -32,7 +32,7 @@
     </header>
 
     <!-- Tabs -->
-    <div id="home-tabs" class="flex items-center justify-between px-6 py-3 border-b border-border">
+    <div id="home-tabs" class="flex items-center justify-between px-6 py-3 border-b border-border shrink-0">
         <nav id="home-tabs-nav" class="flex items-center gap-6">
             @for (tab of tabs; track tab.key; let i = $index) {
             <button [id]="'home-tab-' + i"
@@ -50,7 +50,7 @@
     </div>
 
     <!-- Content -->
-    <div id="home-content" class="flex-1 overflow-auto p-6">
+    <div id="home-content" class="flex-1 min-h-0 overflow-auto p-6">
         @if (loading()) {
         <div id="home-loading" class="flex flex-col items-center justify-center py-16 gap-4 text-zinc-500">
             <p-progressSpinner strokeWidth="3" />
