@@ -117,6 +117,15 @@ body {
     background-color: rgba(38, 38, 38, 0.3) !important;
 }
 
+.profile-table .p-datatable-tbody>tr>td {
+    border: none !important;
+    border-bottom: 1px solid #E4E4E7 !important;
+}
+
+.dark .profile-table .p-datatable-tbody>tr>td {
+    border-bottom: 1px solid #2E2E2E !important;
+}
+
 .profile-table .p-datatable-tfoot>tr>td {
     background-color: transparent !important;
     border-color: #2E2E2E !important;
