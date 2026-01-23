@@ -3,18 +3,25 @@
     <div id="sidebar-header"
         class="flex items-center justify-between px-4 h-(--spacing-header) shrink-0 border-b border-border">
         <span id="sidebar-header-title" class="text-base font-semibold text-zinc-50">Browsers</span>
-        <button id="sidebar-header-add-btn"
-            class="w-7 h-7 rounded-md flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-surface-hover transition-colors"
-            (click)="onAddFolder()" title="Add folder">
-            <i class="pi pi-plus text-sm"></i>
-        </button>
+        <div id="sidebar-header-actions" class="flex items-center gap-1">
+            <button id="sidebar-header-settings-btn"
+                class="w-7 h-7 rounded-md flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-surface-hover transition-colors"
+                (click)="openProfilesDirectoryDialog()" title="Profiles Directory">
+                <i class="pi pi-cog text-sm"></i>
+            </button>
+            <button id="sidebar-header-add-btn"
+                class="w-7 h-7 rounded-md flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-surface-hover transition-colors"
+                (click)="onAddFolder()" title="Add folder">
+                <i class="pi pi-plus text-sm"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Folders Header -->
     <div id="sidebar-folders-header" class="flex items-center justify-between px-4 py-2">
         <span id="sidebar-folders-title"
             class="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Folders</span>
-        <button id="sidebar-folders-settings-btn"
+        <button
             class="w-6 h-6 rounded flex items-center justify-center text-zinc-600 hover:text-zinc-400 transition-colors"
             (click)="onFolderSettings()" title="Folder settings">
             <i class="pi pi-cog text-xs"></i>
@@ -58,7 +65,7 @@
         </div>
 
         <!-- Language Selector -->
-        <div id="sidebar-language" class="flex items-center justify-center mt-3 pt-3 border-t border-border">
+        <div class="flex items-center justify-center mt-3 pt-3 border-t border-border">
             <button id="sidebar-language-btn"
                 class="flex items-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors text-sm">
                 <span class="text-base">🇬🇧</span>
@@ -67,3 +74,45 @@
         </div>
     </div>
 </aside>
+
+<!-- Profiles Directory Dialog -->
+<p-dialog id="sidebar-profiles-dir-dialog" header="Profiles Directory" [(visible)]="showProfilesDirectoryDialog"
+    [modal]="true" [style]="{ width: '480px' }" [draggable]="false" [resizable]="false">
+    <div id="sidebar-profiles-dir-dialog-content" class="py-2 space-y-4">
+        <p class="text-sm text-zinc-400">
+            Set the directory where your Chrome profiles are stored. This path will be used to scan and manage your
+            browser profiles.
+        </p>
+        <div>
+            <label for="sidebar-profiles-dir-input" class="block text-xs font-medium text-zinc-500 mb-2">Directory
+                Path</label>
+            <div class="flex items-center gap-2">
+                <input pInputText id="sidebar-profiles-dir-input" type="text" [ngModel]="profilesDirectoryPath()"
+                    (ngModelChange)="profilesDirectoryPath.set($event)"
+                    placeholder="/Volumes/ExternalDrive/ChromeProfiles"
+                    class="flex-1 bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none" />
+                <button id="sidebar-profiles-dir-browse-btn"
+                    class="w-10 h-10 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-primary transition-colors flex items-center justify-center"
+                    title="Browse folder">
+                    <i class="pi pi-folder-open"></i>
+                </button>
+            </div>
+        </div>
+        <div class="bg-surface-hover/50 rounded-lg p-3 border border-border">
+            <div class="flex items-center gap-2 text-xs text-zinc-500">
+                <i class="pi pi-info-circle"></i>
+                <span>Example: <code class="text-zinc-400">/Users/john/ChromeProfiles</code></span>
+            </div>
+        </div>
+    </div>
+    <ng-template #footer>
+        <div id="sidebar-profiles-dir-dialog-footer" class="flex justify-end gap-3 pt-2">
+            <button id="sidebar-profiles-dir-cancel-btn" pButton
+                class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
+                (click)="showProfilesDirectoryDialog.set(false)">Cancel</button>
+            <button id="sidebar-profiles-dir-save-btn" pButton
+                class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
+                (click)="saveProfilesDirectory()">Save</button>
+        </div>
+    </ng-template>
+</p-dialog>
