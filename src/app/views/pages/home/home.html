@@ -296,6 +296,12 @@
                         <!-- Actions -->
                         <td class="p-4">
                             <div class="flex items-center gap-1">
+                                <button [id]="'home-profile-' + i + '-incognito-btn'"
+                                    (click)="launchProfileIncognito(profile, $event)"
+                                    class="w-7 h-7 rounded-md text-zinc-500 hover:text-purple-400 transition-colors flex items-center justify-center"
+                                    title="Launch in Incognito">
+                                    <i class="pi pi-eye-slash text-sm"></i>
+                                </button>
                                 <button [id]="'home-profile-' + i + '-duplicate-btn'"
                                     (click)="openDuplicateDialog(profile, $event)"
                                     class="w-7 h-7 rounded-md text-zinc-500 hover:text-primary transition-colors flex items-center justify-center"

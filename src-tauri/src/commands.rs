@@ -193,7 +193,7 @@ pub fn is_chrome_running_for_profile(profile_path: String) -> bool {
 }
 
 #[tauri::command]
-pub fn launch_browser(profile_path: String, browser: String, url: Option<String>) -> Result<(), String> {
+pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>) -> Result<(), String> {
     let user_data_arg = format!("--user-data-dir={}", profile_path);
     
     let app_name = match browser.as_str() {
@@ -204,7 +204,26 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
         _ => return Err(format!("Unknown browser: {}", browser)),
     };
     
+    // Determine incognito flag based on browser
+    let incognito_flag = if incognito.unwrap_or(false) {
+        match browser.as_str() {
+            "brave" => Some("--incognito"), // Brave uses same flag as Chrome
+            "edge" => Some("--inprivate"),
+            "arc" => None, // Arc doesn't support incognito via CLI
+            _ => Some("--incognito"), // Chrome default
+        }
+    } else {
+        None
+    };
+    
     let mut args = vec!["-n", "-a", app_name, "--args", &user_data_arg];
+    
+    // Add incognito flag if applicable
+    let incognito_owned: String;
+    if let Some(flag) = incognito_flag {
+        incognito_owned = flag.to_string();
+        args.push(&incognito_owned);
+    }
     
     // Add URL if provided
     let url_owned: String;

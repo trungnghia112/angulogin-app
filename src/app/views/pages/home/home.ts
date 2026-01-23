@@ -567,6 +567,22 @@ export class Home implements OnInit, OnDestroy {
         }
     }
 
+    async launchProfileIncognito(profile: Profile, event: Event): Promise<void> {
+        event.stopPropagation();
+        const browser = profile.metadata?.browser || 'chrome';
+        const url = profile.metadata?.launchUrl || undefined;
+        try {
+            await this.profileService.launchBrowser(profile.path, browser, url, true);
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Launched',
+                detail: `${profile.name} started in Incognito`,
+            });
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+        }
+    }
+
     deleteProfile(profile: Profile, event: Event): void {
         event.stopPropagation();
         this.confirmationService.confirm({
