@@ -1,10 +1,10 @@
-<div class="flex h-screen bg-bg overflow-hidden">
+<div id="pages-container" class="flex h-screen bg-bg overflow-hidden">
     <!-- Main Navigation (Icon Rail) -->
     <app-main-nav />
 
     <!-- Sub Sidebar (Conditional) -->
     @if (hasSidebar()) {
-    <div class="transition-all duration-300 ease-in-out">
+    <div id="pages-sidebar-wrapper" class="transition-all duration-300 ease-in-out">
         @switch (sidebarType()) {
         @case ('folders') {
         <app-sidebar [folders]="folders()" [selectedFolderId]="selectedFolderId()"
@@ -13,11 +13,12 @@
         }
         @case ('extensions') {
         <!-- Extensions sidebar placeholder -->
-        <aside class="flex flex-col h-screen w-60 bg-sidebar border-r border-border">
-            <div class="px-4 py-4 border-b border-border">
-                <span class="text-base font-semibold text-zinc-50">Extensions</span>
+        <aside id="pages-extensions-sidebar" class="flex flex-col h-screen w-60 bg-sidebar border-r border-border">
+            <div id="pages-extensions-sidebar-header" class="px-4 py-4 border-b border-border">
+                <span id="pages-extensions-sidebar-title" class="text-base font-semibold text-zinc-50">Extensions</span>
             </div>
-            <div class="flex-1 flex items-center justify-center text-zinc-500 text-sm">
+            <div id="pages-extensions-sidebar-content"
+                class="flex-1 flex items-center justify-center text-zinc-500 text-sm">
                 Coming soon...
             </div>
         </aside>
@@ -27,7 +28,7 @@
     }
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col overflow-hidden">
+    <main id="pages-main-content" class="flex-1 flex flex-col overflow-hidden">
         <router-outlet />
     </main>
 </div>

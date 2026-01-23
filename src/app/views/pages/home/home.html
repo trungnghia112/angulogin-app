@@ -1,22 +1,22 @@
-<div class="flex flex-col h-full bg-bg">
+<div id="home-container" class="flex flex-col h-full bg-bg">
     <!-- Header Toolbar - matches header height -->
-    <header class="flex items-center gap-4 px-6 h-(--spacing-header) shrink-0 border-b border-border">
+    <header id="home-header" class="flex items-center gap-4 px-6 h-(--spacing-header) shrink-0 border-b border-border">
         <!-- Search -->
-        <div class="flex-1 max-w-md">
+        <div id="home-header-search" class="flex-1 max-w-md">
             <div class="relative">
                 <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
-                <input pInputText type="text" placeholder="Search"
+                <input id="home-header-search-input" pInputText type="text" placeholder="Search"
                     class="w-full bg-surface border border-border rounded-lg pl-9 pr-4 py-2.5 text-zinc-50 text-sm placeholder-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none transition-all" />
             </div>
         </div>
 
         <!-- Path Input (collapsible) -->
         @if (!profiles().length) {
-        <div class="flex items-center gap-2 flex-1">
-            <input pInputText type="text" [ngModel]="profilesPath()" (ngModelChange)="onPathChange($event)"
-                placeholder="/Volumes/ExternalDrive/ChromeProfiles"
+        <div id="home-header-path" class="flex items-center gap-2 flex-1">
+            <input id="home-header-path-input" pInputText type="text" [ngModel]="profilesPath()"
+                (ngModelChange)="onPathChange($event)" placeholder="/Volumes/ExternalDrive/ChromeProfiles"
                 class="flex-1 bg-surface border border-border rounded-lg px-4 py-2.5 text-zinc-50 text-sm placeholder-zinc-600 focus:border-primary outline-none transition-all" />
-            <button pButton [loading]="loading()" (click)="scanProfiles()"
+            <button id="home-header-scan-btn" pButton [loading]="loading()" (click)="scanProfiles()"
                 class="flex items-center gap-2 px-4 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer hover:bg-primary-hover transition-colors">
                 <i class="pi pi-search"></i>
                 <span>Scan</span>
@@ -25,18 +25,18 @@
         }
 
         <!-- Actions -->
-        <div class="flex items-center gap-2">
-            <button
+        <div id="home-header-actions" class="flex items-center gap-2">
+            <button id="home-header-refresh-btn"
                 class="flex items-center gap-2 px-3 py-2.5 bg-surface border border-border rounded-lg text-zinc-300 text-sm hover:bg-surface-hover transition-colors">
                 <i class="pi pi-refresh text-sm"></i>
                 <span>Refresh</span>
             </button>
-            <button
+            <button id="home-header-filters-btn"
                 class="flex items-center gap-2 px-3 py-2.5 bg-surface border border-border rounded-lg text-zinc-300 text-sm hover:bg-surface-hover transition-colors">
                 <i class="pi pi-filter text-sm"></i>
                 <span>Filters</span>
             </button>
-            <button pButton (click)="openCreateDialog()"
+            <button id="home-header-create-btn" pButton (click)="openCreateDialog()"
                 class="flex items-center gap-2 px-4 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-semibold cursor-pointer hover:bg-primary-hover transition-colors">
                 <i class="pi pi-plus"></i>
                 <span>Create profile</span>
@@ -45,10 +45,11 @@
     </header>
 
     <!-- Tabs -->
-    <div class="flex items-center justify-between px-6 py-3 border-b border-border">
-        <nav class="flex items-center gap-6">
-            @for (tab of tabs; track tab.key) {
-            <button class="flex items-center gap-2 pb-2 text-sm font-medium transition-colors border-b-2 -mb-[13px]"
+    <div id="home-tabs" class="flex items-center justify-between px-6 py-3 border-b border-border">
+        <nav id="home-tabs-nav" class="flex items-center gap-6">
+            @for (tab of tabs; track tab.key; let i = $index) {
+            <button [id]="'home-tab-' + i"
+                class="flex items-center gap-2 pb-2 text-sm font-medium transition-colors border-b-2 -mb-[13px]"
                 [class]="activeTab() === tab.key
             ? 'text-zinc-50 border-primary'
             : 'text-zinc-500 border-transparent hover:text-zinc-300'" (click)="setActiveTab(tab.key)">
@@ -57,27 +58,30 @@
             </button>
             }
         </nav>
-        <span class="text-sm text-zinc-500">{{ profilesUsed() }} of {{ maxProfiles() }} profiles used</span>
+        <span id="home-tabs-usage" class="text-sm text-zinc-500">{{ profilesUsed() }} of {{ maxProfiles() }} profiles
+            used</span>
     </div>
 
     <!-- Content -->
-    <div class="flex-1 overflow-auto p-6">
+    <div id="home-content" class="flex-1 overflow-auto p-6">
         @if (loading()) {
-        <div class="flex flex-col items-center justify-center py-16 gap-4 text-zinc-500">
+        <div id="home-loading" class="flex flex-col items-center justify-center py-16 gap-4 text-zinc-500">
             <p-progressSpinner strokeWidth="3" />
             <p>Scanning profiles...</p>
         </div>
         } @else if (profiles().length === 0) {
-        <div class="flex flex-col items-center justify-center py-16 text-center">
-            <div class="w-20 h-20 rounded-2xl bg-surface border border-border flex items-center justify-center mb-5">
+        <div id="home-empty" class="flex flex-col items-center justify-center py-16 text-center">
+            <div id="home-empty-icon"
+                class="w-20 h-20 rounded-2xl bg-surface border border-border flex items-center justify-center mb-5">
                 <i class="pi pi-inbox text-3xl text-zinc-500"></i>
             </div>
-            <h3 class="text-lg font-semibold text-zinc-50 mb-2">No Profiles Found</h3>
-            <p class="text-sm text-zinc-500">Enter the path to your Chrome profiles folder and click Scan</p>
+            <h3 id="home-empty-title" class="text-lg font-semibold text-zinc-50 mb-2">No Profiles Found</h3>
+            <p id="home-empty-desc" class="text-sm text-zinc-500">Enter the path to your Chrome profiles folder and
+                click Scan</p>
         </div>
         } @else if (activeTab() === 'profiles') {
         <!-- Profiles Table -->
-        <div class="bg-surface border border-border rounded-xl overflow-hidden">
+        <div id="home-profiles-table" class="bg-surface border border-border rounded-xl overflow-hidden">
             <p-table [value]="filteredProfiles()" [(selection)]="selectedProfiles"
                 (selectionChange)="onSelectionChange($event)" [paginator]="true" [rows]="rowsPerPage()"
                 [first]="first()" (onPage)="onPageChange($event)" [rowsPerPageOptions]="[5, 10, 20]" dataKey="path"
@@ -85,7 +89,7 @@
 
                 <!-- Header -->
                 <ng-template pTemplate="header">
-                    <tr class="border-b border-border">
+                    <tr id="home-profiles-table-header" class="border-b border-border">
                         <th class="w-12 bg-surface-hover/50 p-4">
                             <p-tableHeaderCheckbox />
                         </th>
@@ -112,7 +116,8 @@
 
                 <!-- Body -->
                 <ng-template pTemplate="body" let-profile let-i="rowIndex">
-                    <tr class="border-b border-border hover:bg-surface-hover/30 transition-colors cursor-pointer"
+                    <tr [id]="'home-profile-row-' + i"
+                        class="border-b border-border hover:bg-surface-hover/30 transition-colors cursor-pointer"
                         (click)="openEditDialog(profile, $event)">
                         <!-- Checkbox -->
                         <td class="p-4">
@@ -122,7 +127,8 @@
                         <!-- Name with Start button -->
                         <td class="p-4">
                             <div class="flex items-center gap-3">
-                                <button (click)="launchProfile(profile, $event)"
+                                <button [id]="'home-profile-' + i + '-start-btn'"
+                                    (click)="launchProfile(profile, $event)"
                                     class="flex items-center gap-2 px-3 py-1.5 bg-primary/20 border border-primary/40 rounded-md text-primary text-xs font-semibold hover:bg-primary hover:text-bg transition-colors">
                                     <i [class]="'pi ' + getOsIcon(profile) + ' text-xs'"></i>
                                     <span>Start</span>
@@ -141,7 +147,7 @@
 
                         <!-- Proxy -->
                         <td class="p-4">
-                            <button
+                            <button [id]="'home-profile-' + i + '-proxy-btn'"
                                 class="w-7 h-7 rounded-md border border-border text-zinc-500 hover:border-primary hover:text-primary transition-colors flex items-center justify-center">
                                 <i class="pi pi-plus text-xs"></i>
                             </button>
@@ -149,7 +155,7 @@
 
                         <!-- Tags -->
                         <td class="p-4">
-                            <button
+                            <button [id]="'home-profile-' + i + '-tags-btn'"
                                 class="w-7 h-7 rounded-md border border-border text-zinc-500 hover:border-primary hover:text-primary transition-colors flex items-center justify-center">
                                 <i class="pi pi-plus text-xs"></i>
                             </button>
@@ -164,7 +170,7 @@
                                 <span class="max-w-[100px] truncate">{{ profile.metadata?.notes }}</span>
                             </span>
                             } @else {
-                            <button
+                            <button [id]="'home-profile-' + i + '-notes-btn'"
                                 class="w-7 h-7 rounded-md border border-border text-zinc-500 hover:border-primary hover:text-primary transition-colors flex items-center justify-center">
                                 <i class="pi pi-plus text-xs"></i>
                             </button>
@@ -173,7 +179,7 @@
 
                         <!-- Actions -->
                         <td class="p-4">
-                            <button (click)="deleteProfile(profile, $event)"
+                            <button [id]="'home-profile-' + i + '-actions-btn'" (click)="deleteProfile(profile, $event)"
                                 class="w-7 h-7 rounded-md text-zinc-500 hover:text-error transition-colors flex items-center justify-center">
                                 <i class="pi pi-ellipsis-v text-sm"></i>
                             </button>
@@ -193,82 +199,86 @@
         </div>
         } @else {
         <!-- Other tabs placeholder -->
-        <div class="flex flex-col items-center justify-center py-16 text-center">
-            <div class="w-16 h-16 rounded-xl bg-surface border border-border flex items-center justify-center mb-4">
+        <div id="home-tab-placeholder" class="flex flex-col items-center justify-center py-16 text-center">
+            <div id="home-tab-placeholder-icon"
+                class="w-16 h-16 rounded-xl bg-surface border border-border flex items-center justify-center mb-4">
                 <i class="pi pi-cog text-2xl text-zinc-500"></i>
             </div>
-            <h3 class="text-lg font-semibold text-zinc-50 mb-2">{{ activeTab() | titlecase }}</h3>
-            <p class="text-sm text-zinc-500">Coming soon...</p>
+            <h3 id="home-tab-placeholder-title" class="text-lg font-semibold text-zinc-50 mb-2">{{ activeTab() |
+                titlecase }}</h3>
+            <p id="home-tab-placeholder-desc" class="text-sm text-zinc-500">Coming soon...</p>
         </div>
         }
     </div>
 
     <!-- Bottom Action Bar -->
     @if (selectedProfiles().length > 0) {
-    <footer class="flex items-center justify-between px-6 py-3 border-t border-border bg-surface">
-        <div class="flex items-center gap-2">
-            <button
+    <footer id="home-footer" class="flex items-center justify-between px-6 py-3 border-t border-border bg-surface">
+        <div id="home-footer-actions" class="flex items-center gap-2">
+            <button id="home-footer-edit-btn"
                 class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
                 title="Edit">
                 <i class="pi pi-pencil"></i>
             </button>
-            <button
+            <button id="home-footer-duplicate-btn"
                 class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
                 title="Duplicate">
                 <i class="pi pi-copy"></i>
             </button>
-            <button
+            <button id="home-footer-move-btn"
                 class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
                 title="Move to folder">
                 <i class="pi pi-folder"></i>
             </button>
-            <button
+            <button id="home-footer-sync-btn"
                 class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
                 title="Sync">
                 <i class="pi pi-sync"></i>
             </button>
-            <button
+            <button id="home-footer-refresh-btn"
                 class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
                 title="Refresh">
                 <i class="pi pi-refresh"></i>
             </button>
             <div class="w-px h-6 bg-border mx-2"></div>
-            <button
+            <button id="home-footer-start-all-btn"
                 class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-primary hover:border-primary transition-colors flex items-center justify-center"
                 title="Start all">
                 <i class="pi pi-play"></i>
             </button>
-            <button
+            <button id="home-footer-stop-all-btn"
                 class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-warning hover:border-warning transition-colors flex items-center justify-center"
                 title="Stop all">
                 <i class="pi pi-pause"></i>
             </button>
-            <button
+            <button id="home-footer-delete-btn"
                 class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-error hover:border-error transition-colors flex items-center justify-center"
                 title="Delete">
                 <i class="pi pi-trash"></i>
             </button>
         </div>
-        <span class="text-sm text-zinc-500">{{ selectedProfiles().length }} selected</span>
+        <span id="home-footer-selected-count" class="text-sm text-zinc-500">{{ selectedProfiles().length }}
+            selected</span>
     </footer>
     }
 </div>
 
 <!-- Create Profile Dialog -->
-<p-dialog header="Create New Profile" [(visible)]="showCreateDialog" [modal]="true" [style]="{ width: '400px' }"
-    [draggable]="false" [resizable]="false">
-    <div class="py-2">
-        <label for="new-profile-name" class="block text-xs font-medium text-zinc-500 mb-2">Profile Name</label>
-        <input pInputText id="new-profile-name" type="text" [ngModel]="newProfileName()"
+<p-dialog id="home-create-dialog" header="Create New Profile" [(visible)]="showCreateDialog" [modal]="true"
+    [style]="{ width: '400px' }" [draggable]="false" [resizable]="false">
+    <div id="home-create-dialog-content" class="py-2">
+        <label for="home-create-dialog-name-input" class="block text-xs font-medium text-zinc-500 mb-2">Profile
+            Name</label>
+        <input pInputText id="home-create-dialog-name-input" type="text" [ngModel]="newProfileName()"
             (ngModelChange)="newProfileName.set($event)" placeholder="e.g., Work, Personal"
             class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none" />
     </div>
     <ng-template #footer>
-        <div class="flex justify-end gap-3 pt-2">
-            <button pButton
+        <div id="home-create-dialog-footer" class="flex justify-end gap-3 pt-2">
+            <button id="home-create-dialog-cancel-btn" pButton
                 class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
                 (click)="showCreateDialog.set(false)">Cancel</button>
-            <button pButton
+            <button id="home-create-dialog-submit-btn" pButton
                 class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
                 (click)="createProfile()">Create</button>
         </div>
@@ -276,20 +286,20 @@
 </p-dialog>
 
 <!-- Rename Profile Dialog -->
-<p-dialog header="Rename Profile" [(visible)]="showRenameDialog" [modal]="true" [style]="{ width: '400px' }"
-    [draggable]="false" [resizable]="false">
-    <div class="py-2">
-        <label for="rename-profile-name" class="block text-xs font-medium text-zinc-500 mb-2">New Name</label>
-        <input pInputText id="rename-profile-name" type="text" [ngModel]="renameProfileName()"
+<p-dialog id="home-rename-dialog" header="Rename Profile" [(visible)]="showRenameDialog" [modal]="true"
+    [style]="{ width: '400px' }" [draggable]="false" [resizable]="false">
+    <div id="home-rename-dialog-content" class="py-2">
+        <label for="home-rename-dialog-name-input" class="block text-xs font-medium text-zinc-500 mb-2">New Name</label>
+        <input pInputText id="home-rename-dialog-name-input" type="text" [ngModel]="renameProfileName()"
             (ngModelChange)="renameProfileName.set($event)"
             class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none" />
     </div>
     <ng-template #footer>
-        <div class="flex justify-end gap-3 pt-2">
-            <button pButton
+        <div id="home-rename-dialog-footer" class="flex justify-end gap-3 pt-2">
+            <button id="home-rename-dialog-cancel-btn" pButton
                 class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
                 (click)="showRenameDialog.set(false)">Cancel</button>
-            <button pButton
+            <button id="home-rename-dialog-submit-btn" pButton
                 class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
                 (click)="renameProfile()">Rename</button>
         </div>
@@ -297,15 +307,15 @@
 </p-dialog>
 
 <!-- Edit Profile Dialog -->
-<p-dialog header="Edit Profile" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '500px' }"
-    [draggable]="false" [resizable]="false">
-    <div class="py-2 space-y-5">
+<p-dialog id="home-edit-dialog" header="Edit Profile" [(visible)]="showEditDialog" [modal]="true"
+    [style]="{ width: '500px' }" [draggable]="false" [resizable]="false">
+    <div id="home-edit-dialog-content" class="py-2 space-y-5">
         <!-- Icon -->
-        <div>
+        <div id="home-edit-dialog-icon-section">
             <label class="block text-xs font-medium text-zinc-500 mb-2">Icon</label>
-            <div class="flex flex-wrap gap-2">
-                @for (emoji of emojiOptions; track emoji) {
-                <button
+            <div id="home-edit-dialog-icon-options" class="flex flex-wrap gap-2">
+                @for (emoji of emojiOptions; track emoji; let i = $index) {
+                <button [id]="'home-edit-dialog-emoji-' + i"
                     class="w-10 h-10 rounded-lg border flex items-center justify-center text-xl cursor-pointer transition-all duration-150"
                     [class]="editEmoji() === emoji ? 'bg-primary border-primary' : 'bg-surface-hover border-border hover:border-primary'"
                     (click)="selectEmoji(emoji)">
@@ -316,11 +326,12 @@
         </div>
 
         <!-- Group -->
-        <div>
+        <div id="home-edit-dialog-group-section">
             <label class="block text-xs font-medium text-zinc-500 mb-2">Group</label>
-            <div class="flex flex-wrap gap-2">
-                @for (group of groupOptions; track group) {
-                <button class="px-3 py-2 rounded-lg border text-sm cursor-pointer transition-all duration-150"
+            <div id="home-edit-dialog-group-options" class="flex flex-wrap gap-2">
+                @for (group of groupOptions; track group; let i = $index) {
+                <button [id]="'home-edit-dialog-group-' + i"
+                    class="px-3 py-2 rounded-lg border text-sm cursor-pointer transition-all duration-150"
                     [class]="editGroup() === group ? 'bg-primary border-primary text-bg' : 'bg-surface-hover border-border text-zinc-400 hover:border-primary'"
                     (click)="selectGroup(group)">
                     {{ group }}
@@ -330,11 +341,11 @@
         </div>
 
         <!-- Shortcut -->
-        <div>
+        <div id="home-edit-dialog-shortcut-section">
             <label class="block text-xs font-medium text-zinc-500 mb-2">Keyboard Shortcut</label>
-            <div class="flex flex-wrap gap-2">
-                @for (num of shortcutOptions; track num) {
-                <button
+            <div id="home-edit-dialog-shortcut-options" class="flex flex-wrap gap-2">
+                @for (num of shortcutOptions; track num; let i = $index) {
+                <button [id]="'home-edit-dialog-shortcut-' + i"
                     class="w-10 h-10 rounded-lg border flex items-center justify-center text-sm font-mono cursor-pointer transition-all duration-150"
                     [class]="editShortcut() === num ? 'bg-primary border-primary text-bg' : 'bg-surface-hover border-border text-zinc-400 hover:border-primary'"
                     (click)="selectShortcut(num)">
@@ -345,11 +356,11 @@
         </div>
 
         <!-- Browser -->
-        <div>
+        <div id="home-edit-dialog-browser-section">
             <label class="block text-xs font-medium text-zinc-500 mb-2">Default Browser</label>
-            <div class="flex flex-wrap gap-2">
-                @for (browser of availableBrowsers(); track browser) {
-                <button
+            <div id="home-edit-dialog-browser-options" class="flex flex-wrap gap-2">
+                @for (browser of availableBrowsers(); track browser; let i = $index) {
+                <button [id]="'home-edit-dialog-browser-' + i"
                     class="px-3 py-2 rounded-lg border text-sm cursor-pointer transition-all duration-150 flex items-center gap-2"
                     [class]="editBrowser() === browser ? 'bg-primary border-primary text-bg' : 'bg-surface-hover border-border text-zinc-400 hover:border-primary'"
                     (click)="selectBrowser($any(browser))">
@@ -361,19 +372,19 @@
         </div>
 
         <!-- Notes -->
-        <div>
-            <label for="edit-notes" class="block text-xs font-medium text-zinc-500 mb-2">Notes</label>
-            <textarea id="edit-notes" [ngModel]="editNotes()" (ngModelChange)="editNotes.set($event)"
+        <div id="home-edit-dialog-notes-section">
+            <label for="home-edit-dialog-notes-input" class="block text-xs font-medium text-zinc-500 mb-2">Notes</label>
+            <textarea id="home-edit-dialog-notes-input" [ngModel]="editNotes()" (ngModelChange)="editNotes.set($event)"
                 placeholder="What is this profile for?" rows="2"
                 class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none resize-none"></textarea>
         </div>
     </div>
     <ng-template #footer>
-        <div class="flex justify-end gap-3 pt-2">
-            <button pButton
+        <div id="home-edit-dialog-footer" class="flex justify-end gap-3 pt-2">
+            <button id="home-edit-dialog-cancel-btn" pButton
                 class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
                 (click)="showEditDialog.set(false)">Cancel</button>
-            <button pButton
+            <button id="home-edit-dialog-submit-btn" pButton
                 class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
                 (click)="saveProfileEdit()">Save</button>
         </div>
