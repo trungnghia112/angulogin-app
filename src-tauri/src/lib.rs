@@ -29,7 +29,8 @@ pub fn run() {
             commands::launch_browser,
             commands::get_profile_size,
             commands::list_available_browsers,
-            commands::duplicate_profile
+            commands::duplicate_profile,
+            commands::backup_profile
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -289,3 +289,57 @@ pub fn list_available_browsers() -> Vec<String> {
         .map(|(name, _)| name.to_string())
         .collect()
 }
+
+#[tauri::command]
+pub fn backup_profile(profile_path: String, backup_path: String) -> Result<String, String> {
+    use std::io::{Read, Write};
+    use zip::write::FileOptions;
+    
+    let source = std::path::Path::new(&profile_path);
+    if !source.exists() {
+        return Err("Profile does not exist".to_string());
+    }
+    
+    let file = fs::File::create(&backup_path)
+        .map_err(|e| format!("Failed to create backup file: {}", e))?;
+    
+    let mut zip = zip::ZipWriter::new(file);
+    let options = FileOptions::default()
+        .compression_method(zip::CompressionMethod::Deflated);
+    
+    fn add_dir_to_zip<W: Write + std::io::Seek>(
+        zip: &mut zip::ZipWriter<W>,
+        path: &std::path::Path,
+        base_path: &std::path::Path,
+        options: FileOptions,
+    ) -> Result<(), String> {
+        if path.is_dir() {
+            if let Ok(entries) = fs::read_dir(path) {
+                for entry in entries.flatten() {
+                    let entry_path = entry.path();
+                    add_dir_to_zip(zip, &entry_path, base_path, options)?;
+                }
+            }
+        } else {
+            let relative_path = path.strip_prefix(base_path)
+                .map_err(|_| "Failed to get relative path")?;
+            
+            zip.start_file(relative_path.to_string_lossy(), options)
+                .map_err(|e| format!("Failed to start file in zip: {}", e))?;
+            
+            let mut file = fs::File::open(path)
+                .map_err(|e| format!("Failed to open file: {}", e))?;
+            let mut buffer = Vec::new();
+            file.read_to_end(&mut buffer)
+                .map_err(|e| format!("Failed to read file: {}", e))?;
+            zip.write_all(&buffer)
+                .map_err(|e| format!("Failed to write to zip: {}", e))?;
+        }
+        Ok(())
+    }
+    
+    add_dir_to_zip(&mut zip, source, source, options)?;
+    zip.finish().map_err(|e| format!("Failed to finish zip: {}", e))?;
+    
+    Ok(backup_path)
+}
