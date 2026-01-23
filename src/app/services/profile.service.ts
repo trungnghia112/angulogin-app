@@ -296,4 +296,44 @@ export class ProfileService {
             );
         }
     }
+
+    async duplicateProfile(sourcePath: string, newName: string, basePath: string): Promise<string> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            debugLog('Mock duplicateProfile:', sourcePath, newName);
+            const newPath = `${basePath}/${newName}`;
+            const sourceProfile = this.profiles().find(p => p.path === sourcePath);
+            if (sourceProfile) {
+                const newProfile: Profile = {
+                    id: `profile-${Date.now()}`,
+                    name: newName,
+                    path: newPath,
+                    metadata: {
+                        emoji: sourceProfile.metadata?.emoji || null,
+                        notes: sourceProfile.metadata?.notes || null,
+                        group: sourceProfile.metadata?.group || null,
+                        shortcut: sourceProfile.metadata?.shortcut || null,
+                        browser: sourceProfile.metadata?.browser || null,
+                        tags: sourceProfile.metadata?.tags,
+                        launchUrl: sourceProfile.metadata?.launchUrl,
+                        isPinned: sourceProfile.metadata?.isPinned,
+                    },
+                    isRunning: false,
+                    size: sourceProfile.size,
+                };
+                this.profiles.update(profiles => [...profiles, newProfile]);
+            }
+            return newPath;
+        }
+
+        try {
+            const newPath = await invoke<string>('duplicate_profile', { sourcePath, newName });
+            await this.scanProfiles(basePath);
+            return newPath;
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
 }

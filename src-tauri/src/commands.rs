@@ -93,6 +93,38 @@ pub fn rename_profile(old_path: String, new_name: String) -> Result<String, Stri
     Ok(new_path.to_string_lossy().to_string())
 }
 
+#[tauri::command]
+pub fn duplicate_profile(source_path: String, new_name: String) -> Result<String, String> {
+    let source = std::path::Path::new(&source_path);
+    
+    if !source.exists() {
+        return Err("Source profile does not exist".to_string());
+    }
+    
+    let parent = source.parent()
+        .ok_or("Cannot get parent directory")?;
+    
+    let dest_path = parent.join(&new_name);
+    
+    if dest_path.exists() {
+        return Err(format!("Profile '{}' already exists", new_name));
+    }
+    
+    let options = fs_extra::dir::CopyOptions::new();
+    fs_extra::dir::copy(&source_path, parent, &options)
+        .map_err(|e| format!("Failed to copy profile: {}", e))?;
+    
+    // Rename the copied folder to the new name
+    let copied_name = source.file_name()
+        .ok_or("Cannot get source folder name")?;
+    let copied_path = parent.join(copied_name);
+    
+    fs::rename(&copied_path, &dest_path)
+        .map_err(|e| format!("Failed to rename copied profile: {}", e))?;
+    
+    Ok(dest_path.to_string_lossy().to_string())
+}
+
 #[derive(serde::Serialize, serde::Deserialize, Default)]
 pub struct ProfileMetadata {
     pub emoji: Option<String>,

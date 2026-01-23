@@ -28,7 +28,8 @@ pub fn run() {
             commands::is_chrome_running_for_profile,
             commands::launch_browser,
             commands::get_profile_size,
-            commands::list_available_browsers
+            commands::list_available_browsers,
+            commands::duplicate_profile
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

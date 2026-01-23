@@ -254,10 +254,20 @@
 
                         <!-- Actions -->
                         <td class="p-4">
-                            <button [id]="'home-profile-' + i + '-actions-btn'" (click)="deleteProfile(profile, $event)"
-                                class="w-7 h-7 rounded-md text-zinc-500 hover:text-error transition-colors flex items-center justify-center">
-                                <i class="pi pi-ellipsis-v text-sm"></i>
-                            </button>
+                            <div class="flex items-center gap-1">
+                                <button [id]="'home-profile-' + i + '-duplicate-btn'"
+                                    (click)="openDuplicateDialog(profile, $event)"
+                                    class="w-7 h-7 rounded-md text-zinc-500 hover:text-primary transition-colors flex items-center justify-center"
+                                    title="Duplicate profile">
+                                    <i class="pi pi-copy text-sm"></i>
+                                </button>
+                                <button [id]="'home-profile-' + i + '-delete-btn'"
+                                    (click)="deleteProfile(profile, $event)"
+                                    class="w-7 h-7 rounded-md text-zinc-500 hover:text-error transition-colors flex items-center justify-center"
+                                    title="Delete profile">
+                                    <i class="pi pi-trash text-sm"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 </ng-template>
@@ -505,6 +515,29 @@
                 <button id="home-edit-dialog-submit-btn" pButton
                     class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
                     (click)="saveProfileEdit()">Save</button>
+            </div>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Duplicate Profile Dialog -->
+    <p-dialog id="home-duplicate-dialog" header="Duplicate Profile" [(visible)]="showDuplicateDialog" [modal]="true"
+        [style]="{ width: '400px' }" [draggable]="false" [resizable]="false">
+        <div id="home-duplicate-dialog-content" class="py-2">
+            <p class="text-sm text-zinc-400 mb-4">Create a copy of "{{ selectedProfile()?.name }}"</p>
+            <label for="home-duplicate-dialog-name-input" class="block text-xs font-medium text-zinc-500 mb-2">New
+                Name</label>
+            <input pInputText id="home-duplicate-dialog-name-input" type="text" [ngModel]="duplicateProfileName()"
+                (ngModelChange)="duplicateProfileName.set($event)"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none" />
+        </div>
+        <ng-template #footer>
+            <div id="home-duplicate-dialog-footer" class="flex justify-end gap-3 pt-2">
+                <button id="home-duplicate-dialog-cancel-btn" pButton
+                    class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
+                    (click)="showDuplicateDialog.set(false)">Cancel</button>
+                <button id="home-duplicate-dialog-submit-btn" pButton
+                    class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
+                    (click)="duplicateProfile()">Duplicate</button>
             </div>
         </ng-template>
     </p-dialog>

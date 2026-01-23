@@ -169,6 +169,10 @@ export class Home implements OnInit, OnDestroy {
     protected readonly editLaunchUrl = signal<string | null>(null);
     protected readonly editIsPinned = signal<boolean>(false);
 
+    // Duplicate dialog
+    protected readonly showDuplicateDialog = signal(false);
+    protected readonly duplicateProfileName = signal('');
+
     // Available tags from all profiles
     protected readonly availableTags = computed(() => {
         const all = this.profiles().flatMap((p) => p.metadata?.tags || []);
@@ -543,6 +547,34 @@ export class Home implements OnInit, OnDestroy {
                 }
             },
         });
+    }
+
+    // Duplicate Profile
+    openDuplicateDialog(profile: Profile, event: Event): void {
+        event.stopPropagation();
+        this.selectedProfile.set(profile);
+        this.duplicateProfileName.set(`${profile.name} (Copy)`);
+        this.showDuplicateDialog.set(true);
+    }
+
+    async duplicateProfile(): Promise<void> {
+        const profile = this.selectedProfile();
+        const newName = this.duplicateProfileName().trim();
+        if (!profile || !newName) {
+            this.showDuplicateDialog.set(false);
+            return;
+        }
+        try {
+            await this.profileService.duplicateProfile(profile.path, newName, this.profilesPath());
+            this.showDuplicateDialog.set(false);
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Duplicated',
+                detail: `Created "${newName}" from "${profile.name}"`,
+            });
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+        }
     }
 
     // Selection
