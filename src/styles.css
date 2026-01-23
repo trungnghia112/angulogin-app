@@ -122,6 +122,34 @@ body {
     border-color: #2E2E2E !important;
 }
 
+/* Checkbox Dark Mode Overrides */
+.p-checkbox .p-checkbox-box {
+    background-color: #1A1A1A !important;
+    border: 1px solid #3F3F46 !important;
+    transition: all 0.2s ease;
+}
+
+.p-checkbox .p-checkbox-box.p-highlight,
+.p-checkbox .p-checkbox-box.p-checkbox-checked {
+    background-color: #f637e3 !important;
+    border-color: #f637e3 !important;
+}
+
+.p-checkbox .p-checkbox-box .p-checkbox-icon {
+    color: #0F0F0F !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+}
+
+.p-checkbox:not(.p-checkbox-disabled):has(.p-checkbox-input:hover) .p-checkbox-box {
+    border-color: #f637e3 !important;
+}
+
+.p-checkbox-input {
+    appearance: none !important;
+    background: transparent !important;
+}
+
 /* Paginator Dark Mode Overrides */
 .p-paginator {
     background-color: transparent !important;
@@ -138,13 +166,20 @@ body {
     color: #f637e3 !important;
 }
 
-.p-paginator .p-paginator-page:not(.p-highlight):hover,
+.p-paginator .p-paginator-page:not(.p-highlight):not(.p-paginator-page-selected):hover,
 .p-paginator .p-paginator-first:not(.p-disabled):hover,
 .p-paginator .p-paginator-prev:not(.p-disabled):hover,
 .p-paginator .p-paginator-next:not(.p-disabled):hover,
 .p-paginator .p-paginator-last:not(.p-disabled):hover {
     background-color: #262626 !important;
     color: #FAFAFA !important;
+}
+
+.p-paginator .p-paginator-pages .p-paginator-page-selected,
+.p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+    background-color: rgba(246, 55, 227, 0.2) !important;
+    color: #f637e3 !important;
+    border: 1px solid rgba(246, 55, 227, 0.4) !important;
 }
 
 .p-paginator .p-dropdown {

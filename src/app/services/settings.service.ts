@@ -1,7 +1,9 @@
 import { Injectable, signal, effect } from '@angular/core';
 import { AppSettings } from '../models/profile.model';
+import { isTauriAvailable } from '../core/utils/platform.util';
 
 const STORAGE_KEY = 'chrome-profile-manager-settings';
+const MOCK_PROFILES_PATH = '/mock/profiles';
 
 @Injectable({
     providedIn: 'root',
@@ -33,6 +35,10 @@ export class SettingsService {
     }
 
     getProfilesPath(): string | null {
+        // In mock mode, always return a mock path to enable profile scanning
+        if (!isTauriAvailable()) {
+            return MOCK_PROFILES_PATH;
+        }
         return this.settings().profilesPath;
     }
 

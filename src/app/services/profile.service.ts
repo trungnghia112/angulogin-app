@@ -1,6 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 import { invoke } from '@tauri-apps/api/core';
 import { BrowserType, Profile, ProfileMetadata } from '../models/profile.model';
+import { isTauriAvailable } from '../core/utils/platform.util';
+import { MOCK_PROFILES, MOCK_AVAILABLE_BROWSERS, getMockProfileByPath } from '../mocks/profile.mock';
 
 @Injectable({
     providedIn: 'root',
@@ -15,6 +17,13 @@ export class ProfileService {
         this.error.set(null);
 
         try {
+            // Mock mode for web development
+            if (!isTauriAvailable()) {
+                console.log('[Mock] scanProfiles:', path);
+                this.profiles.set(MOCK_PROFILES);
+                return MOCK_PROFILES;
+            }
+
             const names = await invoke<string[]>('scan_profiles', { path });
 
             // Build profiles with metadata and running status
@@ -41,6 +50,12 @@ export class ProfileService {
     }
 
     async launchChrome(profilePath: string): Promise<void> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            console.log('[Mock] launchChrome:', profilePath);
+            return;
+        }
+
         try {
             await invoke('launch_chrome', { profilePath });
         } catch (e) {
@@ -51,6 +66,12 @@ export class ProfileService {
     }
 
     async checkPathExists(path: string): Promise<boolean> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            console.log('[Mock] checkPathExists:', path);
+            return true;
+        }
+
         try {
             return await invoke<boolean>('check_path_exists', { path });
         } catch {
@@ -59,6 +80,22 @@ export class ProfileService {
     }
 
     async createProfile(basePath: string, name: string): Promise<string> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            console.log('[Mock] createProfile:', basePath, name);
+            const newPath = `${basePath}/${name}`;
+            const newProfile: Profile = {
+                id: `profile-${Date.now()}`,
+                name,
+                path: newPath,
+                metadata: { emoji: null, notes: null, group: null, shortcut: null, browser: null },
+                isRunning: false,
+                size: 0,
+            };
+            this.profiles.update(profiles => [...profiles, newProfile]);
+            return newPath;
+        }
+
         try {
             const newPath = await invoke<string>('create_profile', { basePath, name });
             await this.scanProfiles(basePath);
@@ -71,6 +108,13 @@ export class ProfileService {
     }
 
     async deleteProfile(profilePath: string, basePath: string): Promise<void> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            console.log('[Mock] deleteProfile:', profilePath);
+            this.profiles.update(profiles => profiles.filter(p => p.path !== profilePath));
+            return;
+        }
+
         try {
             await invoke('delete_profile', { profilePath });
             await this.scanProfiles(basePath);
@@ -82,6 +126,16 @@ export class ProfileService {
     }
 
     async renameProfile(oldPath: string, newName: string, basePath: string): Promise<string> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            console.log('[Mock] renameProfile:', oldPath, newName);
+            const newPath = `${basePath}/${newName}`;
+            this.profiles.update(profiles =>
+                profiles.map(p => p.path === oldPath ? { ...p, name: newName, path: newPath } : p)
+            );
+            return newPath;
+        }
+
         try {
             const newPath = await invoke<string>('rename_profile', { oldPath, newName });
             await this.scanProfiles(basePath);
@@ -94,6 +148,12 @@ export class ProfileService {
     }
 
     async getProfileMetadata(profilePath: string): Promise<ProfileMetadata> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            const profile = getMockProfileByPath(profilePath);
+            return profile?.metadata || { emoji: null, notes: null, group: null, shortcut: null, browser: null };
+        }
+
         try {
             return await invoke<ProfileMetadata>('get_profile_metadata', { profilePath });
         } catch {
@@ -109,6 +169,17 @@ export class ProfileService {
         shortcut: number | null,
         browser: string | null,
     ): Promise<void> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            console.log('[Mock] saveProfileMetadata:', profilePath, { emoji, notes, group, shortcut, browser });
+            this.profiles.update((profiles) =>
+                profiles.map((p) =>
+                    p.path === profilePath ? { ...p, metadata: { emoji, notes, group, shortcut, browser: browser as BrowserType | null } } : p
+                )
+            );
+            return;
+        }
+
         try {
             await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut, browser });
             this.profiles.update((profiles) =>
@@ -124,6 +195,12 @@ export class ProfileService {
     }
 
     async isProfileRunning(profilePath: string): Promise<boolean> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            const profile = getMockProfileByPath(profilePath);
+            return profile?.isRunning || false;
+        }
+
         try {
             return await invoke<boolean>('is_chrome_running_for_profile', { profilePath });
         } catch {
@@ -143,6 +220,16 @@ export class ProfileService {
     }
 
     async launchBrowser(profilePath: string, browser: string): Promise<void> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            console.log('[Mock] launchBrowser:', profilePath, browser);
+            // Simulate running state change
+            this.profiles.update(profiles =>
+                profiles.map(p => p.path === profilePath ? { ...p, isRunning: true } : p)
+            );
+            return;
+        }
+
         try {
             await invoke('launch_browser', { profilePath, browser });
         } catch (e) {
@@ -153,6 +240,12 @@ export class ProfileService {
     }
 
     async getProfileSize(profilePath: string): Promise<number> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            const profile = getMockProfileByPath(profilePath);
+            return profile?.size || 0;
+        }
+
         try {
             return await invoke<number>('get_profile_size', { profilePath });
         } catch {
@@ -161,6 +254,12 @@ export class ProfileService {
     }
 
     async listAvailableBrowsers(): Promise<string[]> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            console.log('[Mock] listAvailableBrowsers');
+            return MOCK_AVAILABLE_BROWSERS;
+        }
+
         try {
             return await invoke<string[]>('list_available_browsers');
         } catch {
