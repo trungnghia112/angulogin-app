@@ -29,11 +29,11 @@
 
 Những tính năng nên làm sớm vì mang lại giá trị cao:
 
-### 1. Search & Filter ⭐
+### 1. Search & Filter ✅
 - **Mô tả:** Tìm kiếm profile theo tên, filter theo group/tag
 - **Độ khó:** 🟢 Dễ
 - **Giá trị:** Rất cao - Core UX khi có nhiều profile
-- **Status:** 📋 Backlog
+- **Status:** ✅ Done
 
 ### 2. Tags System ⭐
 - **Mô tả:** Gắn nhiều tags cho profile (Work, Personal, Testing...)
