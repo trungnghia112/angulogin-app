@@ -22,10 +22,6 @@
     --spacing-header: 56px;
 }
 
-[data-tauri-drag-region] {
-    cursor: default;
-    user-select: none;
-}
 
 /* Base styles */
 html,
@@ -42,14 +38,6 @@ body {
     user-select: none;
 }
 
-#main-nav-logo,
-#sidebar-header,
-#home-header {
-    /* Safe area for Mac traffic lights on transparent title bar */
-    padding-top: 32px;
-    height: calc(var(--spacing-header) + 32px) !important;
-    background-color: inherit;
-}
 
 /* Scrollbar */
 ::-webkit-scrollbar {
