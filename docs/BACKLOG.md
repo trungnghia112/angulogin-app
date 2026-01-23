@@ -10,9 +10,9 @@
 
 | Trạng thái | Số lượng |
 |------------|----------|
-| ✅ Done | 7 |
+| ✅ Done | 9 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 42 |
+| 📋 Backlog | 40 |
 
 ---
 
@@ -53,11 +53,11 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 - **Giá trị:** Cao - UX tốt
 - **Status:** ✅ Done
 
-### 5. Quick Search (⌘+K)
+### 5. Quick Search (⌘+K) ✅
 - **Mô tả:** Command palette style search & launch
 - **Độ khó:** 🟡 Trung bình
 - **Giá trị:** Cao - Modern UX, fast access
-- **Status:** 📋 Backlog
+- **Status:** ✅ Done
 
 ---
 
@@ -65,7 +65,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
-| 1.1 | Bulk Actions | Chọn nhiều profile → launch/delete/move cùng lúc | 🟢 Dễ | 📋 |
+| 1.1 | Bulk Actions | Chọn nhiều profile → launch/delete/move cùng lúc | 🟢 Dễ | ✅ |
 | 1.2 | Profile Duplicating | Clone profile (copy folder) để tạo variant | 🟢 Dễ | 📋 |
 | 1.3 | Profile Sorting | Sort theo tên, ngày tạo, size, lần dùng gần nhất | 🟢 Dễ | 📋 |
 | 1.4 | Profile Pinning | Ghim profile hay dùng lên đầu | 🟢 Dễ | 📋 |
