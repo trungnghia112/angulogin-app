@@ -4,6 +4,7 @@ import { filter, Subscription } from 'rxjs';
 import { MainNav } from '../components/main-nav/main-nav';
 import { Sidebar } from '../components/sidebar/sidebar';
 import { NavigationService } from '../../services/navigation.service';
+import { SettingsService } from '../../services/settings.service';
 import { Folder } from '../../models/folder.model';
 
 @Component({
@@ -16,6 +17,7 @@ import { Folder } from '../../models/folder.model';
 export class Pages implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   protected readonly navService = inject(NavigationService);
+  private readonly settingsService = inject(SettingsService);
   private routeSub?: Subscription;
 
   // Sidebar visibility based on active feature
@@ -70,5 +72,9 @@ export class Pages implements OnInit, OnDestroy {
 
   protected onFolderSettings(): void {
     console.log('Folder settings clicked');
+  }
+
+  protected onProfilesDirectoryChanged(path: string): void {
+    this.settingsService.setProfilesPath(path);
   }
 }

@@ -27,14 +27,28 @@
     user-select: none;
 }
 
-#main-nav-logo {
-    /* Safe area for Mac traffic lights on transparent title bar */
-    padding-top: 12px;
+/* Base styles */
+html,
+body {
+    background-color: var(--color-bg);
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    @apply text-zinc-50 font-sans antialiased;
 }
 
-/* Base styles */
-body {
-    @apply bg-bg text-zinc-50 font-sans antialiased;
+[data-tauri-drag-region] {
+    cursor: default;
+    user-select: none;
+}
+
+#main-nav-logo,
+#sidebar-header,
+#home-header {
+    /* Safe area for Mac traffic lights on transparent title bar */
+    padding-top: 32px;
+    height: calc(var(--spacing-header) + 32px) !important;
+    background-color: inherit;
 }
 
 /* Scrollbar */

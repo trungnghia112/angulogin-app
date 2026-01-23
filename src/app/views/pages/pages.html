@@ -9,7 +9,8 @@
         @case ('folders') {
         <app-sidebar [folders]="folders()" [selectedFolderId]="selectedFolderId()"
             (folderSelected)="onFolderSelected($event)" (addFolderClicked)="onAddFolder()"
-            (settingsClicked)="onSettings()" (folderSettingsClicked)="onFolderSettings()" />
+            (settingsClicked)="onSettings()" (folderSettingsClicked)="onFolderSettings()"
+            (profilesDirectoryChanged)="onProfilesDirectoryChanged($event)" />
         }
         @case ('extensions') {
         <!-- Extensions sidebar placeholder -->

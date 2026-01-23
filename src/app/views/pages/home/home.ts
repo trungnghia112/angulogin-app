@@ -7,6 +7,7 @@ import {
     HostListener,
     computed,
     OnInit,
+    effect,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TitleCasePipe } from '@angular/common';
@@ -73,7 +74,7 @@ export class Home implements OnInit, OnDestroy {
     protected readonly activeTab = signal<TabKey>('profiles');
 
     // Core state
-    protected readonly profilesPath = signal(this.settingsService.getProfilesPath() || '');
+    protected readonly profilesPath = computed(() => this.settingsService.settings().profilesPath || '');
     protected readonly profiles = this.profileService.profiles;
     protected readonly loading = this.profileService.loading;
     protected readonly selectedProfiles = signal<Profile[]>([]);
@@ -127,11 +128,14 @@ export class Home implements OnInit, OnDestroy {
     }
 
     constructor() {
-        const savedPath = this.settingsService.getProfilesPath();
-        if (savedPath) {
-            this.profilesPath.set(savedPath);
-            this.scanProfiles();
-        }
+        // Auto-scan whenever the profiles path changes
+        effect(() => {
+            const path = this.profilesPath();
+            if (path) {
+                this.scanProfiles();
+            }
+        });
+
         this.statusInterval = setInterval(() => {
             if (this.profiles().length > 0) {
                 this.profileService.refreshProfileStatus();
@@ -249,7 +253,7 @@ export class Home implements OnInit, OnDestroy {
     }
 
     onPathChange(value: string): void {
-        this.profilesPath.set(value);
+        this.settingsService.setProfilesPath(value);
     }
 
     setFilterGroup(group: string | null): void {
