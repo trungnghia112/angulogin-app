@@ -10,9 +10,9 @@
 
 | Trạng thái | Số lượng |
 |------------|----------|
-| ✅ Done | 4 |
+| ✅ Done | 7 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 45 |
+| 📋 Backlog | 42 |
 
 ---
 
@@ -35,23 +35,23 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 - **Giá trị:** Rất cao - Core UX khi có nhiều profile
 - **Status:** ✅ Done
 
-### 2. Tags System ⭐
+### 2. Tags System ✅
 - **Mô tả:** Gắn nhiều tags cho profile (Work, Personal, Testing...)
 - **Độ khó:** 🟢 Dễ
 - **Giá trị:** Cao - Tổ chức linh hoạt hơn folders
-- **Status:** 📋 Backlog
+- **Status:** ✅ Done
 
-### 3. Launch with URL
+### 3. Launch with URL ✅
 - **Mô tả:** Mở profile và tự động navigate đến URL
 - **Độ khó:** 🟢 Dễ
 - **Giá trị:** Cao - Tiết kiệm thời gian workflow
-- **Status:** 📋 Backlog
+- **Status:** ✅ Done
 
-### 4. Profile Pinning
+### 4. Profile Pinning ✅
 - **Mô tả:** Ghim profile hay dùng lên đầu danh sách
 - **Độ khó:** 🟢 Dễ
 - **Giá trị:** Cao - UX tốt
-- **Status:** 📋 Backlog
+- **Status:** ✅ Done
 
 ### 5. Quick Search (⌘+K)
 - **Mô tả:** Command palette style search & launch
