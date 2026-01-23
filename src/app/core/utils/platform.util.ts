@@ -12,9 +12,7 @@ import { isTauri } from '@tauri-apps/api/core';
  * @returns true if running in Tauri, false if running in browser
  */
 export function isTauriAvailable(): boolean {
-    const available = isTauri();
-    console.log('[Platform] isTauriAvailable:', available);
-    return available;
+    return isTauri();
 }
 
 /**

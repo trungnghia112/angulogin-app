@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { Folder } from '../../../models/folder.model';
 import { isTauriAvailable } from '../../../core/utils/platform.util';
+import { debugLog } from '../../../core/utils/logger.util';
 
 @Component({
     selector: 'app-sidebar',
@@ -52,7 +53,7 @@ export class Sidebar {
     protected async browseFolder(): Promise<void> {
         // Only works in Tauri environment
         if (!isTauriAvailable()) {
-            console.log('[Mock] browseFolder - Tauri not available');
+            debugLog('Sidebar', 'browseFolder - Tauri not available');
             return;
         }
 

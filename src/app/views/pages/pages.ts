@@ -5,6 +5,7 @@ import { MainNav } from '../components/main-nav/main-nav';
 import { Sidebar } from '../components/sidebar/sidebar';
 import { NavigationService } from '../../services/navigation.service';
 import { SettingsService } from '../../services/settings.service';
+import { debugLog } from '../../core/utils/logger.util';
 import { Folder } from '../../models/folder.model';
 
 @Component({
@@ -63,15 +64,15 @@ export class Pages implements OnInit, OnDestroy {
   }
 
   protected onAddFolder(): void {
-    console.log('Add folder clicked');
+    debugLog('Pages', 'Add folder clicked');
   }
 
   protected onSettings(): void {
-    console.log('Settings clicked');
+    debugLog('Pages', 'Settings clicked');
   }
 
   protected onFolderSettings(): void {
-    console.log('Folder settings clicked');
+    debugLog('Pages', 'Folder settings clicked');
   }
 
   protected onProfilesDirectoryChanged(path: string): void {

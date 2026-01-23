@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { invoke } from '@tauri-apps/api/core';
 import { BrowserType, Profile, ProfileMetadata } from '../models/profile.model';
 import { isTauriAvailable } from '../core/utils/platform.util';
+import { debugLog } from '../core/utils/logger.util';
 import { MOCK_PROFILES, MOCK_AVAILABLE_BROWSERS, getMockProfileByPath } from '../mocks/profile.mock';
 
 @Injectable({
@@ -19,7 +20,7 @@ export class ProfileService {
         try {
             // Mock mode for web development
             if (!isTauriAvailable()) {
-                console.log('[Mock] scanProfiles:', path);
+                debugLog('Mock scanProfiles:', path);
                 this.profiles.set(MOCK_PROFILES);
                 return MOCK_PROFILES;
             }
@@ -52,7 +53,7 @@ export class ProfileService {
     async launchChrome(profilePath: string): Promise<void> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            console.log('[Mock] launchChrome:', profilePath);
+            debugLog('Mock launchChrome:', profilePath);
             return;
         }
 
@@ -68,7 +69,7 @@ export class ProfileService {
     async checkPathExists(path: string): Promise<boolean> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            console.log('[Mock] checkPathExists:', path);
+            debugLog('Mock checkPathExists:', path);
             return true;
         }
 
@@ -82,7 +83,7 @@ export class ProfileService {
     async createProfile(basePath: string, name: string): Promise<string> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            console.log('[Mock] createProfile:', basePath, name);
+            debugLog('Mock createProfile:', basePath, name);
             const newPath = `${basePath}/${name}`;
             const newProfile: Profile = {
                 id: `profile-${Date.now()}`,
@@ -110,7 +111,7 @@ export class ProfileService {
     async deleteProfile(profilePath: string, basePath: string): Promise<void> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            console.log('[Mock] deleteProfile:', profilePath);
+            debugLog('Mock deleteProfile:', profilePath);
             this.profiles.update(profiles => profiles.filter(p => p.path !== profilePath));
             return;
         }
@@ -128,7 +129,7 @@ export class ProfileService {
     async renameProfile(oldPath: string, newName: string, basePath: string): Promise<string> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            console.log('[Mock] renameProfile:', oldPath, newName);
+            debugLog('Mock renameProfile:', oldPath, newName);
             const newPath = `${basePath}/${newName}`;
             this.profiles.update(profiles =>
                 profiles.map(p => p.path === oldPath ? { ...p, name: newName, path: newPath } : p)
@@ -174,7 +175,7 @@ export class ProfileService {
     ): Promise<void> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            console.log('[Mock] saveProfileMetadata:', profilePath, { emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned });
+            debugLog('Mock saveProfileMetadata:', profilePath, { emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned });
             this.profiles.update((profiles) =>
                 profiles.map((p) =>
                     p.path === profilePath
@@ -240,7 +241,7 @@ export class ProfileService {
     async launchBrowser(profilePath: string, browser: string, url?: string): Promise<void> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            console.log('[Mock] launchBrowser:', profilePath, browser, url);
+            debugLog('Mock launchBrowser:', profilePath, browser, url);
             // Simulate running state change
             this.profiles.update(profiles =>
                 profiles.map(p => p.path === profilePath ? { ...p, isRunning: true } : p)
@@ -274,7 +275,7 @@ export class ProfileService {
     async listAvailableBrowsers(): Promise<string[]> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            console.log('[Mock] listAvailableBrowsers');
+            debugLog('Mock listAvailableBrowsers');
             return MOCK_AVAILABLE_BROWSERS;
         }
 

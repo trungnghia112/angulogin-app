@@ -4,7 +4,6 @@ import {
     inject,
     signal,
     OnDestroy,
-    HostListener,
     computed,
     OnInit,
     effect,
@@ -48,6 +47,9 @@ interface Tab {
     templateUrl: './home.html',
     styleUrl: './home.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    host: {
+        '(window:keydown)': 'handleKeyboard($event)',
+    },
     imports: [
         FormsModule,
         TitleCasePipe,
@@ -229,7 +231,6 @@ export class Home implements OnInit, OnDestroy {
         }
     }
 
-    @HostListener('window:keydown', ['$event'])
     handleKeyboard(event: KeyboardEvent): void {
         if ((event.metaKey || event.ctrlKey) && event.key >= '1' && event.key <= '9') {
             const shortcutNum = parseInt(event.key, 10);
