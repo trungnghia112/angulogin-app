@@ -2,13 +2,19 @@ use std::fs;
 use std::process::Command;
 
 /// Check if a folder is a valid Chrome profile
-/// A valid profile has a "Preferences" file inside
-fn is_valid_profile(path: &std::path::Path) -> bool {
+/// In strict mode: requires Preferences file or Default/Profile X naming
+/// In relaxed mode: accepts any directory (for managed profiles)
+fn is_valid_profile(path: &std::path::Path, strict_mode: bool) -> bool {
     if !path.is_dir() {
         return false;
     }
     
-    // Check for Preferences file (present in all Chrome profiles)
+    // In relaxed mode (managed profiles directory), accept any folder
+    if !strict_mode {
+        return true;
+    }
+    
+    // Strict mode: Check for Preferences file (present in all Chrome profiles)
     let prefs_file = path.join("Preferences");
     if prefs_file.exists() {
         return true;
@@ -30,8 +36,20 @@ fn is_valid_profile(path: &std::path::Path) -> bool {
     false
 }
 
+/// Detect if this is a native Chrome User Data directory (has "Local State" file)
+/// or a managed profiles directory (no "Local State" file)
+fn is_native_chrome_directory(path: &std::path::Path) -> bool {
+    let local_state = path.join("Local State");
+    local_state.exists()
+}
+
 #[tauri::command]
 pub fn scan_profiles(path: String) -> Result<Vec<String>, String> {
+    let path_obj = std::path::Path::new(&path);
+    
+    // Detect if this is native Chrome directory or managed profiles directory
+    let is_native = is_native_chrome_directory(path_obj);
+    
     let entries = fs::read_dir(&path).map_err(|e| format!("Failed to read directory: {}", e))?;
 
     let mut profiles: Vec<String> = Vec::new();
@@ -40,22 +58,38 @@ pub fn scan_profiles(path: String) -> Result<Vec<String>, String> {
         if let Ok(entry) = entry {
             let entry_path = entry.path();
             
+            // Skip files (only process directories)
+            if !entry_path.is_dir() {
+                continue;
+            }
+            
             // Skip hidden folders
             if let Some(name) = entry_path.file_name().and_then(|n| n.to_str()) {
                 if name.starts_with('.') {
                     continue;
                 }
+                
+                // For native Chrome directory, skip known non-profile folders
+                if is_native {
+                    let skip_folders = ["Crashpad", "GrShaderCache", "ShaderCache", 
+                                        "FileTypePolicies", "Crowd Deny", "MEIPreload",
+                                        "SafetyTips", "SSLErrorAssistant", "hyphen-data",
+                                        "pnacl", "WidevineCdm", "ZxcvbnData"];
+                    if skip_folders.contains(&name) {
+                        continue;
+                    }
+                }
             }
             
-            // Only include valid Chrome profiles
-            if is_valid_profile(&entry_path) {
+            // Check if valid profile (strict mode for native, relaxed for managed)
+            if is_valid_profile(&entry_path, is_native) {
                 if let Some(name) = entry_path.file_name().and_then(|n| n.to_str()) {
                     profiles.push(name.to_string());
                 }
             }
         }
     }
-
+    
     profiles.sort();
     Ok(profiles)
 }
