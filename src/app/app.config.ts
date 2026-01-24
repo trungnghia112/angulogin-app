@@ -15,7 +15,7 @@ import { getFunctions, provideFunctions, connectFunctionsEmulator } from '@angul
 import { getStorage, provideStorage, connectStorageEmulator } from '@angular/fire/storage';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
-// Custom theme preset with pink primary color
+// Custom theme preset with pink primary color and dark surfaces
 const AppTheme = definePreset(Aura, {
   semantic: {
     primary: palette('#f637e3'), // Pink primary color
@@ -35,6 +35,24 @@ const AppTheme = definePreset(Aura, {
           900: '#E4E4E7',
           950: '#FAFAFA'
         }
+      }
+    }
+  },
+  components: {
+    // DataTable - transparent backgrounds
+    datatable: {
+      header: {
+        background: 'transparent'
+      },
+      row: {
+        background: 'transparent'
+      }
+    },
+    // Dialog - dark background (root section)
+    dialog: {
+      root: {
+        background: '{surface.100}',
+        borderColor: '{surface.300}'
       }
     }
   }
