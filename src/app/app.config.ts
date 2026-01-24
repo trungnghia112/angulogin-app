@@ -2,6 +2,7 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode } from
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
+import { definePreset, palette } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 
 import { routes } from './app.routes';
@@ -14,6 +15,31 @@ import { getFunctions, provideFunctions, connectFunctionsEmulator } from '@angul
 import { getStorage, provideStorage, connectStorageEmulator } from '@angular/fire/storage';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
+// Custom theme preset with pink primary color
+const AppTheme = definePreset(Aura, {
+  semantic: {
+    primary: palette('#f637e3'), // Pink primary color
+    colorScheme: {
+      dark: {
+        surface: {
+          0: '#0F0F0F',
+          50: '#161616',
+          100: '#1A1A1A',
+          200: '#262626',
+          300: '#2E2E2E',
+          400: '#3F3F46',
+          500: '#52525B',
+          600: '#71717A',
+          700: '#A1A1AA',
+          800: '#D4D4D8',
+          900: '#E4E4E7',
+          950: '#FAFAFA'
+        }
+      }
+    }
+  }
+});
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -21,7 +47,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {
-        preset: Aura,
+        preset: AppTheme,
         options: {
           darkModeSelector: '.dark',
           cssLayer: {

@@ -1,17 +1,36 @@
 @import "primeicons/primeicons.css";
 @import "tailwindcss";
 
-/* Custom CSS variables for dark theme - used by Tailwind */
+/* 
+ * PrimeNG Theming: Standard Configuration
+ * ----------------------------------------
+ * Primary color: #f637e3 (pink) - defined via definePreset() in app.config.ts
+ * Surface colors: custom dark palette - defined via definePreset() in app.config.ts
+ * Dark mode: enabled via class="dark" on <html> element (index.html)
+ * 
+ * CSS Variables from PrimeNG:
+ * - var(--p-primary-color), var(--p-primary-500), etc.
+ * - var(--p-surface-0) to var(--p-surface-950)
+ * - var(--p-content-background), var(--p-content-border-color)
+ * 
+ * Reference: https://primeng.org/theming/styled
+ */
+
+/* App-specific Tailwind theme extensions */
 @theme {
-    --color-bg: #0F0F0F;
-    --color-surface: #1A1A1A;
-    --color-surface-hover: #262626;
-    --color-border: #2E2E2E;
+    /* Layout sidebar colors (not from PrimeNG) */
     --color-rail: #0A0A0A;
     --color-sidebar: #161616;
-    --color-primary: #f637e3;
-    --color-primary-hover: #DC087D;
-    --color-secondary: #22D3EE;
+
+    /* Alias to PrimeNG surface variables for Tailwind usage */
+    --color-bg: var(--p-surface-0, #0F0F0F);
+    --color-surface: var(--p-surface-100, #1A1A1A);
+    --color-surface-hover: var(--p-surface-200, #262626);
+    --color-border: var(--p-surface-300, #2E2E2E);
+    --color-primary: var(--p-primary-color, #f637e3);
+    --color-primary-hover: var(--p-primary-hover-color, #DC087D);
+
+    /* Semantic colors */
     --color-error: #EF4444;
     --color-success: #22C55E;
     --color-warning: #F59E0B;
@@ -22,15 +41,15 @@
     --spacing-header: 56px;
 }
 
-
-/* Base styles */
+/* Base styles - use PrimeNG CSS variables */
 html,
 body {
-    background-color: var(--color-bg);
+    background-color: var(--p-surface-0, #0F0F0F);
     margin: 0;
     padding: 0;
     height: 100vh;
-    @apply text-zinc-50 font-sans antialiased;
+    color: var(--p-surface-950, #FAFAFA);
+    @apply font-sans antialiased;
 }
 
 [data-tauri-drag-region] {
@@ -38,100 +57,133 @@ body {
     user-select: none;
 }
 
-
-/* Scrollbar */
+/* Scrollbar - use PrimeNG surface colors */
 ::-webkit-scrollbar {
     @apply w-2 h-2;
 }
 
 ::-webkit-scrollbar-track {
-    @apply bg-bg;
+    background-color: var(--p-surface-0);
 }
 
 ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded;
+    background-color: var(--p-surface-300);
+    @apply rounded;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    @apply bg-zinc-500;
+    background-color: var(--p-surface-400);
 }
 
 ::selection {
-    @apply bg-primary text-white;
+    background-color: var(--p-primary-color);
+    @apply text-white;
 }
 
-/* PrimeNG uses native dark mode with .dark class on html - minimal overrides below */
+/* ================================================================
+   MINIMAL PrimeNG Overrides
+   ----------------------------------------------------------------
+   Only override what PrimeNG doesn't handle natively.
+   Majority of styling comes from definePreset() in app.config.ts
+   ================================================================ */
 
-/* Table Custom Styles */
+/* Dialog - force dark surface colors */
+.p-dialog {
+    background-color: var(--p-surface-100) !important;
+    border: 1px solid var(--p-surface-300) !important;
+    color: var(--p-surface-950) !important;
+}
+
+.p-dialog-header {
+    background-color: var(--p-surface-100) !important;
+    border-bottom: 1px solid var(--p-surface-300) !important;
+    color: var(--p-surface-950) !important;
+}
+
+.p-dialog-content {
+    background-color: var(--p-surface-100) !important;
+    color: var(--p-surface-950) !important;
+}
+
+.p-dialog-footer {
+    background-color: var(--p-surface-100) !important;
+    border-top: 1px solid var(--p-surface-300) !important;
+}
+
+.p-dialog-mask {
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(4px) !important;
+}
+
+.p-confirmdialog {
+    background-color: var(--p-surface-100) !important;
+    border: 1px solid var(--p-surface-300) !important;
+}
+
+.p-confirmdialog-message {
+    color: var(--p-surface-600) !important;
+}
+
+/* Table - transparent backgrounds to match container */
 .profile-table .p-datatable-header {
     background-color: transparent !important;
-    border-color: #2E2E2E !important;
+    border-color: var(--p-surface-300) !important;
 }
 
 .profile-table .p-datatable-thead>tr>th {
-    background-color: rgba(38, 38, 38, 0.5) !important;
-    color: #A1A1AA !important;
-    border-color: #2E2E2E !important;
+    background-color: color-mix(in srgb, var(--p-surface-200) 50%, transparent) !important;
+    color: var(--p-surface-600) !important;
+    border-color: var(--p-surface-300) !important;
 }
 
 .profile-table .p-datatable-tbody>tr {
     background-color: transparent !important;
-    color: #FAFAFA !important;
-    border-color: #2E2E2E !important;
+    color: var(--p-surface-950) !important;
+    border-color: var(--p-surface-300) !important;
 }
 
 .profile-table .p-datatable-tbody>tr:hover {
-    background-color: rgba(38, 38, 38, 0.3) !important;
+    background-color: color-mix(in srgb, var(--p-surface-200) 30%, transparent) !important;
 }
 
 .profile-table .p-datatable-tbody>tr>td {
     border: none !important;
-    border-bottom: 1px solid #2E2E2E !important;
-}
-
-.dark .profile-table .p-datatable-tbody>tr>td {
-    border-bottom: 1px solid #2E2E2E !important;
+    border-bottom: 1px solid var(--p-surface-300) !important;
 }
 
 .profile-table .p-datatable-tfoot>tr>td {
     background-color: transparent !important;
-    border-color: #2E2E2E !important;
+    border-color: var(--p-surface-300) !important;
 }
 
-/* Make table wrapper expand to content width so home-content handles scroll */
-#home-profiles-table {
-    min-width: 60rem;
-}
-
-.profile-table {
-    min-width: 60rem;
-}
-
+/* Table min-width for horizontal scroll */
+#home-profiles-table,
+.profile-table,
 #home-table-footer {
     min-width: 60rem;
 }
 
-/* Checkbox Dark Mode Overrides */
+/* Checkbox - use primary color from theme */
 .p-checkbox .p-checkbox-box {
-    background-color: #1A1A1A !important;
-    border: 1px solid #3F3F46 !important;
+    background-color: var(--p-surface-100) !important;
+    border: 1px solid var(--p-surface-400) !important;
     transition: all 0.2s ease;
 }
 
 .p-checkbox .p-checkbox-box.p-highlight,
 .p-checkbox .p-checkbox-box.p-checkbox-checked {
-    background-color: #f637e3 !important;
-    border-color: #f637e3 !important;
+    background-color: var(--p-primary-color) !important;
+    border-color: var(--p-primary-color) !important;
 }
 
 .p-checkbox .p-checkbox-box .p-checkbox-icon {
-    color: #0F0F0F !important;
+    color: var(--p-surface-0) !important;
     font-size: 10px !important;
     font-weight: bold !important;
 }
 
 .p-checkbox:not(.p-checkbox-disabled):has(.p-checkbox-input:hover) .p-checkbox-box {
-    border-color: #f637e3 !important;
+    border-color: var(--p-primary-color) !important;
 }
 
 .p-checkbox-input {
@@ -139,20 +191,22 @@ body {
     background: transparent !important;
 }
 
-/* Paginator Dark Mode Overrides */
+/* Paginator - transparent background */
 .p-paginator {
     background-color: transparent !important;
-    color: #A1A1AA !important;
+    color: var(--p-surface-600) !important;
     border: none !important;
 }
 
 .p-paginator .p-paginator-pages .p-paginator-page {
-    color: #A1A1AA !important;
+    color: var(--p-surface-600) !important;
 }
 
-.p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
-    background-color: rgba(246, 55, 227, 0.1) !important;
-    color: #f637e3 !important;
+.p-paginator .p-paginator-pages .p-paginator-page.p-highlight,
+.p-paginator .p-paginator-pages .p-paginator-page-selected {
+    background-color: color-mix(in srgb, var(--p-primary-color) 20%, transparent) !important;
+    color: var(--p-primary-color) !important;
+    border: 1px solid color-mix(in srgb, var(--p-primary-color) 40%, transparent) !important;
 }
 
 .p-paginator .p-paginator-page:not(.p-highlight):not(.p-paginator-page-selected):hover,
@@ -160,61 +214,28 @@ body {
 .p-paginator .p-paginator-prev:not(.p-disabled):hover,
 .p-paginator .p-paginator-next:not(.p-disabled):hover,
 .p-paginator .p-paginator-last:not(.p-disabled):hover {
-    background-color: #262626 !important;
-    color: #FAFAFA !important;
-}
-
-.p-paginator .p-paginator-pages .p-paginator-page-selected,
-.p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
-    background-color: rgba(246, 55, 227, 0.2) !important;
-    color: #f637e3 !important;
-    border: 1px solid rgba(246, 55, 227, 0.4) !important;
-}
-
-.p-paginator .p-dropdown {
-    background-color: #1A1A1A !important;
-    border-color: #2E2E2E !important;
-}
-
-.p-paginator .p-dropdown-label {
-    color: #FAFAFA !important;
-}
-
-.p-paginator .p-dropdown-trigger {
-    color: #A1A1AA !important;
-}
-
-.p-paginator .p-dropdown-panel {
-    background-color: #1A1A1A !important;
-    border-color: #2E2E2E !important;
-    color: #FAFAFA !important;
-}
-
-.p-paginator .p-dropdown-item {
-    color: #FAFAFA !important;
-}
-
-.p-paginator .p-dropdown-item:hover {
-    background-color: #262626 !important;
+    background-color: var(--p-surface-200) !important;
+    color: var(--p-surface-950) !important;
 }
 
 .p-paginator .p-select {
-    background-color: #1A1A1A !important;
-    border-color: #2E2E2E !important;
+    background-color: var(--p-surface-100) !important;
+    border-color: var(--p-surface-300) !important;
 }
 
 .p-paginator .p-select-label {
-    color: #FAFAFA !important;
+    color: var(--p-surface-950) !important;
     font-size: 13px !important;
 }
 
 .p-paginator .p-select-dropdown {
-    color: #A1A1AA !important;
+    color: var(--p-surface-600) !important;
 }
 
+/* Select Dropdown Overlay */
 .p-select-overlay {
-    background-color: #1A1A1A !important;
-    border: 1px solid #2E2E2E !important;
+    background-color: var(--p-surface-100) !important;
+    border: 1px solid var(--p-surface-300) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
 }
 
@@ -223,38 +244,38 @@ body {
 }
 
 .p-select-option {
-    color: #FAFAFA !important;
+    color: var(--p-surface-950) !important;
     padding: 8px 12px !important;
     font-size: 13px !important;
     border-radius: 6px !important;
 }
 
 .p-select-option:hover {
-    background-color: #262626 !important;
+    background-color: var(--p-surface-200) !important;
 }
 
 .p-select-option.p-selected {
-    background-color: rgba(246, 55, 227, 0.1) !important;
-    color: #f637e3 !important;
+    background-color: color-mix(in srgb, var(--p-primary-color) 10%, transparent) !important;
+    color: var(--p-primary-color) !important;
 }
 
-/* Toast Dark Mode */
+/* Toast - minimal overrides, theme handles most */
 .p-toast-message {
-    background-color: #1A1A1A !important;
-    border: 1px solid #2E2E2E !important;
-    color: #FAFAFA !important;
+    background-color: var(--p-surface-100) !important;
+    border: 1px solid var(--p-surface-300) !important;
+    color: var(--p-surface-950) !important;
 }
 
 .p-toast-message-content {
-    color: #FAFAFA !important;
+    color: var(--p-surface-950) !important;
 }
 
 .p-toast-summary {
-    color: #FAFAFA !important;
+    color: var(--p-surface-950) !important;
 }
 
 .p-toast-detail {
-    color: #A1A1AA !important;
+    color: var(--p-surface-600) !important;
 }
 
 .p-toast-message-success {
