@@ -1,113 +1,141 @@
 {
     "meta": {
         "schema_version": "1.1.0",
-        "awf_version": "3.3.0"
+        "awf_version": "3.3.0",
+        "updated_at": "2026-01-24T23:38:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
-        "type": "Angular + Tauri Desktop Application",
-        "status": "Active Development"
+        "type": "desktop-app",
+        "status": "active-development",
+        "description": "Tauri + Angular desktop app to manage multiple Chrome profiles"
     },
     "tech_stack": {
         "frontend": {
-            "framework": "Angular 21",
-            "ui_library": "PrimeNG 21",
-            "styling": "Tailwind CSS 4 + tailwindcss-primeui",
-            "icons": "PrimeIcons"
+            "framework": "Angular 20",
+            "ui_library": "PrimeNG",
+            "styling": "Tailwind CSS + tailwindcss-primeui",
+            "state": "Angular Signals"
         },
         "backend": {
-            "hosting": "Firebase (Firestore)",
-            "database": "Firestore",
-            "desktop_bridge": "Tauri 2"
+            "runtime": "Tauri 2.x (Rust)",
+            "plugins": [
+                "tauri-plugin-fs",
+                "tauri-plugin-shell",
+                "tauri-plugin-dialog",
+                "tauri-plugin-os",
+                "tauri-plugin-log"
+            ]
+        },
+        "database": {
+            "type": "file-based",
+            "format": "JSON metadata per profile (.profile-meta.json)"
         }
     },
+    "architecture": {
+        "profile_storage": {
+            "managed_profiles_path": {
+                "macOS": "~/Library/Application Support/ChromeProfileManager/Profiles",
+                "windows": "%APPDATA%/ChromeProfileManager/Profiles",
+                "linux": "~/.config/ChromeProfileManager/Profiles"
+            },
+            "native_chrome_path": {
+                "macOS": "~/Library/Application Support/Google/Chrome",
+                "windows": "%LOCALAPPDATA%/Google/Chrome/User Data",
+                "linux": "~/.config/google-chrome"
+            }
+        },
+        "profile_detection": {
+            "native_profile": "Parent folder has 'Local State' file",
+            "managed_profile": "No 'Local State' in parent",
+            "valid_profile_check": "Has 'Preferences' file OR named 'Default'/'Profile X'"
+        },
+        "launch_behavior": {
+            "native_profile": "--user-data-dir=<parent> --profile-directory=<folder_name>",
+            "managed_profile": "--user-data-dir=<profile_path>"
+        }
+    },
+    "key_files": {
+        "rust_commands": "src-tauri/src/commands.rs",
+        "tauri_config": "src-tauri/src/lib.rs",
+        "settings_service": "src/app/core/services/settings.service.ts",
+        "profile_service": "src/app/services/profile.service.ts",
+        "home_component": "src/app/views/pages/home/home.ts"
+    },
     "features": [
-        "Profile Management (Grid/List View, Search, Sort, Filter)",
-        "Directory Scanning for Chrome Profiles",
-        "Dark/Light Mode with Persistence",
-        "Folder/Group Organization",
-        "Settings Page (Appearance, General, Browser Paths, Data)",
-        "Dynamic Theme Engine (Primary Color, Surface, Scale)",
-        "Extension Management (Placeholder)",
-        "Automation (Placeholder)"
+        {
+            "name": "Profile Management",
+            "status": "implemented",
+            "includes": [
+                "scan",
+                "create",
+                "delete",
+                "rename",
+                "duplicate"
+            ]
+        },
+        {
+            "name": "Multi-Browser Support",
+            "status": "implemented",
+            "browsers": [
+                "Chrome",
+                "Brave",
+                "Edge",
+                "Arc"
+            ]
+        },
+        {
+            "name": "Profile Metadata",
+            "status": "implemented",
+            "includes": [
+                "emoji",
+                "notes",
+                "group",
+                "tags",
+                "launchUrl",
+                "isPinned"
+            ]
+        },
+        {
+            "name": "Settings Page",
+            "status": "partial",
+            "includes": [
+                "Appearance (themes, colors)",
+                "Browser Paths"
+            ]
+        },
+        {
+            "name": "Smart Profile Detection",
+            "status": "implemented",
+            "description": "Auto-detect native vs managed profiles for correct launch"
+        }
     ],
     "knowledge_items": {
         "patterns": [
-            "Signal-based state management",
-            "Standalone components as default (Angular 20+)",
-            "Host class rule for page components: host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' }",
-            "p-menu [popup]=\"true\" for dropdown menus with menu.toggle($event)"
+            {
+                "name": "Tauri 2.x Environment Detection",
+                "code": "window.__TAURI_INTERNALS__ !== undefined",
+                "note": "Tauri 1.x uses window.__TAURI__, Tauri 2.x uses window.__TAURI_INTERNALS__"
+            },
+            {
+                "name": "Chrome Profile Directory Structure",
+                "note": "User Data Dir contains 'Local State' + profile folders (Default, Profile 1, etc.)"
+            }
         ],
-        "dark_mode_architecture": {
-            "summary": "PrimeNG + Tailwind CSS unified dark mode using .dark class",
-            "key_config": {
-                "primeng_config": "darkModeSelector: '.dark' in providePrimeNG()",
-                "tailwind_css": "@custom-variant dark (&:where(.dark, .dark *));"
-            },
-            "critical_insight": "PrimeNG surface scale is NOT inverted in dark mode! surface.0 = always WHITE (text), surface.950 = always DARK (background)",
-            "template_pattern": {
-                "backgrounds": [
-                    "bg-surface-0 dark:bg-surface-900",
-                    "bg-surface-50 dark:bg-surface-950",
-                    "bg-surface-100 dark:bg-surface-800"
-                ],
-                "borders": [
-                    "border-surface-200 dark:border-surface-700"
-                ]
-            },
-            "toggle_mechanism": "Direct DOM manipulation: document.documentElement.classList.add/remove('dark')",
-            "persistence": "localStorage via SettingsService"
-        },
-        "primeng_theming": {
-            "update_primary_color": "import { updatePrimaryPalette } from '@primeuix/themes'; updatePrimaryPalette({ 50: '{blue.50}', ... })",
-            "update_surface": "import { updateSurfacePalette } from '@primeuix/themes'; updateSurfacePalette({ 50: '{zinc.50}', ... })",
-            "available_colors": [
-                "emerald",
-                "blue",
-                "violet",
-                "amber",
-                "rose",
-                "fuchsia"
-            ],
-            "available_surfaces": [
-                "zinc",
-                "slate",
-                "gray",
-                "neutral",
-                "stone"
-            ]
-        },
         "gotchas": [
-            "PrimeNG default darkModeSelector is 'system' (@media prefers-color-scheme) - NOT .dark class!",
-            "tailwindcss-primeui does NOT auto-invert bg-surface-X in dark mode - must add dark: variants manually",
-            "PrimeNG cssLayer: false to avoid conflict with Tailwind ordering",
-            "Tailwind v4 CSS Variable syntax: h-[var(--spacing-header)] required for custom CSS variables",
-            "Angular effect() may not work reliably in zoneless mode for DOM manipulation - use direct DOM APIs",
-            "NO styleClass on PrimeNG - use class instead",
-            "Must NOT set standalone: true in Angular v20+ (it's the default)"
+            {
+                "issue": "Using --user-data-dir with profile subfolder creates NEW profile",
+                "solution": "Use --user-data-dir=<parent> --profile-directory=<folder> for native profiles"
+            },
+            {
+                "issue": "tauri-plugin-os not working",
+                "solution": "Must add to Cargo.toml, register in lib.rs, AND add 'os:default' to capabilities"
+            }
         ],
         "conventions": [
-            "Strict naming: [name].ts, [name].html, [name].css (NOT .component.ts)",
-            "Tailwind only for layout/styling",
-            "All page components must have host property with flex classes",
-            "HTML ID format: [feature]-[section]-[index]",
-            "Commit after every step with semantic messages"
-        ]
-    },
-    "api_endpoints": [],
-    "database_schema": {
-        "collections": [
-            {
-                "name": "profiles",
-                "fields": [
-                    "id",
-                    "name",
-                    "path",
-                    "browserType",
-                    "metadata",
-                    "userId"
-                ]
-            }
+            "All page components MUST have host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' }",
+            "Use async/await + firstValueFrom for user actions",
+            "Commit after every significant change with semantic format"
         ]
     }
 }
