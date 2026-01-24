@@ -35,11 +35,22 @@ export const UI_SCALES = [
     { value: 18, label: 'Large' },
 ] as const;
 
+export type BrowserType = 'chrome' | 'brave' | 'edge' | 'arc';
+export type OnLaunchBehavior = 'keep-open' | 'minimize' | 'close';
+
 export interface AppearanceSettings {
     primaryColor: string;
     surface: string;
     scale: number;
     isDarkMode: boolean;
+}
+
+export interface GeneralSettings {
+    defaultBrowser: BrowserType;
+    onLaunch: OnLaunchBehavior;
+    launchAtStartup: boolean;
+    startMinimized: boolean;
+    confirmDelete: boolean;
 }
 
 export interface BrowserSettings {
@@ -48,6 +59,7 @@ export interface BrowserSettings {
 
 export interface AppSettings {
     appearance: AppearanceSettings;
+    general: GeneralSettings;
     browser: BrowserSettings;
 }
 
@@ -57,6 +69,13 @@ const DEFAULT_SETTINGS: AppSettings = {
         surface: 'zinc',
         scale: 16,
         isDarkMode: false,
+    },
+    general: {
+        defaultBrowser: 'chrome',
+        onLaunch: 'keep-open',
+        launchAtStartup: false,
+        startMinimized: false,
+        confirmDelete: true
     },
     browser: {
         profilesPath: '',
@@ -78,6 +97,7 @@ export class SettingsService {
     // Public readonly signals
     readonly settings = this._settings.asReadonly();
     readonly appearance = computed(() => this._settings().appearance);
+    readonly general = computed(() => this._settings().general || DEFAULT_SETTINGS.general);
     readonly browser = computed(() => this._settings().browser);
     readonly isDarkMode = computed(() => this._settings().appearance.isDarkMode);
 
@@ -213,6 +233,19 @@ export class SettingsService {
     }
 
     /**
+     * Update general settings
+     */
+    setGeneralSetting<K extends keyof GeneralSettings>(key: K, value: GeneralSettings[K]): void {
+        this._settings.update((s) => ({
+            ...s,
+            general: {
+                ...s.general,
+                [key]: value
+            }
+        }));
+    }
+
+    /**
      * Reset all settings to default
      */
     resetToDefaults(): void {
@@ -228,7 +261,14 @@ export class SettingsService {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 const parsed = JSON.parse(stored) as Partial<AppSettings>;
-                return { ...DEFAULT_SETTINGS, ...parsed };
+                // Merge with defaults to ensure new fields are present
+                return { 
+                    ...DEFAULT_SETTINGS, 
+                    ...parsed,
+                    appearance: { ...DEFAULT_SETTINGS.appearance, ...parsed.appearance },
+                    general: { ...DEFAULT_SETTINGS.general, ...parsed.general },
+                    browser: { ...DEFAULT_SETTINGS.browser, ...parsed.browser }
+                };
             }
         } catch (e) {
             console.warn('Failed to load settings:', e);
