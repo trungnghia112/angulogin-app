@@ -14,7 +14,7 @@ Compete the unfinished Tabs in the Settings page to make the application fully f
 
 | Phase | Name | Status | Progress |
 |-------|------|--------|----------|
-| 01 | Browser Paths (Directory Selection) | ⬜ Pending | 0% |
+| 01 | Browser Paths (Directory Selection) | ✅ Complete | 100% |
 | 02 | General Settings (Startup, etc.) | ⬜ Pending | 0% |
 | 03 | Data Management (Backup/Restore) | ⬜ Pending | 0% |
 

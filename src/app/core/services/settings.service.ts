@@ -94,9 +94,21 @@ export class SettingsService {
     }
 
     /**
+     * Check if running inside Tauri desktop app
+     */
+    private isTauriEnvironment(): boolean {
+        return typeof window !== 'undefined' && '__TAURI__' in window;
+    }
+
+    /**
      * Detect default Chrome User Data path based on OS
      */
     async detectDefaultPath(): Promise<string> {
+        if (!this.isTauriEnvironment()) {
+            console.warn('Tauri APIs not available in browser mode');
+            return '';
+        }
+
         try {
             const osType = await type();
             const home = await homeDir();
