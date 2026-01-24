@@ -25,7 +25,8 @@ import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { TooltipModule } from 'primeng/tooltip';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MenuModule } from 'primeng/menu';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { ProfileService } from '../../../services/profile.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { BrowserType, Profile } from '../../../models/profile.model';
@@ -71,6 +72,7 @@ interface Tab {
         TableModule,
         PaginatorModule,
         TooltipModule,
+        MenuModule,
         HomeSidebar,
     ],
 })
@@ -123,20 +125,35 @@ export class Home implements OnInit, OnDestroy {
     // Search & Filter
     protected readonly searchText = signal('');
     protected readonly filterGroup = signal<string | null>(null);
-    protected readonly showFiltersDropdown = signal(false);
 
     // Sorting
     protected readonly sortBy = signal<'name' | 'size' | 'lastOpened'>('name');
     protected readonly sortOrder = signal<'asc' | 'desc'>('asc');
-    protected readonly showSortDropdown = signal(false);
-    protected readonly sortOptions = [
-        { label: 'Name', value: 'name' as const },
-        { label: 'Size', value: 'size' as const },
-        { label: 'Last Used', value: 'lastOpened' as const },
-    ];
+    protected readonly sortMenuItems = computed<MenuItem[]>(() => [
+        {
+            label: 'Sort By',
+            items: [
+                {
+                    label: 'Name',
+                    icon: this.sortBy() === 'name' ? (this.sortOrder() === 'asc' ? 'pi pi-arrow-up' : 'pi pi-arrow-down') : undefined,
+                    command: () => this.setSortBy('name'),
+                },
+                {
+                    label: 'Size',
+                    icon: this.sortBy() === 'size' ? (this.sortOrder() === 'asc' ? 'pi pi-arrow-up' : 'pi pi-arrow-down') : undefined,
+                    command: () => this.setSortBy('size'),
+                },
+                {
+                    label: 'Last Used',
+                    icon: this.sortBy() === 'lastOpened' ? (this.sortOrder() === 'asc' ? 'pi pi-arrow-up' : 'pi pi-arrow-down') : undefined,
+                    command: () => this.setSortBy('lastOpened'),
+                },
+            ],
+        },
+    ]);
     protected readonly currentSortLabel = computed(() => {
-        const option = this.sortOptions.find(o => o.value === this.sortBy());
-        return option?.label || 'Sort';
+        const labels: Record<string, string> = { name: 'Name', size: 'Size', lastOpened: 'Last Used' };
+        return labels[this.sortBy()] || 'Sort';
     });
 
     protected readonly filteredProfiles = computed(() => {
@@ -188,6 +205,35 @@ export class Home implements OnInit, OnDestroy {
             .map((p) => p.metadata?.group)
             .filter((g): g is string => !!g);
         return [...new Set(groups)];
+    });
+
+    protected readonly filterMenuItems = computed<MenuItem[]>(() => {
+        const groups = this.uniqueGroups();
+        const currentFilter = this.filterGroup();
+
+        const groupItems: MenuItem[] = groups.length > 0
+            ? groups.map((group) => ({
+                label: group,
+                icon: currentFilter === group ? 'pi pi-check' : undefined,
+                command: () => this.setFilterGroup(group),
+            }))
+            : [{ label: 'No groups available', disabled: true }];
+
+        return [
+            {
+                label: 'Filter by Group',
+                items: [
+                    ...groupItems,
+                    { separator: true },
+                    {
+                        label: 'Clear All',
+                        icon: 'pi pi-times',
+                        disabled: !this.hasActiveFilters(),
+                        command: () => this.clearFilters(),
+                    },
+                ],
+            },
+        ];
     });
 
     protected readonly hasActiveFilters = computed(
@@ -408,18 +454,9 @@ export class Home implements OnInit, OnDestroy {
         this.searchSubject.next(value);
     }
 
-    toggleFiltersDropdown(): void {
-        this.showFiltersDropdown.update((v) => !v);
-    }
-
-    closeFiltersDropdown(): void {
-        this.showFiltersDropdown.set(false);
-    }
-
     clearFilters(): void {
         this.searchText.set('');
         this.filterGroup.set(null);
-        this.showFiltersDropdown.set(false);
     }
 
     setSortBy(value: 'name' | 'size' | 'lastOpened'): void {
@@ -430,7 +467,6 @@ export class Home implements OnInit, OnDestroy {
             this.sortBy.set(value);
             this.sortOrder.set('asc');
         }
-        this.showSortDropdown.set(false);
     }
 
     // Dialog methods

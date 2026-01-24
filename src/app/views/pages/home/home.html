@@ -10,10 +10,10 @@
         class="flex items-center gap-4 px-6 h-[var(--spacing-header)] shrink-0 border-b border-surface">
         <!-- Search (full width) -->
         <div id="home-header-search" class="flex-1">
-            <p-iconfield>
+            <p-iconfield class="w-full">
                 <p-inputicon class="pi pi-search" />
                 <input id="home-header-search-input" pInputText type="text" placeholder="Search profiles..."
-                    [ngModel]="searchText()" (ngModelChange)="onSearchInput($event)" />
+                    class="w-full" [ngModel]="searchText()" (ngModelChange)="onSearchInput($event)" />
             </p-iconfield>
         </div>
 
@@ -22,68 +22,16 @@
             <p-button id="home-header-refresh-btn" (click)="scanProfiles()" icon="pi pi-refresh" label="Refresh"
                 severity="secondary" [outlined]="true" />
 
-            <!-- Sort Dropdown -->
-            <div class="relative">
-                <p-button id="home-header-sort-btn" (click)="showSortDropdown.set(!showSortDropdown())"
-                    icon="pi pi-sort-alt" [label]="currentSortLabel()" severity="secondary" [outlined]="true" />
-                @if (showSortDropdown()) {
-                <div id="home-sort-dropdown"
-                    class="absolute right-0 top-full mt-2 w-48 border border-surface rounded-xl shadow-2xl z-50 overflow-hidden">
-                    <div class="py-2">
-                        @for (option of sortOptions; track option.value) {
-                        <button (click)="setSortBy(option.value)"
-                            class="w-full px-4 py-2 text-left text-sm transition-colors flex items-center justify-between"
-                            [class]="sortBy() === option.value ? 'bg-primary/20 text-primary' : 'text-muted-color '">
-                            <span>{{ option.label }}</span>
-                            @if (sortBy() === option.value) {
-                            <i [class]="'pi text-xs ' + (sortOrder() === 'asc' ? 'pi-arrow-up' : 'pi-arrow-down')"></i>
-                            }
-                        </button>
-                        }
-                    </div>
-                </div>
-                }
-            </div>
+            <!-- Sort Menu -->
+            <p-menu #sortMenu [model]="sortMenuItems()" [popup]="true" />
+            <p-button id="home-header-sort-btn" (click)="sortMenu.toggle($event)" icon="pi pi-sort-alt"
+                [label]="currentSortLabel()" severity="secondary" [outlined]="true" />
 
-            <!-- Filters Button with Dropdown -->
-            <div class="relative">
-                <p-button id="home-header-filters-btn" (click)="toggleFiltersDropdown()" icon="pi pi-filter"
-                    label="Filters" severity="secondary" [outlined]="true"
-                    [badge]="activeFilterCount() > 0 ? activeFilterCount().toString() : undefined" />
-
-                <!-- Filters Dropdown -->
-                @if (showFiltersDropdown()) {
-                <div id="home-filters-dropdown"
-                    class="absolute right-0 top-full mt-2 w-64 border border-surface rounded-xl shadow-2xl z-50 overflow-hidden">
-                    <div class="p-4 border-b border-surface">
-                        <div class="flex items-center justify-between mb-3">
-                            <h4 class="text-sm font-semibold text-color">Filter by Group</h4>
-                            @if (hasActiveFilters()) {
-                            <button (click)="clearFilters()"
-                                class="text-xs text-primary hover:text-primary-hover transition-colors">
-                                Clear all
-                            </button>
-                            }
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            @if (uniqueGroups().length === 0) {
-                            <p class="text-xs text-muted-color">No groups available</p>
-                            } @else {
-                            @for (group of uniqueGroups(); track group) {
-                            <button (click)="setFilterGroup(group)"
-                                class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                                [class]="filterGroup() === group
-                                                 ? 'bg-primary text-white'
-                                                 : 'border border-surface text-muted-color hover:border-primary hover:text-primary'">
-                                {{ group }}
-                            </button>
-                            }
-                            }
-                        </div>
-                    </div>
-                </div>
-                }
-            </div>
+            <!-- Filters Menu -->
+            <p-menu #filterMenu [model]="filterMenuItems()" [popup]="true" />
+            <p-button id="home-header-filters-btn" (click)="filterMenu.toggle($event)" icon="pi pi-filter"
+                label="Filters" severity="secondary" [outlined]="true"
+                [badge]="activeFilterCount() > 0 ? activeFilterCount().toString() : undefined" />
 
             <!-- View Mode Toggle -->
             <p-buttonGroup>
