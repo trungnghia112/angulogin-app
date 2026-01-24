@@ -9,6 +9,7 @@
     "core:default",
     "fs:default",
     "shell:default",
-    "dialog:default"
+    "dialog:default",
+    "os:default"
   ]
 }

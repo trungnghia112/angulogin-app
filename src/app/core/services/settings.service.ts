@@ -94,10 +94,11 @@ export class SettingsService {
     }
 
     /**
-     * Check if running inside Tauri desktop app
+     * Check if running inside Tauri desktop app (Tauri 2.x)
      */
     private isTauriEnvironment(): boolean {
-        return typeof window !== 'undefined' && '__TAURI__' in window;
+        // Tauri 2.x uses __TAURI_INTERNALS__ instead of __TAURI__
+        return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
     }
 
     /**
