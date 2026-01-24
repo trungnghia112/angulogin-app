@@ -24,6 +24,10 @@ export interface ProfileMetadata {
     color?: string | null;
     // Phase 2: Hidden Profiles
     isHidden?: boolean;
+    // Usage Statistics
+    launchCount?: number;
+    totalUsageMinutes?: number;
+    lastSessionDuration?: number;
 }
 
 export interface Profile {

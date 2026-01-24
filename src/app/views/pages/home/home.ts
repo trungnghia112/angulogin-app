@@ -439,6 +439,13 @@ export class Home implements OnInit, OnDestroy {
         if (profile.size) {
             lines.push(`Size: ${this.formatSize(profile.size)}`);
         }
+        // Usage Statistics
+        if (profile.metadata?.launchCount) {
+            lines.push(`Launches: ${profile.metadata.launchCount}`);
+        }
+        if (profile.metadata?.totalUsageMinutes) {
+            lines.push(`Total usage: ${this.formatMinutes(profile.metadata.totalUsageMinutes)}`);
+        }
         if (profile.metadata?.lastOpened) {
             const date = new Date(profile.metadata.lastOpened);
             lines.push(`Last used: ${date.toLocaleDateString()}`);
@@ -454,6 +461,17 @@ export class Home implements OnInit, OnDestroy {
         }
 
         return lines.length > 0 ? lines.join('\n') : 'Click to edit profile';
+    }
+
+    // Usage Statistics helper
+    formatMinutes(minutes: number): string {
+        if (minutes < 60) return `${minutes} min`;
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        if (hours < 24) return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+        const days = Math.floor(hours / 24);
+        const remainingHours = hours % 24;
+        return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
     }
 
     // Profile actions
@@ -496,8 +514,23 @@ export class Home implements OnInit, OnDestroy {
             const url = profile.metadata?.launchUrl || undefined;
             const proxy = profile.metadata?.proxyServer || undefined;
             await this.profileService.launchBrowser(profile.path, browser, url, false, proxy);
+
             // Phase 3: Log activity
             this.activityLogService.logLaunch(profile.name, profile.path, browser);
+
+            // Usage Statistics: Update launch count and estimate usage
+            const currentCount = profile.metadata?.launchCount || 0;
+            const currentMinutes = profile.metadata?.totalUsageMinutes || 0;
+            const lastSession = profile.metadata?.lastSessionDuration || 0;
+            // Add estimated session time from last session (default 15 min for first launch)
+            const estimatedSessionMinutes = lastSession > 0 ? lastSession : 15;
+            this.profileService.updateUsageStats(
+                profile.path,
+                currentCount + 1,
+                currentMinutes + estimatedSessionMinutes,
+                estimatedSessionMinutes
+            );
+
             this.messageService.add({
                 severity: 'info',
                 summary: 'Launched',

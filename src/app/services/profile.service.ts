@@ -223,6 +223,67 @@ export class ProfileService {
         }
     }
 
+    /**
+     * Update usage statistics for a profile
+     * Merges with existing metadata to preserve other fields
+     */
+    async updateUsageStats(
+        profilePath: string,
+        launchCount: number,
+        totalUsageMinutes: number,
+        lastSessionDuration: number | null = null
+    ): Promise<void> {
+        // Get existing profile to merge metadata
+        const profile = this.profiles().find(p => p.path === profilePath);
+        if (!profile) return;
+
+        const meta = profile.metadata || { emoji: null, notes: null, group: null, shortcut: null, browser: null };
+
+        const updatedMeta: ProfileMetadata = {
+            ...meta,
+            launchCount,
+            totalUsageMinutes,
+            lastSessionDuration: lastSessionDuration ?? undefined,
+        };
+
+        if (!isTauriAvailable()) {
+            // Mock mode
+            this.profiles.update(profiles =>
+                profiles.map(p =>
+                    p.path === profilePath ? { ...p, metadata: updatedMeta } : p
+                )
+            );
+            return;
+        }
+
+        try {
+            await invoke('save_profile_metadata', {
+                profilePath,
+                emoji: meta.emoji,
+                notes: meta.notes,
+                group: meta.group,
+                shortcut: meta.shortcut,
+                browser: meta.browser,
+                tags: meta.tags || null,
+                launchUrl: meta.launchUrl || null,
+                isPinned: meta.isPinned || null,
+                color: meta.color || null,
+                isHidden: meta.isHidden || null,
+                launchCount,
+                totalUsageMinutes,
+                lastSessionDuration,
+            });
+
+            this.profiles.update(profiles =>
+                profiles.map(p =>
+                    p.path === profilePath ? { ...p, metadata: updatedMeta } : p
+                )
+            );
+        } catch (e) {
+            console.error('Failed to update usage stats:', e);
+        }
+    }
+
     async isProfileRunning(profilePath: string): Promise<boolean> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
