@@ -15,27 +15,26 @@ import { getFunctions, provideFunctions, connectFunctionsEmulator } from '@angul
 import { getStorage, provideStorage, connectStorageEmulator } from '@angular/fire/storage';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
-// Custom theme preset with pink primary color and dark surfaces
-// IMPORTANT: PrimeNG convention - surface.0 = lightest (for form backgrounds), surface.950 = darkest
+// Custom theme preset with pink primary color and slate surfaces
 const AppTheme = definePreset(Aura, {
   semantic: {
     primary: palette('#f637e3'), // Pink primary color
     colorScheme: {
       dark: {
         surface: {
-          // Following PrimeNG convention: 0 = lightest, 950 = darkest
-          0: '#FAFAFA',
-          50: '#E4E4E7',
-          100: '#D4D4D8',
-          200: '#A1A1AA',
-          300: '#71717A',
-          400: '#52525B',
-          500: '#3F3F46',
-          600: '#2E2E2E',
-          700: '#262626',
-          800: '#1A1A1A',
-          900: '#161616',
-          950: '#0F0F0F'
+          // Using PrimeNG's built-in 'slate' palette
+          0: '#ffffff',
+          50: '{slate.50}',
+          100: '{slate.100}',
+          200: '{slate.200}',
+          300: '{slate.300}',
+          400: '{slate.400}',
+          500: '{slate.500}',
+          600: '{slate.600}',
+          700: '{slate.700}',
+          800: '{slate.800}',
+          900: '{slate.900}',
+          950: '{slate.950}'
         }
       }
     }
