@@ -80,6 +80,25 @@ export class ProfileService {
         }
     }
 
+    /**
+     * Ensure the profiles directory exists, create if not
+     */
+    async ensureProfilesDirectory(path: string): Promise<void> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            debugLog('Mock ensureProfilesDirectory:', path);
+            return;
+        }
+
+        try {
+            await invoke('ensure_profiles_directory', { path });
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
+
     async createProfile(basePath: string, name: string): Promise<string> {
         // Mock mode for web development
         if (!isTauriAvailable()) {

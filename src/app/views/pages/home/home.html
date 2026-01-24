@@ -1,7 +1,6 @@
 <!-- Sidebar -->
 <app-home-sidebar [folders]="folders()" [selectedFolderId]="selectedFolderId()"
-    (folderSelected)="onFolderSelected($event)" (addFolderClicked)="onAddFolder()" (settingsClicked)="onSettings()"
-    (folderSettingsClicked)="onFolderSettings()" (profilesDirectoryChanged)="onProfilesDirectoryChanged($event)" />
+    (folderSelected)="onFolderSelected($event)" (addFolderClicked)="onAddFolder()" (settingsClicked)="onSettings()" />
 
 <!-- Main Content -->
 <div id="home-container" class="flex-1 flex flex-col min-h-0 text-color overflow-hidden">

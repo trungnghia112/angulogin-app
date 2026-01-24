@@ -65,10 +65,10 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 const STORAGE_KEY = 'app-settings';
 
-// Chrome User Data Folders
-const MACOS_CHROME_PATH = 'Library/Application Support/Google/Chrome/User Data';
-const WINDOWS_CHROME_PATH = 'AppData\\Local\\Google\\Chrome\\User Data';
-const LINUX_CHROME_PATH = '.config/google-chrome';
+// Chrome Profile Manager Storage Paths (Dedicated directory, not Chrome's)
+const MACOS_CHROME_PATH = 'Library/Application Support/ChromeProfileManager/Profiles';
+const WINDOWS_CHROME_PATH = 'AppData\\\\Roaming\\\\ChromeProfileManager\\\\Profiles';
+const LINUX_CHROME_PATH = '.config/ChromeProfileManager/Profiles';
 
 @Injectable({ providedIn: 'root' })
 export class SettingsService {

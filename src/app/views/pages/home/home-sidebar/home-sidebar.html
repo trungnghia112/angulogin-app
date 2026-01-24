@@ -1,11 +1,10 @@
-<aside id="home-sidebar" class="flex flex-col h-full w-60 border-r border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shrink-0">
+<aside id="home-sidebar"
+    class="flex flex-col h-full w-60 border-r border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shrink-0">
     <!-- Feature Header - matches header height -->
     <div id="home-sidebar-header"
         class="flex items-center justify-between px-4 h-[var(--spacing-header)] shrink-0 border-b border-surface-200 dark:border-surface-700">
         <span id="home-sidebar-header-title" class="text-base font-semibold text-color">Browsers</span>
         <div id="home-sidebar-header-actions" class="flex items-center gap-2">
-            <p-button id="home-sidebar-header-settings-btn" icon="pi pi-cog" [rounded]="true" [text]="true"
-                (click)="openProfilesDirectoryDialog()" pTooltip="Profiles Directory" tooltipPosition="bottom" />
             <p-button id="home-sidebar-header-add-btn" icon="pi pi-plus" [rounded]="true" [text]="true"
                 (click)="onAddFolder()" pTooltip="Add folder" tooltipPosition="bottom" />
         </div>
@@ -36,48 +35,8 @@
 
     <!-- Bottom Actions -->
     <div id="home-sidebar-bottom" class="border-t border-surface-200 dark:border-surface-700 p-3">
-        <div id="home-sidebar-bottom-actions" class="flex items-center justify-between">
-            <p-button id="home-sidebar-settings-btn" icon="pi pi-cog" [rounded]="true" [text]="true"
-                (click)="onSettings()" pTooltip="Settings" />
-            <p-button id="home-sidebar-trash-btn" icon="pi pi-trash" [rounded]="true" [text]="true" pTooltip="Trash" />
-            <p-button id="home-sidebar-export-btn" icon="pi pi-download" [rounded]="true" [text]="true"
-                pTooltip="Export" />
-        </div>
+        <button pButton icon="pi pi-cog" text="true" severity="secondary" class="!w-full !justify-start !text-sm !px-3"
+            label="Settings" (click)="onSettings()">
+        </button>
     </div>
 </aside>
-
-<!-- Profiles Directory Dialog -->
-<p-dialog id="home-sidebar-profiles-dir-dialog" header="Profiles Directory" [visible]="showProfilesDirectoryDialog()"
-    (visibleChange)="showProfilesDirectoryDialog.set($event)" [modal]="true" [style]="{ width: '480px' }"
-    [draggable]="false" [resizable]="false">
-    <div id="home-sidebar-profiles-dir-dialog-content" class="py-2 space-y-4">
-        <p class="text-sm text-muted-color">
-            Set the directory where your Chrome profiles are stored. This path will be used to scan and manage your
-            browser profiles.
-        </p>
-        <div>
-            <label for="home-sidebar-profiles-dir-input" class="block text-xs font-medium text-color mb-2">Directory
-                Path</label>
-            <div class="flex items-center gap-2">
-                <input pInputText id="home-sidebar-profiles-dir-input" type="text" [ngModel]="profilesDirectoryPath()"
-                    (ngModelChange)="profilesDirectoryPath.set($event)"
-                    placeholder="/Volumes/ExternalDrive/ChromeProfiles" class="flex-1" />
-                <p-button id="home-sidebar-profiles-dir-browse-btn" icon="pi pi-folder-open" [outlined]="true"
-                    (click)="browseFolder()" pTooltip="Browse folder" />
-            </div>
-        </div>
-        <div class="rounded-lg p-3 border border-surface-200 dark:border-surface-700">
-            <div class="flex items-center gap-2 text-xs text-color">
-                <i class="pi pi-info-circle"></i>
-                <span>Example: <code class="text-muted-color">/Users/john/ChromeProfiles</code></span>
-            </div>
-        </div>
-    </div>
-    <ng-template #footer>
-        <div id="home-sidebar-profiles-dir-dialog-footer" class="flex justify-end gap-3 pt-2">
-            <p-button id="home-sidebar-profiles-dir-cancel-btn" label="Cancel" severity="secondary"
-                (click)="showProfilesDirectoryDialog.set(false)" />
-            <p-button id="home-sidebar-profiles-dir-save-btn" label="Save" (click)="saveProfilesDirectory()" />
-        </div>
-    </ng-template>
-</p-dialog>

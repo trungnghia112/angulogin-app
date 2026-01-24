@@ -9,6 +9,7 @@ import {
     effect,
     DestroyRef,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { HomeSidebar } from './home-sidebar/home-sidebar';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -77,6 +78,7 @@ interface Tab {
     ],
 })
 export class Home implements OnInit, OnDestroy {
+    private readonly router = inject(Router);
     private readonly profileService = inject(ProfileService);
     private readonly settingsService = inject(SettingsService);
     private readonly messageService = inject(MessageService);
@@ -287,7 +289,12 @@ export class Home implements OnInit, OnDestroy {
         effect(() => {
             const path = this.profilesPath();
             if (path) {
-                this.scanProfiles();
+                // Ensure directory exists, then scan
+                this.profileService.ensureProfilesDirectory(path).then(() => {
+                    this.scanProfiles();
+                }).catch(err => {
+                    console.error('Failed to ensure profiles directory:', err);
+                });
             }
         });
 
@@ -788,14 +795,8 @@ export class Home implements OnInit, OnDestroy {
     }
 
     protected onSettings(): void {
-        console.log('Home: Settings clicked');
+        this.router.navigate(['/settings']);
     }
 
-    protected onFolderSettings(): void {
-        console.log('Home: Folder settings clicked');
-    }
 
-    protected onProfilesDirectoryChanged(path: string): void {
-        this.settingsService.setProfilesPath(path);
-    }
 }

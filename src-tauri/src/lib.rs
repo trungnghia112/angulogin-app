@@ -21,6 +21,7 @@ pub fn run() {
             commands::scan_profiles,
             commands::launch_chrome,
             commands::check_path_exists,
+            commands::ensure_profiles_directory,
             commands::create_profile,
             commands::delete_profile,
             commands::rename_profile,

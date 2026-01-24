@@ -1,6 +1,35 @@
 use std::fs;
 use std::process::Command;
 
+/// Check if a folder is a valid Chrome profile
+/// A valid profile has a "Preferences" file inside
+fn is_valid_profile(path: &std::path::Path) -> bool {
+    if !path.is_dir() {
+        return false;
+    }
+    
+    // Check for Preferences file (present in all Chrome profiles)
+    let prefs_file = path.join("Preferences");
+    if prefs_file.exists() {
+        return true;
+    }
+    
+    // Also accept folders named "Default" or "Profile X" (for Chrome's native structure)
+    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+        if name == "Default" || name.starts_with("Profile ") {
+            return true;
+        }
+    }
+    
+    // For newly created empty profiles (by our app), check for metadata file
+    let meta_file = path.join(".profile-meta.json");
+    if meta_file.exists() {
+        return true;
+    }
+    
+    false
+}
+
 #[tauri::command]
 pub fn scan_profiles(path: String) -> Result<Vec<String>, String> {
     let entries = fs::read_dir(&path).map_err(|e| format!("Failed to read directory: {}", e))?;
@@ -9,15 +38,19 @@ pub fn scan_profiles(path: String) -> Result<Vec<String>, String> {
 
     for entry in entries {
         if let Ok(entry) = entry {
-            let path = entry.path();
-            if path.is_dir() {
-                if let Some(name) = path.file_name() {
-                    if let Some(name_str) = name.to_str() {
-                        // Skip hidden folders
-                        if !name_str.starts_with('.') {
-                            profiles.push(name_str.to_string());
-                        }
-                    }
+            let entry_path = entry.path();
+            
+            // Skip hidden folders
+            if let Some(name) = entry_path.file_name().and_then(|n| n.to_str()) {
+                if name.starts_with('.') {
+                    continue;
+                }
+            }
+            
+            // Only include valid Chrome profiles
+            if is_valid_profile(&entry_path) {
+                if let Some(name) = entry_path.file_name().and_then(|n| n.to_str()) {
+                    profiles.push(name.to_string());
                 }
             }
         }
@@ -42,6 +75,21 @@ pub fn launch_chrome(profile_path: String) -> Result<(), String> {
 #[tauri::command]
 pub fn check_path_exists(path: String) -> bool {
     std::path::Path::new(&path).exists()
+}
+
+/// Ensure the profiles directory exists, create if not
+#[tauri::command]
+pub fn ensure_profiles_directory(path: String) -> Result<(), String> {
+    let path_obj = std::path::Path::new(&path);
+    
+    if path_obj.exists() {
+        return Ok(());
+    }
+    
+    fs::create_dir_all(&path)
+        .map_err(|e| format!("Failed to create profiles directory: {}", e))?;
+    
+    Ok(())
 }
 
 #[tauri::command]
