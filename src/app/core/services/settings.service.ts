@@ -245,6 +245,69 @@ export class SettingsService {
         }));
     }
 
+    // === Data Management Methods ===
+
+    /**
+     * Export all application data as a JSON object
+     * Includes settings and can be extended to include profile metadata
+     */
+    exportData(): string {
+        const exportPayload = {
+            version: '1.0.0',
+            exportedAt: new Date().toISOString(),
+            settings: this._settings(),
+            // Future: Add profile metadata here
+        };
+        return JSON.stringify(exportPayload, null, 2);
+    }
+
+    /**
+     * Import application data from a JSON string
+     * Returns true if successful, false otherwise
+     */
+    importData(jsonString: string): { success: boolean; message: string } {
+        try {
+            const data = JSON.parse(jsonString);
+
+            // Validate structure
+            if (!data.version || !data.settings) {
+                return { success: false, message: 'Invalid backup file format.' };
+            }
+
+            // Restore settings with merge to ensure compatibility
+            const restoredSettings: AppSettings = {
+                ...DEFAULT_SETTINGS,
+                ...data.settings,
+                appearance: { ...DEFAULT_SETTINGS.appearance, ...data.settings.appearance },
+                general: { ...DEFAULT_SETTINGS.general, ...data.settings.general },
+                browser: { ...DEFAULT_SETTINGS.browser, ...data.settings.browser }
+            };
+
+            this._settings.set(restoredSettings);
+            this.applyTheme(restoredSettings.appearance);
+            this.applyDarkMode(restoredSettings.appearance.isDarkMode);
+
+            return { success: true, message: 'Settings restored successfully.' };
+        } catch (e) {
+            console.error('Import failed:', e);
+            return { success: false, message: 'Failed to parse backup file.' };
+        }
+    }
+
+    /**
+     * Clear all application data (factory reset)
+     * WARNING: This is destructive and should require confirmation
+     */
+    clearAllData(): void {
+        // Clear localStorage
+        localStorage.removeItem(STORAGE_KEY);
+
+        // Reset to defaults
+        this._settings.set(DEFAULT_SETTINGS);
+        this.applyTheme(DEFAULT_SETTINGS.appearance);
+        this.applyDarkMode(DEFAULT_SETTINGS.appearance.isDarkMode);
+    }
+
     /**
      * Reset all settings to default
      */
@@ -262,8 +325,8 @@ export class SettingsService {
             if (stored) {
                 const parsed = JSON.parse(stored) as Partial<AppSettings>;
                 // Merge with defaults to ensure new fields are present
-                return { 
-                    ...DEFAULT_SETTINGS, 
+                return {
+                    ...DEFAULT_SETTINGS,
                     ...parsed,
                     appearance: { ...DEFAULT_SETTINGS.appearance, ...parsed.appearance },
                     general: { ...DEFAULT_SETTINGS.general, ...parsed.general },

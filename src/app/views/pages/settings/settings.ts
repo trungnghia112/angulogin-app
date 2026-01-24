@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { open } from '@tauri-apps/plugin-dialog';
+import { open, save } from '@tauri-apps/plugin-dialog';
+import { writeTextFile, readTextFile } from '@tauri-apps/plugin-fs';
 
 // PrimeNG
 import { ButtonModule } from 'primeng/button';
@@ -9,7 +10,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { MessageService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 // Services
@@ -48,6 +49,7 @@ interface SettingsCategory {
 export class Settings {
     protected readonly settingsService = inject(SettingsService);
     private readonly messageService = inject(MessageService);
+    private readonly confirmationService = inject(ConfirmationService);
 
     // Settings categories for sidebar navigation
     protected readonly categories: SettingsCategory[] = [
@@ -149,5 +151,88 @@ export class Settings {
                 detail: 'This feature only works in the desktop app.',
             });
         }
+    }
+
+    // === Data Management Methods ===
+
+    async exportConfig(): Promise<void> {
+        try {
+            const filePath = await save({
+                title: 'Export Configuration',
+                defaultPath: `chrome-profile-manager-backup-${new Date().toISOString().slice(0, 10)}.json`,
+                filters: [{ name: 'JSON', extensions: ['json'] }]
+            });
+
+            if (filePath) {
+                const data = this.settingsService.exportData();
+                await writeTextFile(filePath, data);
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Export Successful',
+                    detail: 'Configuration has been exported.',
+                });
+            }
+        } catch (err) {
+            console.error('Export failed:', err);
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Export Failed',
+                detail: 'Could not save the configuration file.',
+            });
+        }
+    }
+
+    async importConfig(): Promise<void> {
+        try {
+            const filePath = await open({
+                title: 'Import Configuration',
+                multiple: false,
+                filters: [{ name: 'JSON', extensions: ['json'] }]
+            });
+
+            if (filePath && typeof filePath === 'string') {
+                const content = await readTextFile(filePath);
+                const result = this.settingsService.importData(content);
+
+                if (result.success) {
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Import Successful',
+                        detail: result.message,
+                    });
+                } else {
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Import Failed',
+                        detail: result.message,
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Import failed:', err);
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Import Failed',
+                detail: 'Could not read the configuration file.',
+            });
+        }
+    }
+
+    clearData(): void {
+        this.confirmationService.confirm({
+            key: 'confirmDialog',
+            header: 'Clear All Data',
+            message: 'This will reset all settings to default and clear all stored data. This action cannot be undone. Are you sure?',
+            icon: 'pi pi-exclamation-triangle',
+            acceptButtonStyleClass: 'p-button-danger',
+            accept: () => {
+                this.settingsService.clearAllData();
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Data Cleared',
+                    detail: 'All settings have been reset to defaults.',
+                });
+            }
+        });
     }
 }
