@@ -1,6 +1,6 @@
 # Plan: Complete Core System (Settings)
 Created: 2026-01-24 22:42
-Status: 🟡 In Progress
+Status: ✅ Complete
 
 ## Overview
 Compete the unfinished Tabs in the Settings page to make the application fully functional and configurable. This includes allowing users to select their Chrome Profiles directory, backup/restore data, and configure general preferences.
@@ -15,8 +15,8 @@ Compete the unfinished Tabs in the Settings page to make the application fully f
 | Phase | Name | Status | Progress |
 |-------|------|--------|----------|
 | 01 | Browser Paths (Directory Selection) | ✅ Complete | 100% |
-| 02 | General Settings (Startup, etc.) | ⬜ Pending | 0% |
-| 03 | Data Management (Backup/Restore) | ⬜ Pending | 0% |
+| 02 | General Settings (Startup, etc.) | ✅ Complete | 100% |
+| 03 | Data Management (Backup/Restore) | ✅ Complete | 100% |
 
 ## Quick Commands
 - Start Phase 1: `/code phase-01`
