@@ -468,3 +468,122 @@ pub fn backup_profile(profile_path: String, backup_path: String) -> Result<Strin
     
     Ok(backup_path)
 }
+
+#[derive(Serialize)]
+pub struct RestoreResult {
+    pub success: bool,
+    pub restored_path: String,
+    pub profile_name: String,
+    pub was_renamed: bool,
+}
+
+#[tauri::command]
+pub fn restore_from_backup(
+    backup_path: String,
+    target_base_path: String,
+    conflict_action: String,  // "overwrite" | "rename" | "skip"
+) -> Result<RestoreResult, String> {
+    use std::io::Read;
+    
+    let backup_file = std::path::Path::new(&backup_path);
+    if !backup_file.exists() {
+        return Err("Backup file does not exist".to_string());
+    }
+    
+    // Open zip file
+    let file = fs::File::open(&backup_path)
+        .map_err(|e| format!("Failed to open backup file: {}", e))?;
+    let mut archive = zip::ZipArchive::new(file)
+        .map_err(|e| format!("Failed to read zip archive: {}", e))?;
+    
+    // Get profile name from backup filename (e.g., "ProfileName_backup_2024.zip" -> "ProfileName")
+    let backup_filename = backup_file.file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("RestoreProfile");
+    let profile_name = backup_filename.split("_backup_").next().unwrap_or(backup_filename);
+    
+    // Determine target path
+    let base = std::path::Path::new(&target_base_path);
+    let mut target_path = base.join(profile_name);
+    let mut was_renamed = false;
+    
+    if target_path.exists() {
+        match conflict_action.as_str() {
+            "overwrite" => {
+                fs::remove_dir_all(&target_path)
+                    .map_err(|e| format!("Failed to remove existing profile: {}", e))?;
+            },
+            "rename" => {
+                let mut counter = 1;
+                loop {
+                    let new_name = format!("{} (Restored {})", profile_name, counter);
+                    let new_path = base.join(&new_name);
+                    if !new_path.exists() {
+                        target_path = new_path;
+                        was_renamed = true;
+                        break;
+                    }
+                    counter += 1;
+                    if counter > 100 {
+                        return Err("Could not find unique name for restored profile".to_string());
+                    }
+                }
+            },
+            "skip" => {
+                return Err("Profile already exists and skip was selected".to_string());
+            },
+            _ => {
+                return Err("Invalid conflict action".to_string());
+            }
+        }
+    }
+    
+    // Create target directory
+    fs::create_dir_all(&target_path)
+        .map_err(|e| format!("Failed to create target directory: {}", e))?;
+    
+    // Extract all files
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)
+            .map_err(|e| format!("Failed to read zip entry: {}", e))?;
+        
+        let file_path = match file.enclosed_name() {
+            Some(path) => target_path.join(path),
+            None => continue,
+        };
+        
+        if file.is_dir() {
+            fs::create_dir_all(&file_path)
+                .map_err(|e| format!("Failed to create directory: {}", e))?;
+        } else {
+            if let Some(parent) = file_path.parent() {
+                if !parent.exists() {
+                    fs::create_dir_all(parent)
+                        .map_err(|e| format!("Failed to create parent directory: {}", e))?;
+                }
+            }
+            
+            let mut outfile = fs::File::create(&file_path)
+                .map_err(|e| format!("Failed to create file: {}", e))?;
+            
+            let mut buffer = Vec::new();
+            file.read_to_end(&mut buffer)
+                .map_err(|e| format!("Failed to read from zip: {}", e))?;
+            
+            std::io::Write::write_all(&mut outfile, &buffer)
+                .map_err(|e| format!("Failed to write file: {}", e))?;
+        }
+    }
+    
+    let final_name = target_path.file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or(profile_name)
+        .to_string();
+    
+    Ok(RestoreResult {
+        success: true,
+        restored_path: target_path.to_string_lossy().to_string(),
+        profile_name: final_name,
+        was_renamed,
+    })
+}

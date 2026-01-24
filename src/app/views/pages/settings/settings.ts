@@ -12,6 +12,7 @@ import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { DialogModule } from 'primeng/dialog';
 
 // Services
 import {
@@ -21,6 +22,7 @@ import {
     UI_SCALES,
     GeneralSettings
 } from '../../../core/services/settings.service';
+import { ProfileService } from '../../../services/profile.service';
 
 interface SettingsCategory {
     id: string;
@@ -43,11 +45,13 @@ interface SettingsCategory {
         TooltipModule,
         InputGroupModule,
         InputGroupAddonModule,
-        ToggleSwitchModule
+        ToggleSwitchModule,
+        DialogModule
     ],
 })
 export class Settings {
     protected readonly settingsService = inject(SettingsService);
+    protected readonly profileService = inject(ProfileService);
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
 
@@ -79,6 +83,18 @@ export class Settings {
         { label: 'Keep Open', value: 'keep-open', icon: 'pi pi-window-maximize' },
         { label: 'Minimize', value: 'minimize', icon: 'pi pi-window-minimize' },
         { label: 'Close', value: 'close', icon: 'pi pi-times' }
+    ];
+
+    // Restore Dialog state
+    protected readonly showRestoreDialog = signal(false);
+    protected readonly selectedBackupPath = signal('');
+    protected readonly conflictAction = signal<'overwrite' | 'rename' | 'skip'>('rename');
+    protected readonly restoring = signal(false);
+
+    protected readonly conflictOptions = [
+        { label: 'Rename', value: 'rename' },
+        { label: 'Overwrite', value: 'overwrite' },
+        { label: 'Skip', value: 'skip' }
     ];
 
     // Navigate to category
@@ -235,4 +251,79 @@ export class Settings {
             }
         });
     }
+
+    // === Restore from Backup Methods ===
+
+    openRestoreDialog(): void {
+        this.showRestoreDialog.set(true);
+        this.selectedBackupPath.set('');
+        this.conflictAction.set('rename');
+    }
+
+    async selectBackupFile(): Promise<void> {
+        try {
+            const filePath = await open({
+                title: 'Select Backup File',
+                multiple: false,
+                filters: [{ name: 'ZIP Archive', extensions: ['zip'] }]
+            });
+
+            if (filePath && typeof filePath === 'string') {
+                this.selectedBackupPath.set(filePath);
+            }
+        } catch (err) {
+            console.error('Failed to select backup file:', err);
+        }
+    }
+
+    async restoreBackup(): Promise<void> {
+        const backupPath = this.selectedBackupPath();
+        if (!backupPath) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'No File Selected',
+                detail: 'Please select a backup file first.',
+            });
+            return;
+        }
+
+        const profilesPath = this.settingsService.browser().profilesPath;
+        if (!profilesPath) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'No Profiles Path',
+                detail: 'Please set a profiles path first in Browser Paths settings.',
+            });
+            return;
+        }
+
+        this.restoring.set(true);
+
+        try {
+            const result = await this.profileService.restoreFromBackup(
+                backupPath,
+                profilesPath,
+                this.conflictAction()
+            );
+
+            this.showRestoreDialog.set(false);
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Restore Successful',
+                detail: result.wasRenamed
+                    ? `Profile restored as "${result.profileName}" (renamed to avoid conflict)`
+                    : `Profile "${result.profileName}" has been restored.`,
+            });
+        } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Restore Failed',
+                detail: errorMsg,
+            });
+        } finally {
+            this.restoring.set(false);
+        }
+    }
 }
+

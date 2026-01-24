@@ -424,4 +424,42 @@ export class ProfileService {
             throw e;
         }
     }
+
+    /**
+     * Restore a profile from a backup zip file
+     */
+    async restoreFromBackup(
+        backupPath: string,
+        targetBasePath: string,
+        conflictAction: 'overwrite' | 'rename' | 'skip'
+    ): Promise<{ success: boolean; restoredPath: string; profileName: string; wasRenamed: boolean }> {
+        if (!isTauriAvailable()) {
+            debugLog('Mock restoreFromBackup:', backupPath, targetBasePath, conflictAction);
+            return {
+                success: true,
+                restoredPath: targetBasePath + '/RestoredProfile',
+                profileName: 'RestoredProfile',
+                wasRenamed: false,
+            };
+        }
+
+        try {
+            const result = await invoke<{ success: boolean; restored_path: string; profile_name: string; was_renamed: boolean }>(
+                'restore_from_backup',
+                { backupPath, targetBasePath, conflictAction }
+            );
+            // Refresh profiles list after restore
+            await this.scanProfiles(targetBasePath);
+            return {
+                success: result.success,
+                restoredPath: result.restored_path,
+                profileName: result.profile_name,
+                wasRenamed: result.was_renamed,
+            };
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
 }

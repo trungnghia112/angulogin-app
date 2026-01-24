@@ -275,6 +275,17 @@
                         </div>
                         <p-button label="Import" icon="pi pi-upload" [outlined]="true" (click)="importConfig()" />
                     </div>
+
+                    <!-- Restore Profile from Backup -->
+                    <div class="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-800/50 rounded-lg">
+                        <div>
+                            <p class="text-sm font-medium text-color">Restore Profile from Backup</p>
+                            <p class="text-xs text-muted-color">Extract and restore a profile from a .zip backup file
+                            </p>
+                        </div>
+                        <p-button label="Restore" icon="pi pi-history" [outlined]="true"
+                            (click)="openRestoreDialog()" />
+                    </div>
                 </div>
             </section>
 
@@ -298,3 +309,43 @@
 
     </div>
 </div>
+
+<!-- Restore Profile Dialog -->
+<p-dialog id="settings-restore-dialog" header="Restore Profile from Backup" [(visible)]="showRestoreDialog"
+    [modal]="true" [style]="{ width: '480px' }" [closable]="true">
+    <div class="flex flex-col gap-6 py-2">
+
+        <!-- Select File -->
+        <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium text-color">Backup File</label>
+            <div class="flex gap-2">
+                <input pInputText [value]="selectedBackupPath()" readonly placeholder="Select a .zip backup file"
+                    class="flex-1" />
+                <p-button icon="pi pi-folder-open" (click)="selectBackupFile()" pTooltip="Browse" />
+            </div>
+        </div>
+
+        <!-- Conflict Action -->
+        <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium text-color">If profile already exists</label>
+            <p-selectButton [options]="conflictOptions" [(ngModel)]="conflictAction" optionLabel="label"
+                optionValue="value" />
+            <p class="text-xs text-muted-color">
+                @switch (conflictAction()) {
+                @case ('rename') { Profile will be restored with a new name (e.g., "Profile (Restored 1)") }
+                @case ('overwrite') { Existing profile will be replaced with the backup }
+                @case ('skip') { Restore will be cancelled if profile exists }
+                }
+            </p>
+        </div>
+
+    </div>
+
+    <ng-template #footer>
+        <div class="flex justify-end gap-2">
+            <p-button label="Cancel" [text]="true" severity="secondary" (click)="showRestoreDialog.set(false)" />
+            <p-button label="Restore" icon="pi pi-check" [loading]="restoring()"
+                [disabled]="!selectedBackupPath() || restoring()" (click)="restoreBackup()" />
+        </div>
+    </ng-template>
+</p-dialog>
