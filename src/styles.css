@@ -3,124 +3,37 @@
 @import "tailwindcss";
 @import "tailwindcss-primeui";
 
+/**
+ * Tailwind CSS v4 Custom Theme
+ * 
+ * IMPORTANT: tailwindcss-primeui plugin automatically syncs with PrimeNG's
+ * CSS variables (--p-surface-*, --p-primary-*, --p-text-color, etc.)
+ * 
+ * When .dark class is added to <html>:
+ * 1. PrimeNG changes --p-surface-* variables (via darkModeSelector: '.dark')
+ * 2. tailwindcss-primeui reads these variables
+ * 3. Tailwind utilities (bg-surface-*, text-color, etc.) automatically update
+ * 
+ * NO MANUAL CSS OVERRIDES NEEDED!
+ */
 @theme {
     --spacing-header: 64px;
     --font-sans: "Inter", system-ui, sans-serif;
 }
 
-/* Default Dark Mode (Zinc palette) - applies when .dark class is on html */
-:root.dark {
-    --p-surface-0: #09090b;
-    --p-surface-50: #18181b;
-    --p-surface-100: #27272a;
-    --p-surface-200: #27272a;
-    --p-surface-300: #3f3f46;
-    --p-surface-400: #52525b;
-    --p-surface-500: #71717a;
-    --p-surface-600: #a1a1aa;
-    --p-surface-700: #d4d4d8;
-    --p-surface-800: #e4e4e7;
-    --p-surface-900: #f4f4f5;
-    --p-surface-950: #ffffff;
-    --p-text-color: #e4e4e7;
-    --p-text-muted-color: #a1a1aa;
-    --p-content-background: var(--p-surface-0);
-}
+/**
+ * Tailwind v4: Custom dark mode variant
+ * This tells Tailwind's dark: prefix to look for .dark class on parent
+ * instead of using @media (prefers-color-scheme: dark)
+ */
+@custom-variant dark (&:where(.dark, .dark *));
 
-/* --- Surface Palettes (Theme-specific overrides) --- */
-
-/* Slate */
-.theme-slate.dark {
-    --p-surface-0: #020617;
-    --p-surface-50: #0f172a;
-    --p-surface-100: #1e293b;
-    --p-surface-200: #1e293b;
-    --p-surface-300: #334155;
-    --p-surface-400: #475569;
-    --p-surface-500: #64748b;
-    --p-surface-600: #94a3b8;
-    --p-surface-700: #cbd5e1;
-    --p-surface-800: #e2e8f0;
-    --p-surface-900: #f1f5f9;
-    --p-surface-950: #f8fafc;
-    --p-text-color: #f8fafc;
-    --p-text-muted-color: #94a3b8;
-}
-
-/* Gray */
-.theme-gray.dark {
-    --p-surface-0: #030712;
-    --p-surface-50: #111827;
-    --p-surface-100: #1f2937;
-    --p-surface-200: #1f2937;
-    --p-surface-300: #374151;
-    --p-surface-400: #4b5563;
-    --p-surface-500: #6b7280;
-    --p-surface-600: #9ca3af;
-    --p-surface-700: #d1d5db;
-    --p-surface-800: #e5e7eb;
-    --p-surface-900: #f3f4f6;
-    --p-surface-950: #f9fafb;
-    --p-text-color: #f9fafb;
-    --p-text-muted-color: #9ca3af;
-}
-
-/* Neutral */
-.theme-neutral.dark {
-    --p-surface-0: #0a0a0a;
-    --p-surface-50: #171717;
-    --p-surface-100: #262626;
-    --p-surface-200: #262626;
-    --p-surface-300: #404040;
-    --p-surface-400: #525252;
-    --p-surface-500: #737373;
-    --p-surface-600: #a3a3a3;
-    --p-surface-700: #d4d4d4;
-    --p-surface-800: #e5e5e5;
-    --p-surface-900: #f5f5f5;
-    --p-surface-950: #fafafa;
-    --p-text-color: #fafafa;
-    --p-text-muted-color: #a3a3a3;
-}
-
-/* Stone */
-.theme-stone.dark {
-    --p-surface-0: #0c0a09;
-    --p-surface-50: #1c1917;
-    --p-surface-100: #292524;
-    --p-surface-200: #292524;
-    --p-surface-300: #44403c;
-    --p-surface-400: #57534e;
-    --p-surface-500: #78716c;
-    --p-surface-600: #a8a29e;
-    --p-surface-700: #d6d3d1;
-    --p-surface-800: #e7e5e4;
-    --p-surface-900: #f5f5f4;
-    --p-surface-950: #fafaf9;
-    --p-text-color: #fafaf9;
-    --p-text-muted-color: #a8a29e;
-}
-
-/* Re-apply Zinc as default (overrides the basic :root.dark if theme-zinc is present) */
-.theme-zinc.dark {
-    --p-surface-0: #09090b;
-    --p-surface-50: #18181b;
-    --p-surface-100: #27272a;
-    --p-surface-200: #27272a;
-    --p-surface-300: #3f3f46;
-    --p-surface-400: #52525b;
-    --p-surface-500: #71717a;
-    --p-surface-600: #a1a1aa;
-    --p-surface-700: #d4d4d8;
-    --p-surface-800: #e4e4e7;
-    --p-surface-900: #f4f4f5;
-    --p-surface-950: #ffffff;
-    --p-text-color: #e4e4e7;
-    --p-text-muted-color: #a1a1aa;
-}
-
+/**
+ * Body styling using PrimeNG's semantic tokens
+ * These will automatically switch when .dark class is toggled
+ */
 body {
     font-family: var(--font-sans);
-    background-color: var(--p-surface-0);
-    color: var(--p-text-color);
+    background-color: var(--p-content-background, var(--p-surface-ground, #ffffff));
+    color: var(--p-text-color, #000000);
 }

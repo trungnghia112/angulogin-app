@@ -5,6 +5,27 @@ import { providePrimeNG } from 'primeng/config';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 
+import { routes } from './app.routes';
+import { environment } from '../environments/environment';
+
+import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
+import { getAuth, provideAuth, connectAuthEmulator } from '@angular/fire/auth';
+import { getFirestore, provideFirestore, connectFirestoreEmulator } from '@angular/fire/firestore';
+import { getFunctions, provideFunctions, connectFunctionsEmulator } from '@angular/fire/functions';
+import { getStorage, provideStorage, connectStorageEmulator } from '@angular/fire/storage';
+import { ConfirmationService, MessageService } from 'primeng/api';
+
+/**
+ * Custom preset extending Aura with Fuchsia as primary color.
+ * 
+ * IMPORTANT: PrimeNG surface scale is NOT inverted in dark mode!
+ * - surface.0 = always WHITE (used for text/foreground in dark mode)
+ * - surface.950 = always DARK (used for background in dark mode)
+ * 
+ * PrimeNG components use:
+ * - formField.background: {surface.950} in dark mode
+ * - content.background: {surface.900} in dark mode
+ */
 const MyPreset = definePreset(Aura, {
   semantic: {
     primary: {
@@ -19,53 +40,11 @@ const MyPreset = definePreset(Aura, {
       800: '{fuchsia.800}',
       900: '{fuchsia.900}',
       950: '{fuchsia.950}'
-    },
-    colorScheme: {
-      light: {
-        surface: {
-          0: '#ffffff',
-          50: '{zinc.50}',
-          100: '{zinc.100}',
-          200: '{zinc.200}',
-          300: '{zinc.300}',
-          400: '{zinc.400}',
-          500: '{zinc.500}',
-          600: '{zinc.600}',
-          700: '{zinc.700}',
-          800: '{zinc.800}',
-          900: '{zinc.900}',
-          950: '{zinc.950}'
-        }
-      },
-      dark: {
-        surface: {
-          0: '#ffffff',
-          50: '{zinc.50}',
-          100: '{zinc.100}',
-          200: '{zinc.200}',
-          300: '{zinc.300}',
-          400: '{zinc.400}',
-          500: '{zinc.500}',
-          600: '{zinc.600}',
-          700: '{zinc.700}',
-          800: '{zinc.800}',
-          900: '{zinc.900}',
-          950: '{zinc.950}'
-        }
-      }
     }
+    // DO NOT override colorScheme.dark.surface - let Aura handle it!
+    // Aura already has correct dark mode tokens using zinc palette
   }
 });
-
-import { routes } from './app.routes';
-import { environment } from '../environments/environment';
-
-import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getAuth, provideAuth, connectAuthEmulator } from '@angular/fire/auth';
-import { getFirestore, provideFirestore, connectFirestoreEmulator } from '@angular/fire/firestore';
-import { getFunctions, provideFunctions, connectFunctionsEmulator } from '@angular/fire/functions';
-import { getStorage, provideStorage, connectStorageEmulator } from '@angular/fire/storage';
-import { ConfirmationService, MessageService } from 'primeng/api';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -77,11 +56,10 @@ export const appConfig: ApplicationConfig = {
       theme: {
         preset: MyPreset,
         options: {
+          // CRITICAL: This tells PrimeNG to use .dark class for dark mode
+          // instead of system preference @media (prefers-color-scheme: dark)
           darkModeSelector: '.dark',
-          cssLayer: {
-            name: 'primeng',
-            order: 'theme, base, primeng, utilities'
-          }
+          cssLayer: false  // Disabled to avoid layer ordering issues with Tailwind
         }
       }
     }),
