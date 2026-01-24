@@ -28,9 +28,9 @@ export const SURFACE_PALETTES = [
  * Available UI scales
  */
 export const UI_SCALES = [
-    { value: 12, label: 'Small' },
-    { value: 14, label: 'Normal' },
-    { value: 16, label: 'Large' },
+    { value: 14, label: 'Small' },
+    { value: 16, label: 'Normal' },
+    { value: 18, label: 'Large' },
 ] as const;
 
 export interface AppearanceSettings {
@@ -53,7 +53,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     appearance: {
         primaryColor: 'fuchsia',
         surface: 'zinc',
-        scale: 14,
+        scale: 16,
         isDarkMode: false,
     },
     browser: {
