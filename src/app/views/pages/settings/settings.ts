@@ -1,11 +1,14 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { open } from '@tauri-apps/plugin-dialog';
 
 // PrimeNG
 import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 
 // Services
 import {
@@ -32,7 +35,10 @@ interface SettingsCategory {
         ButtonModule,
         SelectButtonModule,
         InputTextModule,
+        InputTextModule,
         TooltipModule,
+        InputGroupModule,
+        InputGroupAddonModule,
     ],
 })
 export class Settings {
@@ -74,5 +80,28 @@ export class Settings {
 
     toggleDarkMode(): void {
         this.settingsService.toggleDarkMode();
+    }
+
+    async browseProfilesPath(): Promise<void> {
+        try {
+            const selected = await open({
+                directory: true,
+                multiple: false,
+                title: 'Select Chrome User Data Directory',
+            });
+
+            if (selected && typeof selected === 'string') {
+                this.settingsService.setProfilesPath(selected);
+            }
+        } catch (err) {
+            console.error('Failed to open folder picker:', err);
+        }
+    }
+
+    async resetProfilesPath(): Promise<void> {
+        const defaultPath = await this.settingsService.detectDefaultPath();
+        if (defaultPath) {
+            this.settingsService.setProfilesPath(defaultPath);
+        }
     }
 }

@@ -1,4 +1,6 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
+import { homeDir, join } from '@tauri-apps/api/path';
+import { type } from '@tauri-apps/plugin-os';
 import { updatePrimaryPalette, updateSurfacePalette } from '@primeuix/themes';
 
 /**
@@ -63,6 +65,11 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 const STORAGE_KEY = 'app-settings';
 
+// Chrome User Data Folders
+const MACOS_CHROME_PATH = 'Library/Application Support/Google/Chrome/User Data';
+const WINDOWS_CHROME_PATH = 'AppData\\Local\\Google\\Chrome\\User Data';
+const LINUX_CHROME_PATH = '.config/google-chrome';
+
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
     // Private state
@@ -84,6 +91,38 @@ export class SettingsService {
             const settings = this._settings();
             this.saveSettings(settings);
         });
+    }
+
+    /**
+     * Detect default Chrome User Data path based on OS
+     */
+    async detectDefaultPath(): Promise<string> {
+        try {
+            const osType = await type();
+            const home = await homeDir();
+
+            switch (osType) {
+                case 'macos':
+                    return await join(home, MACOS_CHROME_PATH);
+                case 'windows':
+                    return await join(home, WINDOWS_CHROME_PATH);
+                case 'linux':
+                    return await join(home, LINUX_CHROME_PATH);
+                default:
+                    return '';
+            }
+        } catch (e) {
+            console.error('Failed to detect OS/Home:', e);
+            return '';
+        }
+    }
+
+    /**
+     * Validate if the selected path looks like a Chrome User Data folder
+     */
+    validatePath(path: string): boolean {
+        // Basic validation - just check if it's not empty for now
+        return !!path && path.length > 0;
     }
 
     /**
