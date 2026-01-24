@@ -2,22 +2,22 @@
     [style]="{ width: '500px', maxHeight: '400px' }" [draggable]="false" [resizable]="false" [dismissableMask]="true"
     (onHide)="close()">
 
-    <div id="command-palette-container" class="bg-surface rounded-xl overflow-hidden">
+    <div id="command-palette-container" class="bg-surface-900 rounded-xl overflow-hidden">
         <!-- Search Input -->
-        <div id="command-palette-input-wrapper" class="p-4 border-b border-border">
+        <div id="command-palette-input-wrapper" class="p-4 border-b border-surface-700">
             <div class="flex items-center gap-3">
-                <i class="pi pi-search text-zinc-500"></i>
+                <i class="pi pi-search text-surface-0"></i>
                 <input #searchInput pInputText type="text" [ngModel]="query()" (ngModelChange)="query.set($event)"
                     (keydown)="onKeydown($event)" placeholder="Search profiles..."
-                    class="flex-1 bg-transparent border-none outline-none text-zinc-50 text-sm placeholder:text-zinc-500" />
-                <kbd class="px-2 py-1 bg-surface-hover border border-border rounded text-xs text-zinc-500">ESC</kbd>
+                    class="flex-1 bg-transparent border-none outline-none text-surface-0 text-sm placeholder:text-surface-0" />
+                <kbd class="px-2 py-1 bg-surface-800 border border-surface-700 rounded text-xs text-surface-0">ESC</kbd>
             </div>
         </div>
 
         <!-- Results -->
         <div id="command-palette-results" class="max-h-[300px] overflow-auto">
             @if (filteredProfiles().length === 0) {
-            <div class="p-8 text-center text-zinc-500">
+            <div class="p-8 text-center text-surface-0">
                 <i class="pi pi-inbox text-2xl mb-2"></i>
                 <p class="text-sm">No profiles found</p>
             </div>
@@ -25,20 +25,20 @@
             @for (profile of filteredProfiles(); track profile.path; let i = $index) {
             <button [id]="'command-palette-item-' + i" (click)="selectProfile(i)"
                 class="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors" [class]="selectedIndex() === i 
-                            ? 'bg-primary/20 text-zinc-50' 
-                            : 'hover:bg-surface-hover text-zinc-400'">
+                            ? 'bg-primary/20 text-surface-0' 
+                            : 'hover:bg-surface-800 text-surface-400'">
 
                 <!-- Icon -->
                 <span
-                    class="w-8 h-8 rounded-lg bg-surface-hover border border-border flex items-center justify-center text-sm">
+                    class="w-8 h-8 rounded-lg bg-surface-800 border border-surface-700 flex items-center justify-center text-sm">
                     {{ getProfileDisplay(profile) }}
                 </span>
 
                 <!-- Info -->
                 <div class="flex-1 min-w-0">
-                    <div class="font-medium text-zinc-50 truncate">{{ profile.name }}</div>
+                    <div class="font-medium text-surface-0 truncate">{{ profile.name }}</div>
                     @if (profile.metadata?.group) {
-                    <span class="text-xs text-zinc-500">{{ profile.metadata?.group }}</span>
+                    <span class="text-xs text-surface-0">{{ profile.metadata?.group }}</span>
                     }
                 </div>
 
@@ -55,7 +55,7 @@
 
                 <!-- Enter hint -->
                 @if (selectedIndex() === i) {
-                <kbd class="px-2 py-1 bg-surface-hover border border-border rounded text-xs text-zinc-500">↵</kbd>
+                <kbd class="px-2 py-1 bg-surface-800 border border-surface-700 rounded text-xs text-surface-0">↵</kbd>
                 }
             </button>
             }
@@ -64,10 +64,10 @@
 
         <!-- Footer -->
         <div id="command-palette-footer"
-            class="px-4 py-2 border-t border-border flex items-center gap-4 text-xs text-zinc-600">
-            <span><kbd class="px-1 bg-surface-hover rounded">↑↓</kbd> Navigate</span>
-            <span><kbd class="px-1 bg-surface-hover rounded">↵</kbd> Launch</span>
-            <span><kbd class="px-1 bg-surface-hover rounded">ESC</kbd> Close</span>
+            class="px-4 py-2 border-t border-surface-700 flex items-center gap-4 text-xs text-surface-600">
+            <span><kbd class="px-1 bg-surface-800 rounded">↑↓</kbd> Navigate</span>
+            <span><kbd class="px-1 bg-surface-800 rounded">↵</kbd> Launch</span>
+            <span><kbd class="px-1 bg-surface-800 rounded">ESC</kbd> Close</span>
         </div>
     </div>
 

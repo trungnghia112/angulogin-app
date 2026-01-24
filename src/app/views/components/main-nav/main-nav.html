@@ -1,7 +1,7 @@
-<nav id="main-nav-container" class="flex flex-col h-screen w-16 bg-rail border-r border-border">
+<nav id="main-nav-container" class="flex flex-col h-screen w-16 bg-surface-950 border-r border-surface-700">
     <!-- Logo - matches header height -->
     <div id="main-nav-logo" data-tauri-drag-region
-        class="flex items-center justify-center h-(--spacing-header) shrink-0 border-b border-border">
+        class="flex items-center justify-center h-(--spacing-header) shrink-0 border-b border-surface-700">
         <svg class="w-9 h-9 logo-animated" viewBox="280 70 480 340">
             <defs>
                 <linearGradient id="navLogoGradient" x1="280" y1="410" x2="760" y2="70" gradientUnits="userSpaceOnUse">
@@ -43,7 +43,7 @@
             class="relative w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 group"
             [class]="isActive(feature.id) 
           ? 'bg-primary/20 text-primary' 
-          : 'text-zinc-500 hover:text-zinc-300 hover:bg-surface-hover'" [pTooltip]="feature.name"
+          : 'text-surface-0 hover:text-surface-300 hover:bg-surface-800'" [pTooltip]="feature.name"
             tooltipPosition="right" (click)="selectFeature(feature.id)">
             <i [class]="'pi ' + feature.icon + ' text-lg'"></i>
 
@@ -60,17 +60,17 @@
     </div>
 
     <!-- Bottom Actions -->
-    <div id="main-nav-bottom" class="flex flex-col items-center py-3 gap-1 border-t border-border">
+    <div id="main-nav-bottom" class="flex flex-col items-center py-3 gap-1 border-t border-surface-700">
         <!-- Settings -->
         <button id="main-nav-settings-btn"
-            class="w-11 h-11 rounded-xl flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-surface-hover transition-all duration-200"
+            class="w-11 h-11 rounded-xl flex items-center justify-center text-surface-0 hover:text-surface-300 hover:bg-surface-800 transition-all duration-200"
             pTooltip="Settings" tooltipPosition="right">
             <i class="pi pi-cog text-lg"></i>
         </button>
 
         <!-- Dark Mode Toggle -->
         <button id="main-nav-darkmode-btn" (click)="toggleDarkMode()"
-            class="w-11 h-11 rounded-xl flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-surface-hover transition-all duration-200"
+            class="w-11 h-11 rounded-xl flex items-center justify-center text-surface-0 hover:text-surface-300 hover:bg-surface-800 transition-all duration-200"
             [pTooltip]="isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'" tooltipPosition="right">
             <i [class]="isDarkMode() ? 'pi pi-sun text-lg' : 'pi pi-moon text-lg'"></i>
         </button>

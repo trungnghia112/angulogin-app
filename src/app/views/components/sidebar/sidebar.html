@@ -1,16 +1,16 @@
-<aside id="sidebar-container" class="flex flex-col h-screen w-60 bg-sidebar border-r border-border">
+<aside id="sidebar-container" class="flex flex-col h-screen w-60 bg-surface-900 border-r border-surface-700">
     <!-- Feature Header - matches header height -->
     <div id="sidebar-header"
-        class="flex items-center justify-between px-4 h-(--spacing-header) shrink-0 border-b border-border">
-        <span id="sidebar-header-title" class="text-base font-semibold text-zinc-50">Browsers</span>
+        class="flex items-center justify-between px-4 h-(--spacing-header) shrink-0 border-b border-surface-700">
+        <span id="sidebar-header-title" class="text-base font-semibold text-surface-0">Browsers</span>
         <div id="sidebar-header-actions" class="flex items-center gap-1">
             <button id="sidebar-header-settings-btn"
-                class="w-7 h-7 rounded-md flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-surface-hover transition-colors"
+                class="w-7 h-7 rounded-md flex items-center justify-center text-surface-0 hover:text-surface-300 hover:bg-surface-800 transition-colors"
                 (click)="openProfilesDirectoryDialog()" title="Profiles Directory">
                 <i class="pi pi-cog text-sm"></i>
             </button>
             <button id="sidebar-header-add-btn"
-                class="w-7 h-7 rounded-md flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-surface-hover transition-colors"
+                class="w-7 h-7 rounded-md flex items-center justify-center text-surface-0 hover:text-surface-300 hover:bg-surface-800 transition-colors"
                 (click)="onAddFolder()" title="Add folder">
                 <i class="pi pi-plus text-sm"></i>
             </button>
@@ -20,7 +20,7 @@
     <!-- Folders Header -->
     <div id="sidebar-folders-header" class="px-4 py-2">
         <span id="sidebar-folders-title"
-            class="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Folders</span>
+            class="text-xs font-semibold text-surface-0 uppercase tracking-wide">Folders</span>
     </div>
 
     <!-- Folders List -->
@@ -28,32 +28,32 @@
         @for (folder of folders(); track folder.id; let i = $index) {
         <button [id]="'sidebar-folder-' + i"
             class="w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-all duration-150" [class]="selectedFolderId() === folder.id 
-          ? 'bg-surface-hover text-zinc-50' 
-          : 'text-zinc-400 hover:text-zinc-200 hover:bg-surface-hover/50'" (click)="selectFolder(folder.id)">
+          ? 'bg-surface-800 text-surface-0' 
+          : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/50'" (click)="selectFolder(folder.id)">
             <i [class]="'pi ' + getFolderIcon(folder) + ' text-base'" [style.color]="getFolderColor(folder)"></i>
             <span class="text-sm font-medium truncate flex-1 text-left">{{ folder.name }}</span>
             @if (folder.profileCount !== undefined) {
-            <span class="text-xs text-zinc-600">{{ folder.profileCount }}</span>
+            <span class="text-xs text-surface-600">{{ folder.profileCount }}</span>
             }
         </button>
         }
     </nav>
 
     <!-- Bottom Actions -->
-    <div id="sidebar-bottom" class="border-t border-border p-3">
+    <div id="sidebar-bottom" class="border-t border-surface-700 p-3">
         <div id="sidebar-bottom-actions" class="flex items-center justify-between">
             <button id="sidebar-settings-btn"
-                class="w-8 h-8 rounded-md flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-surface-hover transition-colors"
+                class="w-8 h-8 rounded-md flex items-center justify-center text-surface-0 hover:text-surface-300 hover:bg-surface-800 transition-colors"
                 (click)="onSettings()" title="Settings">
                 <i class="pi pi-cog text-sm"></i>
             </button>
             <button id="sidebar-trash-btn"
-                class="w-8 h-8 rounded-md flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-surface-hover transition-colors"
+                class="w-8 h-8 rounded-md flex items-center justify-center text-surface-0 hover:text-surface-300 hover:bg-surface-800 transition-colors"
                 title="Trash">
                 <i class="pi pi-trash text-sm"></i>
             </button>
             <button id="sidebar-export-btn"
-                class="w-8 h-8 rounded-md flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-surface-hover transition-colors"
+                class="w-8 h-8 rounded-md flex items-center justify-center text-surface-0 hover:text-surface-300 hover:bg-surface-800 transition-colors"
                 title="Export">
                 <i class="pi pi-download text-sm"></i>
             </button>
@@ -66,36 +66,36 @@
     (visibleChange)="showProfilesDirectoryDialog.set($event)" [modal]="true" [style]="{ width: '480px' }"
     [draggable]="false" [resizable]="false">
     <div id="sidebar-profiles-dir-dialog-content" class="py-2 space-y-4">
-        <p class="text-sm text-zinc-400">
+        <p class="text-sm text-surface-400">
             Set the directory where your Chrome profiles are stored. This path will be used to scan and manage your
             browser profiles.
         </p>
         <div>
-            <label for="sidebar-profiles-dir-input" class="block text-xs font-medium text-zinc-500 mb-2">Directory
+            <label for="sidebar-profiles-dir-input" class="block text-xs font-medium text-surface-0 mb-2">Directory
                 Path</label>
             <div class="flex items-center gap-2">
                 <input pInputText id="sidebar-profiles-dir-input" type="text" [ngModel]="profilesDirectoryPath()"
                     (ngModelChange)="profilesDirectoryPath.set($event)"
                     placeholder="/Volumes/ExternalDrive/ChromeProfiles"
-                    class="flex-1 bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none" />
+                    class="flex-1 bg-surface-950 border border-surface-700 rounded-lg px-4 py-3 text-surface-0 text-sm focus:border-primary outline-none" />
                 <button id="sidebar-profiles-dir-browse-btn"
-                    class="w-10 h-10 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-primary transition-colors flex items-center justify-center"
+                    class="w-10 h-10 rounded-lg border border-surface-700 text-surface-400 hover:text-surface-0 hover:border-primary transition-colors flex items-center justify-center"
                     (click)="browseFolder()" title="Browse folder">
                     <i class="pi pi-folder-open"></i>
                 </button>
             </div>
         </div>
-        <div class="bg-surface-hover/50 rounded-lg p-3 border border-border">
-            <div class="flex items-center gap-2 text-xs text-zinc-500">
+        <div class="bg-surface-800/50 rounded-lg p-3 border border-surface-700">
+            <div class="flex items-center gap-2 text-xs text-surface-0">
                 <i class="pi pi-info-circle"></i>
-                <span>Example: <code class="text-zinc-400">/Users/john/ChromeProfiles</code></span>
+                <span>Example: <code class="text-surface-400">/Users/john/ChromeProfiles</code></span>
             </div>
         </div>
     </div>
     <ng-template #footer>
         <div id="sidebar-profiles-dir-dialog-footer" class="flex justify-end gap-3 pt-2">
             <button id="sidebar-profiles-dir-cancel-btn" pButton
-                class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
+                class="px-5 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-0 text-sm cursor-pointer"
                 (click)="showProfilesDirectoryDialog.set(false)">Cancel</button>
             <button id="sidebar-profiles-dir-save-btn" pButton
                 class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"

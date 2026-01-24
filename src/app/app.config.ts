@@ -40,15 +40,6 @@ const AppTheme = definePreset(Aura, {
     }
   },
   components: {
-    // DataTable - transparent backgrounds
-    datatable: {
-      header: {
-        background: 'transparent'
-      },
-      row: {
-        background: 'transparent'
-      }
-    },
   }
 });
 
