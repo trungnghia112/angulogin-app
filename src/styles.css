@@ -8,7 +8,26 @@
     --font-sans: "Inter", system-ui, sans-serif;
 }
 
-/* --- Surface Palettes --- */
+/* Default Dark Mode (Zinc palette) - applies when .dark class is on html */
+:root.dark {
+    --p-surface-0: #09090b;
+    --p-surface-50: #18181b;
+    --p-surface-100: #27272a;
+    --p-surface-200: #27272a;
+    --p-surface-300: #3f3f46;
+    --p-surface-400: #52525b;
+    --p-surface-500: #71717a;
+    --p-surface-600: #a1a1aa;
+    --p-surface-700: #d4d4d8;
+    --p-surface-800: #e4e4e7;
+    --p-surface-900: #f4f4f5;
+    --p-surface-950: #ffffff;
+    --p-text-color: #e4e4e7;
+    --p-text-muted-color: #a1a1aa;
+    --p-content-background: var(--p-surface-0);
+}
+
+/* --- Surface Palettes (Theme-specific overrides) --- */
 
 /* Slate */
 .theme-slate.dark {
