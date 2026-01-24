@@ -1,6 +1,7 @@
-<div id="home-container" class="flex flex-col h-screen min-h-0 bg-surface-950">
+<div id="home-container" class="flex flex-col h-screen min-h-0 text-color">
     <!-- Header Toolbar -->
-    <header id="home-header" class="flex items-center gap-4 px-6 h-(--spacing-header) shrink-0 border-b border-surface-700">
+    <header id="home-header"
+        class="flex items-center gap-4 px-6 h-[var(--spacing-header)] shrink-0 border-b border-surface">
         <!-- Search (full width) -->
         <div id="home-header-search" class="flex-1">
             <p-iconfield>
@@ -21,12 +22,12 @@
                     icon="pi pi-sort-alt" [label]="currentSortLabel()" severity="secondary" [outlined]="true" />
                 @if (showSortDropdown()) {
                 <div id="home-sort-dropdown"
-                    class="absolute right-0 top-full mt-2 w-48 bg-surface-900 border border-surface-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+                    class="absolute right-0 top-full mt-2 w-48 border border-surface rounded-xl shadow-2xl z-50 overflow-hidden">
                     <div class="py-2">
                         @for (option of sortOptions; track option.value) {
                         <button (click)="setSortBy(option.value)"
                             class="w-full px-4 py-2 text-left text-sm transition-colors flex items-center justify-between"
-                            [class]="sortBy() === option.value ? 'bg-primary/20 text-primary' : 'text-surface-300 hover:bg-surface-800'">
+                            [class]="sortBy() === option.value ? 'bg-primary/20 text-primary' : 'text-muted-color '">
                             <span>{{ option.label }}</span>
                             @if (sortBy() === option.value) {
                             <i [class]="'pi text-xs ' + (sortOrder() === 'asc' ? 'pi-arrow-up' : 'pi-arrow-down')"></i>
@@ -47,10 +48,10 @@
                 <!-- Filters Dropdown -->
                 @if (showFiltersDropdown()) {
                 <div id="home-filters-dropdown"
-                    class="absolute right-0 top-full mt-2 w-64 bg-surface-900 border border-surface-700 rounded-xl shadow-2xl z-50 overflow-hidden">
-                    <div class="p-4 border-b border-surface-700">
+                    class="absolute right-0 top-full mt-2 w-64 border border-surface rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <div class="p-4 border-b border-surface">
                         <div class="flex items-center justify-between mb-3">
-                            <h4 class="text-sm font-semibold text-surface-0">Filter by Group</h4>
+                            <h4 class="text-sm font-semibold text-color">Filter by Group</h4>
                             @if (hasActiveFilters()) {
                             <button (click)="clearFilters()"
                                 class="text-xs text-primary hover:text-primary-hover transition-colors">
@@ -60,14 +61,14 @@
                         </div>
                         <div class="flex flex-wrap gap-2">
                             @if (uniqueGroups().length === 0) {
-                            <p class="text-xs text-surface-0">No groups available</p>
+                            <p class="text-xs text-muted-color">No groups available</p>
                             } @else {
                             @for (group of uniqueGroups(); track group) {
                             <button (click)="setFilterGroup(group)"
                                 class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                                [class]="filterGroup() === group 
-                                                ? 'bg-primary text-bg' 
-                                                : 'bg-surface-800 border border-surface-700 text-surface-400 hover:border-primary hover:text-primary'">
+                                [class]="filterGroup() === group
+                                                 ? 'bg-primary text-white'
+                                                 : 'border border-surface text-muted-color hover:border-primary hover:text-primary'">
                                 {{ group }}
                             </button>
                             }
@@ -79,12 +80,12 @@
             </div>
 
             <!-- View Mode Toggle -->
-            <p-selectbutton [options]="[{icon: 'pi pi-list', value: 'table'}, {icon: 'pi pi-th-large', value: 'grid'}]"
-                [ngModel]="viewMode()" (ngModelChange)="viewMode.set($event)" optionLabel="icon" optionValue="value">
-                <ng-template pTemplate="item" let-item>
-                    <i [class]="item.icon"></i>
-                </ng-template>
-            </p-selectbutton>
+            <p-buttonGroup>
+                <p-button icon="pi pi-list" (onClick)="viewMode.set('table')" [outlined]="viewMode() !== 'table'"
+                    severity="secondary" />
+                <p-button icon="pi pi-th-large" (onClick)="viewMode.set('grid')" [outlined]="viewMode() !== 'grid'"
+                    severity="secondary" />
+            </p-buttonGroup>
 
             <p-button id="home-header-create-btn" (click)="openCreateDialog()" icon="pi pi-plus"
                 label="Create profile" />
@@ -92,50 +93,53 @@
     </header>
 
     <!-- Tabs -->
-    <div id="home-tabs" class="flex items-center justify-between px-6 py-3 border-b border-surface-700 shrink-0">
+    <div id="home-tabs" class="flex items-center justify-between px-6 py-3 border-b border-surface shrink-0">
         <nav id="home-tabs-nav" class="flex items-center gap-6">
             @for (tab of tabs; track tab.key; let i = $index) {
             <button [id]="'home-tab-' + i"
                 class="flex items-center gap-2 pb-2 text-sm font-medium transition-colors border-b-2 -mb-[13px]"
                 [class]="activeTab() === tab.key
-            ? 'text-surface-0 border-primary'
-            : 'text-surface-0 border-transparent hover:text-surface-300'" (click)="setActiveTab(tab.key)">
+            ? 'text-color border-primary'
+            : 'text-muted-color border-transparent hover:text-muted-color'" (click)="setActiveTab(tab.key)">
                 <i [class]="'pi ' + tab.icon + ' text-sm'"></i>
                 <span>{{ tab.label }}</span>
             </button>
             }
         </nav>
-        <span id="home-tabs-usage" class="text-sm text-surface-0">{{ profilesUsed() }} of {{ maxProfiles() }} profiles
+        <span id="home-tabs-usage" class="text-sm text-muted-color">{{ profilesUsed() }} of {{
+            maxProfiles() }} profiles
             used</span>
     </div>
 
     <!-- Content -->
     <div id="home-content" class="flex-1 min-h-0 overflow-auto p-6 pb-4">
         @if (loading()) {
-        <div id="home-loading" class="flex flex-col items-center justify-center py-16 gap-4 text-surface-0">
+        <div id="home-loading" class="flex flex-col items-center justify-center py-16 gap-4 text-muted-color">
             <p-progressSpinner strokeWidth="3" />
             <p>Scanning profiles...</p>
         </div>
         } @else if (profiles().length === 0) {
         <div id="home-empty" class="flex flex-col items-center justify-center py-16 text-center">
             <div id="home-empty-icon"
-                class="w-20 h-20 rounded-2xl bg-surface-900 border border-surface-700 flex items-center justify-center mb-5">
-                <i class="pi pi-inbox text-3xl text-surface-0"></i>
+                class="w-20 h-20 rounded-2xl border border-surface flex items-center justify-center mb-5">
+                <i class="pi pi-inbox text-3xl text-zinc-400"></i>
             </div>
-            <h3 id="home-empty-title" class="text-lg font-semibold text-surface-0 mb-2">No Profiles Found</h3>
-            <p id="home-empty-desc" class="text-sm text-surface-0">Enter the path to your Chrome profiles folder and
+            <h3 id="home-empty-title" class="text-lg font-semibold text-color mb-2">No
+                Profiles Found</h3>
+            <p id="home-empty-desc" class="text-sm text-muted-color">Enter the path to your Chrome
+                profiles folder and
                 click Scan</p>
         </div>
         } @else if (filteredProfiles().length === 0 && hasActiveFilters()) {
         <!-- No search results -->
         <div id="home-no-results" class="flex flex-col items-center justify-center py-16 text-center">
-            <div class="w-20 h-20 rounded-2xl bg-surface-900 border border-surface-700 flex items-center justify-center mb-5">
-                <i class="pi pi-search text-3xl text-surface-0"></i>
+            <div class="w-20 h-20 rounded-2xl border border-surface flex items-center justify-center mb-5">
+                <i class="pi pi-search text-3xl text-zinc-400"></i>
             </div>
-            <h3 class="text-lg font-semibold text-surface-0 mb-2">No Matching Profiles</h3>
-            <p class="text-sm text-surface-0 mb-4">Try adjusting your search or filters</p>
+            <h3 class="text-lg font-semibold text-color mb-2">No Matching Profiles</h3>
+            <p class="text-sm text-muted-color mb-4">Try adjusting your search or filters</p>
             <button (click)="clearFilters()"
-                class="px-4 py-2 bg-primary text-bg text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors">
+                class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors">
                 Clear filters
             </button>
         </div>
@@ -173,8 +177,8 @@
                     <td>
                         <button [id]="'home-profile-' + i + '-pin-btn'" (click)="togglePin(profile, $event)"
                             class="w-7 h-7 rounded-md transition-colors flex items-center justify-center" [class]="profile.metadata?.isPinned 
-                                    ? 'text-yellow-400 hover:text-yellow-300' 
-                                    : 'text-surface-600 hover:text-surface-400'">
+                                     ? 'text-yellow-400 hover:text-yellow-300' 
+                                     : 'text-muted-color hover:text-zinc-400'">
                             <i [class]="profile.metadata?.isPinned ? 'pi pi-star-fill' : 'pi pi-star'"></i>
                         </button>
                     </td>
@@ -190,7 +194,7 @@
 
                     <!-- Status -->
                     <td>
-                        <span class="px-2.5 py-1 bg-surface-800 border border-surface-700 rounded text-xs text-surface-400">
+                        <span class="px-2.5 py-1 border border-surface rounded text-xs text-muted-color">
                             No status
                         </span>
                     </td>
@@ -212,8 +216,7 @@
                             </span>
                             }
                             @if (profile.metadata.tags.length > 3) {
-                            <span
-                                class="px-2 py-0.5 bg-surface-800 border border-surface-700 rounded text-xs text-surface-0">
+                            <span class="px-2 py-0.5 border border-surface rounded text-xs text-color">
                                 +{{ profile.metadata.tags.length - 3 }}
                             </span>
                             }
@@ -275,7 +278,7 @@
         <div id="home-profiles-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             @for (profile of filteredProfiles(); track profile.path; let i = $index) {
             <div [id]="'home-profile-card-' + i"
-                class="bg-surface-900 border border-surface-700 rounded-xl p-4 hover:border-primary/50 transition-all cursor-pointer relative group"
+                class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-all cursor-pointer relative group shadow-sm"
                 (click)="openEditDialog(profile, $event)">
                 <!-- Pin indicator -->
                 @if (profile.metadata?.isPinned) {
@@ -284,11 +287,12 @@
                 </div>
                 }
                 <!-- Avatar/Emoji -->
-                <div class="w-14 h-14 rounded-xl bg-surface-800 flex items-center justify-center mb-3 text-2xl">
+                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-3 text-2xl">
                     {{ getProfileDisplay(profile) }}
                 </div>
                 <!-- Name -->
-                <h3 class="text-sm font-semibold text-surface-0 mb-1 truncate">{{ profile.name }}</h3>
+                <h3 class="text-sm font-semibold text-color mb-1 truncate">{{ profile.name }}
+                </h3>
                 <!-- Tags -->
                 @if (profile.metadata?.tags?.length) {
                 <div class="flex flex-wrap gap-1 mb-2">
@@ -300,15 +304,15 @@
                 <!-- Actions -->
                 <div class="flex items-center gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button (click)="launchProfile(profile, $event)"
-                        class="flex-1 py-1.5 bg-primary text-bg text-xs font-medium rounded-lg hover:bg-primary-hover transition-colors">
+                        class="flex-1 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover transition-colors">
                         Start
                     </button>
                     <button (click)="openDuplicateDialog(profile, $event)"
-                        class="p-1.5 text-surface-0 hover:text-primary transition-colors" title="Duplicate">
+                        class="p-1.5 text-muted-color hover:text-primary transition-colors" title="Duplicate">
                         <i class="pi pi-copy text-sm"></i>
                     </button>
                     <button (click)="deleteProfile(profile, $event)"
-                        class="p-1.5 text-surface-0 hover:text-error transition-colors" title="Delete">
+                        class="p-1.5 text-muted-color hover:text-error transition-colors" title="Delete">
                         <i class="pi pi-trash text-sm"></i>
                     </button>
                 </div>
@@ -320,28 +324,29 @@
         <!-- Other tabs placeholder -->
         <div id="home-tab-placeholder" class="flex flex-col items-center justify-center py-16 text-center">
             <div id="home-tab-placeholder-icon"
-                class="w-16 h-16 rounded-xl bg-surface-900 border border-surface-700 flex items-center justify-center mb-4">
-                <i class="pi pi-cog text-2xl text-surface-0"></i>
+                class="w-16 h-16 rounded-xl border border-surface flex items-center justify-center mb-4">
+                <i class="pi pi-cog text-2xl text-zinc-400"></i>
             </div>
-            <h3 id="home-tab-placeholder-title" class="text-lg font-semibold text-surface-0 mb-2">{{ activeTab() |
+            <h3 id="home-tab-placeholder-title" class="text-lg font-semibold text-color mb-2">
+                {{ activeTab() |
                 titlecase }}</h3>
-            <p id="home-tab-placeholder-desc" class="text-sm text-surface-0">Coming soon...</p>
+            <p id="home-tab-placeholder-desc" class="text-sm text-muted-color">Coming soon...</p>
         </div>
         }
     </div>
 
     <!-- Bottom Actions Bar (Fixed at bottom, like sidebar-bottom) -->
     @if (selectedProfiles().length > 0 && activeTab() === 'profiles') {
-    <div id="home-bottom" class="shrink-0 border-t border-surface-700 bg-surface-900 p-3">
+    <div id="home-bottom" class="shrink-0 border-t border-surface p-3">
         <div id="home-bottom-actions" class="flex items-center gap-3">
             <button id="home-bottom-clear-btn" (click)="clearSelection()"
-                class="w-8 h-8 rounded-md border border-surface-700 text-surface-400 hover:text-surface-0 hover:border-zinc-400 transition-colors flex items-center justify-center"
+                class="w-8 h-8 rounded-md border border-surface text-muted-color hover:text-color transition-colors flex items-center justify-center"
                 title="Clear selection">
                 <i class="pi pi-times"></i>
             </button>
             <div class="w-px h-6 bg-border"></div>
             <button id="home-bottom-start-all-btn" (click)="bulkLaunch()"
-                class="h-8 flex items-center gap-2 px-3 rounded-md border border-primary text-primary hover:bg-primary hover:text-bg transition-colors"
+                class="h-8 flex items-center gap-2 px-3 rounded-md border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
                 title="Launch all selected">
                 <i class="pi pi-play text-sm"></i>
                 <span class="text-sm font-medium">Launch All</span>
@@ -366,7 +371,7 @@
         <div id="home-create-dialog-content">
             <label for="home-create-dialog-name-input">Profile Name</label>
             <input pInputText id="home-create-dialog-name-input" type="text" [ngModel]="newProfileName()"
-                (ngModelChange)="newProfileName.set($event)" placeholder="e.g., Work, Personal" fluid />
+                (ngModelChange)="newProfileName.set($event)" placeholder="e.g., Work, Personal" class="w-full" />
         </div>
         <ng-template #footer>
             <p-button id="home-create-dialog-cancel-btn" label="Cancel" severity="secondary"
@@ -381,7 +386,7 @@
         <div id="home-rename-dialog-content">
             <label for="home-rename-dialog-name-input">New Name</label>
             <input pInputText id="home-rename-dialog-name-input" type="text" [ngModel]="renameProfileName()"
-                (ngModelChange)="renameProfileName.set($event)" fluid />
+                (ngModelChange)="renameProfileName.set($event)" class="w-full" />
         </div>
         <ng-template #footer>
             <p-button id="home-rename-dialog-cancel-btn" label="Cancel" severity="secondary"
@@ -396,12 +401,12 @@
         <div id="home-edit-dialog-content" class="py-2 space-y-5">
             <!-- Icon -->
             <div id="home-edit-dialog-icon-section">
-                <label class="block text-xs font-medium text-surface-0 mb-2">Icon</label>
+                <label class="block text-xs font-medium text-color mb-2">Icon</label>
                 <div id="home-edit-dialog-icon-options" class="flex flex-wrap gap-2">
                     @for (emoji of emojiOptions; track emoji; let i = $index) {
                     <button [id]="'home-edit-dialog-emoji-' + i"
                         class="w-10 h-10 rounded-lg border flex items-center justify-center text-xl cursor-pointer transition-all duration-150"
-                        [class]="editEmoji() === emoji ? 'bg-primary border-primary' : 'bg-surface-800 border-surface-700 hover:border-primary'"
+                        [class]="editEmoji() === emoji ? 'bg-primary border-primary text-white' : 'border-surface hover:border-primary'"
                         (click)="selectEmoji(emoji)">
                         {{ emoji }}
                     </button>
@@ -411,12 +416,12 @@
 
             <!-- Group -->
             <div id="home-edit-dialog-group-section">
-                <label class="block text-xs font-medium text-surface-0 mb-2">Group</label>
+                <label class="block text-xs font-medium text-color mb-2">Group</label>
                 <div id="home-edit-dialog-group-options" class="flex flex-wrap gap-2">
                     @for (group of groupOptions; track group; let i = $index) {
                     <button [id]="'home-edit-dialog-group-' + i"
                         class="px-3 py-2 rounded-lg border text-sm cursor-pointer transition-all duration-150"
-                        [class]="editGroup() === group ? 'bg-primary border-primary text-bg' : 'bg-surface-800 border-surface-700 text-surface-400 hover:border-primary'"
+                        [class]="editGroup() === group ? 'bg-primary border-primary text-white' : 'border-surface text-muted-color hover:border-primary'"
                         (click)="selectGroup(group)">
                         {{ group }}
                     </button>
@@ -426,12 +431,13 @@
 
             <!-- Shortcut -->
             <div id="home-edit-dialog-shortcut-section">
-                <label class="block text-xs font-medium text-surface-0 mb-2">Keyboard Shortcut</label>
+                <label class="block text-xs font-medium text-color mb-2">Keyboard
+                    Shortcut</label>
                 <div id="home-edit-dialog-shortcut-options" class="flex flex-wrap gap-2">
                     @for (num of shortcutOptions; track num; let i = $index) {
                     <button [id]="'home-edit-dialog-shortcut-' + i"
                         class="w-10 h-10 rounded-lg border flex items-center justify-center text-sm font-mono cursor-pointer transition-all duration-150"
-                        [class]="editShortcut() === num ? 'bg-primary border-primary text-bg' : 'bg-surface-800 border-surface-700 text-surface-400 hover:border-primary'"
+                        [class]="editShortcut() === num ? 'bg-primary border-primary text-white' : 'border-surface text-muted-color hover:border-primary'"
                         (click)="selectShortcut(num)">
                         ⌘{{ num }}
                     </button>
@@ -441,12 +447,13 @@
 
             <!-- Browser -->
             <div id="home-edit-dialog-browser-section">
-                <label class="block text-xs font-medium text-surface-0 mb-2">Default Browser</label>
+                <label class="block text-xs font-medium text-color mb-2">Default
+                    Browser</label>
                 <div id="home-edit-dialog-browser-options" class="flex flex-wrap gap-2">
                     @for (browser of availableBrowsers(); track browser; let i = $index) {
                     <button [id]="'home-edit-dialog-browser-' + i"
                         class="px-3 py-2 rounded-lg border text-sm cursor-pointer transition-all duration-150 flex items-center gap-2"
-                        [class]="editBrowser() === browser ? 'bg-primary border-primary text-bg' : 'bg-surface-800 border-surface-700 text-surface-400 hover:border-primary'"
+                        [class]="editBrowser() === browser ? 'bg-primary border-primary text-white' : 'border-surface text-muted-color hover:border-primary'"
                         (click)="selectBrowser($any(browser))">
                         <i [class]="'pi ' + browserInfo[browser].icon"></i>
                         {{ browserInfo[browser].name }}
@@ -457,11 +464,10 @@
 
             <!-- Tags -->
             <div id="home-edit-dialog-tags-section">
-                <label class="block text-xs font-medium text-surface-0 mb-2">Tags</label>
+                <label class="block text-xs font-medium text-color mb-2">Tags</label>
                 <div class="flex flex-wrap gap-2">
                     <input id="home-edit-dialog-tags-input" pInputText type="text"
-                        placeholder="Type and press Enter to add tags"
-                        class="flex-1 min-w-[200px] bg-surface-950 border border-surface-700 rounded-lg px-4 py-2.5 text-surface-0 text-sm focus:border-primary outline-none"
+                        placeholder="Type and press Enter to add tags" class="flex-1 min-w-[200px]"
                         (keydown.enter)="addTag($event)" />
                 </div>
                 @if (editTags().length > 0) {
@@ -470,7 +476,7 @@
                     <span
                         class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/20 border border-primary/40 rounded-lg text-xs text-primary">
                         {{ tag }}
-                        <button (click)="removeTag(i)" class="hover:text-white transition-colors">
+                        <button (click)="removeTag(i)" class="hover:text-muted-color transition-colors">
                             <i class="pi pi-times text-[10px]"></i>
                         </button>
                     </span>
@@ -481,24 +487,23 @@
 
             <!-- Launch URL -->
             <div id="home-edit-dialog-url-section">
-                <label for="home-edit-dialog-url-input" class="block text-xs font-medium text-surface-0 mb-2">Launch
+                <label for="home-edit-dialog-url-input" class="block text-xs font-medium text-color mb-2">Launch
                     URL</label>
                 <input id="home-edit-dialog-url-input" pInputText type="url" [ngModel]="editLaunchUrl()"
-                    (ngModelChange)="editLaunchUrl.set($event)" placeholder="https://example.com"
-                    class="w-full bg-surface-950 border border-surface-700 rounded-lg px-4 py-2.5 text-surface-0 text-sm focus:border-primary outline-none" />
-                <p class="text-xs text-surface-600 mt-1">Browser will open this URL when starting the profile</p>
+                    (ngModelChange)="editLaunchUrl.set($event)" placeholder="https://example.com" class="w-full" />
+                <p class="text-xs text-muted-color mt-1">Browser will open this URL when starting the profile</p>
             </div>
 
             <!-- Pin to Top -->
             <div id="home-edit-dialog-pin-section" class="flex items-center justify-between">
                 <div>
-                    <label class="block text-xs font-medium text-surface-0">Pin to Top</label>
-                    <p class="text-xs text-surface-600">Keep this profile at the top of the list</p>
+                    <label class="block text-xs font-medium text-color">Pin to Top</label>
+                    <p class="text-xs text-muted-color">Keep this profile at the top of the list</p>
                 </div>
                 <button (click)="editIsPinned.set(!editIsPinned())"
                     class="w-12 h-7 rounded-full transition-colors relative"
-                    [class]="editIsPinned() ? 'bg-primary' : 'bg-surface-800 border border-surface-700'">
-                    <span class="absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-all"
+                    [class]="editIsPinned() ? 'bg-primary' : 'bg-surface-200 border border-surface'">
+                    <span class="absolute top-1 w-5 h-5 rounded-full shadow transition-all"
                         [class]="editIsPinned() ? 'left-6' : 'left-1'"></span>
                 </button>
             </div>
@@ -506,20 +511,17 @@
             <!-- Notes -->
             <div id="home-edit-dialog-notes-section">
                 <label for="home-edit-dialog-notes-input"
-                    class="block text-xs font-medium text-surface-0 mb-2">Notes</label>
-                <textarea id="home-edit-dialog-notes-input" [ngModel]="editNotes()"
+                    class="block text-xs font-medium text-color mb-2">Notes</label>
+                <textarea pInputTextarea id="home-edit-dialog-notes-input" [ngModel]="editNotes()"
                     (ngModelChange)="editNotes.set($event)" placeholder="What is this profile for?" rows="2"
-                    class="w-full bg-surface-950 border border-surface-700 rounded-lg px-4 py-3 text-surface-0 text-sm focus:border-primary outline-none resize-none"></textarea>
+                    class="w-full resize-none"></textarea>
             </div>
         </div>
         <ng-template #footer>
             <div id="home-edit-dialog-footer" class="flex justify-end gap-3 pt-2">
-                <button id="home-edit-dialog-cancel-btn" pButton
-                    class="px-5 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-0 text-sm cursor-pointer"
-                    (click)="showEditDialog.set(false)">Cancel</button>
-                <button id="home-edit-dialog-submit-btn" pButton
-                    class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
-                    (click)="saveProfileEdit()">Save</button>
+                <p-button id="home-edit-dialog-cancel-btn" label="Cancel" severity="secondary"
+                    (click)="showEditDialog.set(false)" />
+                <p-button id="home-edit-dialog-submit-btn" label="Save" (click)="saveProfileEdit()" />
             </div>
         </ng-template>
     </p-dialog>
@@ -528,21 +530,19 @@
     <p-dialog id="home-duplicate-dialog" header="Duplicate Profile" [(visible)]="showDuplicateDialog" [modal]="true"
         [style]="{ width: '400px' }" [draggable]="false" [resizable]="false">
         <div id="home-duplicate-dialog-content" class="py-2">
-            <p class="text-sm text-surface-400 mb-4">Create a copy of "{{ selectedProfile()?.name }}"</p>
-            <label for="home-duplicate-dialog-name-input" class="block text-xs font-medium text-surface-0 mb-2">New
+            <p class="text-sm text-muted-color mb-4">Create a copy of "{{ selectedProfile()?.name
+                }}"</p>
+            <label for="home-duplicate-dialog-name-input" class="block text-xs font-medium text-color mb-2">New
                 Name</label>
             <input pInputText id="home-duplicate-dialog-name-input" type="text" [ngModel]="duplicateProfileName()"
-                (ngModelChange)="duplicateProfileName.set($event)"
-                class="w-full bg-surface-950 border border-surface-700 rounded-lg px-4 py-3 text-surface-0 text-sm focus:border-primary outline-none" />
+                (ngModelChange)="duplicateProfileName.set($event)" class="w-full" />
         </div>
         <ng-template #footer>
             <div id="home-duplicate-dialog-footer" class="flex justify-end gap-3 pt-2">
-                <button id="home-duplicate-dialog-cancel-btn" pButton
-                    class="px-5 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-0 text-sm cursor-pointer"
-                    (click)="showDuplicateDialog.set(false)">Cancel</button>
-                <button id="home-duplicate-dialog-submit-btn" pButton
-                    class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
-                    (click)="duplicateProfile()">Duplicate</button>
+                <p-button id="home-duplicate-dialog-cancel-btn" label="Cancel" severity="secondary"
+                    (click)="showDuplicateDialog.set(false)" />
+                <p-button id="home-duplicate-dialog-submit-btn" label="Duplicate" (click)="duplicateProfile()" />
             </div>
         </ng-template>
     </p-dialog>
+</div>

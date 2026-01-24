@@ -1,62 +1,46 @@
-<aside id="sidebar-container" class="flex flex-col h-screen w-60 bg-surface-900 border-r border-surface-700">
+<aside id="sidebar-container" class="flex flex-col h-screen w-60 border-r border-surface">
     <!-- Feature Header - matches header height -->
     <div id="sidebar-header"
-        class="flex items-center justify-between px-4 h-(--spacing-header) shrink-0 border-b border-surface-700">
-        <span id="sidebar-header-title" class="text-base font-semibold text-surface-0">Browsers</span>
-        <div id="sidebar-header-actions" class="flex items-center gap-1">
-            <button id="sidebar-header-settings-btn"
-                class="w-7 h-7 rounded-md flex items-center justify-center text-surface-0 hover:text-surface-300 hover:bg-surface-800 transition-colors"
-                (click)="openProfilesDirectoryDialog()" title="Profiles Directory">
-                <i class="pi pi-cog text-sm"></i>
-            </button>
-            <button id="sidebar-header-add-btn"
-                class="w-7 h-7 rounded-md flex items-center justify-center text-surface-0 hover:text-surface-300 hover:bg-surface-800 transition-colors"
-                (click)="onAddFolder()" title="Add folder">
-                <i class="pi pi-plus text-sm"></i>
-            </button>
+        class="flex items-center justify-between px-4 h-[var(--spacing-header)] shrink-0 border-b border-surface">
+        <span id="sidebar-header-title" class="text-base font-semibold text-color">Browsers</span>
+        <div id="sidebar-header-actions" class="flex items-center gap-2">
+            <p-button id="sidebar-header-settings-btn" icon="pi pi-cog" [rounded]="true" [text]="true"
+                (click)="openProfilesDirectoryDialog()" pTooltip="Profiles Directory" tooltipPosition="bottom" />
+            <p-button id="sidebar-header-add-btn" icon="pi pi-plus" [rounded]="true" [text]="true"
+                (click)="onAddFolder()" pTooltip="Add folder" tooltipPosition="bottom" />
         </div>
     </div>
 
     <!-- Folders Header -->
     <div id="sidebar-folders-header" class="px-4 py-2">
         <span id="sidebar-folders-title"
-            class="text-xs font-semibold text-surface-0 uppercase tracking-wide">Folders</span>
+            class="text-xs font-semibold text-muted-color uppercase tracking-wide">Folders</span>
     </div>
 
     <!-- Folders List -->
-    <nav id="sidebar-folders-list" class="flex-1 overflow-y-auto px-2">
+    <nav id="sidebar-folders-list" class="flex-1 overflow-y-auto px-2" aria-label="Folder navigation">
         @for (folder of folders(); track folder.id; let i = $index) {
-        <button [id]="'sidebar-folder-' + i"
-            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-all duration-150" [class]="selectedFolderId() === folder.id 
-          ? 'bg-surface-800 text-surface-0' 
-          : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/50'" (click)="selectFolder(folder.id)">
+        <button [id]="'sidebar-folder-' + i" [attr.aria-current]="selectedFolderId() === folder.id ? 'page' : null"
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-all duration-150 cursor-pointer"
+            [class]="selectedFolderId() === folder.id
+          ? 'text-color'
+          : 'text-muted-color hover:text-color /50'" (click)="selectFolder(folder.id)">
             <i [class]="'pi ' + getFolderIcon(folder) + ' text-base'" [style.color]="getFolderColor(folder)"></i>
             <span class="text-sm font-medium truncate flex-1 text-left">{{ folder.name }}</span>
             @if (folder.profileCount !== undefined) {
-            <span class="text-xs text-surface-600">{{ folder.profileCount }}</span>
+            <span class="text-xs text-muted-color">{{ folder.profileCount }}</span>
             }
         </button>
         }
     </nav>
 
     <!-- Bottom Actions -->
-    <div id="sidebar-bottom" class="border-t border-surface-700 p-3">
+    <div id="sidebar-bottom" class="border-t border-surface p-3">
         <div id="sidebar-bottom-actions" class="flex items-center justify-between">
-            <button id="sidebar-settings-btn"
-                class="w-8 h-8 rounded-md flex items-center justify-center text-surface-0 hover:text-surface-300 hover:bg-surface-800 transition-colors"
-                (click)="onSettings()" title="Settings">
-                <i class="pi pi-cog text-sm"></i>
-            </button>
-            <button id="sidebar-trash-btn"
-                class="w-8 h-8 rounded-md flex items-center justify-center text-surface-0 hover:text-surface-300 hover:bg-surface-800 transition-colors"
-                title="Trash">
-                <i class="pi pi-trash text-sm"></i>
-            </button>
-            <button id="sidebar-export-btn"
-                class="w-8 h-8 rounded-md flex items-center justify-center text-surface-0 hover:text-surface-300 hover:bg-surface-800 transition-colors"
-                title="Export">
-                <i class="pi pi-download text-sm"></i>
-            </button>
+            <p-button id="sidebar-settings-btn" icon="pi pi-cog" [rounded]="true" [text]="true" (click)="onSettings()"
+                pTooltip="Settings" />
+            <p-button id="sidebar-trash-btn" icon="pi pi-trash" [rounded]="true" [text]="true" pTooltip="Trash" />
+            <p-button id="sidebar-export-btn" icon="pi pi-download" [rounded]="true" [text]="true" pTooltip="Export" />
         </div>
     </div>
 </aside>
@@ -66,40 +50,33 @@
     (visibleChange)="showProfilesDirectoryDialog.set($event)" [modal]="true" [style]="{ width: '480px' }"
     [draggable]="false" [resizable]="false">
     <div id="sidebar-profiles-dir-dialog-content" class="py-2 space-y-4">
-        <p class="text-sm text-surface-400">
+        <p class="text-sm text-muted-color">
             Set the directory where your Chrome profiles are stored. This path will be used to scan and manage your
             browser profiles.
         </p>
         <div>
-            <label for="sidebar-profiles-dir-input" class="block text-xs font-medium text-surface-0 mb-2">Directory
+            <label for="sidebar-profiles-dir-input" class="block text-xs font-medium text-color mb-2">Directory
                 Path</label>
             <div class="flex items-center gap-2">
                 <input pInputText id="sidebar-profiles-dir-input" type="text" [ngModel]="profilesDirectoryPath()"
                     (ngModelChange)="profilesDirectoryPath.set($event)"
-                    placeholder="/Volumes/ExternalDrive/ChromeProfiles"
-                    class="flex-1 bg-surface-950 border border-surface-700 rounded-lg px-4 py-3 text-surface-0 text-sm focus:border-primary outline-none" />
-                <button id="sidebar-profiles-dir-browse-btn"
-                    class="w-10 h-10 rounded-lg border border-surface-700 text-surface-400 hover:text-surface-0 hover:border-primary transition-colors flex items-center justify-center"
-                    (click)="browseFolder()" title="Browse folder">
-                    <i class="pi pi-folder-open"></i>
-                </button>
+                    placeholder="/Volumes/ExternalDrive/ChromeProfiles" class="flex-1" />
+                <p-button id="sidebar-profiles-dir-browse-btn" icon="pi pi-folder-open" [outlined]="true"
+                    (click)="browseFolder()" pTooltip="Browse folder" />
             </div>
         </div>
-        <div class="bg-surface-800/50 rounded-lg p-3 border border-surface-700">
-            <div class="flex items-center gap-2 text-xs text-surface-0">
+        <div class="rounded-lg p-3 border border-surface">
+            <div class="flex items-center gap-2 text-xs text-color">
                 <i class="pi pi-info-circle"></i>
-                <span>Example: <code class="text-surface-400">/Users/john/ChromeProfiles</code></span>
+                <span>Example: <code class="text-muted-color">/Users/john/ChromeProfiles</code></span>
             </div>
         </div>
     </div>
     <ng-template #footer>
         <div id="sidebar-profiles-dir-dialog-footer" class="flex justify-end gap-3 pt-2">
-            <button id="sidebar-profiles-dir-cancel-btn" pButton
-                class="px-5 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-0 text-sm cursor-pointer"
-                (click)="showProfilesDirectoryDialog.set(false)">Cancel</button>
-            <button id="sidebar-profiles-dir-save-btn" pButton
-                class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
-                (click)="saveProfilesDirectory()">Save</button>
+            <p-button id="sidebar-profiles-dir-cancel-btn" label="Cancel" severity="secondary"
+                (click)="showProfilesDirectoryDialog.set(false)" />
+            <p-button id="sidebar-profiles-dir-save-btn" label="Save" (click)="saveProfilesDirectory()" />
         </div>
     </ng-template>
 </p-dialog>

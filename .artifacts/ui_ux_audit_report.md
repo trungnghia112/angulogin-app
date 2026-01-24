@@ -98,7 +98,7 @@ Thay đổi pattern:
 <div class="bg-surface-950">
 
 <!-- SAU (đúng) -->
-<div class="bg-surface-0 dark:bg-surface-950">
+<div class="dark:bg-surface-950">
 ```
 
 **Hoặc**, nếu chỉ hỗ trợ Dark Mode, thêm vào CSS:

@@ -15,9 +15,10 @@ import { FormsModule } from '@angular/forms';
 import { TitleCasePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { SelectButtonModule } from 'primeng/selectbutton';
+import { ButtonGroupModule } from 'primeng/buttongroup';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
@@ -59,9 +60,10 @@ interface Tab {
         TitleCasePipe,
         ButtonModule,
         InputTextModule,
+
         IconFieldModule,
         InputIconModule,
-        SelectButtonModule,
+        ButtonGroupModule,
         ProgressSpinnerModule,
         DialogModule,
         TableModule,

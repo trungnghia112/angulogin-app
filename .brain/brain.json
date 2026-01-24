@@ -32,6 +32,7 @@
     "knowledge_items": {
         "patterns": [
             "Light/Dark Mode: Use 'bg-surface-50 dark:bg-surface-950' pattern",
+            "Theme Layering: Container (50/950) -> Sidebar (0/900) -> Card (0/800)",
             "Signal-based state management",
             "Standalone components as default"
         ],

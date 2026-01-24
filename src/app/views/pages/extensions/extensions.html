@@ -1,12 +1,14 @@
-<div id="extensions-container" class="flex flex-col h-full bg-surface-950 p-8">
+<div id="extensions-container" class="flex flex-col h-full p-8">
     <!-- Header -->
     <div id="extensions-header" class="flex items-center justify-between mb-8">
         <div id="extensions-header-info">
-            <h1 id="extensions-header-title" class="text-2xl font-bold text-surface-0 mb-2">Extensions</h1>
-            <p id="extensions-header-subtitle" class="text-sm text-surface-0">Manage Chrome extensions for your profiles
+            <h1 id="extensions-header-title" class="text-2xl font-bold text-color mb-2">
+                Extensions</h1>
+            <p id="extensions-header-subtitle" class="text-sm text-muted-color">Manage Chrome
+                extensions for your profiles
             </p>
         </div>
-        <button id="extensions-header-add-btn"
+        <button id="extensions-header-add-btn" aria-label="Add new extension"
             class="flex items-center gap-2 px-4 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-semibold cursor-pointer hover:bg-primary-hover transition-colors">
             <i class="pi pi-plus"></i>
             <span>Add Extension</span>
@@ -16,85 +18,94 @@
     <!-- Extensions Grid -->
     <div id="extensions-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- Sample Extension Cards -->
-        <div id="extensions-card-0"
-            class="bg-surface-900 border border-surface-700 rounded-xl p-4 hover:border-primary/50 transition-colors cursor-pointer">
+        <article id="extensions-card-0"
+            class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-colors cursor-pointer">
             <div id="extensions-card-0-header" class="flex items-start gap-3 mb-3">
                 <div id="extensions-card-0-icon"
                     class="w-12 h-12 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white text-xl">
                     <i class="pi pi-shield"></i>
                 </div>
                 <div id="extensions-card-0-info" class="flex-1 min-w-0">
-                    <h3 id="extensions-card-0-name" class="font-semibold text-surface-0 truncate">AdBlock Pro</h3>
-                    <p id="extensions-card-0-desc" class="text-xs text-surface-0">Block ads and trackers</p>
+                    <h3 id="extensions-card-0-name" class="font-semibold text-color truncate">
+                        AdBlock Pro</h3>
+                    <p id="extensions-card-0-desc" class="text-xs text-muted-color">Block ads and
+                        trackers</p>
                 </div>
                 <span id="extensions-card-0-status"
                     class="px-2 py-0.5 bg-primary/20 text-primary text-xs rounded">Active</span>
             </div>
-            <p id="extensions-card-0-usage" class="text-xs text-surface-0 mb-3">Used in 12 profiles</p>
+            <p id="extensions-card-0-usage" class="text-xs text-muted-color mb-3">Used in 12
+                profiles</p>
             <div id="extensions-card-0-actions" class="flex items-center gap-2">
-                <button id="extensions-card-0-configure-btn"
-                    class="flex-1 py-2 bg-surface-800 border border-surface-700 rounded-lg text-xs text-surface-400 hover:text-surface-0 transition-colors">
+                <button id="extensions-card-0-configure-btn" aria-label="Configure AdBlock Pro"
+                    class="flex-1 py-2 bg-zinc-200 border border-surface rounded-lg text-xs text-muted-color hover:text-color transition-colors cursor-pointer">
                     Configure
                 </button>
-                <button id="extensions-card-0-delete-btn"
-                    class="w-9 h-9 rounded-lg border border-surface-700 text-surface-0 hover:text-error hover:border-error transition-colors flex items-center justify-center">
+                <button id="extensions-card-0-delete-btn" aria-label="Delete AdBlock Pro"
+                    class="w-9 h-9 rounded-lg border border-surface text-muted-color hover:text-error hover:border-error transition-colors flex items-center justify-center cursor-pointer">
                     <i class="pi pi-trash text-xs"></i>
                 </button>
             </div>
-        </div>
+        </article>
 
-        <div id="extensions-card-1"
-            class="bg-surface-900 border border-surface-700 rounded-xl p-4 hover:border-primary/50 transition-colors cursor-pointer">
+        <article id="extensions-card-1"
+            class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-colors cursor-pointer">
             <div id="extensions-card-1-header" class="flex items-start gap-3 mb-3">
                 <div id="extensions-card-1-icon"
                     class="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-xl">
                     <i class="pi pi-key"></i>
                 </div>
                 <div id="extensions-card-1-info" class="flex-1 min-w-0">
-                    <h3 id="extensions-card-1-name" class="font-semibold text-surface-0 truncate">Password Manager</h3>
-                    <p id="extensions-card-1-desc" class="text-xs text-surface-0">Secure password storage</p>
+                    <h3 id="extensions-card-1-name" class="font-semibold text-color truncate">
+                        Password Manager</h3>
+                    <p id="extensions-card-1-desc" class="text-xs text-muted-color">Secure
+                        password storage</p>
                 </div>
                 <span id="extensions-card-1-status"
                     class="px-2 py-0.5 bg-primary/20 text-primary text-xs rounded">Active</span>
             </div>
-            <p id="extensions-card-1-usage" class="text-xs text-surface-0 mb-3">Used in 8 profiles</p>
+            <p id="extensions-card-1-usage" class="text-xs text-muted-color mb-3">Used in 8
+                profiles</p>
             <div id="extensions-card-1-actions" class="flex items-center gap-2">
-                <button id="extensions-card-1-configure-btn"
-                    class="flex-1 py-2 bg-surface-800 border border-surface-700 rounded-lg text-xs text-surface-400 hover:text-surface-0 transition-colors">
+                <button id="extensions-card-1-configure-btn" aria-label="Configure Password Manager"
+                    class="flex-1 py-2 bg-zinc-200 border border-surface rounded-lg text-xs text-muted-color hover:text-color transition-colors cursor-pointer">
                     Configure
                 </button>
-                <button id="extensions-card-1-delete-btn"
-                    class="w-9 h-9 rounded-lg border border-surface-700 text-surface-0 hover:text-error hover:border-error transition-colors flex items-center justify-center">
+                <button id="extensions-card-1-delete-btn" aria-label="Delete Password Manager"
+                    class="w-9 h-9 rounded-lg border border-surface text-muted-color hover:text-error hover:border-error transition-colors flex items-center justify-center cursor-pointer">
                     <i class="pi pi-trash text-xs"></i>
                 </button>
             </div>
-        </div>
+        </article>
 
-        <div id="extensions-card-2"
-            class="bg-surface-900 border border-surface-700 rounded-xl p-4 hover:border-primary/50 transition-colors cursor-pointer">
+        <article id="extensions-card-2"
+            class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-colors cursor-pointer">
             <div id="extensions-card-2-header" class="flex items-start gap-3 mb-3">
                 <div id="extensions-card-2-icon"
                     class="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xl">
                     <i class="pi pi-globe"></i>
                 </div>
                 <div id="extensions-card-2-info" class="flex-1 min-w-0">
-                    <h3 id="extensions-card-2-name" class="font-semibold text-surface-0 truncate">VPN Proxy</h3>
-                    <p id="extensions-card-2-desc" class="text-xs text-surface-0">Secure browsing</p>
+                    <h3 id="extensions-card-2-name" class="font-semibold text-color truncate">
+                        VPN Proxy</h3>
+                    <p id="extensions-card-2-desc" class="text-xs text-muted-color">Secure
+                        browsing</p>
                 </div>
                 <span id="extensions-card-2-status"
-                    class="px-2 py-0.5 bg-zinc-600/50 text-surface-400 text-xs rounded">Inactive</span>
+                    class="px-2 py-0.5 bg-zinc-300 text-muted-color text-xs rounded">Inactive</span>
             </div>
-            <p id="extensions-card-2-usage" class="text-xs text-surface-0 mb-3">Used in 5 profiles</p>
+            <p id="extensions-card-2-usage" class="text-xs text-muted-color mb-3">Used in 5
+                profiles</p>
             <div id="extensions-card-2-actions" class="flex items-center gap-2">
-                <button id="extensions-card-2-configure-btn"
-                    class="flex-1 py-2 bg-surface-800 border border-surface-700 rounded-lg text-xs text-surface-400 hover:text-surface-0 transition-colors">
+                <button id="extensions-card-2-configure-btn" aria-label="Configure VPN Proxy"
+                    class="flex-1 py-2 bg-zinc-200 border border-surface rounded-lg text-xs text-muted-color hover:text-color transition-colors cursor-pointer">
                     Configure
                 </button>
-                <button id="extensions-card-2-delete-btn"
-                    class="w-9 h-9 rounded-lg border border-surface-700 text-surface-0 hover:text-error hover:border-error transition-colors flex items-center justify-center">
+                <button id="extensions-card-2-delete-btn" aria-label="Delete VPN Proxy"
+                    class="w-9 h-9 rounded-lg border border-surface text-muted-color hover:text-error hover:border-error transition-colors flex items-center justify-center cursor-pointer">
                     <i class="pi pi-trash text-xs"></i>
                 </button>
             </div>
-        </div>
+        </article>
     </div>
 </div>

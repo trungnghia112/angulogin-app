@@ -1,51 +1,70 @@
-import { Component, ChangeDetectionStrategy, inject, signal, DOCUMENT } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, inject, signal, effect, OnInit } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { NavigationService } from '../../../services/navigation.service';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-main-nav',
+    standalone: true,
+    imports: [CommonModule, ButtonModule, TooltipModule],
     templateUrl: './main-nav.html',
-    styleUrl: './main-nav.css',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [TooltipModule],
+    styleUrl: './main-nav.css'
 })
-export class MainNav {
-    private readonly router = inject(Router);
-    private readonly document = inject(DOCUMENT);
-    protected readonly navService = inject(NavigationService);
+export class MainNav implements OnInit {
+    private document = inject(DOCUMENT);
+    private router = inject(Router);
 
-    protected readonly features = this.navService.features;
-    protected readonly activeFeatureId = this.navService.activeFeatureId;
+    // Signals
+    isDarkMode = signal<boolean>(false);
 
-    // Dark mode toggle
-    protected readonly isDarkMode = signal(true);
+    features = signal<{ id: string, name: string, icon: string, badge?: string }[]>([
+        { id: 'browsers', name: 'Browsers', icon: 'pi-globe' },
+        { id: 'automation', name: 'Automation', icon: 'pi-bolt' },
+        { id: 'extensions', name: 'Extensions', icon: 'pi-box' },
+        { id: 'teams', name: 'Teams', icon: 'pi-users' }
+    ]);
 
     constructor() {
-        // Initialize from current HTML class
-        this.isDarkMode.set(this.document.documentElement.classList.contains('dark'));
+        // Effect to apply theme class when signal changes
+        effect(() => {
+            const isDark = this.isDarkMode();
+            const html = this.document.documentElement;
+
+            if (isDark) {
+                html.classList.add('dark');
+            } else {
+                html.classList.remove('dark');
+            }
+
+            localStorage.setItem('app-theme', isDark ? 'dark' : 'light');
+        });
     }
 
-    protected toggleDarkMode(): void {
-        const newValue = !this.isDarkMode();
-        this.isDarkMode.set(newValue);
+    ngOnInit() {
+        this.checkInitialTheme();
+    }
 
-        if (newValue) {
-            this.document.documentElement.classList.add('dark');
+    private checkInitialTheme() {
+        const savedTheme = localStorage.getItem('app-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            this.isDarkMode.set(true);
         } else {
-            this.document.documentElement.classList.remove('dark');
+            this.isDarkMode.set(false);
         }
     }
 
-    protected selectFeature(featureId: string): void {
-        this.navService.setActiveFeature(featureId);
-        const feature = this.navService.getFeatureById(featureId);
-        if (feature) {
-            this.router.navigate([feature.route]);
-        }
+    toggleTheme() {
+        this.isDarkMode.update(curr => !curr);
     }
 
-    protected isActive(featureId: string): boolean {
-        return this.activeFeatureId() === featureId;
+    isActive(featureId: string): boolean {
+        return this.router.url.includes(featureId);
+    }
+
+    selectFeature(featureId: string) {
+        this.router.navigate(['/' + featureId]);
     }
 }

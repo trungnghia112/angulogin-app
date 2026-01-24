@@ -1,3 +1,7 @@
 @import "primeicons/primeicons.css";
 @import "tailwindcss";
 @import "tailwindcss-primeui";
+
+@theme {
+  --spacing-header: 64px;
+}

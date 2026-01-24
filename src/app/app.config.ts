@@ -1,9 +1,30 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
-import { definePreset, palette } from '@primeuix/themes';
+import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
+
+const MyPreset = definePreset(Aura, {
+  semantic: {
+    primary: {
+      50: '{fuchsia.50}',
+      100: '{fuchsia.100}',
+      200: '{fuchsia.200}',
+      300: '{fuchsia.300}',
+      400: '{fuchsia.400}',
+      500: '{fuchsia.500}',
+      600: '{fuchsia.600}',
+      700: '{fuchsia.700}',
+      800: '{fuchsia.800}',
+      900: '{fuchsia.900}',
+      950: '{fuchsia.950}'
+    },
+    colorScheme: {
+
+    }
+  }
+});
 
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
@@ -15,34 +36,6 @@ import { getFunctions, provideFunctions, connectFunctionsEmulator } from '@angul
 import { getStorage, provideStorage, connectStorageEmulator } from '@angular/fire/storage';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
-// Custom theme preset with pink primary color and slate surfaces
-const AppTheme = definePreset(Aura, {
-  semantic: {
-    primary: palette('#f637e3'), // Pink primary color
-    colorScheme: {
-      dark: {
-        surface: {
-          // Using PrimeNG's built-in 'gray' palette (neutral)
-          0: '#ffffff',
-          50: '{gray.50}',
-          100: '{gray.100}',
-          200: '{gray.200}',
-          300: '{gray.300}',
-          400: '{gray.400}',
-          500: '{gray.500}',
-          600: '{gray.600}',
-          700: '{gray.700}',
-          800: '{gray.800}',
-          900: '{gray.900}',
-          950: '{gray.950}'
-        }
-      }
-    }
-  },
-  components: {
-  }
-});
-
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -50,12 +43,12 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {
-        preset: AppTheme,
+        preset: MyPreset,
         options: {
           darkModeSelector: '.dark',
           cssLayer: {
             name: 'primeng',
-            order: 'theme, base, primeng'
+            order: 'theme, base, primeng, utilities'
           }
         }
       }
