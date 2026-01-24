@@ -3,7 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { CommandPalette } from './views/components/command-palette/command-palette';
-import { ThemeService } from './core/services/theme.service';
+import { SettingsService } from './core/services/settings.service';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +18,8 @@ import { ThemeService } from './core/services/theme.service';
 export class App {
   protected readonly title = signal('chrome-profile-manager');
   protected readonly commandPalette = viewChild<CommandPalette>('commandPalette');
-  private themeService = inject(ThemeService);
+  // Inject to ensure service is initialized on app start
+  private settingsService = inject(SettingsService);
 
   handleGlobalKeydown(event: KeyboardEvent): void {
     // ⌘+K (Mac) or Ctrl+K (Windows/Linux)

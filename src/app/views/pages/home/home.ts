@@ -27,7 +27,7 @@ import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ProfileService } from '../../../services/profile.service';
-import { SettingsService } from '../../../services/settings.service';
+import { SettingsService } from '../../../core/services/settings.service';
 import { BrowserType, Profile } from '../../../models/profile.model';
 
 const EMOJI_OPTIONS = ['💼', '🏠', '🛠️', '🎮', '📱', '💻', '🔒', '🌐', '📧', '🛒'];
@@ -103,7 +103,7 @@ export class Home implements OnInit, OnDestroy {
     protected readonly activeTab = signal<TabKey>('profiles');
 
     // Core state
-    protected readonly profilesPath = computed(() => this.settingsService.settings().profilesPath || '');
+    protected readonly profilesPath = computed(() => this.settingsService.browser().profilesPath || '');
     protected readonly profiles = this.profileService.profiles;
     protected readonly loading = this.profileService.loading;
     protected readonly selectedProfiles = signal<Profile[]>([]);

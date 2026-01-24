@@ -1,11 +1,8 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { MainNav } from '../components/main-nav/main-nav';
 import { NavigationService } from '../../services/navigation.service';
-import { SettingsService } from '../../services/settings.service';
-import { SettingsService as CoreSettingsService } from '../../core/services/settings.service';
-import { debugLog } from '../../core/utils/logger.util';
 
 @Component({
   selector: 'app-pages',
@@ -17,12 +14,7 @@ import { debugLog } from '../../core/utils/logger.util';
 export class Pages implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   protected readonly navService = inject(NavigationService);
-  private readonly settingsService = inject(SettingsService); // Legacy App Service
-  protected readonly coreSettingsService = inject(CoreSettingsService); // New Core Service
   private routeSub?: Subscription;
-
-
-
 
   ngOnInit(): void {
     // Sync navigation state with current route
@@ -47,6 +39,4 @@ export class Pages implements OnInit, OnDestroy {
       this.navService.setActiveFeature(feature.id);
     }
   }
-
-
 }
