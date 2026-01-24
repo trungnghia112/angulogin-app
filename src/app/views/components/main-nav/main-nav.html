@@ -1,16 +1,13 @@
-<nav id="main-nav-container" class="flex flex-col h-screen w-16 border-r border-surface">
+<nav id="main-nav-container" class="flex flex-col h-screen w-16 border-r border-surface-200">
     <!-- Logo - matches header height -->
     <div id="main-nav-logo" data-tauri-drag-region
-        class="flex items-center justify-center h-[var(--spacing-header)] shrink-0 border-b border-surface">
+        class="flex items-center justify-center h-[var(--spacing-header)] shrink-0 border-b border-surface-200">
         <svg class="w-9 h-9 logo-animated" viewBox="280 70 480 340">
             <defs>
                 <linearGradient id="navLogoGradient" x1="280" y1="410" x2="760" y2="70" gradientUnits="userSpaceOnUse">
-                    <stop offset="0" stop-color="#E40035" />
-                    <stop offset="0.24" stop-color="#F60A48" />
-                    <stop offset="0.352" stop-color="#F20755" />
-                    <stop offset="0.494" stop-color="#DC087D" />
-                    <stop offset="0.745" stop-color="#9717E7" />
-                    <stop offset="1" stop-color="#6C00F5" />
+                    <stop offset="0" stop-color="var(--p-primary-400)" />
+                    <stop offset="0.5" stop-color="var(--p-primary-500)" />
+                    <stop offset="1" stop-color="var(--p-primary-600)" />
                 </linearGradient>
                 <linearGradient id="navLogoHighlight" x1="350" y1="70" x2="650" y2="350" gradientUnits="userSpaceOnUse">
                     <stop offset="0" stop-color="#FF31D9" />
@@ -52,7 +49,7 @@
     </div>
 
     <!-- Bottom Actions -->
-    <div id="main-nav-bottom" class="flex flex-col items-center py-3 gap-1 border-t border-surface">
+    <div id="main-nav-bottom" class="flex flex-col items-center py-3 gap-1 border-t border-surface-200">
         <!-- Dark Mode Toggle -->
         <button id="main-nav-darkmode-btn" (click)="toggleTheme()" aria-label="Toggle dark mode"
             class="w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200" [class]="isDarkMode() 
@@ -61,10 +58,12 @@
             <i [class]="'pi ' + (isDarkMode() ? 'pi-moon' : 'pi-sun') + ' text-lg'"></i>
         </button>
 
+
         <!-- Settings -->
-        <button id="main-nav-settings-btn" aria-label="Open settings"
+        <button id="main-nav-settings-btn" (click)="selectFeature('settings')" aria-label="Open settings"
             class="w-11 h-11 rounded-xl flex items-center justify-center text-muted-color hover:text-primary hover:transition-all duration-200"
-            pTooltip="Settings" tooltipPosition="right">
+            [class.text-primary]="isActive('settings')" [class.bg-primary-20]="isActive('settings')" pTooltip="Settings"
+            tooltipPosition="right">
             <i class="pi pi-cog text-lg"></i>
         </button>
 
@@ -75,4 +74,5 @@
             JT
         </button>
     </div>
+
 </nav>

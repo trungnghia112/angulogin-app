@@ -4,8 +4,9 @@ export interface NavFeature {
     icon: string;
     route: string;
     hasSidebar: boolean;
-    sidebarType?: 'folders' | 'extensions' | null;
-    badge?: number; // Optional notification badge
+    sidebarType?: 'folders' | 'extensions' | 'settings' | null;
+    badge?: number;
+    hidden?: boolean;
 }
 
 export const NAV_FEATURES: NavFeature[] = [
@@ -39,4 +40,13 @@ export const NAV_FEATURES: NavFeature[] = [
         hasSidebar: true,
         sidebarType: 'extensions',
     },
+    {
+        id: 'settings',
+        name: 'Settings',
+        icon: 'pi-cog',
+        route: '/settings',
+        hasSidebar: true,
+        sidebarType: 'settings',
+        hidden: true
+    }
 ];

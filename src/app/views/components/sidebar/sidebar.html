@@ -1,7 +1,7 @@
-<aside id="sidebar-container" class="flex flex-col h-screen w-60 border-r border-surface">
+<aside id="sidebar-container" class="flex flex-col h-screen w-60 border-r border-surface-200">
     <!-- Feature Header - matches header height -->
     <div id="sidebar-header"
-        class="flex items-center justify-between px-4 h-[var(--spacing-header)] shrink-0 border-b border-surface">
+        class="flex items-center justify-between px-4 h-[var(--spacing-header)] shrink-0 border-b border-surface-200">
         <span id="sidebar-header-title" class="text-base font-semibold text-color">Browsers</span>
         <div id="sidebar-header-actions" class="flex items-center gap-2">
             <p-button id="sidebar-header-settings-btn" icon="pi pi-cog" [rounded]="true" [text]="true"
@@ -35,7 +35,7 @@
     </nav>
 
     <!-- Bottom Actions -->
-    <div id="sidebar-bottom" class="border-t border-surface p-3">
+    <div id="sidebar-bottom" class="border-t border-surface-200 p-3">
         <div id="sidebar-bottom-actions" class="flex items-center justify-between">
             <p-button id="sidebar-settings-btn" icon="pi pi-cog" [rounded]="true" [text]="true" (click)="onSettings()"
                 pTooltip="Settings" />

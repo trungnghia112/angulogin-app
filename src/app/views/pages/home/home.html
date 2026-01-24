@@ -278,7 +278,7 @@
         <div id="home-profiles-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             @for (profile of filteredProfiles(); track profile.path; let i = $index) {
             <div [id]="'home-profile-card-' + i"
-                class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-all cursor-pointer relative group shadow-sm"
+                class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-all duration-300 cursor-pointer relative group shadow-sm hover:shadow-md hover:-translate-y-1"
                 (click)="openEditDialog(profile, $event)">
                 <!-- Pin indicator -->
                 @if (profile.metadata?.isPinned) {
@@ -303,10 +303,7 @@
                 }
                 <!-- Actions -->
                 <div class="flex items-center gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button (click)="launchProfile(profile, $event)"
-                        class="flex-1 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover transition-colors">
-                        Start
-                    </button>
+                    <p-button (click)="launchProfile(profile, $event)" label="Start" size="small" class="flex-1" />
                     <button (click)="openDuplicateDialog(profile, $event)"
                         class="p-1.5 text-muted-color hover:text-primary transition-colors" title="Duplicate">
                         <i class="pi pi-copy text-sm"></i>

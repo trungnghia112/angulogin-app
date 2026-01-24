@@ -1,29 +1,28 @@
-import { Component, inject, signal, effect, OnInit } from '@angular/core';
+import { Component, inject, signal, effect, OnInit, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { Router } from '@angular/router';
+import { NavigationService } from '../../../services/navigation.service';
 
 @Component({
     selector: 'app-main-nav',
     standalone: true,
     imports: [CommonModule, ButtonModule, TooltipModule],
     templateUrl: './main-nav.html',
-    styleUrl: './main-nav.css'
+    styleUrl: './main-nav.css',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MainNav implements OnInit {
     private document = inject(DOCUMENT);
     private router = inject(Router);
+    private navService = inject(NavigationService);
 
     // Signals
     isDarkMode = signal<boolean>(false);
 
-    features = signal<{ id: string, name: string, icon: string, badge?: string }[]>([
-        { id: 'browsers', name: 'Browsers', icon: 'pi-globe' },
-        { id: 'automation', name: 'Automation', icon: 'pi-bolt' },
-        { id: 'extensions', name: 'Extensions', icon: 'pi-box' },
-        { id: 'teams', name: 'Teams', icon: 'pi-users' }
-    ]);
+    // Filter out hidden features (like Settings which has its own button)
+    features = computed(() => this.navService.features().filter(f => !f.hidden));
 
     constructor() {
         // Effect to apply theme class when signal changes

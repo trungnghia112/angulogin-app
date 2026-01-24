@@ -1,0 +1,12 @@
+- Hãy dựa theo guidelines ở `AGENTS.md,.gemini/GEMINI.md,.claude/CLAUDE.md` trong quá trình thực hiện.
+- Khi bạn thấy trong prompt của tôi có câu nào đó với prefix "Hãy ghi nhớ:" thì đó là thông tin bạn cần cập nhật ngay vào memories và `AGENTS.md,.gemini/GEMINI.md,.claude/CLAUDE.md`
+- Đưa ra kế hoạch cụ thể để thực hiện các yêu cầu trên, sau đó thực hiện nó mà không cần hỏi lại.
+- Thực hiện các bước này một cách tuần tự ở mỗi bước để đảm bảo migration thành công.
+- Mỗi sprint cần kết thúc với build thành công.
+- Cần commit code sau mỗi bước. Message commit cần viết bằng tiếng Anh. Commit message tuân thủ semantic commit.
+- Tôi giao tiếp với bạn bằng ngôn ngữ gì thì bạn trả lời lại bằng ngôn ngữ đó.
+- Không nên dừng giữa chừng rồi hỏi lại tôi có muốn tiếp tục hay không, tôi luôn muốn tiếp tục.
+- Không tự viết tests khi tôi không yêu cầu.
+- Không được thêm emoji trong code, kể cả khi viết comments.
+- Không tự tạo các file documentation Markdown mà không có sự yêu cầu từ tôi.
+- Nếu có lỗi ngưng giữa chừng cần có cơ chế tự động chạy lại nhé.

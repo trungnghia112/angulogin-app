@@ -5,6 +5,7 @@ import { MainNav } from '../components/main-nav/main-nav';
 import { Sidebar } from '../components/sidebar/sidebar';
 import { NavigationService } from '../../services/navigation.service';
 import { SettingsService } from '../../services/settings.service';
+import { SettingsService as CoreSettingsService } from '../../core/services/settings.service';
 import { debugLog } from '../../core/utils/logger.util';
 import { Folder } from '../../models/folder.model';
 
@@ -18,7 +19,8 @@ import { Folder } from '../../models/folder.model';
 export class Pages implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   protected readonly navService = inject(NavigationService);
-  private readonly settingsService = inject(SettingsService);
+  private readonly settingsService = inject(SettingsService); // Legacy App Service
+  protected readonly coreSettingsService = inject(CoreSettingsService); // New Core Service
   private routeSub?: Subscription;
 
   // Sidebar visibility based on active feature
@@ -34,6 +36,14 @@ export class Pages implements OnInit, OnDestroy {
   ]);
 
   protected readonly selectedFolderId = signal<string | null>('1');
+
+  // Settings Sidebar Data
+  protected readonly settingsCategories = [
+    { id: 'general', label: 'General', icon: 'pi pi-cog' },
+    { id: 'appearance', label: 'Appearance', icon: 'pi pi-palette' },
+    { id: 'browser', label: 'Browser Paths', icon: 'pi pi-globe' },
+    { id: 'data', label: 'Data', icon: 'pi pi-database' }
+  ];
 
   ngOnInit(): void {
     // Sync navigation state with current route

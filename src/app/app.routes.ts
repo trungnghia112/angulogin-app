@@ -29,6 +29,11 @@ export const routes: Routes = [
                 loadComponent: () =>
                     import('./views/pages/extensions/extensions').then((m) => m.Extensions),
             },
+            {
+                path: 'settings',
+                loadComponent: () =>
+                    import('./views/pages/settings/settings').then((m) => m.Settings),
+            },
         ],
     },
 ];

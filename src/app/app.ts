@@ -1,8 +1,9 @@
-import { Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { CommandPalette } from './views/components/command-palette/command-palette';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -12,10 +13,12 @@ import { CommandPalette } from './views/components/command-palette/command-palet
   host: {
     '(window:keydown)': 'handleGlobalKeydown($event)',
   },
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
   protected readonly title = signal('chrome-profile-manager');
   protected readonly commandPalette = viewChild<CommandPalette>('commandPalette');
+  private themeService = inject(ThemeService);
 
   handleGlobalKeydown(event: KeyboardEvent): void {
     // ⌘+K (Mac) or Ctrl+K (Windows/Linux)

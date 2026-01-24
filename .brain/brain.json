@@ -26,19 +26,22 @@
         "Directory Scanning",
         "Dark/Light Mode with Persistence",
         "Folder/Group Organization",
+        "Settings Page (Appearance, General)",
+        "Dynamic Theme Engine (Primary Color, Scale)",
         "Extension Management Placeholder",
         "Automation Placeholder"
     ],
     "knowledge_items": {
         "patterns": [
-            "Light/Dark Mode: Use 'bg-surface-50 dark:bg-surface-950' pattern",
-            "Theme Layering: Container (50/950) -> Sidebar (0/900) -> Card (0/800)",
+            "Light/Dark Mode: Use 'bg-surface-50' + semantic variables",
+            "Theme Layering: Container (surface-50) -> Sidebar (surface-0) -> Card (surface-0)",
+            "Dark Mode Override: Use ':root.dark { --p-surface-X: ... }' in styles.css to fix PrimeUI variables",
             "Signal-based state management",
             "Standalone components as default"
         ],
         "gotchas": [
             "Tailwind v4 CSS Variable syntax: h-[var(--spacing-header)] is required for custom CSS variables",
-            "PrimeNG Surface colors: Use surface-0 (lightest) to surface-950 (darkest) in BOTH modes"
+            "PrimeNG Surface colors: Default preset might not auto-invert correctly in Tailwind v4; requires manual CSS overrides"
         ],
         "conventions": [
             "Strict naming: [name].ts, [name].html, [name].css",
