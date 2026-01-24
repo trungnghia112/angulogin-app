@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "3.3.0",
-        "updated_at": "2026-01-24T23:38:00+07:00"
+        "updated_at": "2026-01-25T02:39:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
@@ -12,7 +12,7 @@
     },
     "tech_stack": {
         "frontend": {
-            "framework": "Angular 20",
+            "framework": "Angular 21",
             "ui_library": "PrimeNG",
             "styling": "Tailwind CSS + tailwindcss-primeui",
             "state": "Angular Signals"
@@ -98,10 +98,12 @@
         },
         {
             "name": "Settings Page",
-            "status": "partial",
+            "status": "implemented",
             "includes": [
-                "Appearance (themes, colors)",
-                "Browser Paths"
+                "Appearance (theme, colors, scale, dark mode)",
+                "General (default browser, launch behavior, startup options)",
+                "Browser Paths (profiles directory selection)",
+                "Data Management (export, import, clear)"
             ]
         },
         {
@@ -130,6 +132,10 @@
             {
                 "issue": "tauri-plugin-os not working",
                 "solution": "Must add to Cargo.toml, register in lib.rs, AND add 'os:default' to capabilities"
+            },
+            {
+                "issue": "PrimeNG v21 renamed InputSwitch to ToggleSwitch",
+                "solution": "import { ToggleSwitchModule } from 'primeng/toggleswitch'; use <p-toggleSwitch>"
             }
         ],
         "conventions": [
