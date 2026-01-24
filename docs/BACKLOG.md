@@ -10,9 +10,9 @@
 
 | Trạng thái | Số lượng |
 |------------|----------|
-| ✅ Done | 16 |
+| ✅ Done | 22 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 33 |
+| 📋 Backlog | 27 |
 
 ---
 
@@ -78,9 +78,9 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
-| 2.1 | Tags System ⭐ | Gắn nhiều tags (Work, Personal, Testing...) | 🟢 Dễ | 📋 |
+| 2.1 | Tags System ⭐ | Gắn nhiều tags (Work, Personal, Testing...) | 🟢 Dễ | ✅ |
 | 2.2 | Smart Folders | Folder tự động dựa trên filter (VD: "Profiles > 1GB") | 🟡 TB | 📋 |
-| 2.3 | Color Coding | Gán màu cho profile/group để nhận diện nhanh | 🟢 Dễ | 📋 |
+| 2.3 | Color Coding | Gán màu cho profile/group để nhận diện nhanh | 🟢 Dễ | ✅ |
 | 2.4 | Favorites | Danh sách yêu thích riêng biệt | 🟢 Dễ | 📋 |
 | 2.5 | Folder Management | Group profiles into custom folders | 🟡 TB | 📋 |
 
@@ -91,7 +91,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
 | 3.1 | Launch with URL | Mở profile + tự động navigate đến URL | 🟢 Dễ | ✅ |
-| 3.2 | Launch Groups | Mở nhiều profile cùng lúc (1 click → 5 Chrome) | 🟡 TB | 📋 |
+| 3.2 | Launch Groups | Mở nhiều profile cùng lúc (1 click → 5 Chrome) | 🟡 TB | ✅ |
 | 3.3 | Scheduled Launch | Hẹn giờ mở profile (VD: 8AM mở Work profile) | 🟡 TB | 📋 |
 | 3.4 | Launch with Extensions | Toggle on/off extensions khi launch | 🔴 Khó | 📋 |
 | 3.5 | Incognito Mode | Launch profile ở chế độ incognito | 🟢 Dễ | ✅ |
@@ -130,11 +130,11 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
 | 6.1 | Grid/List View Toggle | Chuyển đổi giữa card grid và table list | 🟢 Dễ | ✅ |
-| 6.2 | Dark/Light Theme | Toggle theme | 🟢 Dễ | 📋 |
-| 6.3 | Keyboard Shortcuts | ⌘+1 mở profile 1, ⌘+N tạo mới... | 🟡 TB | 📋 |
+| 6.2 | Dark/Light Theme | Toggle theme | 🟢 Dễ | ✅ |
+| 6.3 | Keyboard Shortcuts | ⌘+1 mở profile 1, ⌘+N tạo mới... | 🟡 TB | ✅ |
 | 6.4 | Quick Search (⌘+K) | Command palette style search | 🟡 TB | ✅ |
 | 6.5 | Drag & Drop | Kéo thả để sắp xếp, di chuyển vào group | 🟡 TB | 📋 |
-| 6.6 | Profile Preview | Hover để xem preview/info nhanh | 🟢 Dễ | 📋 |
+| 6.6 | Profile Preview | Hover để xem preview/info nhanh | 🟢 Dễ | ✅ |
 | 6.7 | Compact Mode | UI thu gọn cho màn hình nhỏ | 🟢 Dễ | 📋 |
 | 6.8 | Custom Themes | Cho phép user tạo theme riêng | 🟡 TB | 📋 |
 
@@ -158,9 +158,9 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
 | 8.1 | Profile Lock | Khóa profile bằng password/TouchID | 🟡 TB | 📋 |
-| 8.2 | Hidden Profiles | Ẩn profile khỏi view mặc định | 🟢 Dễ | 📋 |
+| 8.2 | Hidden Profiles | Ẩn profile khỏi view mặc định | 🟢 Dễ | ✅ |
 | 8.3 | Auto-clear Data | Tự động xóa cache/cookies khi đóng | 🟡 TB | 📋 |
-| 8.4 | Activity Log | Ghi log ai mở profile nào, khi nào | 🟢 Dễ | 📋 |
+| 8.4 | Activity Log | Ghi log ai mở profile nào, khi nào | 🟢 Dễ | ✅ |
 | 8.5 | App Lock | Khóa toàn bộ app bằng password/TouchID | 🟡 TB | 📋 |
 
 ---
@@ -221,5 +221,6 @@ Những ý tưởng táo bạo hơn cho future versions:
 
 | Ngày | Thay đổi |
 |------|----------|
+| 2026-01-25 | Hoàn thành: Color Coding, Hidden Profiles, Activity Log, Profile Preview |
 | 2026-01-23 | Khởi tạo backlog với 45+ tính năng từ brainstorm session |
 
