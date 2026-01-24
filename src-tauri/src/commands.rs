@@ -214,11 +214,14 @@ pub struct ProfileMetadata {
     pub group: Option<String>,
     pub shortcut: Option<u8>,
     pub browser: Option<String>,
-    // New fields
     pub tags: Option<Vec<String>>,
     pub launch_url: Option<String>,
     pub is_pinned: Option<bool>,
     pub last_opened: Option<String>,
+    // Phase 1: Color Coding
+    pub color: Option<String>,
+    // Phase 2: Hidden Profiles
+    pub is_hidden: Option<bool>,
 }
 
 #[tauri::command]
@@ -248,10 +251,12 @@ pub fn save_profile_metadata(
     launch_url: Option<String>,
     is_pinned: Option<bool>,
     last_opened: Option<String>,
+    color: Option<String>,
+    is_hidden: Option<bool>,
 ) -> Result<(), String> {
     let meta_file = format!("{}/.profile-meta.json", profile_path);
     
-    let metadata = ProfileMetadata { emoji, notes, group, shortcut, browser, tags, launch_url, is_pinned, last_opened };
+    let metadata = ProfileMetadata { emoji, notes, group, shortcut, browser, tags, launch_url, is_pinned, last_opened, color, is_hidden };
     
     let content = serde_json::to_string_pretty(&metadata)
         .map_err(|e| format!("Failed to serialize metadata: {}", e))?;

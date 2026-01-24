@@ -191,14 +191,16 @@ export class ProfileService {
         tags: string[] | null = null,
         launchUrl: string | null = null,
         isPinned: boolean | null = null,
+        color: string | null = null,
+        isHidden: boolean | null = null,
     ): Promise<void> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            debugLog('Mock saveProfileMetadata:', profilePath, { emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned });
+            debugLog('Mock saveProfileMetadata:', profilePath, { emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden });
             this.profiles.update((profiles) =>
                 profiles.map((p) =>
                     p.path === profilePath
-                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined } }
+                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined } }
                         : p
                 )
             );
@@ -206,11 +208,11 @@ export class ProfileService {
         }
 
         try {
-            await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned });
+            await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden });
             this.profiles.update((profiles) =>
                 profiles.map((p) =>
                     p.path === profilePath
-                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined } }
+                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined } }
                         : p
                 )
             );

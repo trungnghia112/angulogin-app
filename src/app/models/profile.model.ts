@@ -20,6 +20,10 @@ export interface ProfileMetadata {
     isPinned?: boolean;
     lastOpened?: string | null;
     proxyServer?: string | null;
+    // Phase 1: Color Coding
+    color?: string | null;
+    // Phase 2: Hidden Profiles
+    isHidden?: boolean;
 }
 
 export interface Profile {

@@ -40,6 +40,12 @@
                     severity="secondary" />
             </p-buttonGroup>
 
+            <!-- Phase 2: Show Hidden Toggle -->
+            <p-button id="home-header-hidden-toggle" (click)="showHidden.set(!showHidden())"
+                [icon]="showHidden() ? 'pi pi-eye' : 'pi pi-eye-slash'"
+                [label]="showHidden() ? 'Hide Hidden' : 'Show Hidden'" severity="secondary" [outlined]="true"
+                [class]="showHidden() ? 'ring-1 ring-primary' : ''" />
+
             <p-button id="home-header-create-btn" (click)="openCreateDialog()" icon="pi pi-plus"
                 label="Create profile" />
         </div>
@@ -139,9 +145,18 @@
                     <!-- Name with Start button -->
                     <td>
                         <div class="flex items-center gap-3">
+                            <!-- Phase 1: Color dot -->
+                            @if (profile.metadata?.color) {
+                            <span class="w-3 h-3 rounded-full flex-shrink-0"
+                                [style.background-color]="profile.metadata.color"></span>
+                            }
                             <p-button [id]="'home-profile-' + i + '-start-btn'" (click)="launchProfile(profile, $event)"
                                 [icon]="'pi ' + getOsIcon(profile)" label="Start" size="small" [outlined]="true" />
-                            <span>{{ profile.name }}</span>
+                            <span [class]="profile.metadata?.isHidden ? 'opacity-50' : ''">{{ profile.name }}</span>
+                            <!-- Phase 2: Hidden indicator -->
+                            @if (profile.metadata?.isHidden) {
+                            <i class="pi pi-eye-slash text-xs text-muted-color" pTooltip="Hidden profile"></i>
+                            }
                         </div>
                     </td>
 
@@ -204,6 +219,11 @@
                             <p-button [id]="'home-profile-' + i + '-duplicate-btn'"
                                 (click)="openDuplicateDialog(profile, $event)" icon="pi pi-copy" [rounded]="true"
                                 [text]="true" severity="secondary" size="small" pTooltip="Duplicate profile" />
+                            <!-- Phase 2: Hide toggle -->
+                            <p-button [id]="'home-profile-' + i + '-hide-btn'" (click)="toggleHide(profile, $event)"
+                                [icon]="profile.metadata?.isHidden ? 'pi pi-eye' : 'pi pi-eye-slash'" [rounded]="true"
+                                [text]="true" severity="secondary" size="small"
+                                [pTooltip]="profile.metadata?.isHidden ? 'Show profile' : 'Hide profile'" />
                             <p-button [id]="'home-profile-' + i + '-delete-btn'"
                                 (click)="deleteProfile(profile, $event)" icon="pi pi-trash" [rounded]="true"
                                 [text]="true" severity="danger" size="small" pTooltip="Delete profile" />
@@ -233,18 +253,34 @@
             <div [id]="'home-profile-card-' + i"
                 class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-all duration-300 cursor-pointer relative group shadow-sm hover:shadow-md hover:-translate-y-1"
                 (click)="openEditDialog(profile, $event)">
+                <!-- Phase 1: Color indicator -->
+                @if (profile.metadata?.color) {
+                <div class="absolute top-2 left-2">
+                    <span class="w-3 h-3 rounded-full inline-block"
+                        [style.background-color]="profile.metadata?.color"></span>
+                </div>
+                }
                 <!-- Pin indicator -->
                 @if (profile.metadata?.isPinned) {
                 <div class="absolute top-2 right-2">
                     <i class="pi pi-star-fill text-yellow-400 text-xs"></i>
                 </div>
                 }
+                <!-- Phase 2: Hidden indicator -->
+                @if (profile.metadata?.isHidden) {
+                <div class="absolute top-2" [class]="profile.metadata?.color ? 'left-7' : 'left-2'">
+                    <i class="pi pi-eye-slash text-muted-color text-xs"></i>
+                </div>
+                }
                 <!-- Avatar/Emoji -->
-                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-3 text-2xl">
+                <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-3 text-2xl"
+                    [class]="profile.metadata?.isHidden ? 'opacity-50' : ''">
                     {{ getProfileDisplay(profile) }}
                 </div>
                 <!-- Name -->
-                <h3 class="text-sm font-semibold text-color mb-1 truncate">{{ profile.name }}
+                <h3 class="text-sm font-semibold text-color mb-1 truncate"
+                    [class]="profile.metadata?.isHidden ? 'opacity-50' : ''">
+                    {{ profile.name }}
                 </h3>
                 <!-- Tags -->
                 @if (profile.metadata?.tags?.length) {
@@ -407,6 +443,28 @@
                         (click)="selectBrowser($any(browser))">
                         <i [class]="'pi ' + browserInfo[browser].icon"></i>
                         {{ browserInfo[browser].name }}
+                    </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Phase 1: Color Coding -->
+            <div id="home-edit-dialog-color-section">
+                <label class="block text-xs font-medium text-color mb-2">Color</label>
+                <div id="home-edit-dialog-color-options" class="flex flex-wrap gap-2">
+                    <!-- Clear color option -->
+                    <button id="home-edit-dialog-color-none"
+                        class="w-8 h-8 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all duration-150"
+                        [class]="editColor() === null ? 'border-primary ring-2 ring-primary/30' : 'border-surface hover:border-primary'"
+                        (click)="selectColor(null)" title="No color">
+                        <i class="pi pi-times text-xs text-muted-color"></i>
+                    </button>
+                    @for (color of colorOptions; track color.name; let i = $index) {
+                    <button [id]="'home-edit-dialog-color-' + i"
+                        class="w-8 h-8 rounded-full border-2 cursor-pointer transition-all duration-150"
+                        [style.background-color]="color.hex"
+                        [class]="editColor() === color.hex ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:ring-2 hover:ring-surface'"
+                        (click)="selectColor(color.hex)" [title]="color.label">
                     </button>
                     }
                 </div>

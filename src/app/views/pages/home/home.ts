@@ -35,6 +35,18 @@ import { BrowserType, Profile } from '../../../models/profile.model';
 const EMOJI_OPTIONS = ['💼', '🏠', '🛠️', '🎮', '📱', '💻', '🔒', '🌐', '📧', '🛒'];
 const GROUP_OPTIONS = ['Work', 'Personal', 'Development', 'Social', 'Shopping', 'Other'];
 
+// Phase 1: Color options for profile color coding
+const COLOR_OPTIONS = [
+    { name: 'red', hex: '#ef4444', label: 'Red' },
+    { name: 'orange', hex: '#f97316', label: 'Orange' },
+    { name: 'yellow', hex: '#eab308', label: 'Yellow' },
+    { name: 'green', hex: '#22c55e', label: 'Green' },
+    { name: 'blue', hex: '#3b82f6', label: 'Blue' },
+    { name: 'purple', hex: '#a855f7', label: 'Purple' },
+    { name: 'pink', hex: '#ec4899', label: 'Pink' },
+    { name: 'gray', hex: '#6b7280', label: 'Gray' },
+];
+
 const BROWSER_INFO: Record<string, { name: string; icon: string }> = {
     chrome: { name: 'Chrome', icon: 'pi-google' },
     brave: { name: 'Brave', icon: 'pi-shield' },
@@ -127,6 +139,8 @@ export class Home implements OnInit, OnDestroy {
     // Search & Filter
     protected readonly searchText = signal('');
     protected readonly filterGroup = signal<string | null>(null);
+    // Phase 2: Show hidden profiles toggle
+    protected readonly showHidden = signal(false);
 
     // Sorting
     protected readonly sortBy = signal<'name' | 'size' | 'lastOpened'>('name');
@@ -162,6 +176,12 @@ export class Home implements OnInit, OnDestroy {
         let result = this.profiles();
         const search = this.searchText().toLowerCase().trim();
         const group = this.filterGroup();
+        const showHiddenValue = this.showHidden();
+
+        // Phase 2: Filter out hidden profiles unless showHidden is true
+        if (!showHiddenValue) {
+            result = result.filter((p) => !p.metadata?.isHidden);
+        }
 
         // Apply search filter
         if (search) {
@@ -268,6 +288,9 @@ export class Home implements OnInit, OnDestroy {
     protected readonly editTags = signal<string[]>([]);
     protected readonly editLaunchUrl = signal<string | null>(null);
     protected readonly editIsPinned = signal<boolean>(false);
+    // Phase 1: Color coding
+    protected readonly editColor = signal<string | null>(null);
+    protected readonly colorOptions = COLOR_OPTIONS;
 
     // Duplicate dialog
     protected readonly showDuplicateDialog = signal(false);
@@ -533,10 +556,11 @@ export class Home implements OnInit, OnDestroy {
         this.editGroup.set(profile.metadata?.group || null);
         this.editShortcut.set(profile.metadata?.shortcut || null);
         this.editBrowser.set(profile.metadata?.browser || null);
-        // New fields
         this.editTags.set(profile.metadata?.tags || []);
         this.editLaunchUrl.set(profile.metadata?.launchUrl || null);
         this.editIsPinned.set(profile.metadata?.isPinned || false);
+        // Phase 1: Load color
+        this.editColor.set(profile.metadata?.color || null);
         this.showEditDialog.set(true);
     }
 
@@ -568,6 +592,11 @@ export class Home implements OnInit, OnDestroy {
         this.editBrowser.set(this.editBrowser() === browser ? null : browser);
     }
 
+    // Phase 1: Color selection
+    selectColor(color: string | null): void {
+        this.editColor.set(this.editColor() === color ? null : color);
+    }
+
     addTag(event: Event): void {
         const input = event.target as HTMLInputElement;
         const tag = input.value.trim();
@@ -595,7 +624,9 @@ export class Home implements OnInit, OnDestroy {
                 this.editBrowser(),
                 this.editTags().length > 0 ? this.editTags() : null,
                 this.editLaunchUrl(),
-                this.editIsPinned() || null
+                this.editIsPinned() || null,
+                this.editColor(),
+                profile.metadata?.isHidden || null, // Preserve hidden state
             );
             this.showEditDialog.set(false);
             this.messageService.add({
@@ -621,12 +652,42 @@ export class Home implements OnInit, OnDestroy {
                 profile.metadata?.browser || null,
                 profile.metadata?.tags || null,
                 profile.metadata?.launchUrl || null,
-                newPinned
+                newPinned,
+                profile.metadata?.color || null,
+                profile.metadata?.isHidden || null,
             );
             this.messageService.add({
                 severity: 'success',
                 summary: newPinned ? 'Pinned' : 'Unpinned',
                 detail: `${profile.name} ${newPinned ? 'pinned to top' : 'unpinned'}`,
+            });
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+        }
+    }
+
+    // Phase 2: Toggle hide profile
+    async toggleHide(profile: Profile, event: Event): Promise<void> {
+        event.stopPropagation();
+        const newHidden = !profile.metadata?.isHidden;
+        try {
+            await this.profileService.saveProfileMetadata(
+                profile.path,
+                profile.metadata?.emoji || null,
+                profile.metadata?.notes || null,
+                profile.metadata?.group || null,
+                profile.metadata?.shortcut || null,
+                profile.metadata?.browser || null,
+                profile.metadata?.tags || null,
+                profile.metadata?.launchUrl || null,
+                profile.metadata?.isPinned || null,
+                profile.metadata?.color || null,
+                newHidden,
+            );
+            this.messageService.add({
+                severity: 'success',
+                summary: newHidden ? 'Hidden' : 'Visible',
+                detail: `${profile.name} ${newHidden ? 'hidden from view' : 'now visible'}`,
             });
         } catch (e) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
