@@ -255,12 +255,21 @@
         }
         } @else {
         <!-- Grid View -->
-        <div id="home-profiles-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div id="home-profiles-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+            cdkDropList [cdkDropListDisabled]="sortBy() !== 'custom'" (cdkDropListDropped)="onProfileDrop($event)">
             @for (profile of filteredProfiles(); track profile.path; let i = $index) {
             <div [id]="'home-profile-card-' + i"
-                class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-all duration-300 cursor-pointer relative group shadow-sm hover:shadow-md hover:-translate-y-1"
-                (click)="openEditDialog(profile, $event)" [pTooltip]="getProfileTooltip(profile)" tooltipPosition="top"
-                [escape]="false">
+                class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-all duration-300 cursor-pointer relative group shadow-sm hover:shadow-md"
+                [class.hover:-translate-y-1]="sortBy() !== 'custom'" [class.cursor-grab]="sortBy() === 'custom'" cdkDrag
+                [cdkDragDisabled]="sortBy() !== 'custom'" (click)="openEditDialog(profile, $event)"
+                [pTooltip]="getProfileTooltip(profile)" tooltipPosition="top" [escape]="false">
+                <!-- Drag Handle indicator (only in custom sort mode) -->
+                @if (sortBy() === 'custom') {
+                <div
+                    class="absolute top-2 right-2 text-muted-color opacity-0 group-hover:opacity-100 transition-opacity">
+                    <i class="pi pi-arrows-alt text-xs"></i>
+                </div>
+                }
                 <!-- Phase 1: Color indicator -->
                 @if (profile.metadata?.color) {
                 <div class="absolute top-2 left-2">
@@ -269,7 +278,7 @@
                 </div>
                 }
                 <!-- Pin indicator -->
-                @if (profile.metadata?.isPinned) {
+                @if (profile.metadata?.isPinned && sortBy() !== 'custom') {
                 <div class="absolute top-2 right-2">
                     <i class="pi pi-star-fill text-yellow-400 text-xs"></i>
                 </div>
@@ -310,6 +319,10 @@
                         <i class="pi pi-trash text-sm"></i>
                     </button>
                 </div>
+
+                <!-- CDK Drag Placeholder -->
+                <div *cdkDragPlaceholder
+                    class="border-2 border-dashed border-primary/50 rounded-xl bg-primary/5 h-full"></div>
             </div>
             }
         </div>

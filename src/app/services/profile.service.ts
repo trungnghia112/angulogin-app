@@ -224,6 +224,56 @@ export class ProfileService {
     }
 
     /**
+     * Update sort order for a profile (for drag & drop reordering)
+     */
+    async updateSortOrder(profilePath: string, sortOrder: number): Promise<void> {
+        // Get existing metadata first
+        const profile = this.profiles().find(p => p.path === profilePath);
+        const existingMetadata = profile?.metadata || { emoji: null, notes: null, group: null, shortcut: null, browser: null };
+
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            debugLog('Mock updateSortOrder:', profilePath, sortOrder);
+            this.profiles.update((profiles) =>
+                profiles.map((p): Profile =>
+                    p.path === profilePath
+                        ? { ...p, metadata: { ...p.metadata, sortOrder } } as Profile
+                        : p
+                )
+            );
+            return;
+        }
+
+        try {
+            // Save full metadata with sortOrder
+            await invoke('save_profile_metadata', {
+                profilePath,
+                emoji: existingMetadata.emoji,
+                notes: existingMetadata.notes,
+                group: existingMetadata.group,
+                shortcut: existingMetadata.shortcut,
+                browser: existingMetadata.browser,
+                tags: existingMetadata.tags || null,
+                launchUrl: existingMetadata.launchUrl || null,
+                isPinned: existingMetadata.isPinned || null,
+                color: existingMetadata.color || null,
+                isHidden: existingMetadata.isHidden || null
+            });
+            this.profiles.update((profiles) =>
+                profiles.map((p): Profile =>
+                    p.path === profilePath
+                        ? { ...p, metadata: { ...p.metadata, sortOrder } } as Profile
+                        : p
+                )
+            );
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
+
+    /**
      * Update usage statistics for a profile
      * Merges with existing metadata to preserve other fields
      */

@@ -28,6 +28,8 @@ export interface ProfileMetadata {
     launchCount?: number;
     totalUsageMinutes?: number;
     lastSessionDuration?: number;
+    // Custom Sort Order (for drag & drop)
+    sortOrder?: number;
 }
 
 export interface Profile {

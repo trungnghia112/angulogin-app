@@ -15,6 +15,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { TitleCasePipe } from '@angular/common';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 
@@ -88,6 +89,7 @@ interface Tab {
         TooltipModule,
         MenuModule,
         HomeSidebar,
+        DragDropModule,
     ],
 })
 export class Home implements OnInit, OnDestroy {
@@ -145,7 +147,7 @@ export class Home implements OnInit, OnDestroy {
     protected readonly showHidden = signal(false);
 
     // Sorting
-    protected readonly sortBy = signal<'name' | 'size' | 'lastOpened'>('name');
+    protected readonly sortBy = signal<'name' | 'size' | 'lastOpened' | 'custom'>('name');
     protected readonly sortOrder = signal<'asc' | 'desc'>('asc');
     protected readonly sortMenuItems = computed<MenuItem[]>(() => [
         {
@@ -166,11 +168,16 @@ export class Home implements OnInit, OnDestroy {
                     icon: this.sortBy() === 'lastOpened' ? (this.sortOrder() === 'asc' ? 'pi pi-arrow-up' : 'pi pi-arrow-down') : undefined,
                     command: () => this.setSortBy('lastOpened'),
                 },
+                {
+                    label: 'Custom (Drag & Drop)',
+                    icon: this.sortBy() === 'custom' ? 'pi pi-check' : undefined,
+                    command: () => this.setSortBy('custom'),
+                },
             ],
         },
     ]);
     protected readonly currentSortLabel = computed(() => {
-        const labels: Record<string, string> = { name: 'Name', size: 'Size', lastOpened: 'Last Used' };
+        const labels: Record<string, string> = { name: 'Name', size: 'Size', lastOpened: 'Last Used', custom: 'Custom' };
         return labels[this.sortBy()] || 'Sort';
     });
 
@@ -217,6 +224,11 @@ export class Home implements OnInit, OnDestroy {
                     const aDate = a.metadata?.lastOpened ? new Date(a.metadata.lastOpened).getTime() : 0;
                     const bDate = b.metadata?.lastOpened ? new Date(b.metadata.lastOpened).getTime() : 0;
                     return (bDate - aDate) * multiplier; // Most recent first by default
+                case 'custom':
+                    // Sort by custom sortOrder, fallback to 0
+                    const aOrder = a.metadata?.sortOrder ?? 999999;
+                    const bOrder = b.metadata?.sortOrder ?? 999999;
+                    return aOrder - bOrder;
                 case 'name':
                 default:
                     return a.name.localeCompare(b.name) * multiplier;
@@ -564,13 +576,17 @@ export class Home implements OnInit, OnDestroy {
         this.filterGroup.set(null);
     }
 
-    setSortBy(value: 'name' | 'size' | 'lastOpened'): void {
+    setSortBy(value: 'name' | 'size' | 'lastOpened' | 'custom'): void {
         if (this.sortBy() === value) {
-            // Toggle order if same field
-            this.sortOrder.set(this.sortOrder() === 'asc' ? 'desc' : 'asc');
+            // Toggle order if same field (except custom)
+            if (value !== 'custom') {
+                this.sortOrder.set(this.sortOrder() === 'asc' ? 'desc' : 'asc');
+            }
         } else {
             this.sortBy.set(value);
-            this.sortOrder.set('asc');
+            if (value !== 'custom') {
+                this.sortOrder.set('asc');
+            }
         }
     }
 
@@ -940,5 +956,31 @@ export class Home implements OnInit, OnDestroy {
         this.router.navigate(['/settings']);
     }
 
+    // Drag & Drop Reordering
+    protected async onProfileDrop(event: CdkDragDrop<Profile[]>): Promise<void> {
+        if (event.previousIndex === event.currentIndex) return;
+        if (this.sortBy() !== 'custom') return;
+
+        // Get current filtered profiles and reorder
+        const profiles = [...this.filteredProfiles()];
+        moveItemInArray(profiles, event.previousIndex, event.currentIndex);
+
+        // Update sortOrder for all reordered profiles
+        for (let index = 0; index < profiles.length; index++) {
+            const profile = profiles[index];
+            try {
+                await this.profileService.updateSortOrder(profile.path, index);
+            } catch (err) {
+                console.error('Failed to save sort order:', err);
+            }
+        }
+
+        this.messageService.add({
+            severity: 'success',
+            summary: 'Order Updated',
+            detail: 'Profile order has been saved.',
+            life: 2000,
+        });
+    }
 
 }
