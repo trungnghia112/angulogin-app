@@ -1,224 +1,47 @@
 {
     "meta": {
         "schema_version": "1.1.0",
-        "awf_version": "3.4.0",
-        "last_updated": "2026-01-23T23:17:00+07:00"
+        "awf_version": "3.3.0"
     },
     "project": {
         "name": "Chrome Profile Manager",
-        "type": "desktop-app",
-        "status": "in-progress",
-        "description": "Desktop app (Tauri v2 + Angular) để quản lý và khởi chạy Chrome profiles từ ổ cứng ngoài"
+        "type": "Angular + Tauri Application",
+        "status": "Active Development"
     },
     "tech_stack": {
         "frontend": {
             "framework": "Angular 21",
-            "styling": "TailwindCSS v4",
-            "ui_library": "PrimeNG",
-            "state": "Angular Signals"
+            "ui_library": "PrimeNG 21",
+            "styling": "Tailwind CSS 4",
+            "icons": "PrimeIcons"
         },
         "backend": {
-            "runtime": "Tauri v2.9.5",
-            "language": "Rust",
-            "plugins": [
-                "tauri-plugin-fs",
-                "tauri-plugin-shell",
-                "tauri-plugin-dialog",
-                "tauri-plugin-log"
-            ]
-        },
-        "build": {
-            "bundler": "Vite (via Angular)",
-            "package_manager": "npm"
+            "hosting": "Firebase",
+            "database": "Firestore",
+            "desktop_bridge": "Tauri 2"
         }
     },
-    "architecture": {
-        "layers": [
-            {
-                "name": "Frontend (Angular)",
-                "path": "src/app/",
-                "components": [
-                    "views/pages/",
-                    "views/components/",
-                    "services/",
-                    "models/"
-                ]
-            },
-            {
-                "name": "Backend (Rust)",
-                "path": "src-tauri/src/",
-                "modules": [
-                    "lib.rs",
-                    "commands.rs",
-                    "main.rs"
-                ]
-            }
-        ],
-        "key_patterns": [
-            "Standalone Components (Angular 21+)",
-            "Signal-based state management",
-            "Tauri IPC via invoke() for Rust commands",
-            "Mock mode for web development (isTauriAvailable check)"
-        ]
-    },
-    "rust_commands": [
-        {
-            "name": "scan_profiles",
-            "description": "Scan folder for profile directories",
-            "params": [
-                "path: String"
-            ]
-        },
-        {
-            "name": "launch_chrome",
-            "description": "Launch Chrome with specific profile",
-            "params": [
-                "profile_path: String"
-            ]
-        },
-        {
-            "name": "launch_browser",
-            "description": "Launch any browser (Chrome, Brave, Edge, Arc)",
-            "params": [
-                "profile_path: String",
-                "browser: String"
-            ]
-        },
-        {
-            "name": "check_path_exists",
-            "description": "Check if path exists",
-            "params": [
-                "path: String"
-            ]
-        },
-        {
-            "name": "create_profile",
-            "description": "Create new profile folder",
-            "params": [
-                "base_path: String",
-                "name: String"
-            ]
-        },
-        {
-            "name": "delete_profile",
-            "description": "Delete profile folder",
-            "params": [
-                "profile_path: String"
-            ]
-        },
-        {
-            "name": "rename_profile",
-            "description": "Rename profile folder",
-            "params": [
-                "old_path: String",
-                "new_name: String"
-            ]
-        },
-        {
-            "name": "get_profile_metadata",
-            "description": "Read .profile-meta.json",
-            "params": [
-                "profile_path: String"
-            ]
-        },
-        {
-            "name": "save_profile_metadata",
-            "description": "Save .profile-meta.json",
-            "params": [
-                "profile_path, emoji, notes, group, shortcut, browser"
-            ]
-        },
-        {
-            "name": "is_chrome_running_for_profile",
-            "description": "Check if Chrome is running for profile",
-            "params": [
-                "profile_path: String"
-            ]
-        },
-        {
-            "name": "get_profile_size",
-            "description": "Calculate profile folder size",
-            "params": [
-                "profile_path: String"
-            ]
-        },
-        {
-            "name": "list_available_browsers",
-            "description": "List installed browsers on system",
-            "params": []
-        }
-    ],
     "features": [
-        {
-            "name": "Profile Scanning",
-            "status": "done",
-            "description": "Scan and list Chrome profiles from selected directory"
-        },
-        {
-            "name": "Profile Launch",
-            "status": "done",
-            "description": "Launch browser with specific profile (Chrome, Brave, Edge, Arc)"
-        },
-        {
-            "name": "Profile Metadata",
-            "status": "done",
-            "description": "Save emoji, notes, group, shortcut, browser preference per profile"
-        },
-        {
-            "name": "Native Folder Picker",
-            "status": "done",
-            "description": "Use Tauri dialog plugin for macOS native folder selection"
-        },
-        {
-            "name": "Folder Management",
-            "status": "pending",
-            "description": "Group profiles into custom folders"
-        },
-        {
-            "name": "Search & Filter",
-            "status": "pending",
-            "description": "Search profiles by name, filter by group"
-        },
-        {
-            "name": "Proxy Management",
-            "status": "pending",
-            "description": "Assign proxy to profiles"
-        },
-        {
-            "name": "Tags System",
-            "status": "pending",
-            "description": "Add tags to profiles"
-        }
+        "Profile Management (Grid/List View)",
+        "Directory Scanning",
+        "Dark/Light Mode with Persistence",
+        "Folder/Group Organization",
+        "Extension Management Placeholder",
+        "Automation Placeholder"
     ],
     "knowledge_items": {
         "patterns": [
-            "Use isTauriAvailable() from platform.util.ts to check if running in Tauri",
-            "Dynamic import for Tauri plugins to avoid errors in web mode",
-            "effect() in constructor for reactive auto-scan when settings change",
-            "computed() for derived signals from SettingsService"
+            "Light/Dark Mode: Use 'bg-surface-50 dark:bg-surface-950' pattern",
+            "Signal-based state management",
+            "Standalone components as default"
         ],
         "gotchas": [
-            "Tauri dialog plugin requires 'dialog:default' permission in capabilities/default.json",
-            "titleBarStyle: 'Transparent' with transparent: false allows drag region + solid background",
-            "Flexbox scroll: parent needs h-screen, child needs flex-1 min-h-0 overflow-auto",
-            "inject() must be called in injection context (class field, constructor) not in methods",
-            "@theme and @apply CSS warnings are normal (Tailwind v4 syntax, IDE doesn't recognize)"
+            "Tailwind v4 CSS Variable syntax: h-[var(--spacing-header)] is required for custom CSS variables",
+            "PrimeNG Surface colors: Use surface-0 (lightest) to surface-950 (darkest) in BOTH modes"
         ],
         "conventions": [
-            "Component files: name.ts, name.html, name.css (no .component suffix)",
-            "Use templateUrl and styleUrl, not inline templates",
-            "Use input(), output() functions instead of @Input/@Output decorators",
-            "Use signals for local state, computed() for derived state"
+            "Strict naming: [name].ts, [name].html, [name].css",
+            "Tailwind only for layout/styling"
         ]
-    },
-    "file_structure": {
-        "src/app/views/pages/": "Page components (home, automation, teams, extensions)",
-        "src/app/views/components/": "Shared components (sidebar, main-nav)",
-        "src/app/services/": "Angular services (profile, settings, navigation)",
-        "src/app/models/": "TypeScript interfaces",
-        "src/app/mocks/": "Mock data for web development",
-        "src/app/core/utils/": "Utility functions (platform detection)",
-        "src-tauri/src/": "Rust backend (commands.rs, lib.rs)",
-        "src-tauri/capabilities/": "Tauri permissions (default.json)"
     }
 }
