@@ -3,30 +3,22 @@
     <header id="home-header" class="flex items-center gap-4 px-6 h-(--spacing-header) shrink-0 border-b border-border">
         <!-- Search (full width) -->
         <div id="home-header-search" class="flex-1">
-            <div class="relative">
-                <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
+            <p-iconfield>
+                <p-inputicon class="pi pi-search" />
                 <input id="home-header-search-input" pInputText type="text" placeholder="Search profiles..."
-                    [ngModel]="searchText()" (ngModelChange)="onSearchInput($event)"
-                    class="w-full bg-surface border border-border rounded-lg pl-9 pr-4 py-2.5 text-zinc-50 text-sm placeholder-zinc-600 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none transition-all" />
-            </div>
+                    [ngModel]="searchText()" (ngModelChange)="onSearchInput($event)" />
+            </p-iconfield>
         </div>
 
         <!-- Actions -->
         <div id="home-header-actions" class="flex items-center gap-2">
-            <button id="home-header-refresh-btn" (click)="scanProfiles()"
-                class="flex items-center gap-2 px-3 py-2.5 bg-surface border border-border rounded-lg text-zinc-300 text-sm hover:bg-surface-hover transition-colors">
-                <i class="pi pi-refresh text-sm"></i>
-                <span>Refresh</span>
-            </button>
+            <p-button id="home-header-refresh-btn" (click)="scanProfiles()" icon="pi pi-refresh" label="Refresh"
+                severity="secondary" [outlined]="true" />
 
             <!-- Sort Dropdown -->
             <div class="relative">
-                <button id="home-header-sort-btn" (click)="showSortDropdown.set(!showSortDropdown())"
-                    class="flex items-center gap-2 px-3 py-2.5 bg-surface border border-border rounded-lg text-zinc-300 text-sm hover:bg-surface-hover transition-colors">
-                    <i class="pi pi-sort-alt text-sm"></i>
-                    <span>{{ currentSortLabel() }}</span>
-                    <i [class]="'pi text-xs ' + (sortOrder() === 'asc' ? 'pi-arrow-up' : 'pi-arrow-down')"></i>
-                </button>
+                <p-button id="home-header-sort-btn" (click)="showSortDropdown.set(!showSortDropdown())"
+                    icon="pi pi-sort-alt" [label]="currentSortLabel()" severity="secondary" [outlined]="true" />
                 @if (showSortDropdown()) {
                 <div id="home-sort-dropdown"
                     class="absolute right-0 top-full mt-2 w-48 bg-surface border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
@@ -48,19 +40,9 @@
 
             <!-- Filters Button with Dropdown -->
             <div class="relative">
-                <button id="home-header-filters-btn" (click)="toggleFiltersDropdown()"
-                    class="flex items-center gap-2 px-3 py-2.5 border rounded-lg text-sm transition-colors" [class]="hasActiveFilters() 
-                        ? 'bg-primary/20 border-primary text-primary' 
-                        : 'bg-surface border-border text-zinc-300 hover:bg-surface-hover'">
-                    <i class="pi pi-filter text-sm"></i>
-                    <span>Filters</span>
-                    @if (activeFilterCount() > 0) {
-                    <span
-                        class="ml-1 px-1.5 py-0.5 bg-primary text-bg text-xs font-bold rounded-full min-w-[18px] text-center">
-                        {{ activeFilterCount() }}
-                    </span>
-                    }
-                </button>
+                <p-button id="home-header-filters-btn" (click)="toggleFiltersDropdown()" icon="pi pi-filter"
+                    label="Filters" severity="secondary" [outlined]="true"
+                    [badge]="activeFilterCount() > 0 ? activeFilterCount().toString() : undefined" />
 
                 <!-- Filters Dropdown -->
                 @if (showFiltersDropdown()) {
@@ -97,22 +79,15 @@
             </div>
 
             <!-- View Mode Toggle -->
-            <div class="flex items-center border border-border rounded-lg overflow-hidden">
-                <button id="home-header-table-view-btn" (click)="viewMode.set('table')" class="p-2.5 transition-colors"
-                    [class]="viewMode() === 'table' ? 'bg-primary text-bg' : 'bg-surface text-zinc-400 hover:text-zinc-200'">
-                    <i class="pi pi-list text-sm"></i>
-                </button>
-                <button id="home-header-grid-view-btn" (click)="viewMode.set('grid')" class="p-2.5 transition-colors"
-                    [class]="viewMode() === 'grid' ? 'bg-primary text-bg' : 'bg-surface text-zinc-400 hover:text-zinc-200'">
-                    <i class="pi pi-th-large text-sm"></i>
-                </button>
-            </div>
+            <p-selectbutton [options]="[{icon: 'pi pi-list', value: 'table'}, {icon: 'pi pi-th-large', value: 'grid'}]"
+                [ngModel]="viewMode()" (ngModelChange)="viewMode.set($event)" optionLabel="icon" optionValue="value">
+                <ng-template pTemplate="item" let-item>
+                    <i [class]="item.icon"></i>
+                </ng-template>
+            </p-selectbutton>
 
-            <button id="home-header-create-btn" pButton (click)="openCreateDialog()"
-                class="flex items-center gap-2 px-4 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-semibold cursor-pointer hover:bg-primary-hover transition-colors">
-                <i class="pi pi-plus"></i>
-                <span>Create profile</span>
-            </button>
+            <p-button id="home-header-create-btn" (click)="openCreateDialog()" icon="pi pi-plus"
+                label="Create profile" />
         </div>
     </header>
 
@@ -168,177 +143,133 @@
         <!-- Profiles View - Table or Grid -->
         @if (viewMode() === 'table') {
         <!-- Profiles Table -->
-        <div id="home-profiles-table" class="bg-surface border border-border rounded-xl">
-            <p-table [value]="filteredProfiles()" [(selection)]="selectedProfiles"
-                (selectionChange)="onSelectionChange($event)" [first]="first()" [rows]="rowsPerPage()" dataKey="path"
-                [tableStyle]="{ 'min-width': '60rem' }" class="profile-table">
+        <p-table id="home-profiles-table" [value]="filteredProfiles()" [(selection)]="selectedProfiles"
+            (selectionChange)="onSelectionChange($event)" [first]="first()" [rows]="rowsPerPage()" dataKey="path"
+            [scrollable]="true">
 
-                <!-- Header -->
-                <ng-template pTemplate="header">
-                    <tr id="home-profiles-table-header" class="border-b border-border">
-                        <th class="w-12 bg-surface-hover/50 p-4">
-                            <p-tableHeaderCheckbox />
-                        </th>
-                        <th class="w-10 bg-surface-hover/50 p-4 text-center">
-                            <i class="pi pi-star text-zinc-500 text-xs"></i>
-                        </th>
-                        <th
-                            class="bg-surface-hover/50 p-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">
-                            Name</th>
-                        <th
-                            class="bg-surface-hover/50 p-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">
-                            Status</th>
-                        <th
-                            class="bg-surface-hover/50 p-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">
-                            Proxy</th>
-                        <th
-                            class="bg-surface-hover/50 p-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">
-                            Tags</th>
-                        <th
-                            class="bg-surface-hover/50 p-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">
-                            Notes</th>
-                        <th class="w-12 bg-surface-hover/50 p-4">
-                            <i class="pi pi-cog text-zinc-500"></i>
-                        </th>
-                    </tr>
-                </ng-template>
+            <!-- Header -->
+            <ng-template pTemplate="header">
+                <tr id="home-profiles-table-header">
+                    <th style="width: 3rem"><p-tableHeaderCheckbox /></th>
+                    <th style="width: 3rem"><i class="pi pi-star"></i></th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Proxy</th>
+                    <th>Tags</th>
+                    <th>Notes</th>
+                    <th style="width: 3rem"><i class="pi pi-cog"></i></th>
+                </tr>
+            </ng-template>
 
-                <!-- Body -->
-                <ng-template pTemplate="body" let-profile let-i="rowIndex">
-                    <tr [id]="'home-profile-row-' + i"
-                        class="border-b border-border hover:bg-surface-hover/30 transition-colors cursor-pointer"
-                        (click)="openEditDialog(profile, $event)">
-                        <!-- Checkbox -->
-                        <td class="p-4" (click)="$event.stopPropagation()">
-                            <p-tableCheckbox [value]="profile" />
-                        </td>
+            <!-- Body -->
+            <ng-template pTemplate="body" let-profile let-i="rowIndex">
+                <tr [id]="'home-profile-row-' + i" (click)="openEditDialog(profile, $event)" style="cursor: pointer">
+                    <!-- Checkbox -->
+                    <td (click)="$event.stopPropagation()">
+                        <p-tableCheckbox [value]="profile" />
+                    </td>
 
-                        <!-- Pin -->
-                        <td class="p-4 text-center">
-                            <button [id]="'home-profile-' + i + '-pin-btn'" (click)="togglePin(profile, $event)"
-                                class="w-7 h-7 rounded-md transition-colors flex items-center justify-center" [class]="profile.metadata?.isPinned 
+                    <!-- Pin -->
+                    <td>
+                        <button [id]="'home-profile-' + i + '-pin-btn'" (click)="togglePin(profile, $event)"
+                            class="w-7 h-7 rounded-md transition-colors flex items-center justify-center" [class]="profile.metadata?.isPinned 
                                     ? 'text-yellow-400 hover:text-yellow-300' 
                                     : 'text-zinc-600 hover:text-zinc-400'">
-                                <i [class]="profile.metadata?.isPinned ? 'pi pi-star-fill' : 'pi pi-star'"></i>
-                            </button>
-                        </td>
+                            <i [class]="profile.metadata?.isPinned ? 'pi pi-star-fill' : 'pi pi-star'"></i>
+                        </button>
+                    </td>
 
-                        <!-- Name with Start button -->
-                        <td class="p-4">
-                            <div class="flex items-center gap-3">
-                                <button [id]="'home-profile-' + i + '-start-btn'"
-                                    (click)="launchProfile(profile, $event)"
-                                    class="flex items-center gap-2 px-3 py-1.5 bg-primary/20 border border-primary/40 rounded-md text-primary text-xs font-semibold hover:bg-primary hover:text-bg transition-colors">
-                                    <i [class]="'pi ' + getOsIcon(profile) + ' text-xs'"></i>
-                                    <span>Start</span>
-                                </button>
-                                <span class="font-medium text-zinc-50">{{ profile.name }}</span>
-                            </div>
-                        </td>
+                    <!-- Name with Start button -->
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <p-button [id]="'home-profile-' + i + '-start-btn'" (click)="launchProfile(profile, $event)"
+                                [icon]="'pi ' + getOsIcon(profile)" label="Start" size="small" [outlined]="true" />
+                            <span>{{ profile.name }}</span>
+                        </div>
+                    </td>
 
-                        <!-- Status -->
-                        <td class="p-4">
+                    <!-- Status -->
+                    <td>
+                        <span class="px-2.5 py-1 bg-surface-hover border border-border rounded text-xs text-zinc-400">
+                            No status
+                        </span>
+                    </td>
+
+                    <!-- Proxy -->
+                    <td>
+                        <p-button [id]="'home-profile-' + i + '-proxy-btn'" icon="pi pi-plus" [rounded]="true"
+                            [text]="true" severity="secondary" size="small" />
+                    </td>
+
+                    <!-- Tags -->
+                    <td>
+                        @if (profile.metadata?.tags && profile.metadata.tags.length > 0) {
+                        <div class="flex flex-wrap gap-1">
+                            @for (tag of profile.metadata.tags.slice(0, 3); track tag) {
                             <span
-                                class="px-2.5 py-1 bg-surface-hover border border-border rounded text-xs text-zinc-400">
-                                No status
+                                class="px-2 py-0.5 bg-primary/20 border border-primary/40 rounded text-xs text-primary">
+                                {{ tag }}
                             </span>
-                        </td>
-
-                        <!-- Proxy -->
-                        <td class="p-4">
-                            <button [id]="'home-profile-' + i + '-proxy-btn'"
-                                class="w-7 h-7 rounded-md border border-border text-zinc-500 hover:border-primary hover:text-primary transition-colors flex items-center justify-center">
-                                <i class="pi pi-plus text-xs"></i>
-                            </button>
-                        </td>
-
-                        <!-- Tags -->
-                        <td class="p-4">
-                            @if (profile.metadata?.tags && profile.metadata.tags.length > 0) {
-                            <div class="flex flex-wrap gap-1">
-                                @for (tag of profile.metadata.tags.slice(0, 3); track tag) {
-                                <span
-                                    class="px-2 py-0.5 bg-primary/20 border border-primary/40 rounded text-xs text-primary">
-                                    {{ tag }}
-                                </span>
-                                }
-                                @if (profile.metadata.tags.length > 3) {
-                                <span
-                                    class="px-2 py-0.5 bg-surface-hover border border-border rounded text-xs text-zinc-500">
-                                    +{{ profile.metadata.tags.length - 3 }}
-                                </span>
-                                }
-                            </div>
-                            } @else {
-                            <button [id]="'home-profile-' + i + '-tags-btn'"
-                                class="w-7 h-7 rounded-md border border-border text-zinc-500 hover:border-primary hover:text-primary transition-colors flex items-center justify-center">
-                                <i class="pi pi-plus text-xs"></i>
-                            </button>
                             }
-                        </td>
-
-                        <!-- Notes -->
-                        <td class="p-4">
-                            @if (profile.metadata?.notes) {
+                            @if (profile.metadata.tags.length > 3) {
                             <span
-                                class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-note-yellow/20 border border-note-yellow/40 rounded text-xs text-note-yellow">
-                                <i class="pi pi-pencil text-[10px]"></i>
-                                <span class="max-w-[100px] truncate">{{ profile.metadata?.notes }}</span>
+                                class="px-2 py-0.5 bg-surface-hover border border-border rounded text-xs text-zinc-500">
+                                +{{ profile.metadata.tags.length - 3 }}
                             </span>
-                            } @else {
-                            <button [id]="'home-profile-' + i + '-notes-btn'"
-                                class="w-7 h-7 rounded-md border border-border text-zinc-500 hover:border-primary hover:text-primary transition-colors flex items-center justify-center">
-                                <i class="pi pi-plus text-xs"></i>
-                            </button>
                             }
-                        </td>
+                        </div>
+                        } @else {
+                        <p-button [id]="'home-profile-' + i + '-tags-btn'" icon="pi pi-plus" [rounded]="true"
+                            [text]="true" severity="secondary" size="small" />
+                        }
+                    </td>
 
-                        <!-- Actions -->
-                        <td class="p-4">
-                            <div class="flex items-center gap-1">
-                                <button [id]="'home-profile-' + i + '-incognito-btn'"
-                                    (click)="launchProfileIncognito(profile, $event)"
-                                    class="w-7 h-7 rounded-md text-zinc-500 hover:text-purple-400 transition-colors flex items-center justify-center"
-                                    title="Launch in Incognito">
-                                    <i class="pi pi-eye-slash text-sm"></i>
-                                </button>
-                                <button [id]="'home-profile-' + i + '-duplicate-btn'"
-                                    (click)="openDuplicateDialog(profile, $event)"
-                                    class="w-7 h-7 rounded-md text-zinc-500 hover:text-primary transition-colors flex items-center justify-center"
-                                    title="Duplicate profile">
-                                    <i class="pi pi-copy text-sm"></i>
-                                </button>
-                                <button [id]="'home-profile-' + i + '-delete-btn'"
-                                    (click)="deleteProfile(profile, $event)"
-                                    class="w-7 h-7 rounded-md text-zinc-500 hover:text-error transition-colors flex items-center justify-center"
-                                    title="Delete profile">
-                                    <i class="pi pi-trash text-sm"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </ng-template>
+                    <!-- Notes -->
+                    <td>
+                        @if (profile.metadata?.notes) {
+                        <span
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-note-yellow/20 border border-note-yellow/40 rounded text-xs text-note-yellow">
+                            <i class="pi pi-pencil text-[10px]"></i>
+                            <span class="max-w-[100px] truncate">{{ profile.metadata?.notes }}</span>
+                        </span>
+                        } @else {
+                        <p-button [id]="'home-profile-' + i + '-notes-btn'" icon="pi pi-plus" [rounded]="true"
+                            [text]="true" severity="secondary" size="small" />
+                        }
+                    </td>
 
-                <!-- Empty state -->
-                <ng-template pTemplate="emptymessage">
-                    <tr>
-                        <td colspan="8" class="p-8 text-center text-zinc-500">
-                            No profiles in this folder
-                        </td>
-                    </tr>
-                </ng-template>
-            </p-table>
+                    <!-- Actions -->
+                    <td>
+                        <div class="flex items-center gap-1">
+                            <p-button [id]="'home-profile-' + i + '-incognito-btn'"
+                                (click)="launchProfileIncognito(profile, $event)" icon="pi pi-eye-slash"
+                                [rounded]="true" [text]="true" severity="secondary" size="small"
+                                pTooltip="Launch in Incognito" />
+                            <p-button [id]="'home-profile-' + i + '-duplicate-btn'"
+                                (click)="openDuplicateDialog(profile, $event)" icon="pi pi-copy" [rounded]="true"
+                                [text]="true" severity="secondary" size="small" pTooltip="Duplicate profile" />
+                            <p-button [id]="'home-profile-' + i + '-delete-btn'"
+                                (click)="deleteProfile(profile, $event)" icon="pi pi-trash" [rounded]="true"
+                                [text]="true" severity="danger" size="small" pTooltip="Delete profile" />
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
 
-            <!-- Paginator inside table container -->
-            @if (filteredProfiles().length > 0) {
-            <div id="home-paginator-container" class="px-4 py-1 border-t border-border">
-                <p-paginator [rows]="rowsPerPage()" [totalRecords]="filteredProfiles().length" [first]="first()"
-                    [rowsPerPageOptions]="[5, 10, 20]" (onPageChange)="onPaginatorChange($event)"
-                    [showCurrentPageReport]="true"
-                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} profiles" />
-            </div>
-            }
-        </div>
+            <!-- Empty state -->
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="8">No profiles in this folder</td>
+                </tr>
+            </ng-template>
+        </p-table>
+
+        <!-- Paginator inside table container -->
+        @if (filteredProfiles().length > 0) {
+        <p-paginator [rows]="rowsPerPage()" [totalRecords]="filteredProfiles().length" [first]="first()"
+            [rowsPerPageOptions]="[5, 10, 20]" (onPageChange)="onPaginatorChange($event)" [showCurrentPageReport]="true"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} profiles" />
+        }
         } @else {
         <!-- Grid View -->
         <div id="home-profiles-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -432,44 +363,30 @@
     <!-- Create Profile Dialog -->
     <p-dialog id="home-create-dialog" header="Create New Profile" [(visible)]="showCreateDialog" [modal]="true"
         [style]="{ width: '400px' }" [draggable]="false" [resizable]="false">
-        <div id="home-create-dialog-content" class="py-2">
-            <label for="home-create-dialog-name-input" class="block text-xs font-medium text-zinc-500 mb-2">Profile
-                Name</label>
+        <div id="home-create-dialog-content">
+            <label for="home-create-dialog-name-input">Profile Name</label>
             <input pInputText id="home-create-dialog-name-input" type="text" [ngModel]="newProfileName()"
-                (ngModelChange)="newProfileName.set($event)" placeholder="e.g., Work, Personal"
-                class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none" />
+                (ngModelChange)="newProfileName.set($event)" placeholder="e.g., Work, Personal" fluid />
         </div>
         <ng-template #footer>
-            <div id="home-create-dialog-footer" class="flex justify-end gap-3 pt-2">
-                <button id="home-create-dialog-cancel-btn" pButton
-                    class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
-                    (click)="showCreateDialog.set(false)">Cancel</button>
-                <button id="home-create-dialog-submit-btn" pButton
-                    class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
-                    (click)="createProfile()">Create</button>
-            </div>
+            <p-button id="home-create-dialog-cancel-btn" label="Cancel" severity="secondary"
+                (click)="showCreateDialog.set(false)" />
+            <p-button id="home-create-dialog-submit-btn" label="Create" (click)="createProfile()" />
         </ng-template>
     </p-dialog>
 
     <!-- Rename Profile Dialog -->
     <p-dialog id="home-rename-dialog" header="Rename Profile" [(visible)]="showRenameDialog" [modal]="true"
         [style]="{ width: '400px' }" [draggable]="false" [resizable]="false">
-        <div id="home-rename-dialog-content" class="py-2">
-            <label for="home-rename-dialog-name-input" class="block text-xs font-medium text-zinc-500 mb-2">New
-                Name</label>
+        <div id="home-rename-dialog-content">
+            <label for="home-rename-dialog-name-input">New Name</label>
             <input pInputText id="home-rename-dialog-name-input" type="text" [ngModel]="renameProfileName()"
-                (ngModelChange)="renameProfileName.set($event)"
-                class="w-full bg-bg border border-border rounded-lg px-4 py-3 text-zinc-50 text-sm focus:border-primary outline-none" />
+                (ngModelChange)="renameProfileName.set($event)" fluid />
         </div>
         <ng-template #footer>
-            <div id="home-rename-dialog-footer" class="flex justify-end gap-3 pt-2">
-                <button id="home-rename-dialog-cancel-btn" pButton
-                    class="px-5 py-2.5 bg-surface-hover border border-border rounded-lg text-zinc-50 text-sm cursor-pointer"
-                    (click)="showRenameDialog.set(false)">Cancel</button>
-                <button id="home-rename-dialog-submit-btn" pButton
-                    class="px-5 py-2.5 bg-primary border-none rounded-lg text-bg text-sm font-medium cursor-pointer"
-                    (click)="renameProfile()">Rename</button>
-            </div>
+            <p-button id="home-rename-dialog-cancel-btn" label="Cancel" severity="secondary"
+                (click)="showRenameDialog.set(false)" />
+            <p-button id="home-rename-dialog-submit-btn" label="Rename" (click)="renameProfile()" />
         </ng-template>
     </p-dialog>
 

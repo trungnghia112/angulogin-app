@@ -15,10 +15,14 @@ import { FormsModule } from '@angular/forms';
 import { TitleCasePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
+import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ProfileService } from '../../../services/profile.service';
 import { SettingsService } from '../../../services/settings.service';
@@ -55,10 +59,14 @@ interface Tab {
         TitleCasePipe,
         ButtonModule,
         InputTextModule,
+        IconFieldModule,
+        InputIconModule,
+        SelectButtonModule,
         ProgressSpinnerModule,
         DialogModule,
         TableModule,
         PaginatorModule,
+        TooltipModule,
     ],
 })
 export class Home implements OnInit, OnDestroy {
