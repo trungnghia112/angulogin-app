@@ -43,6 +43,23 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Do NOT use `ngStyle`, use `style` bindings instead
 - When using external templates/styles, use paths relative to the component TS file.
 
+### Page Components (CRITICAL)
+
+**Host Class Rule**: ALL page components in `src/app/views/pages/` MUST have a `host` property with flexbox classes to ensure full-height layout:
+
+```typescript
+@Component({
+    selector: 'app-[page-name]',
+    templateUrl: './[page-name].html',
+    styleUrl: './[page-name].css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' }, // REQUIRED
+    imports: [...],
+})
+```
+
+**Why**: Angular creates a host element (`<app-xxx>`) that wraps the template. Without this class, the host element has `display: inline` by default and breaks the flexbox chain from the parent layout, causing height issues.
+
 ## State Management
 
 - Use signals for local component state

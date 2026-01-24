@@ -2,16 +2,14 @@ import { Component, ChangeDetectionStrategy, signal, inject, OnInit, OnDestroy }
 import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { MainNav } from '../components/main-nav/main-nav';
-import { Sidebar } from '../components/sidebar/sidebar';
 import { NavigationService } from '../../services/navigation.service';
 import { SettingsService } from '../../services/settings.service';
 import { SettingsService as CoreSettingsService } from '../../core/services/settings.service';
 import { debugLog } from '../../core/utils/logger.util';
-import { Folder } from '../../models/folder.model';
 
 @Component({
   selector: 'app-pages',
-  imports: [RouterOutlet, MainNav, Sidebar],
+  imports: [RouterOutlet, MainNav],
   templateUrl: './pages.html',
   styleUrl: './pages.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,27 +21,8 @@ export class Pages implements OnInit, OnDestroy {
   protected readonly coreSettingsService = inject(CoreSettingsService); // New Core Service
   private routeSub?: Subscription;
 
-  // Sidebar visibility based on active feature
-  protected readonly hasSidebar = this.navService.hasSidebar;
-  protected readonly sidebarType = this.navService.sidebarType;
 
-  // Demo folders data (for browsers sidebar)
-  protected readonly folders = signal<Folder[]>([
-    { id: '1', name: 'Amazon', icon: 'pi-amazon', color: '#FF9900', profileCount: 5 },
-    { id: '2', name: 'Crypto', icon: 'pi-wallet', color: '#71717a', profileCount: 3 },
-    { id: '3', name: 'New Folder', icon: 'pi-folder', color: '#71717a', profileCount: 0 },
-    { id: '4', name: 'Facebook', icon: 'pi-facebook', color: '#1877F2', profileCount: 2 },
-  ]);
 
-  protected readonly selectedFolderId = signal<string | null>('1');
-
-  // Settings Sidebar Data
-  protected readonly settingsCategories = [
-    { id: 'general', label: 'General', icon: 'pi pi-cog' },
-    { id: 'appearance', label: 'Appearance', icon: 'pi pi-palette' },
-    { id: 'browser', label: 'Browser Paths', icon: 'pi pi-globe' },
-    { id: 'data', label: 'Data', icon: 'pi pi-database' }
-  ];
 
   ngOnInit(): void {
     // Sync navigation state with current route
@@ -69,23 +48,5 @@ export class Pages implements OnInit, OnDestroy {
     }
   }
 
-  protected onFolderSelected(folderId: string | null): void {
-    this.selectedFolderId.set(folderId);
-  }
 
-  protected onAddFolder(): void {
-    debugLog('Pages', 'Add folder clicked');
-  }
-
-  protected onSettings(): void {
-    debugLog('Pages', 'Settings clicked');
-  }
-
-  protected onFolderSettings(): void {
-    debugLog('Pages', 'Folder settings clicked');
-  }
-
-  protected onProfilesDirectoryChanged(path: string): void {
-    this.settingsService.setProfilesPath(path);
-  }
 }

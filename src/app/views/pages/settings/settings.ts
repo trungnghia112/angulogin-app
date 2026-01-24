@@ -9,9 +9,18 @@ import { SettingsService } from '../../../core/services/settings.service';
     imports: [CommonModule, ButtonModule],
     templateUrl: './settings.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
 })
 export class Settings {
     settingsService = inject(SettingsService);
+
+    // Sidebar Data
+    settingsCategories = [
+        { id: 'general', label: 'General', icon: 'pi pi-cog' },
+        { id: 'appearance', label: 'Appearance', icon: 'pi pi-palette' },
+        { id: 'browser', label: 'Browser Paths', icon: 'pi pi-globe' },
+        { id: 'data', label: 'Data', icon: 'pi pi-database' }
+    ];
 
     // Appearance Options
 

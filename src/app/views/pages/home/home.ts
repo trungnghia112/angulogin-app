@@ -9,6 +9,7 @@ import {
     effect,
     DestroyRef,
 } from '@angular/core';
+import { Sidebar } from '../../components/sidebar/sidebar';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -53,6 +54,7 @@ interface Tab {
     styleUrl: './home.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: {
+        class: 'flex-1 flex flex-col min-h-0 overflow-hidden',
         '(window:keydown)': 'handleKeyboard($event)',
     },
     imports: [
@@ -69,6 +71,7 @@ interface Tab {
         TableModule,
         PaginatorModule,
         TooltipModule,
+        Sidebar,
     ],
 })
 export class Home implements OnInit, OnDestroy {
@@ -79,6 +82,15 @@ export class Home implements OnInit, OnDestroy {
     private readonly destroyRef = inject(DestroyRef);
     private readonly searchSubject = new Subject<string>();
     private statusInterval: ReturnType<typeof setInterval> | null = null;
+
+    // Sidebar Data (Moved from Pages)
+    protected readonly folders = signal<import('../../../models/folder.model').Folder[]>([
+        { id: '1', name: 'Amazon', icon: 'pi-amazon', color: '#FF9900', profileCount: 5 },
+        { id: '2', name: 'Crypto', icon: 'pi-wallet', color: '#71717a', profileCount: 3 },
+        { id: '3', name: 'New Folder', icon: 'pi-folder', color: '#71717a', profileCount: 0 },
+        { id: '4', name: 'Facebook', icon: 'pi-facebook', color: '#1877F2', profileCount: 2 },
+    ]);
+    protected readonly selectedFolderId = signal<string | null>('1');
 
     // Tabs
     protected readonly tabs: Tab[] = [
@@ -728,5 +740,26 @@ export class Home implements OnInit, OnDestroy {
 
     clearSelection(): void {
         this.selectedProfiles.set([]);
+    }
+
+    // ==== Sidebar Actions (Moved from Pages) ====
+    protected onFolderSelected(folderId: string | null): void {
+        this.selectedFolderId.set(folderId);
+    }
+
+    protected onAddFolder(): void {
+        console.log('Home: Add folder clicked');
+    }
+
+    protected onSettings(): void {
+        console.log('Home: Settings clicked');
+    }
+
+    protected onFolderSettings(): void {
+        console.log('Home: Folder settings clicked');
+    }
+
+    protected onProfilesDirectoryChanged(path: string): void {
+        this.settingsService.setProfilesPath(path);
     }
 }
