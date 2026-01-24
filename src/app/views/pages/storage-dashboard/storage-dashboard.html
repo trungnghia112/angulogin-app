@@ -1,0 +1,142 @@
+<!-- Storage Dashboard -->
+<div class="flex flex-col h-full bg-surface-50 dark:bg-surface-950">
+    <!-- Header -->
+    <header id="storage-header"
+        class="flex items-center justify-between px-6 py-4 border-b border-surface bg-surface-0 dark:bg-surface-900 shrink-0">
+        <div class="flex items-center gap-4">
+            <p-button id="storage-back-btn" icon="pi pi-arrow-left" severity="secondary" [outlined]="true"
+                (click)="goBack()" pTooltip="Back to Home" />
+            <div>
+                <h1 class="text-xl font-semibold text-color">Storage Dashboard</h1>
+                <p class="text-sm text-muted-color">Analyze profile storage usage and get cleanup suggestions</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content -->
+    <div id="storage-content" class="flex-1 overflow-auto p-6">
+        <!-- Summary Cards -->
+        <div id="storage-summary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div
+                class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <i class="pi pi-database text-xl text-blue-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-muted-color">Total Storage</p>
+                    <p class="text-2xl font-bold text-color">{{ formatSize(totalSize()) }}</p>
+                </div>
+            </div>
+
+            <div
+                class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+                    <i class="pi pi-folder text-xl text-green-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-muted-color">Profiles</p>
+                    <p class="text-2xl font-bold text-color">{{ profileCount() }}</p>
+                </div>
+            </div>
+
+            <div
+                class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                    <i class="pi pi-chart-bar text-xl text-purple-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-muted-color">Average Size</p>
+                    <p class="text-2xl font-bold text-color">{{ formatSize(avgSize()) }}</p>
+                </div>
+            </div>
+
+            <div
+                class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                    <i class="pi pi-crown text-xl text-orange-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-muted-color">Largest Profile</p>
+                    <p class="text-lg font-bold text-color truncate max-w-[150px]">{{ largestProfile()?.name ?? 'N/A' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div id="storage-charts" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Pie Chart -->
+            <div class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm">
+                <h3 class="text-lg font-semibold text-color mb-4">Storage Distribution (Top 10)</h3>
+                @if (profiles().length > 0) {
+                <div class="h-[300px]">
+                    <p-chart type="pie" [data]="pieData()" [options]="pieOptions" />
+                </div>
+                } @else {
+                <div class="h-[300px] flex items-center justify-center text-muted-color">
+                    <i class="pi pi-chart-pie text-4xl"></i>
+                    <p class="ml-3">No profiles to display</p>
+                </div>
+                }
+            </div>
+
+            <!-- Bar Chart -->
+            <div class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm">
+                <h3 class="text-lg font-semibold text-color mb-4">Top 10 Profiles by Size</h3>
+                @if (profiles().length > 0) {
+                <div class="h-[300px]">
+                    <p-chart type="bar" [data]="barData()" [options]="barOptions" />
+                </div>
+                } @else {
+                <div class="h-[300px] flex items-center justify-center text-muted-color">
+                    <i class="pi pi-chart-bar text-4xl"></i>
+                    <p class="ml-3">No profiles to display</p>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Cleanup Suggestions -->
+        <div id="storage-cleanup"
+            class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm">
+            <h3 class="text-lg font-semibold text-color mb-4">
+                <i class="pi pi-lightbulb text-yellow-500 mr-2"></i>
+                Cleanup Suggestions
+            </h3>
+            @if (cleanupSuggestions().length > 0) {
+            <div class="space-y-2">
+                @for (suggestion of cleanupSuggestions(); track suggestion.profile.path; let i = $index) {
+                <div [id]="'storage-suggestion-' + i"
+                    class="flex items-center justify-between p-3 rounded-lg border border-surface hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" [class]="{
+                            'bg-orange-500/20 text-orange-500': suggestion.type === 'large',
+                            'bg-gray-500/20 text-gray-500': suggestion.type === 'unused'
+                        }">
+                            <i
+                                [class]="'pi ' + (suggestion.type === 'large' ? 'pi-exclamation-triangle' : 'pi-clock')"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-color">{{ suggestion.profile.name }}</p>
+                            <p class="text-sm text-muted-color">{{ suggestion.reason }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-muted-color">{{ formatSize(suggestion.profile.size)
+                            }}</span>
+                        <p-button icon="pi pi-external-link" severity="secondary" [outlined]="true" size="small"
+                            (click)="openProfile(suggestion.profile)" pTooltip="Open Profile" />
+                    </div>
+                </div>
+                }
+            </div>
+            } @else {
+            <div class="flex flex-col items-center justify-center py-8 text-center">
+                <i class="pi pi-check-circle text-4xl text-green-500 mb-3"></i>
+                <p class="text-color font-medium">All profiles look good!</p>
+                <p class="text-sm text-muted-color mt-1">No cleanup suggestions at this time</p>
+            </div>
+            }
+        </div>
+    </div>
+</div>
