@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, OnInit, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, OnInit, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -25,19 +25,7 @@ export class MainNav implements OnInit {
     features = computed(() => this.navService.features().filter(f => !f.hidden));
 
     constructor() {
-        // Effect to apply theme class when signal changes
-        effect(() => {
-            const isDark = this.isDarkMode();
-            const html = this.document.documentElement;
-
-            if (isDark) {
-                html.classList.add('dark');
-            } else {
-                html.classList.remove('dark');
-            }
-
-            localStorage.setItem('app-theme', isDark ? 'dark' : 'light');
-        });
+        // No effect needed - we handle theme class directly in methods
     }
 
     ngOnInit() {
@@ -50,13 +38,24 @@ export class MainNav implements OnInit {
 
         if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
             this.isDarkMode.set(true);
+            this.document.documentElement.classList.add('dark');
         } else {
             this.isDarkMode.set(false);
+            this.document.documentElement.classList.remove('dark');
         }
     }
 
     toggleTheme() {
-        this.isDarkMode.update(curr => !curr);
+        const newValue = !this.isDarkMode();
+        this.isDarkMode.set(newValue);
+
+        if (newValue) {
+            this.document.documentElement.classList.add('dark');
+        } else {
+            this.document.documentElement.classList.remove('dark');
+        }
+
+        localStorage.setItem('app-theme', newValue ? 'dark' : 'light');
     }
 
     isActive(featureId: string): boolean {

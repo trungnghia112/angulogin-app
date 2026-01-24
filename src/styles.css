@@ -8,39 +8,6 @@
     --font-sans: "Inter", system-ui, sans-serif;
 }
 
-/* Logic: Manually override PrimeNG Surface Variables in Dark Mode */
-:root[class~="dark"] {
-    --p-surface-0: #09090b;
-    /* zinc-950 (Deep Bg) */
-    --p-surface-50: #18181b;
-    /* zinc-900 (Card/Content Bg) */
-    --p-surface-100: #27272a;
-    /* zinc-800 (Hover/Subtle Border) */
-    --p-surface-200: #27272a;
-    /* zinc-800 (Border) */
-    --p-surface-300: #3f3f46;
-    /* zinc-700 (Stronger Border) */
-    --p-surface-400: #52525b;
-    /* zinc-600 */
-    --p-surface-500: #71717a;
-    /* zinc-500 */
-    --p-surface-600: #a1a1aa;
-    --p-surface-700: #d4d4d8;
-    --p-surface-800: #e4e4e7;
-    --p-surface-900: #f4f4f5;
-    --p-surface-950: #ffffff;
-
-    /* Content Background usually maps to surface-0 or 50 */
-    --p-content-background: var(--p-surface-0);
-
-    /* Text Colors usually invert */
-    --p-text-color: #e4e4e7;
-    /* zinc-200 */
-    --p-text-muted-color: #a1a1aa;
-    /* zinc-400 */
-    /* zinc-400 */
-}
-
 /* --- Surface Palettes --- */
 
 /* Slate */
