@@ -52,6 +52,7 @@
     "@angular/cli": "^21.1.1",
     "@angular/compiler-cli": "^21.1.1",
     "@angular/fire": "^21.0.0-rc.0",
+    "@tailwindcss/cli": "^4.1.18",
     "@tailwindcss/postcss": "^4.1.18",
     "@tauri-apps/cli": "^2.9.6",
     "postcss": "^8.5.6",

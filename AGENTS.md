@@ -175,3 +175,24 @@ const data = { description: form.value.description || null };
     - Chrome Extension: Must test in actual loaded extension.
 15. **UI Consistency**: Clone existing Master Template for new features. No reinventing patterns.
 16. **HTML ID Naming**: ALWAYS add `id` attributes. Format: `[feature]-[section]-[index]`.
+
+## ⚡ Performance Rules (MANDATORY)
+
+**Khi dùng setInterval/setTimeout:**
+- Interval >= 30 giây cho background tasks
+- PHẢI cleanup ở `ngOnDestroy()`
+- PHẢI pause khi tab hidden (visibility API)
+- Callback KHÔNG được tạo objects mới nếu data không đổi
+
+**Khi update signal/state:**
+- KHÔNG tạo array/object mới nếu data giống nhau
+- Check `hasChanges` trước khi `.set()` hoặc `.update()`
+- Giữ nguyên reference nếu item không thay đổi
+
+**Template:**
+- KHÔNG dùng getter methods → Dùng signal/computed
+- Computed signals đã có caching tự động
+
+**Subscription:**
+- Observable PHẢI dùng `takeUntilDestroyed()` hoặc unsubscribe
+- Event listener PHẢI có `removeEventListener` ở destroy
