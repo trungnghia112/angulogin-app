@@ -401,24 +401,24 @@
 
     <!-- Bottom Actions Bar (Fixed at bottom, like sidebar-bottom) -->
     @if (selectedProfiles().length > 0 && activeTab() === 'profiles') {
-    <div id="home-bottom" class="shrink-0 border-t border-border bg-surface">
-        <div id="home-bottom-actions" class="flex items-center gap-3 px-6 py-3">
+    <div id="home-bottom" class="shrink-0 border-t border-border bg-surface p-3">
+        <div id="home-bottom-actions" class="flex items-center gap-3">
             <button id="home-bottom-clear-btn" (click)="clearSelection()"
-                class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
+                class="w-8 h-8 rounded-md border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
                 title="Clear selection">
                 <i class="pi pi-times"></i>
             </button>
             <div class="w-px h-6 bg-border"></div>
             <button id="home-bottom-start-all-btn" (click)="bulkLaunch()"
-                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary text-primary hover:bg-primary hover:text-bg transition-colors"
+                class="h-8 flex items-center gap-2 px-3 rounded-md border border-primary text-primary hover:bg-primary hover:text-bg transition-colors"
                 title="Launch all selected">
-                <i class="pi pi-play"></i>
+                <i class="pi pi-play text-sm"></i>
                 <span class="text-sm font-medium">Launch All</span>
             </button>
             <button id="home-bottom-delete-btn" (click)="bulkDelete()"
-                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-error text-error hover:bg-error hover:text-white transition-colors"
+                class="h-8 flex items-center gap-2 px-3 rounded-md border border-error text-error hover:bg-error hover:text-white transition-colors"
                 title="Delete selected">
-                <i class="pi pi-trash"></i>
+                <i class="pi pi-trash text-sm"></i>
                 <span class="text-sm font-medium">Delete</span>
             </button>
             <div class="flex-1"></div>
