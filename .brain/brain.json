@@ -5,7 +5,7 @@
     },
     "project": {
         "name": "Chrome Profile Manager",
-        "type": "Angular + Tauri Application",
+        "type": "Angular + Tauri Desktop Application",
         "status": "Active Development"
     },
     "tech_stack": {
@@ -16,26 +16,27 @@
             "icons": "PrimeIcons"
         },
         "backend": {
-            "hosting": "Firebase",
+            "hosting": "Firebase (Firestore)",
             "database": "Firestore",
             "desktop_bridge": "Tauri 2"
         }
     },
     "features": [
-        "Profile Management (Grid/List View)",
-        "Directory Scanning",
+        "Profile Management (Grid/List View, Search, Sort, Filter)",
+        "Directory Scanning for Chrome Profiles",
         "Dark/Light Mode with Persistence",
         "Folder/Group Organization",
-        "Settings Page (Appearance, General)",
-        "Dynamic Theme Engine (Primary Color, Scale)",
-        "Extension Management Placeholder",
-        "Automation Placeholder"
+        "Settings Page (Appearance, General, Browser Paths, Data)",
+        "Dynamic Theme Engine (Primary Color, Surface, Scale)",
+        "Extension Management (Placeholder)",
+        "Automation (Placeholder)"
     ],
     "knowledge_items": {
         "patterns": [
             "Signal-based state management",
-            "Standalone components as default",
-            "Host class rule for page components: host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' }"
+            "Standalone components as default (Angular 20+)",
+            "Host class rule for page components: host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' }",
+            "p-menu [popup]=\"true\" for dropdown menus with menu.toggle($event)"
         ],
         "dark_mode_architecture": {
             "summary": "PrimeNG + Tailwind CSS unified dark mode using .dark class",
@@ -55,20 +56,58 @@
                 ]
             },
             "toggle_mechanism": "Direct DOM manipulation: document.documentElement.classList.add/remove('dark')",
-            "persistence": "localStorage.setItem('app-theme', 'dark' | 'light')"
+            "persistence": "localStorage via SettingsService"
+        },
+        "primeng_theming": {
+            "update_primary_color": "import { updatePrimaryPalette } from '@primeuix/themes'; updatePrimaryPalette({ 50: '{blue.50}', ... })",
+            "update_surface": "import { updateSurfacePalette } from '@primeuix/themes'; updateSurfacePalette({ 50: '{zinc.50}', ... })",
+            "available_colors": [
+                "emerald",
+                "blue",
+                "violet",
+                "amber",
+                "rose",
+                "fuchsia"
+            ],
+            "available_surfaces": [
+                "zinc",
+                "slate",
+                "gray",
+                "neutral",
+                "stone"
+            ]
         },
         "gotchas": [
             "PrimeNG default darkModeSelector is 'system' (@media prefers-color-scheme) - NOT .dark class!",
             "tailwindcss-primeui does NOT auto-invert bg-surface-X in dark mode - must add dark: variants manually",
-            "PrimeNG cssLayer can conflict with Tailwind - recommend cssLayer: false",
+            "PrimeNG cssLayer: false to avoid conflict with Tailwind ordering",
             "Tailwind v4 CSS Variable syntax: h-[var(--spacing-header)] required for custom CSS variables",
-            "Angular effect() may not work reliably in zoneless mode for DOM manipulation - use direct DOM APIs"
+            "Angular effect() may not work reliably in zoneless mode for DOM manipulation - use direct DOM APIs",
+            "NO styleClass on PrimeNG - use class instead",
+            "Must NOT set standalone: true in Angular v20+ (it's the default)"
         ],
         "conventions": [
-            "Strict naming: [name].ts, [name].html, [name].css",
+            "Strict naming: [name].ts, [name].html, [name].css (NOT .component.ts)",
             "Tailwind only for layout/styling",
-            "NO styleClass on PrimeNG - use class instead",
-            "All page components must have host property with flex classes"
+            "All page components must have host property with flex classes",
+            "HTML ID format: [feature]-[section]-[index]",
+            "Commit after every step with semantic messages"
+        ]
+    },
+    "api_endpoints": [],
+    "database_schema": {
+        "collections": [
+            {
+                "name": "profiles",
+                "fields": [
+                    "id",
+                    "name",
+                    "path",
+                    "browserType",
+                    "metadata",
+                    "userId"
+                ]
+            }
         ]
     }
 }
