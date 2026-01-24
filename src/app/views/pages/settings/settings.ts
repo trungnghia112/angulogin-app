@@ -9,6 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { MessageService } from 'primeng/api';
 
 // Services
 import {
@@ -43,6 +44,7 @@ interface SettingsCategory {
 })
 export class Settings {
     protected readonly settingsService = inject(SettingsService);
+    private readonly messageService = inject(MessageService);
 
     // Settings categories for sidebar navigation
     protected readonly categories: SettingsCategory[] = [
@@ -102,6 +104,17 @@ export class Settings {
         const defaultPath = await this.settingsService.detectDefaultPath();
         if (defaultPath) {
             this.settingsService.setProfilesPath(defaultPath);
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Path Reset',
+                detail: 'Default Chrome path has been set.',
+            });
+        } else {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Desktop Mode Required',
+                detail: 'This feature only works in the desktop app.',
+            });
         }
     }
 }
