@@ -242,7 +242,28 @@ pub fn is_chrome_running_for_profile(profile_path: String) -> bool {
 
 #[tauri::command]
 pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>) -> Result<(), String> {
-    let user_data_arg = format!("--user-data-dir={}", profile_path);
+    let path = std::path::Path::new(&profile_path);
+    
+    // Detect if this is a native Chrome profile (parent has "Local State" file)
+    // or a managed/isolated profile (standalone user-data-dir)
+    let (user_data_dir, profile_directory) = if let Some(parent) = path.parent() {
+        let local_state = parent.join("Local State");
+        if local_state.exists() {
+            // Native Chrome profile: use parent as user-data-dir and folder name as profile-directory
+            let folder_name = path.file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("Default");
+            (parent.to_string_lossy().to_string(), Some(folder_name.to_string()))
+        } else {
+            // Managed profile: use the profile path directly as user-data-dir
+            (profile_path.clone(), None)
+        }
+    } else {
+        // No parent, use as-is
+        (profile_path.clone(), None)
+    };
+    
+    let user_data_arg = format!("--user-data-dir={}", user_data_dir);
     
     let app_name = match browser.as_str() {
         "chrome" => "Google Chrome",
@@ -255,16 +276,23 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
     // Determine incognito flag based on browser
     let incognito_flag = if incognito.unwrap_or(false) {
         match browser.as_str() {
-            "brave" => Some("--incognito"), // Brave uses same flag as Chrome
+            "brave" => Some("--incognito"),
             "edge" => Some("--inprivate"),
-            "arc" => None, // Arc doesn't support incognito via CLI
-            _ => Some("--incognito"), // Chrome default
+            "arc" => None,
+            _ => Some("--incognito"),
         }
     } else {
         None
     };
     
     let mut args = vec!["-n", "-a", app_name, "--args", &user_data_arg];
+    
+    // Add profile-directory flag for native Chrome profiles
+    let profile_dir_arg: String;
+    if let Some(dir) = profile_directory {
+        profile_dir_arg = format!("--profile-directory={}", dir);
+        args.push(&profile_dir_arg);
+    }
     
     // Add incognito flag if applicable
     let incognito_owned: String;
