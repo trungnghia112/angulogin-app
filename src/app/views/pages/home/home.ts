@@ -9,7 +9,7 @@ import {
     effect,
     DestroyRef,
 } from '@angular/core';
-import { Sidebar } from '../../components/sidebar/sidebar';
+import { HomeSidebar } from './home-sidebar/home-sidebar';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -54,7 +54,7 @@ interface Tab {
     styleUrl: './home.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: {
-        class: 'flex-1 flex flex-col min-h-0 overflow-hidden',
+        class: 'flex-1 flex min-h-0 overflow-hidden',
         '(window:keydown)': 'handleKeyboard($event)',
     },
     imports: [
@@ -71,7 +71,7 @@ interface Tab {
         TableModule,
         PaginatorModule,
         TooltipModule,
-        Sidebar,
+        HomeSidebar,
     ],
 })
 export class Home implements OnInit, OnDestroy {

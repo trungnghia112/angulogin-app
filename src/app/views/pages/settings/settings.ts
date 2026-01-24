@@ -5,11 +5,10 @@ import { SettingsService } from '../../../core/services/settings.service';
 
 @Component({
     selector: 'app-settings',
-    standalone: true,
     imports: [CommonModule, ButtonModule],
     templateUrl: './settings.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
+    host: { class: 'flex-1 flex min-h-0 overflow-hidden' },
 })
 export class Settings {
     settingsService = inject(SettingsService);

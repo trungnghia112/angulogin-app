@@ -1,26 +1,26 @@
-<aside id="sidebar-container" class="flex flex-col h-screen w-60 border-r border-surface-200">
+<aside id="home-sidebar" class="flex flex-col h-full w-60 border-r border-surface-200 bg-surface-0 shrink-0">
     <!-- Feature Header - matches header height -->
-    <div id="sidebar-header"
+    <div id="home-sidebar-header"
         class="flex items-center justify-between px-4 h-[var(--spacing-header)] shrink-0 border-b border-surface-200">
-        <span id="sidebar-header-title" class="text-base font-semibold text-color">Browsers</span>
-        <div id="sidebar-header-actions" class="flex items-center gap-2">
-            <p-button id="sidebar-header-settings-btn" icon="pi pi-cog" [rounded]="true" [text]="true"
+        <span id="home-sidebar-header-title" class="text-base font-semibold text-color">Browsers</span>
+        <div id="home-sidebar-header-actions" class="flex items-center gap-2">
+            <p-button id="home-sidebar-header-settings-btn" icon="pi pi-cog" [rounded]="true" [text]="true"
                 (click)="openProfilesDirectoryDialog()" pTooltip="Profiles Directory" tooltipPosition="bottom" />
-            <p-button id="sidebar-header-add-btn" icon="pi pi-plus" [rounded]="true" [text]="true"
+            <p-button id="home-sidebar-header-add-btn" icon="pi pi-plus" [rounded]="true" [text]="true"
                 (click)="onAddFolder()" pTooltip="Add folder" tooltipPosition="bottom" />
         </div>
     </div>
 
     <!-- Folders Header -->
-    <div id="sidebar-folders-header" class="px-4 py-2">
-        <span id="sidebar-folders-title"
+    <div id="home-sidebar-folders-header" class="px-4 py-2">
+        <span id="home-sidebar-folders-title"
             class="text-xs font-semibold text-muted-color uppercase tracking-wide">Folders</span>
     </div>
 
     <!-- Folders List -->
-    <nav id="sidebar-folders-list" class="flex-1 overflow-y-auto px-2" aria-label="Folder navigation">
+    <nav id="home-sidebar-folders-list" class="flex-1 overflow-y-auto px-2" aria-label="Folder navigation">
         @for (folder of folders(); track folder.id; let i = $index) {
-        <button [id]="'sidebar-folder-' + i" [attr.aria-current]="selectedFolderId() === folder.id ? 'page' : null"
+        <button [id]="'home-sidebar-folder-' + i" [attr.aria-current]="selectedFolderId() === folder.id ? 'page' : null"
             class="w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-all duration-150 cursor-pointer"
             [class]="selectedFolderId() === folder.id
           ? 'text-color'
@@ -35,37 +35,38 @@
     </nav>
 
     <!-- Bottom Actions -->
-    <div id="sidebar-bottom" class="border-t border-surface-200 p-3">
-        <div id="sidebar-bottom-actions" class="flex items-center justify-between">
-            <p-button id="sidebar-settings-btn" icon="pi pi-cog" [rounded]="true" [text]="true" (click)="onSettings()"
-                pTooltip="Settings" />
-            <p-button id="sidebar-trash-btn" icon="pi pi-trash" [rounded]="true" [text]="true" pTooltip="Trash" />
-            <p-button id="sidebar-export-btn" icon="pi pi-download" [rounded]="true" [text]="true" pTooltip="Export" />
+    <div id="home-sidebar-bottom" class="border-t border-surface-200 p-3">
+        <div id="home-sidebar-bottom-actions" class="flex items-center justify-between">
+            <p-button id="home-sidebar-settings-btn" icon="pi pi-cog" [rounded]="true" [text]="true"
+                (click)="onSettings()" pTooltip="Settings" />
+            <p-button id="home-sidebar-trash-btn" icon="pi pi-trash" [rounded]="true" [text]="true" pTooltip="Trash" />
+            <p-button id="home-sidebar-export-btn" icon="pi pi-download" [rounded]="true" [text]="true"
+                pTooltip="Export" />
         </div>
     </div>
 </aside>
 
 <!-- Profiles Directory Dialog -->
-<p-dialog id="sidebar-profiles-dir-dialog" header="Profiles Directory" [visible]="showProfilesDirectoryDialog()"
+<p-dialog id="home-sidebar-profiles-dir-dialog" header="Profiles Directory" [visible]="showProfilesDirectoryDialog()"
     (visibleChange)="showProfilesDirectoryDialog.set($event)" [modal]="true" [style]="{ width: '480px' }"
     [draggable]="false" [resizable]="false">
-    <div id="sidebar-profiles-dir-dialog-content" class="py-2 space-y-4">
+    <div id="home-sidebar-profiles-dir-dialog-content" class="py-2 space-y-4">
         <p class="text-sm text-muted-color">
             Set the directory where your Chrome profiles are stored. This path will be used to scan and manage your
             browser profiles.
         </p>
         <div>
-            <label for="sidebar-profiles-dir-input" class="block text-xs font-medium text-color mb-2">Directory
+            <label for="home-sidebar-profiles-dir-input" class="block text-xs font-medium text-color mb-2">Directory
                 Path</label>
             <div class="flex items-center gap-2">
-                <input pInputText id="sidebar-profiles-dir-input" type="text" [ngModel]="profilesDirectoryPath()"
+                <input pInputText id="home-sidebar-profiles-dir-input" type="text" [ngModel]="profilesDirectoryPath()"
                     (ngModelChange)="profilesDirectoryPath.set($event)"
                     placeholder="/Volumes/ExternalDrive/ChromeProfiles" class="flex-1" />
-                <p-button id="sidebar-profiles-dir-browse-btn" icon="pi pi-folder-open" [outlined]="true"
+                <p-button id="home-sidebar-profiles-dir-browse-btn" icon="pi pi-folder-open" [outlined]="true"
                     (click)="browseFolder()" pTooltip="Browse folder" />
             </div>
         </div>
-        <div class="rounded-lg p-3 border border-surface">
+        <div class="rounded-lg p-3 border border-surface-200">
             <div class="flex items-center gap-2 text-xs text-color">
                 <i class="pi pi-info-circle"></i>
                 <span>Example: <code class="text-muted-color">/Users/john/ChromeProfiles</code></span>
@@ -73,10 +74,10 @@
         </div>
     </div>
     <ng-template #footer>
-        <div id="sidebar-profiles-dir-dialog-footer" class="flex justify-end gap-3 pt-2">
-            <p-button id="sidebar-profiles-dir-cancel-btn" label="Cancel" severity="secondary"
+        <div id="home-sidebar-profiles-dir-dialog-footer" class="flex justify-end gap-3 pt-2">
+            <p-button id="home-sidebar-profiles-dir-cancel-btn" label="Cancel" severity="secondary"
                 (click)="showProfilesDirectoryDialog.set(false)" />
-            <p-button id="sidebar-profiles-dir-save-btn" label="Save" (click)="saveProfilesDirectory()" />
+            <p-button id="home-sidebar-profiles-dir-save-btn" label="Save" (click)="saveProfilesDirectory()" />
         </div>
     </ng-template>
 </p-dialog>

@@ -3,18 +3,18 @@ import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { Folder } from '../../../models/folder.model';
-import { isTauriAvailable } from '../../../core/utils/platform.util';
-import { debugLog } from '../../../core/utils/logger.util';
+import { Folder } from '../../../../models/folder.model';
+import { isTauriAvailable } from '../../../../core/utils/platform.util';
+import { debugLog } from '../../../../core/utils/logger.util';
 
 @Component({
-    selector: 'app-sidebar',
-    templateUrl: './sidebar.html',
-    styleUrl: './sidebar.css',
+    selector: 'app-home-sidebar',
+    templateUrl: './home-sidebar.html',
+    styleUrl: './home-sidebar.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [FormsModule, InputTextModule, ButtonModule, DialogModule],
 })
-export class Sidebar {
+export class HomeSidebar {
     // Inputs
     readonly folders = input<Folder[]>([]);
     readonly selectedFolderId = input<string | null>(null);
@@ -53,7 +53,7 @@ export class Sidebar {
     protected async browseFolder(): Promise<void> {
         // Only works in Tauri environment
         if (!isTauriAvailable()) {
-            debugLog('Sidebar', 'browseFolder - Tauri not available');
+            debugLog('HomeSidebar', 'browseFolder - Tauri not available');
             return;
         }
 
