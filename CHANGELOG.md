@@ -19,6 +19,7 @@
     - Fixed invalid colors: `bg-surface-900-800` -> `bg-surface-800`.
     - Resolved build warning: `h-(--spacing-header)` -> `h-[var(--spacing-header)]` for Tailwind v4 compatibility.
 - **Dark Mode**: Fixed critical bug where Settings sidebar and content remained white in Dark Mode.
+- **Dark Mode Root Cause**: Fixed PrimeNG + Tailwind dark mode synchronization. Root cause was PrimeNG using `'system'` (prefers-color-scheme) while Tailwind used `.dark` class. Solution: Set `darkModeSelector: '.dark'` in PrimeNG config and add `dark:` variants to all Tailwind surface classes.
 - **Visual Polish**: Refined border colors in Dark Mode (Zinc-800) for better contrast and subtlety.
 
 ### Changed

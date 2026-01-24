@@ -12,7 +12,7 @@
         "frontend": {
             "framework": "Angular 21",
             "ui_library": "PrimeNG 21",
-            "styling": "Tailwind CSS 4",
+            "styling": "Tailwind CSS 4 + tailwindcss-primeui",
             "icons": "PrimeIcons"
         },
         "backend": {
@@ -33,19 +33,42 @@
     ],
     "knowledge_items": {
         "patterns": [
-            "Light/Dark Mode: Use 'bg-surface-50' + semantic variables",
-            "Theme Layering: Container (surface-50) -> Sidebar (surface-0) -> Card (surface-0)",
-            "Dark Mode Override: Use ':root.dark { --p-surface-X: ... }' in styles.css to fix PrimeUI variables",
             "Signal-based state management",
-            "Standalone components as default"
+            "Standalone components as default",
+            "Host class rule for page components: host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' }"
         ],
+        "dark_mode_architecture": {
+            "summary": "PrimeNG + Tailwind CSS unified dark mode using .dark class",
+            "key_config": {
+                "primeng_config": "darkModeSelector: '.dark' in providePrimeNG()",
+                "tailwind_css": "@custom-variant dark (&:where(.dark, .dark *));"
+            },
+            "critical_insight": "PrimeNG surface scale is NOT inverted in dark mode! surface.0 = always WHITE (text), surface.950 = always DARK (background)",
+            "template_pattern": {
+                "backgrounds": [
+                    "bg-surface-0 dark:bg-surface-900",
+                    "bg-surface-50 dark:bg-surface-950",
+                    "bg-surface-100 dark:bg-surface-800"
+                ],
+                "borders": [
+                    "border-surface-200 dark:border-surface-700"
+                ]
+            },
+            "toggle_mechanism": "Direct DOM manipulation: document.documentElement.classList.add/remove('dark')",
+            "persistence": "localStorage.setItem('app-theme', 'dark' | 'light')"
+        },
         "gotchas": [
-            "Tailwind v4 CSS Variable syntax: h-[var(--spacing-header)] is required for custom CSS variables",
-            "PrimeNG Surface colors: Default preset might not auto-invert correctly in Tailwind v4; requires manual CSS overrides"
+            "PrimeNG default darkModeSelector is 'system' (@media prefers-color-scheme) - NOT .dark class!",
+            "tailwindcss-primeui does NOT auto-invert bg-surface-X in dark mode - must add dark: variants manually",
+            "PrimeNG cssLayer can conflict with Tailwind - recommend cssLayer: false",
+            "Tailwind v4 CSS Variable syntax: h-[var(--spacing-header)] required for custom CSS variables",
+            "Angular effect() may not work reliably in zoneless mode for DOM manipulation - use direct DOM APIs"
         ],
         "conventions": [
             "Strict naming: [name].ts, [name].html, [name].css",
-            "Tailwind only for layout/styling"
+            "Tailwind only for layout/styling",
+            "NO styleClass on PrimeNG - use class instead",
+            "All page components must have host property with flex classes"
         ]
     }
 }

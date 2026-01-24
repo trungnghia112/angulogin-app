@@ -83,6 +83,80 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 
 ---
 
+## Dark Mode Architecture (CRITICAL)
+
+This project uses **PrimeNG + Tailwind CSS** with a unified dark mode system based on the `.dark` class.
+
+### Configuration
+
+**app.config.ts:**
+```typescript
+providePrimeNG({
+  theme: {
+    preset: MyPreset,
+    options: {
+      darkModeSelector: '.dark',  // CRITICAL: Must match Tailwind
+      cssLayer: false             // Avoid conflicts with Tailwind
+    }
+  }
+})
+```
+
+**styles.css:**
+```css
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+### Key Insight: PrimeNG Surface Scale is NOT Inverted!
+
+| Surface | Light Mode | Dark Mode | Usage in Dark Mode |
+|---------|------------|-----------|-------------------|
+| `surface.0` | White | **Still White** | Text/Foreground |
+| `surface.950` | Dark | **Still Dark** | Background |
+
+This means `bg-surface-0` will ALWAYS be white, even in dark mode!
+
+### Template Pattern (MANDATORY)
+
+When using surface backgrounds, ALWAYS add dark variants:
+
+```html
+<!-- Backgrounds -->
+<div class="bg-surface-0 dark:bg-surface-900">...</div>
+<div class="bg-surface-50 dark:bg-surface-950">...</div>
+<div class="bg-surface-100 dark:bg-surface-800">...</div>
+
+<!-- Borders -->
+<div class="border-surface-200 dark:border-surface-700">...</div>
+```
+
+### Toggle Mechanism
+
+Use direct DOM manipulation (NOT Angular effect):
+
+```typescript
+// In component
+toggleTheme() {
+  const html = document.documentElement;
+  if (this.isDarkMode()) {
+    html.classList.remove('dark');
+    localStorage.setItem('app-theme', 'light');
+  } else {
+    html.classList.add('dark');
+    localStorage.setItem('app-theme', 'dark');
+  }
+  this.isDarkMode.set(!this.isDarkMode());
+}
+```
+
+### Common Gotchas
+
+- **PrimeNG default `darkModeSelector` is `'system'`** (uses @media prefers-color-scheme) - NOT `.dark` class!
+- **`tailwindcss-primeui` does NOT auto-invert** `bg-surface-X` - must add `dark:` variants manually
+- **Angular `effect()` is unreliable** for DOM manipulation in zoneless mode - use direct DOM APIs
+
+---
+
 ## Firestore Best Practices
 
 ### Data Fetching Patterns
