@@ -135,7 +135,7 @@
     </div>
 
     <!-- Content -->
-    <div id="home-content" class="flex-1 min-h-0 overflow-auto p-6">
+    <div id="home-content" class="flex-1 min-h-0 overflow-auto p-6 pb-4">
         @if (loading()) {
         <div id="home-loading" class="flex flex-col items-center justify-center py-16 gap-4 text-zinc-500">
             <p-progressSpinner strokeWidth="3" />
@@ -328,52 +328,17 @@
                     </tr>
                 </ng-template>
             </p-table>
-        </div>
 
-        <!-- Sticky Table Footer (Paginator + Actions) -->
-        @if (profiles().length > 0 && activeTab() === 'profiles') {
-        <div id="home-table-footer"
-            class="mt-4 bg-surface border border-border rounded-xl overflow-hidden sticky bottom-0 z-10 shadow-lg">
-            <!-- Paginator Row -->
-            <div id="home-paginator-container" class="px-4 py-1 border-b border-border/50">
+            <!-- Paginator inside table container -->
+            @if (filteredProfiles().length > 0) {
+            <div id="home-paginator-container" class="px-4 py-1 border-t border-border">
                 <p-paginator [rows]="rowsPerPage()" [totalRecords]="filteredProfiles().length" [first]="first()"
                     [rowsPerPageOptions]="[5, 10, 20]" (onPageChange)="onPaginatorChange($event)"
                     [showCurrentPageReport]="true"
                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} profiles" />
             </div>
-
-            <!-- Bulk Actions Row (Only visible when selected) -->
-            @if (selectedProfiles().length > 0) {
-            <div id="home-footer" class="flex items-center justify-between px-6 py-3 bg-surface-hover/30">
-                <div id="home-footer-actions" class="flex items-center gap-2">
-                    <button id="home-footer-clear-btn" (click)="clearSelection()"
-                        class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
-                        title="Clear selection">
-                        <i class="pi pi-times"></i>
-                    </button>
-                    <div class="w-px h-6 bg-border mx-2"></div>
-                    <button id="home-footer-start-all-btn" (click)="bulkLaunch()"
-                        class="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary text-primary hover:bg-primary hover:text-bg transition-colors"
-                        title="Launch all selected">
-                        <i class="pi pi-play"></i>
-                        <span class="text-sm font-medium">Launch All</span>
-                    </button>
-                    <button id="home-footer-delete-btn" (click)="bulkDelete()"
-                        class="flex items-center gap-2 px-3 py-2 rounded-lg border border-error text-error hover:bg-error hover:text-white transition-colors"
-                        title="Delete selected">
-                        <i class="pi pi-trash"></i>
-                        <span class="text-sm font-medium">Delete</span>
-                    </button>
-                </div>
-                <div class="flex items-center gap-4">
-                    <span id="home-footer-selected-count" class="text-sm font-medium text-primary">
-                        {{ selectedProfiles().length }} profiles selected
-                    </span>
-                </div>
-            </div>
             }
         </div>
-        }
         } @else {
         <!-- Grid View -->
         <div id="home-profiles-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -433,6 +398,36 @@
         </div>
         }
     </div>
+
+    <!-- Bottom Actions Bar (Fixed at bottom, like sidebar-bottom) -->
+    @if (selectedProfiles().length > 0 && activeTab() === 'profiles') {
+    <div id="home-bottom" class="shrink-0 border-t border-border bg-surface">
+        <div id="home-bottom-actions" class="flex items-center gap-3 px-6 py-3">
+            <button id="home-bottom-clear-btn" (click)="clearSelection()"
+                class="w-9 h-9 rounded-lg border border-border text-zinc-400 hover:text-zinc-50 hover:border-zinc-400 transition-colors flex items-center justify-center"
+                title="Clear selection">
+                <i class="pi pi-times"></i>
+            </button>
+            <div class="w-px h-6 bg-border"></div>
+            <button id="home-bottom-start-all-btn" (click)="bulkLaunch()"
+                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-primary text-primary hover:bg-primary hover:text-bg transition-colors"
+                title="Launch all selected">
+                <i class="pi pi-play"></i>
+                <span class="text-sm font-medium">Launch All</span>
+            </button>
+            <button id="home-bottom-delete-btn" (click)="bulkDelete()"
+                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-error text-error hover:bg-error hover:text-white transition-colors"
+                title="Delete selected">
+                <i class="pi pi-trash"></i>
+                <span class="text-sm font-medium">Delete</span>
+            </button>
+            <div class="flex-1"></div>
+            <span id="home-bottom-selected-count" class="text-sm font-medium text-primary">
+                {{ selectedProfiles().length }} profiles selected
+            </span>
+        </div>
+    </div>
+    }
 
     <!-- Create Profile Dialog -->
     <p-dialog id="home-create-dialog" header="Create New Profile" [(visible)]="showCreateDialog" [modal]="true"
