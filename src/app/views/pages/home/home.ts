@@ -30,6 +30,7 @@ import { MenuModule } from 'primeng/menu';
 import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { ProfileService } from '../../../services/profile.service';
 import { SettingsService } from '../../../core/services/settings.service';
+import { ActivityLogService } from '../../../services/activity-log.service';
 import { BrowserType, Profile } from '../../../models/profile.model';
 
 const EMOJI_OPTIONS = ['💼', '🏠', '🛠️', '🎮', '📱', '💻', '🔒', '🌐', '📧', '🛒'];
@@ -93,6 +94,7 @@ export class Home implements OnInit, OnDestroy {
     private readonly router = inject(Router);
     private readonly profileService = inject(ProfileService);
     private readonly settingsService = inject(SettingsService);
+    private readonly activityLogService = inject(ActivityLogService);
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
     private readonly destroyRef = inject(DestroyRef);
@@ -296,6 +298,10 @@ export class Home implements OnInit, OnDestroy {
     protected readonly showDuplicateDialog = signal(false);
     protected readonly duplicateProfileName = signal('');
 
+    // Phase 3: Activity Log dialog
+    protected readonly showActivityLog = signal(false);
+    protected readonly activityLog = this.activityLogService;
+
     // Available tags from all profiles
     protected readonly availableTags = computed(() => {
         const all = this.profiles().flatMap((p) => p.metadata?.tags || []);
@@ -456,6 +462,8 @@ export class Home implements OnInit, OnDestroy {
             const url = profile.metadata?.launchUrl || undefined;
             const proxy = profile.metadata?.proxyServer || undefined;
             await this.profileService.launchBrowser(profile.path, browser, url, false, proxy);
+            // Phase 3: Log activity
+            this.activityLogService.logLaunch(profile.name, profile.path, browser);
             this.messageService.add({
                 severity: 'info',
                 summary: 'Launched',
@@ -509,7 +517,9 @@ export class Home implements OnInit, OnDestroy {
         const name = this.newProfileName().trim();
         if (!name) return;
         try {
-            await this.profileService.createProfile(this.profilesPath(), name);
+            const newPath = await this.profileService.createProfile(this.profilesPath(), name);
+            // Phase 3: Log activity
+            this.activityLogService.logCreate(name, newPath || `${this.profilesPath()}/${name}`);
             this.showCreateDialog.set(false);
             this.messageService.add({
                 severity: 'success',
@@ -721,6 +731,8 @@ export class Home implements OnInit, OnDestroy {
             accept: async () => {
                 try {
                     await this.profileService.deleteProfile(profile.path, this.profilesPath());
+                    // Phase 3: Log activity
+                    this.activityLogService.logDelete(profile.name, profile.path);
                     this.messageService.add({
                         severity: 'success',
                         summary: 'Deleted',
@@ -749,7 +761,9 @@ export class Home implements OnInit, OnDestroy {
             return;
         }
         try {
-            await this.profileService.duplicateProfile(profile.path, newName, this.profilesPath());
+            const newPath = await this.profileService.duplicateProfile(profile.path, newName, this.profilesPath());
+            // Phase 3: Log activity
+            this.activityLogService.logDuplicate(profile.name, newPath || `${this.profilesPath()}/${newName}`, newName);
             this.showDuplicateDialog.set(false);
             this.messageService.add({
                 severity: 'success',

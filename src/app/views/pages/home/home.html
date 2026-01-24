@@ -46,6 +46,11 @@
                 [label]="showHidden() ? 'Hide Hidden' : 'Show Hidden'" severity="secondary" [outlined]="true"
                 [class]="showHidden() ? 'ring-1 ring-primary' : ''" />
 
+            <!-- Phase 3: Activity Log -->
+            <p-button id="home-header-activity-log-btn" (click)="showActivityLog.set(true)" icon="pi pi-history"
+                severity="secondary" [outlined]="true" pTooltip="Activity Log"
+                [badge]="activityLog.todayEntries().length > 0 ? activityLog.todayEntries().length.toString() : undefined" />
+
             <p-button id="home-header-create-btn" (click)="openCreateDialog()" icon="pi pi-plus"
                 label="Create profile" />
         </div>
@@ -550,6 +555,65 @@
                 <p-button id="home-duplicate-dialog-cancel-btn" label="Cancel" severity="secondary"
                     (click)="showDuplicateDialog.set(false)" />
                 <p-button id="home-duplicate-dialog-submit-btn" label="Duplicate" (click)="duplicateProfile()" />
+            </div>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Phase 3: Activity Log Dialog -->
+    <p-dialog id="home-activity-log-dialog" header="Activity Log" [(visible)]="showActivityLog" [modal]="true"
+        [style]="{ width: '500px', maxHeight: '70vh' }" [draggable]="false" [resizable]="false">
+        <div id="home-activity-log-content" class="py-2">
+            @if (activityLog.entries().length === 0) {
+            <div class="flex flex-col items-center justify-center py-8 text-center">
+                <i class="pi pi-history text-3xl text-muted-color mb-3"></i>
+                <p class="text-muted-color">No activity recorded yet</p>
+                <p class="text-xs text-muted-color mt-1">Launch, create, or delete profiles to see activity here</p>
+            </div>
+            } @else {
+            <div class="space-y-2 max-h-[400px] overflow-y-auto">
+                @for (entry of activityLog.entries(); track entry.id; let i = $index) {
+                <div [id]="'home-activity-entry-' + i"
+                    class="flex items-start gap-3 p-3 rounded-lg border border-surface hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
+                    <!-- Icon -->
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" [class]="{
+                        'bg-green-500/20 text-green-500': entry.type === 'launch',
+                        'bg-blue-500/20 text-blue-500': entry.type === 'create',
+                        'bg-red-500/20 text-red-500': entry.type === 'delete',
+                        'bg-purple-500/20 text-purple-500': entry.type === 'duplicate',
+                        'bg-yellow-500/20 text-yellow-500': entry.type === 'edit'
+                    }">
+                        <i [class]="'pi ' + activityLog.getTypeIcon(entry.type)"></i>
+                    </div>
+                    <!-- Content -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="font-medium text-color truncate">{{ entry.profileName }}</span>
+                            <span
+                                class="text-xs px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-700 text-muted-color">{{
+                                activityLog.getTypeLabel(entry.type) }}</span>
+                        </div>
+                        <div class="flex items-center gap-2 mt-1 text-xs text-muted-color">
+                            <span>{{ activityLog.formatTimestamp(entry.timestamp) }}</span>
+                            @if (entry.browser) {
+                            <span>• {{ entry.browser | titlecase }}</span>
+                            }
+                            @if (entry.details) {
+                            <span>• {{ entry.details }}</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                }
+            </div>
+            }
+        </div>
+        <ng-template #footer>
+            <div id="home-activity-log-footer" class="flex justify-between items-center pt-2">
+                <p-button id="home-activity-log-clear-btn" label="Clear Log" severity="danger" [outlined]="true"
+                    icon="pi pi-trash" (click)="activityLog.clearLog()"
+                    [disabled]="activityLog.entries().length === 0" />
+                <p-button id="home-activity-log-close-btn" label="Close" severity="secondary"
+                    (click)="showActivityLog.set(false)" />
             </div>
         </ng-template>
     </p-dialog>
