@@ -10,9 +10,9 @@
 
 | Trạng thái | Số lượng |
 |------------|----------|
-| ✅ Done | 9 |
+| ✅ Done | 16 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 40 |
+| 📋 Backlog | 33 |
 
 ---
 
@@ -66,10 +66,10 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
 | 1.1 | Bulk Actions | Chọn nhiều profile → launch/delete/move cùng lúc | 🟢 Dễ | ✅ |
-| 1.2 | Profile Duplicating | Clone profile (copy folder) để tạo variant | 🟢 Dễ | 📋 |
-| 1.3 | Profile Sorting | Sort theo tên, ngày tạo, size, lần dùng gần nhất | 🟢 Dễ | 📋 |
-| 1.4 | Profile Pinning | Ghim profile hay dùng lên đầu | 🟢 Dễ | 📋 |
-| 1.5 | Last Opened Tracking | Hiển thị "dùng gần nhất" cho mỗi profile | 🟢 Dễ | 📋 |
+| 1.2 | Profile Duplicating | Clone profile (copy folder) để tạo variant | 🟢 Dễ | ✅ |
+| 1.3 | Profile Sorting | Sort theo tên, ngày tạo, size, lần dùng gần nhất | 🟢 Dễ | ✅ |
+| 1.4 | Profile Pinning | Ghim profile hay dùng lên đầu | 🟢 Dễ | ✅ |
+| 1.5 | Last Opened Tracking | Hiển thị "dùng gần nhất" cho mỗi profile | 🟢 Dễ | ✅ |
 | 1.6 | Usage Statistics | Đếm số lần mở, tổng thời gian dùng | 🟡 TB | 📋 |
 
 ---
@@ -90,11 +90,11 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
-| 3.1 | Launch with URL | Mở profile + tự động navigate đến URL | 🟢 Dễ | 📋 |
+| 3.1 | Launch with URL | Mở profile + tự động navigate đến URL | 🟢 Dễ | ✅ |
 | 3.2 | Launch Groups | Mở nhiều profile cùng lúc (1 click → 5 Chrome) | 🟡 TB | 📋 |
 | 3.3 | Scheduled Launch | Hẹn giờ mở profile (VD: 8AM mở Work profile) | 🟡 TB | 📋 |
 | 3.4 | Launch with Extensions | Toggle on/off extensions khi launch | 🔴 Khó | 📋 |
-| 3.5 | Incognito Mode | Launch profile ở chế độ incognito | 🟢 Dễ | 📋 |
+| 3.5 | Incognito Mode | Launch profile ở chế độ incognito | 🟢 Dễ | ✅ |
 | 3.6 | Custom Chrome Flags | Thêm flags như `--disable-gpu`, `--no-sandbox` | 🟢 Dễ | 📋 |
 | 3.7 | Window Position | Mở Chrome ở vị trí/kích thước cố định | 🟡 TB | 📋 |
 
@@ -104,7 +104,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
-| 4.1 | Proxy Assignment ⭐ | Gán proxy cho từng profile | 🟡 TB | 📋 |
+| 4.1 | Proxy Assignment ⭐ | Gán proxy cho từng profile | 🟡 TB | ✅ |
 | 4.2 | Proxy Rotation | Tự động đổi proxy theo schedule | 🔴 Khó | 📋 |
 | 4.3 | Proxy Health Check | Test proxy còn hoạt động không | 🟡 TB | 📋 |
 | 4.4 | Proxy Import/Export | Import danh sách proxy từ file | 🟢 Dễ | 📋 |
@@ -116,7 +116,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
-| 5.1 | Profile Backup | Zip & backup profile ra file riêng | 🟡 TB | 📋 |
+| 5.1 | Profile Backup | Zip & backup profile ra file riêng | 🟡 TB | ✅ |
 | 5.2 | Profile Restore | Restore từ backup file | 🟡 TB | 📋 |
 | 5.3 | Auto Backup | Tự động backup theo schedule | 🟡 TB | 📋 |
 | 5.4 | Cloud Sync (Optional) | Sync metadata lên cloud (không sync data) | 🔴 Khó | 📋 |
@@ -129,10 +129,10 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
-| 6.1 | Grid/List View Toggle | Chuyển đổi giữa card grid và table list | 🟢 Dễ | 📋 |
+| 6.1 | Grid/List View Toggle | Chuyển đổi giữa card grid và table list | 🟢 Dễ | ✅ |
 | 6.2 | Dark/Light Theme | Toggle theme | 🟢 Dễ | 📋 |
 | 6.3 | Keyboard Shortcuts | ⌘+1 mở profile 1, ⌘+N tạo mới... | 🟡 TB | 📋 |
-| 6.4 | Quick Search (⌘+K) | Command palette style search | 🟡 TB | 📋 |
+| 6.4 | Quick Search (⌘+K) | Command palette style search | 🟡 TB | ✅ |
 | 6.5 | Drag & Drop | Kéo thả để sắp xếp, di chuyển vào group | 🟡 TB | 📋 |
 | 6.6 | Profile Preview | Hover để xem preview/info nhanh | 🟢 Dễ | 📋 |
 | 6.7 | Compact Mode | UI thu gọn cho màn hình nhỏ | 🟢 Dễ | 📋 |
