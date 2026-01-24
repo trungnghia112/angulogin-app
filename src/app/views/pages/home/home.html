@@ -157,7 +157,9 @@
                             }
                             <p-button [id]="'home-profile-' + i + '-start-btn'" (click)="launchProfile(profile, $event)"
                                 [icon]="'pi ' + getOsIcon(profile)" label="Start" size="small" [outlined]="true" />
-                            <span [class]="profile.metadata?.isHidden ? 'opacity-50' : ''">{{ profile.name }}</span>
+                            <span [class]="profile.metadata?.isHidden ? 'opacity-50' : ''"
+                                [pTooltip]="getProfileTooltip(profile)" tooltipPosition="right" [escape]="false">{{
+                                profile.name }}</span>
                             <!-- Phase 2: Hidden indicator -->
                             @if (profile.metadata?.isHidden) {
                             <i class="pi pi-eye-slash text-xs text-muted-color" pTooltip="Hidden profile"></i>
@@ -257,7 +259,8 @@
             @for (profile of filteredProfiles(); track profile.path; let i = $index) {
             <div [id]="'home-profile-card-' + i"
                 class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-all duration-300 cursor-pointer relative group shadow-sm hover:shadow-md hover:-translate-y-1"
-                (click)="openEditDialog(profile, $event)">
+                (click)="openEditDialog(profile, $event)" [pTooltip]="getProfileTooltip(profile)" tooltipPosition="top"
+                [escape]="false">
                 <!-- Phase 1: Color indicator -->
                 @if (profile.metadata?.color) {
                 <div class="absolute top-2 left-2">

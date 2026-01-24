@@ -422,6 +422,40 @@ export class Home implements OnInit, OnDestroy {
         return `${mb.toFixed(0)} MB`;
     }
 
+    // Phase 4: Profile Preview Tooltip
+    getProfileTooltip(profile: Profile): string {
+        const lines: string[] = [];
+
+        // Name is already displayed, add additional info
+        if (profile.metadata?.group) {
+            lines.push(`Group: ${profile.metadata.group}`);
+        }
+        if (profile.metadata?.browser) {
+            lines.push(`Browser: ${this.getBrowserName(profile.metadata.browser)}`);
+        }
+        if (profile.metadata?.tags && profile.metadata.tags.length > 0) {
+            lines.push(`Tags: ${profile.metadata.tags.join(', ')}`);
+        }
+        if (profile.size) {
+            lines.push(`Size: ${this.formatSize(profile.size)}`);
+        }
+        if (profile.metadata?.lastOpened) {
+            const date = new Date(profile.metadata.lastOpened);
+            lines.push(`Last used: ${date.toLocaleDateString()}`);
+        }
+        if (profile.metadata?.notes) {
+            const notes = profile.metadata.notes.length > 50
+                ? profile.metadata.notes.substring(0, 47) + '...'
+                : profile.metadata.notes;
+            lines.push(`Notes: ${notes}`);
+        }
+        if (profile.metadata?.launchUrl) {
+            lines.push(`Launch URL: ${profile.metadata.launchUrl}`);
+        }
+
+        return lines.length > 0 ? lines.join('\n') : 'Click to edit profile';
+    }
+
     // Profile actions
     async scanProfiles(): Promise<void> {
         const path = this.profilesPath();
