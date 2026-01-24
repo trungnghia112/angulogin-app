@@ -209,7 +209,7 @@
                         class="border-b border-border hover:bg-surface-hover/30 transition-colors cursor-pointer"
                         (click)="openEditDialog(profile, $event)">
                         <!-- Checkbox -->
-                        <td class="p-4">
+                        <td class="p-4" (click)="$event.stopPropagation()">
                             <p-tableCheckbox [value]="profile" />
                         </td>
 
@@ -420,6 +420,7 @@
             }
         </div>
         }
+        } @else {
         <!-- Other tabs placeholder -->
         <div id="home-tab-placeholder" class="flex flex-col items-center justify-center py-16 text-center">
             <div id="home-tab-placeholder-icon"
