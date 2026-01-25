@@ -46,6 +46,12 @@
                 [label]="showHidden() ? 'Hide Hidden' : 'Show Hidden'" severity="secondary" [outlined]="true"
                 [class]="showHidden() ? 'ring-1 ring-primary' : ''" />
 
+            <!-- Feature 2.4: Favorites Filter -->
+            <p-button id="home-header-favorites-toggle" (click)="filterFavoritesOnly.set(!filterFavoritesOnly())"
+                icon="pi pi-heart"
+                [label]="filterFavoritesOnly() ? 'All Profiles' : 'Favorites (' + favoriteCount() + ')'"
+                severity="secondary" [outlined]="true" [class]="filterFavoritesOnly() ? 'ring-1 ring-primary' : ''" />
+
             <!-- Phase 3: Activity Log -->
             <p-button id="home-header-activity-log-btn" (click)="showActivityLog.set(true)" icon="pi pi-history"
                 severity="secondary" [outlined]="true" pTooltip="Activity Log"
@@ -234,6 +240,13 @@
                                 [icon]="profile.metadata?.isHidden ? 'pi pi-eye' : 'pi pi-eye-slash'" [rounded]="true"
                                 [text]="true" severity="secondary" size="small"
                                 [pTooltip]="profile.metadata?.isHidden ? 'Show profile' : 'Hide profile'" />
+                            <!-- Feature 2.4: Favorites toggle -->
+                            <p-button [id]="'home-profile-' + i + '-favorite-btn'"
+                                (click)="toggleFavorite(profile, $event)"
+                                [icon]="profile.metadata?.isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'"
+                                [rounded]="true" [text]="true"
+                                [severity]="profile.metadata?.isFavorite ? 'danger' : 'secondary'" size="small"
+                                [pTooltip]="profile.metadata?.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'" />
                             <p-button [id]="'home-profile-' + i + '-delete-btn'"
                                 (click)="deleteProfile(profile, $event)" icon="pi pi-trash" [rounded]="true"
                                 [text]="true" severity="danger" size="small" pTooltip="Delete profile" />
@@ -320,6 +333,14 @@
                     <button (click)="backupProfile(profile, $event)"
                         class="p-1.5 text-muted-color hover:text-primary transition-colors" title="Backup to ZIP">
                         <i class="pi pi-download text-sm"></i>
+                    </button>
+                    <!-- Feature 2.4: Favorites toggle -->
+                    <button (click)="toggleFavorite(profile, $event)" [class]="profile.metadata?.isFavorite 
+                            ? 'p-1.5 text-red-500 hover:text-red-400 transition-colors' 
+                            : 'p-1.5 text-muted-color hover:text-red-500 transition-colors'"
+                        [title]="profile.metadata?.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'">
+                        <i
+                            [class]="profile.metadata?.isFavorite ? 'pi pi-heart-fill text-sm' : 'pi pi-heart text-sm'"></i>
                     </button>
                     <button (click)="deleteProfile(profile, $event)"
                         class="p-1.5 text-muted-color hover:text-error transition-colors" title="Delete">

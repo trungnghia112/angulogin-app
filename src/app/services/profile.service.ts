@@ -194,14 +194,15 @@ export class ProfileService {
         isPinned: boolean | null = null,
         color: string | null = null,
         isHidden: boolean | null = null,
+        isFavorite: boolean | null = null,
     ): Promise<void> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            debugLog('Mock saveProfileMetadata:', profilePath, { emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden });
+            debugLog('Mock saveProfileMetadata:', profilePath, { emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden, isFavorite });
             this.profiles.update((profiles) =>
                 profiles.map((p) =>
                     p.path === profilePath
-                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined } }
+                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined, isFavorite: isFavorite || undefined } }
                         : p
                 )
             );
@@ -209,11 +210,11 @@ export class ProfileService {
         }
 
         try {
-            await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden });
+            await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden, isFavorite });
             this.profiles.update((profiles) =>
                 profiles.map((p) =>
                     p.path === profilePath
-                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined } }
+                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined, isFavorite: isFavorite || undefined } }
                         : p
                 )
             );
@@ -222,6 +223,32 @@ export class ProfileService {
             this.error.set(errorMsg);
             throw e;
         }
+    }
+
+    /**
+     * Toggle favorite status for a profile
+     */
+    async toggleFavorite(profilePath: string): Promise<void> {
+        const profile = this.profiles().find(p => p.path === profilePath);
+        if (!profile) return;
+
+        const meta = profile.metadata || { emoji: null, notes: null, group: null, shortcut: null, browser: null };
+        const newFavoriteStatus = !meta.isFavorite;
+
+        await this.saveProfileMetadata(
+            profilePath,
+            meta.emoji ?? null,
+            meta.notes ?? null,
+            meta.group ?? null,
+            meta.shortcut ?? null,
+            meta.browser ?? null,
+            meta.tags || null,
+            meta.launchUrl ?? null,
+            meta.isPinned ?? null,
+            meta.color ?? null,
+            meta.isHidden ?? null,
+            newFavoriteStatus,
+        );
     }
 
     /**
@@ -258,7 +285,8 @@ export class ProfileService {
                 launchUrl: existingMetadata.launchUrl || null,
                 isPinned: existingMetadata.isPinned || null,
                 color: existingMetadata.color || null,
-                isHidden: existingMetadata.isHidden || null
+                isHidden: existingMetadata.isHidden || null,
+                isFavorite: existingMetadata.isFavorite || null
             });
             this.profiles.update((profiles) =>
                 profiles.map((p): Profile =>
@@ -323,6 +351,7 @@ export class ProfileService {
                 launchCount,
                 totalUsageMinutes,
                 lastSessionDuration,
+                isFavorite: meta.isFavorite || null,
             });
 
             this.profiles.update(profiles =>

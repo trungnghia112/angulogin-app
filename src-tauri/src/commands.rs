@@ -227,6 +227,8 @@ pub struct ProfileMetadata {
     pub launch_count: Option<u32>,
     pub total_usage_minutes: Option<u32>,
     pub last_session_duration: Option<u32>,
+    // Favorites feature (2.4)
+    pub is_favorite: Option<bool>,
 }
 
 #[tauri::command]
@@ -261,12 +263,13 @@ pub fn save_profile_metadata(
     launch_count: Option<u32>,
     total_usage_minutes: Option<u32>,
     last_session_duration: Option<u32>,
+    is_favorite: Option<bool>,
 ) -> Result<(), String> {
     let meta_file = format!("{}/.profile-meta.json", profile_path);
     
     let metadata = ProfileMetadata { 
         emoji, notes, group, shortcut, browser, tags, launch_url, is_pinned, last_opened, 
-        color, is_hidden, launch_count, total_usage_minutes, last_session_duration 
+        color, is_hidden, launch_count, total_usage_minutes, last_session_duration, is_favorite
     };
     
     let content = serde_json::to_string_pretty(&metadata)

@@ -145,6 +145,8 @@ export class Home implements OnInit, OnDestroy {
     protected readonly filterGroup = signal<string | null>(null);
     // Phase 2: Show hidden profiles toggle
     protected readonly showHidden = signal(false);
+    // Feature 2.4: Favorites filter
+    protected readonly filterFavoritesOnly = signal(false);
 
     // Sorting
     protected readonly sortBy = signal<'name' | 'size' | 'lastOpened' | 'custom'>('name');
@@ -186,10 +188,16 @@ export class Home implements OnInit, OnDestroy {
         const search = this.searchText().toLowerCase().trim();
         const group = this.filterGroup();
         const showHiddenValue = this.showHidden();
+        const favoritesOnly = this.filterFavoritesOnly();
 
         // Phase 2: Filter out hidden profiles unless showHidden is true
         if (!showHiddenValue) {
             result = result.filter((p) => !p.metadata?.isHidden);
+        }
+
+        // Feature 2.4: Filter favorites only
+        if (favoritesOnly) {
+            result = result.filter((p) => p.metadata?.isFavorite);
         }
 
         // Apply search filter
@@ -285,6 +293,10 @@ export class Home implements OnInit, OnDestroy {
 
     protected readonly profilesUsed = computed(() => this.profiles().length);
     protected readonly maxProfiles = signal(50);
+    // Feature 2.4: Favorites count for UI
+    protected readonly favoriteCount = computed(() =>
+        this.profiles().filter(p => p.metadata?.isFavorite).length
+    );
 
     // Dialog states
     protected readonly showCreateDialog = signal(false);
@@ -781,6 +793,22 @@ export class Home implements OnInit, OnDestroy {
                 severity: 'success',
                 summary: newHidden ? 'Hidden' : 'Visible',
                 detail: `${profile.name} ${newHidden ? 'hidden from view' : 'now visible'}`,
+            });
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+        }
+    }
+
+    // Feature 2.4: Toggle favorite status
+    async toggleFavorite(profile: Profile, event: Event): Promise<void> {
+        event.stopPropagation();
+        try {
+            await this.profileService.toggleFavorite(profile.path);
+            const newStatus = !profile.metadata?.isFavorite;
+            this.messageService.add({
+                severity: 'success',
+                summary: newStatus ? 'Added to Favorites' : 'Removed from Favorites',
+                detail: profile.name,
             });
         } catch (e) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });

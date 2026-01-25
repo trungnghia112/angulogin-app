@@ -30,6 +30,8 @@ export interface ProfileMetadata {
     lastSessionDuration?: number;
     // Custom Sort Order (for drag & drop)
     sortOrder?: number;
+    // Favorites feature (2.4)
+    isFavorite?: boolean;
 }
 
 export interface Profile {
