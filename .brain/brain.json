@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.0.0",
-        "updated_at": "2026-01-25T13:22:00+07:00"
+        "updated_at": "2026-01-25T16:00:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
@@ -223,6 +223,11 @@
                 "name": "PrimeNG Charts",
                 "code": "<p-chart type=\"pie\" [data]=\"chartData\" [options]=\"options\" />",
                 "note": "Wrapper around Chart.js, auto-installed with PrimeNG"
+            },
+            {
+                "name": "Tailwind v4 Source Configuration",
+                "code": "@import 'tailwindcss' source(none);\n@source '../src/**/*.html';\n@source '../src/**/*.ts';",
+                "note": "Disable auto-detection with source(none), then explicitly define paths to prevent scanning unintended files"
             }
         ],
         "gotchas": [
@@ -245,6 +250,14 @@
             {
                 "issue": "CDK DragDrop in grid layout",
                 "solution": "Use cdkDropListDisabled to disable when not in custom sort mode"
+            },
+            {
+                "issue": "Tailwind v4 CSS warning: Expected identifier but found - (invalid class like [-:|])",
+                "solution": "Add source(none) to @import 'tailwindcss' and explicitly define @source paths to prevent Tailwind from scanning unintended files"
+            },
+            {
+                "issue": "NG8107 warning: optional chain operator not needed",
+                "solution": "Replace ?.property ?? 'fallback' with @if control flow when signal type doesn't include undefined"
             }
         ],
         "conventions": [
