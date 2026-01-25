@@ -57,7 +57,12 @@
                 </div>
                 <div>
                     <p class="text-sm text-muted-color">Largest Profile</p>
-                    <p class="text-lg font-bold text-color truncate max-w-[150px]">{{ largestProfile()?.name ?? 'N/A' }}
+                    <p class="text-lg font-bold text-color truncate max-w-[150px]">
+                        @if (largestProfile(); as profile) {
+                        {{ profile.name }}
+                        } @else {
+                        N/A
+                        }
                     </p>
                 </div>
             </div>
