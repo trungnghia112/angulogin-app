@@ -7,9 +7,43 @@
   ],
   "permissions": [
     "core:default",
-    "fs:default",
     "shell:default",
     "dialog:default",
-    "os:default"
+    "os:default",
+    "fs:default",
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [
+        {
+          "path": "$DOWNLOAD/**/*"
+        },
+        {
+          "path": "$DOCUMENT/**/*"
+        },
+        {
+          "path": "$HOME/**/*"
+        },
+        {
+          "path": "$DESKTOP/**/*"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [
+        {
+          "path": "$DOWNLOAD/**/*"
+        },
+        {
+          "path": "$DOCUMENT/**/*"
+        },
+        {
+          "path": "$HOME/**/*"
+        },
+        {
+          "path": "$DESKTOP/**/*"
+        }
+      ]
+    }
   ]
 }

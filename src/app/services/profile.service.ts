@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { invoke } from '@tauri-apps/api/core';
+import { save } from '@tauri-apps/plugin-dialog';
 import { BrowserType, Profile, ProfileMetadata } from '../models/profile.model';
 import { isTauriAvailable } from '../core/utils/platform.util';
 import { debugLog } from '../core/utils/logger.util';
@@ -468,6 +469,48 @@ export class ProfileService {
             const newPath = await invoke<string>('duplicate_profile', { sourcePath, newName });
             await this.scanProfiles(basePath);
             return newPath;
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
+
+    /**
+     * Backup a profile to a ZIP file
+     * Opens a save dialog for user to choose destination
+     * @param profilePath - Full path to the profile directory
+     * @returns The path where the backup was saved
+     * @throws Error if backup is cancelled or fails
+     */
+    async backupProfile(profilePath: string): Promise<string> {
+        if (!isTauriAvailable()) {
+            debugLog('Mock backupProfile:', profilePath);
+            throw new Error('Backup is only available in desktop app');
+        }
+
+        // Extract profile name for default filename
+        const profileName = profilePath.split('/').pop() || 'profile';
+        const timestamp = new Date().toISOString().slice(0, 10);
+        const defaultFileName = `${profileName}_backup_${timestamp}.zip`;
+
+        // Open save dialog
+        const filePath = await save({
+            title: 'Save Profile Backup',
+            defaultPath: defaultFileName,
+            filters: [{ name: 'ZIP Archive', extensions: ['zip'] }]
+        });
+
+        if (!filePath) {
+            throw new Error('Backup cancelled');
+        }
+
+        try {
+            const result = await invoke<string>('backup_profile', {
+                profilePath,
+                backupPath: filePath
+            });
+            return result;
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
             this.error.set(errorMsg);

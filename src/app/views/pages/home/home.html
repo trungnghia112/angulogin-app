@@ -226,6 +226,9 @@
                             <p-button [id]="'home-profile-' + i + '-duplicate-btn'"
                                 (click)="openDuplicateDialog(profile, $event)" icon="pi pi-copy" [rounded]="true"
                                 [text]="true" severity="secondary" size="small" pTooltip="Duplicate profile" />
+                            <p-button [id]="'home-profile-' + i + '-backup-btn'"
+                                (click)="backupProfile(profile, $event)" icon="pi pi-download" [rounded]="true"
+                                [text]="true" severity="secondary" size="small" pTooltip="Backup to ZIP" />
                             <!-- Phase 2: Hide toggle -->
                             <p-button [id]="'home-profile-' + i + '-hide-btn'" (click)="toggleHide(profile, $event)"
                                 [icon]="profile.metadata?.isHidden ? 'pi pi-eye' : 'pi pi-eye-slash'" [rounded]="true"
@@ -313,6 +316,10 @@
                     <button (click)="openDuplicateDialog(profile, $event)"
                         class="p-1.5 text-muted-color hover:text-primary transition-colors" title="Duplicate">
                         <i class="pi pi-copy text-sm"></i>
+                    </button>
+                    <button (click)="backupProfile(profile, $event)"
+                        class="p-1.5 text-muted-color hover:text-primary transition-colors" title="Backup to ZIP">
+                        <i class="pi pi-download text-sm"></i>
                     </button>
                     <button (click)="deleteProfile(profile, $event)"
                         class="p-1.5 text-muted-color hover:text-error transition-colors" title="Delete">

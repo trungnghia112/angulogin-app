@@ -858,6 +858,31 @@ export class Home implements OnInit, OnDestroy {
         }
     }
 
+    // Backup Profile to ZIP
+    async backupProfile(profile: Profile, event: Event): Promise<void> {
+        event.stopPropagation();
+        try {
+            const backupPath = await this.profileService.backupProfile(profile.path);
+            const fileName = backupPath.split('/').pop() || 'backup.zip';
+
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Backup Successful',
+                detail: `Saved: ${fileName}`,
+            });
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            // Don't show error toast if user just cancelled
+            if (msg !== 'Backup cancelled') {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Backup Failed',
+                    detail: msg,
+                });
+            }
+        }
+    }
+
     // Selection
     onSelectionChange(selected: Profile[]): void {
         this.selectedProfiles.set(selected);

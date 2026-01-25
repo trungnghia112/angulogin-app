@@ -1,8 +1,8 @@
 {
     "meta": {
         "schema_version": "1.1.0",
-        "awf_version": "3.3.0",
-        "updated_at": "2026-01-25T02:39:00+07:00"
+        "awf_version": "4.0.0",
+        "updated_at": "2026-01-25T13:22:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
@@ -12,10 +12,12 @@
     },
     "tech_stack": {
         "frontend": {
-            "framework": "Angular 21",
+            "framework": "Angular 20+",
             "ui_library": "PrimeNG",
             "styling": "Tailwind CSS + tailwindcss-primeui",
-            "state": "Angular Signals"
+            "state": "Angular Signals",
+            "charts": "PrimeNG Charts (Chart.js wrapper)",
+            "drag_drop": "@angular/cdk DragDropModule"
         },
         "backend": {
             "runtime": "Tauri 2.x (Rust)",
@@ -60,7 +62,9 @@
         "tauri_config": "src-tauri/src/lib.rs",
         "settings_service": "src/app/core/services/settings.service.ts",
         "profile_service": "src/app/services/profile.service.ts",
-        "home_component": "src/app/views/pages/home/home.ts"
+        "home_component": "src/app/views/pages/home/home.ts",
+        "storage_dashboard": "src/app/views/pages/storage-dashboard/storage-dashboard.ts",
+        "activity_log_service": "src/app/services/activity-log.service.ts"
     },
     "features": [
         {
@@ -71,7 +75,9 @@
                 "create",
                 "delete",
                 "rename",
-                "duplicate"
+                "duplicate",
+                "backup",
+                "restore"
             ]
         },
         {
@@ -93,7 +99,10 @@
                 "group",
                 "tags",
                 "launchUrl",
-                "isPinned"
+                "isPinned",
+                "color",
+                "isHidden",
+                "sortOrder"
             ]
         },
         {
@@ -103,13 +112,95 @@
                 "Appearance (theme, colors, scale, dark mode)",
                 "General (default browser, launch behavior, startup options)",
                 "Browser Paths (profiles directory selection)",
-                "Data Management (export, import, clear)"
+                "Data Management (export, import, clear, restore from backup)"
             ]
         },
         {
             "name": "Smart Profile Detection",
             "status": "implemented",
             "description": "Auto-detect native vs managed profiles for correct launch"
+        },
+        {
+            "name": "Storage Dashboard",
+            "status": "implemented",
+            "includes": [
+                "storage stats cards",
+                "pie chart",
+                "bar chart",
+                "sortable table",
+                "usage statistics"
+            ]
+        },
+        {
+            "name": "Usage Statistics",
+            "status": "implemented",
+            "includes": [
+                "launchCount",
+                "totalUsageMinutes",
+                "lastSessionDuration",
+                "session tracking"
+            ]
+        },
+        {
+            "name": "Activity Log",
+            "status": "implemented",
+            "description": "Track profile launches with timestamps, saved in localStorage"
+        },
+        {
+            "name": "Drag & Drop Reordering",
+            "status": "implemented",
+            "description": "Custom sort mode with drag & drop using Angular CDK"
+        },
+        {
+            "name": "Profile Backup & Restore",
+            "status": "implemented",
+            "includes": [
+                "export as ZIP",
+                "restore from ZIP backup",
+                "conflict handling"
+            ]
+        }
+    ],
+    "api_endpoints": [
+        {
+            "command": "scan_profiles",
+            "description": "Quét folder và trả về danh sách profiles với size"
+        },
+        {
+            "command": "launch_profile",
+            "description": "Mở browser với profile, track usage stats"
+        },
+        {
+            "command": "create_profile",
+            "description": "Tạo profile mới (folder rỗng)"
+        },
+        {
+            "command": "delete_profile",
+            "description": "Xóa folder profile"
+        },
+        {
+            "command": "duplicate_profile",
+            "description": "Copy folder profile"
+        },
+        {
+            "command": "rename_profile",
+            "description": "Đổi tên folder profile"
+        },
+        {
+            "command": "backup_profile_to_zip",
+            "description": "Nén profile thành file ZIP backup"
+        },
+        {
+            "command": "restore_from_backup",
+            "description": "Giải nén ZIP backup thành profile mới"
+        },
+        {
+            "command": "save_profile_metadata",
+            "description": "Lưu metadata vào .profile-meta.json"
+        },
+        {
+            "command": "load_profile_metadata",
+            "description": "Đọc metadata từ .profile-meta.json"
         }
     ],
     "knowledge_items": {
@@ -122,6 +213,16 @@
             {
                 "name": "Chrome Profile Directory Structure",
                 "note": "User Data Dir contains 'Local State' + profile folders (Default, Profile 1, etc.)"
+            },
+            {
+                "name": "Angular CDK Drag Drop",
+                "code": "cdkDropList + cdkDrag directives, moveItemInArray for reorder",
+                "note": "Import DragDropModule from @angular/cdk/drag-drop"
+            },
+            {
+                "name": "PrimeNG Charts",
+                "code": "<p-chart type=\"pie\" [data]=\"chartData\" [options]=\"options\" />",
+                "note": "Wrapper around Chart.js, auto-installed with PrimeNG"
             }
         ],
         "gotchas": [
@@ -136,12 +237,22 @@
             {
                 "issue": "PrimeNG v21 renamed InputSwitch to ToggleSwitch",
                 "solution": "import { ToggleSwitchModule } from 'primeng/toggleswitch'; use <p-toggleSwitch>"
+            },
+            {
+                "issue": "Rust zip crate may fail on special characters in filenames",
+                "solution": "Use options.set_option(zip::write::FileOptions::default().utf_encoded_filenames(true))"
+            },
+            {
+                "issue": "CDK DragDrop in grid layout",
+                "solution": "Use cdkDropListDisabled to disable when not in custom sort mode"
             }
         ],
         "conventions": [
             "All page components MUST have host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' }",
             "Use async/await + firstValueFrom for user actions",
-            "Commit after every significant change with semantic format"
+            "Commit after every significant change with semantic format",
+            "All surfaces need dark: variants for dark mode (bg-surface-0 dark:bg-surface-900)",
+            "Use PrimeNG Charts for visualization, not raw Chart.js"
         ]
     }
 }
