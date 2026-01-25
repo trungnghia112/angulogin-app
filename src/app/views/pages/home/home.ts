@@ -151,6 +151,10 @@ export class Home implements OnInit, OnDestroy {
     // Sorting
     protected readonly sortBy = signal<'name' | 'size' | 'lastOpened' | 'custom'>('name');
     protected readonly sortOrder = signal<'asc' | 'desc'>('asc');
+    // Feature 6.7: Compact Mode - display more profiles in less space
+    protected readonly compactMode = signal<boolean>(
+        typeof localStorage !== 'undefined' && localStorage.getItem('home-compact-mode') === 'true'
+    );
     protected readonly sortMenuItems = computed<MenuItem[]>(() => [
         {
             label: 'Sort By',
@@ -531,6 +535,15 @@ export class Home implements OnInit, OnDestroy {
             this.profileService.loadProfileSizes();
         } catch (e) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+        }
+    }
+
+    // Feature 6.7: Toggle compact mode
+    toggleCompactMode(): void {
+        const newValue = !this.compactMode();
+        this.compactMode.set(newValue);
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('home-compact-mode', String(newValue));
         }
     }
 

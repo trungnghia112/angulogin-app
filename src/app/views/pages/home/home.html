@@ -40,6 +40,12 @@
                     severity="secondary" />
             </p-buttonGroup>
 
+            <!-- Feature 6.7: Compact Mode Toggle -->
+            <p-button id="home-header-compact-toggle" (click)="toggleCompactMode()"
+                [icon]="compactMode() ? 'pi pi-arrows-alt' : 'pi pi-minus'"
+                [pTooltip]="compactMode() ? 'Normal View' : 'Compact View'" severity="secondary" [outlined]="true"
+                [class]="compactMode() ? 'ring-1 ring-primary' : ''" />
+
             <!-- Phase 2: Show Hidden Toggle -->
             <p-button id="home-header-hidden-toggle" (click)="showHidden.set(!showHidden())"
                 [icon]="showHidden() ? 'pi pi-eye' : 'pi pi-eye-slash'"
@@ -275,11 +281,16 @@
         }
         } @else {
         <!-- Grid View -->
-        <div id="home-profiles-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
-            cdkDropList [cdkDropListDisabled]="sortBy() !== 'custom'" (cdkDropListDropped)="onProfileDrop($event)">
+        <!-- Feature 6.7: Compact mode adds more columns -->
+        <div id="home-profiles-grid" [class]="compactMode() 
+                ? 'grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2' 
+                : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4'" cdkDropList
+            [cdkDropListDisabled]="sortBy() !== 'custom'" (cdkDropListDropped)="onProfileDrop($event)">
             @for (profile of filteredProfiles(); track profile.path; let i = $index) {
             <div [id]="'home-profile-card-' + i"
-                class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-all duration-300 cursor-pointer relative group shadow-sm hover:shadow-md"
+                [class]="compactMode() 
+                    ? 'border border-surface rounded-lg p-2 hover:border-primary/50 transition-all duration-300 cursor-pointer relative group shadow-sm hover:shadow-md'
+                    : 'border border-surface rounded-xl p-4 hover:border-primary/50 transition-all duration-300 cursor-pointer relative group shadow-sm hover:shadow-md'"
                 [class.hover:-translate-y-1]="sortBy() !== 'custom'" [class.cursor-grab]="sortBy() === 'custom'" cdkDrag
                 [cdkDragDisabled]="sortBy() !== 'custom'" (click)="openEditDialog(profile, $event)"
                 [pTooltip]="getProfileTooltip(profile)" tooltipPosition="top" [escape]="false">
