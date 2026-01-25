@@ -456,6 +456,32 @@ export class ProfileService {
         }
     }
 
+    /**
+     * Feature 4.2: Clear profile cookies, cache, and browsing data
+     * Returns information about what was deleted
+     */
+    async clearProfileCookies(profilePath: string): Promise<{ deletedCount: number; freedBytes: number; failedItems: string[] }> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            debugLog('Mock clearProfileCookies:', profilePath);
+            // Simulate clearing data
+            return { deletedCount: 5, freedBytes: 1024 * 1024 * 10, failedItems: [] };
+        }
+
+        try {
+            const result = await invoke<{ deleted_count: number; freed_bytes: number; failed_items: string[] }>('clear_profile_cookies', { profilePath });
+            return {
+                deletedCount: result.deleted_count,
+                freedBytes: result.freed_bytes,
+                failedItems: result.failed_items
+            };
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
+
     async loadProfileSizes(): Promise<void> {
         const current = this.profiles();
         // Load sizes one by one to avoid blocking

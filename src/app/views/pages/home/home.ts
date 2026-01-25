@@ -900,6 +900,7 @@ export class Home implements OnInit, OnDestroy {
             const backupPath = await this.profileService.backupProfile(profile.path);
             const fileName = backupPath.split('/').pop() || 'backup.zip';
 
+
             this.messageService.add({
                 severity: 'success',
                 summary: 'Backup Successful',
@@ -916,6 +917,33 @@ export class Home implements OnInit, OnDestroy {
                 });
             }
         }
+    }
+
+    // Feature 4.2: Clear Profile Cookies and Cache
+    async clearCookies(profile: Profile, event: Event): Promise<void> {
+        event.stopPropagation();
+        this.confirmationService.confirm({
+            key: 'confirmDialog',
+            message: `Clear all cookies, cache, and browsing data for "${profile.name}"? This cannot be undone.`,
+            header: 'Clear Browsing Data',
+            icon: 'pi pi-exclamation-triangle',
+            acceptButtonStyleClass: 'p-button-warning',
+            accept: async () => {
+                try {
+                    const result = await this.profileService.clearProfileCookies(profile.path);
+                    const freedMB = (result.freedBytes / (1024 * 1024)).toFixed(1);
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Data Cleared',
+                        detail: `Deleted ${result.deletedCount} items, freed ${freedMB} MB`,
+                    });
+                    // Refresh profile sizes
+                    this.profileService.loadProfileSizes();
+                } catch (e) {
+                    this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+                }
+            },
+        });
     }
 
     // Selection

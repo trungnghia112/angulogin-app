@@ -247,6 +247,10 @@
                                 [rounded]="true" [text]="true"
                                 [severity]="profile.metadata?.isFavorite ? 'danger' : 'secondary'" size="small"
                                 [pTooltip]="profile.metadata?.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'" />
+                            <!-- Feature 4.2: Clear Cookies -->
+                            <p-button [id]="'home-profile-' + i + '-clear-cookies-btn'"
+                                (click)="clearCookies(profile, $event)" icon="pi pi-eraser" [rounded]="true"
+                                [text]="true" severity="secondary" size="small" pTooltip="Clear cookies & cache" />
                             <p-button [id]="'home-profile-' + i + '-delete-btn'"
                                 (click)="deleteProfile(profile, $event)" icon="pi pi-trash" [rounded]="true"
                                 [text]="true" severity="danger" size="small" pTooltip="Delete profile" />

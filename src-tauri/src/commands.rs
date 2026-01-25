@@ -437,6 +437,103 @@ pub fn list_available_browsers() -> Vec<String> {
         .collect()
 }
 
+/// Feature 4.2: Clear Profile Cookies and Cache
+/// Deletes cookies, cache, session storage, and local storage from a Chrome profile
+#[tauri::command]
+pub fn clear_profile_cookies(profile_path: String) -> Result<ClearDataResult, String> {
+    let path = std::path::Path::new(&profile_path);
+    if !path.exists() {
+        return Err("Profile does not exist".to_string());
+    }
+    
+    // List of files/folders to delete for a complete cookie/cache clear
+    let items_to_delete = vec![
+        // Cookies
+        "Cookies",
+        "Cookies-journal",
+        // Cache
+        "Cache",
+        "Code Cache",
+        "GPUCache",
+        "Service Worker/CacheStorage",
+        // Session data
+        "Session Storage",
+        "Sessions",
+        // Local Storage (optional, includes site data)
+        "Local Storage",
+        // IndexedDB
+        "IndexedDB",
+        // Web data
+        "Web Data",
+        "Web Data-journal",
+        // Network state
+        "Network Action Predictor",
+        "Network Persistent State",
+    ];
+    
+    let mut deleted_count = 0;
+    let mut failed_items: Vec<String> = Vec::new();
+    let mut freed_bytes: u64 = 0;
+    
+    for item in items_to_delete {
+        let item_path = path.join(item);
+        if item_path.exists() {
+            // Calculate size before deleting
+            let item_size = if item_path.is_dir() {
+                calculate_dir_size(&item_path)
+            } else {
+                item_path.metadata().map(|m| m.len()).unwrap_or(0)
+            };
+            
+            let result = if item_path.is_dir() {
+                fs::remove_dir_all(&item_path)
+            } else {
+                fs::remove_file(&item_path)
+            };
+            
+            match result {
+                Ok(_) => {
+                    deleted_count += 1;
+                    freed_bytes += item_size;
+                }
+                Err(e) => {
+                    failed_items.push(format!("{}: {}", item, e));
+                }
+            }
+        }
+    }
+    
+    Ok(ClearDataResult {
+        deleted_count,
+        freed_bytes,
+        failed_items,
+    })
+}
+
+fn calculate_dir_size(path: &std::path::Path) -> u64 {
+    let mut size: u64 = 0;
+    if path.is_dir() {
+        if let Ok(entries) = fs::read_dir(path) {
+            for entry in entries.flatten() {
+                let entry_path = entry.path();
+                if entry_path.is_dir() {
+                    size += calculate_dir_size(&entry_path);
+                } else if let Ok(meta) = entry_path.metadata() {
+                    size += meta.len();
+                }
+            }
+        }
+    }
+    size
+}
+
+#[derive(serde::Serialize)]
+pub struct ClearDataResult {
+    pub deleted_count: u32,
+    pub freed_bytes: u64,
+    pub failed_items: Vec<String>,
+}
+
 #[tauri::command]
 pub fn backup_profile(profile_path: String, backup_path: String) -> Result<String, String> {
     use std::io::{Read, Write};
