@@ -32,6 +32,8 @@ export interface ProfileMetadata {
     sortOrder?: number;
     // Favorites feature (2.4)
     isFavorite?: boolean;
+    // Custom Chrome Flags (3.6)
+    customFlags?: string | null;
 }
 
 export interface Profile {

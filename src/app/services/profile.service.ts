@@ -195,14 +195,15 @@ export class ProfileService {
         color: string | null = null,
         isHidden: boolean | null = null,
         isFavorite: boolean | null = null,
+        customFlags: string | null = null,
     ): Promise<void> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            debugLog('Mock saveProfileMetadata:', profilePath, { emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden, isFavorite });
+            debugLog('Mock saveProfileMetadata:', profilePath, { emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden, isFavorite, customFlags });
             this.profiles.update((profiles) =>
                 profiles.map((p) =>
                     p.path === profilePath
-                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined, isFavorite: isFavorite || undefined } }
+                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined, isFavorite: isFavorite || undefined, customFlags } }
                         : p
                 )
             );
@@ -210,11 +211,11 @@ export class ProfileService {
         }
 
         try {
-            await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden, isFavorite });
+            await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden, isFavorite, customFlags });
             this.profiles.update((profiles) =>
                 profiles.map((p) =>
                     p.path === profilePath
-                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined, isFavorite: isFavorite || undefined } }
+                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined, isFavorite: isFavorite || undefined, customFlags } }
                         : p
                 )
             );
@@ -400,10 +401,10 @@ export class ProfileService {
         }
     }
 
-    async launchBrowser(profilePath: string, browser: string, url?: string, incognito?: boolean, proxyServer?: string): Promise<void> {
+    async launchBrowser(profilePath: string, browser: string, url?: string, incognito?: boolean, proxyServer?: string, customFlags?: string): Promise<void> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            debugLog('Mock launchBrowser:', profilePath, browser, url, incognito, proxyServer);
+            debugLog('Mock launchBrowser:', profilePath, browser, url, incognito, proxyServer, customFlags);
             // Simulate running state change
             this.profiles.update(profiles =>
                 profiles.map(p => p.path === profilePath ? { ...p, isRunning: true } : p)
@@ -417,7 +418,8 @@ export class ProfileService {
                 browser,
                 url: url || null,
                 incognito: incognito || null,
-                proxyServer: proxyServer || null
+                proxyServer: proxyServer || null,
+                customFlags: customFlags || null
             });
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);

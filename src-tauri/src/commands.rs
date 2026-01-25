@@ -229,6 +229,8 @@ pub struct ProfileMetadata {
     pub last_session_duration: Option<u32>,
     // Favorites feature (2.4)
     pub is_favorite: Option<bool>,
+    // Custom Chrome Flags (3.6)
+    pub custom_flags: Option<String>,
 }
 
 #[tauri::command]
@@ -264,12 +266,13 @@ pub fn save_profile_metadata(
     total_usage_minutes: Option<u32>,
     last_session_duration: Option<u32>,
     is_favorite: Option<bool>,
+    custom_flags: Option<String>,
 ) -> Result<(), String> {
     let meta_file = format!("{}/.profile-meta.json", profile_path);
     
     let metadata = ProfileMetadata { 
         emoji, notes, group, shortcut, browser, tags, launch_url, is_pinned, last_opened, 
-        color, is_hidden, launch_count, total_usage_minutes, last_session_duration, is_favorite
+        color, is_hidden, launch_count, total_usage_minutes, last_session_duration, is_favorite, custom_flags
     };
     
     let content = serde_json::to_string_pretty(&metadata)
@@ -294,7 +297,7 @@ pub fn is_chrome_running_for_profile(profile_path: String) -> bool {
 }
 
 #[tauri::command]
-pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>) -> Result<(), String> {
+pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>, custom_flags: Option<String>) -> Result<(), String> {
     let path = std::path::Path::new(&profile_path);
     
     // Detect if this is a native Chrome profile (parent has "Local State" file)
@@ -359,6 +362,21 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
     if let Some(proxy) = proxy_server {
         proxy_owned = format!("--proxy-server={}", proxy);
         args.push(&proxy_owned);
+    }
+    
+    // Feature 3.6: Add custom flags if provided
+    // Parse space-separated flags and add each one
+    let custom_flags_vec: Vec<String>;
+    if let Some(flags) = custom_flags {
+        custom_flags_vec = flags.split_whitespace()
+            .map(|s| s.to_string())
+            .collect();
+    } else {
+        custom_flags_vec = Vec::new();
+    }
+    let custom_flags_refs: Vec<&str> = custom_flags_vec.iter().map(|s| s.as_str()).collect();
+    for flag in &custom_flags_refs {
+        args.push(flag);
     }
     
     // Add URL if provided

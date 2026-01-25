@@ -317,6 +317,8 @@ export class Home implements OnInit, OnDestroy {
     // Phase 1: Color coding
     protected readonly editColor = signal<string | null>(null);
     protected readonly colorOptions = COLOR_OPTIONS;
+    // Feature 3.6: Custom Chrome Flags
+    protected readonly editCustomFlags = signal<string | null>(null);
 
     // Duplicate dialog
     protected readonly showDuplicateDialog = signal(false);
@@ -537,7 +539,8 @@ export class Home implements OnInit, OnDestroy {
             const browser = profile.metadata?.browser || 'chrome';
             const url = profile.metadata?.launchUrl || undefined;
             const proxy = profile.metadata?.proxyServer || undefined;
-            await this.profileService.launchBrowser(profile.path, browser, url, false, proxy);
+            const customFlags = profile.metadata?.customFlags || undefined; // Feature 3.6
+            await this.profileService.launchBrowser(profile.path, browser, url, false, proxy, customFlags);
 
             // Phase 3: Log activity
             this.activityLogService.logLaunch(profile.name, profile.path, browser);
@@ -666,6 +669,8 @@ export class Home implements OnInit, OnDestroy {
         this.editIsPinned.set(profile.metadata?.isPinned || false);
         // Phase 1: Load color
         this.editColor.set(profile.metadata?.color || null);
+        // Feature 3.6: Load custom flags
+        this.editCustomFlags.set(profile.metadata?.customFlags || null);
         this.showEditDialog.set(true);
     }
 
@@ -732,6 +737,8 @@ export class Home implements OnInit, OnDestroy {
                 this.editIsPinned() || null,
                 this.editColor(),
                 profile.metadata?.isHidden || null, // Preserve hidden state
+                profile.metadata?.isFavorite || null, // Preserve favorite state
+                this.editCustomFlags(), // Feature 3.6: Pass custom flags
             );
             this.showEditDialog.set(false);
             this.messageService.add({

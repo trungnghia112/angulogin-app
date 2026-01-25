@@ -565,6 +565,17 @@
                 </button>
             </div>
 
+            <!-- Feature 3.6: Custom Chrome Flags -->
+            <div id="home-edit-dialog-flags-section">
+                <label for="home-edit-dialog-flags-input" class="block text-xs font-medium text-color mb-2">Custom
+                    Chrome Flags</label>
+                <input id="home-edit-dialog-flags-input" pInputText type="text" [ngModel]="editCustomFlags()"
+                    (ngModelChange)="editCustomFlags.set($event)" placeholder="--disable-gpu --no-sandbox"
+                    class="w-full" />
+                <p class="text-xs text-muted-color mt-1">Space-separated flags passed to browser on launch (e.g.,
+                    --disable-gpu)</p>
+            </div>
+
             <!-- Notes -->
             <div id="home-edit-dialog-notes-section">
                 <label for="home-edit-dialog-notes-input"
