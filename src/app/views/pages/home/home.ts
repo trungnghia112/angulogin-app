@@ -1093,7 +1093,7 @@ export class Home implements OnInit, OnDestroy {
     }
 
     protected onAddFolder(): void {
-        console.log('Home: Add folder clicked');
+        // TODO: Implement folder creation UI
     }
 
     protected onSettings(): void {
