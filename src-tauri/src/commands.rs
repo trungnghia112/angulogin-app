@@ -706,3 +706,66 @@ pub fn restore_from_backup(
         was_renamed,
     })
 }
+
+#[derive(Serialize)]
+pub struct BulkExportResult {
+    pub successful: Vec<String>,
+    pub failed: Vec<String>,
+    pub total_size: u64,
+}
+
+/// Feature 4.1: Bulk Export Profiles
+/// Exports multiple profiles to ZIP files in the specified destination folder
+#[tauri::command]
+pub fn bulk_export_profiles(
+    profile_paths: Vec<String>,
+    destination_folder: String,
+) -> Result<BulkExportResult, String> {
+    let dest = std::path::Path::new(&destination_folder);
+    
+    // Ensure destination folder exists
+    if !dest.exists() {
+        fs::create_dir_all(dest)
+            .map_err(|e| format!("Failed to create destination folder: {}", e))?;
+    }
+    
+    let mut successful: Vec<String> = Vec::new();
+    let mut failed: Vec<String> = Vec::new();
+    let mut total_size: u64 = 0;
+    
+    let timestamp = chrono::Local::now().format("%Y-%m-%d").to_string();
+    
+    for profile_path in profile_paths {
+        let source = std::path::Path::new(&profile_path);
+        if !source.exists() {
+            failed.push(format!("{}: Profile does not exist", profile_path));
+            continue;
+        }
+        
+        let profile_name = source.file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("profile");
+        
+        let backup_filename = format!("{}_backup_{}.zip", profile_name, timestamp);
+        let backup_path = dest.join(&backup_filename);
+        
+        match backup_profile(profile_path.clone(), backup_path.to_string_lossy().to_string()) {
+            Ok(path) => {
+                // Get the size of the created backup
+                if let Ok(metadata) = fs::metadata(&path) {
+                    total_size += metadata.len();
+                }
+                successful.push(profile_name.to_string());
+            }
+            Err(e) => {
+                failed.push(format!("{}: {}", profile_name, e));
+            }
+        }
+    }
+    
+    Ok(BulkExportResult {
+        successful,
+        failed,
+        total_size,
+    })
+}

@@ -63,6 +63,10 @@
                 severity="secondary" [outlined]="true" pTooltip="Activity Log"
                 [badge]="activityLog.todayEntries().length > 0 ? activityLog.todayEntries().length.toString() : undefined" />
 
+            <!-- Feature 5.2: Restore from Backup Button -->
+            <p-button id="home-header-restore-btn" (click)="restoreFromBackup()" icon="pi pi-upload" label="Restore"
+                severity="secondary" [outlined]="true" pTooltip="Restore profile from backup ZIP" />
+
             <p-button id="home-header-create-btn" (click)="openCreateDialog()" icon="pi pi-plus"
                 label="Create profile" />
         </div>
@@ -400,6 +404,13 @@
                 title="Launch all selected">
                 <i class="pi pi-play text-sm"></i>
                 <span class="text-sm font-medium">Launch All</span>
+            </button>
+            <!-- Feature 4.1: Bulk Export Button -->
+            <button id="home-bottom-export-btn" (click)="bulkExport()"
+                class="h-8 flex items-center gap-2 px-3 rounded-md border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white transition-colors"
+                title="Export selected to ZIP">
+                <i class="pi pi-download text-sm"></i>
+                <span class="text-sm font-medium">Export</span>
             </button>
             <button id="home-bottom-delete-btn" (click)="bulkDelete()"
                 class="h-8 flex items-center gap-2 px-3 rounded-md border border-error text-error hover:bg-error hover:text-white transition-colors"

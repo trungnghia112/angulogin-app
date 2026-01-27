@@ -104,13 +104,32 @@ export class Home implements OnInit, OnDestroy {
     private statusInterval: ReturnType<typeof setInterval> | null = null;
 
     // Sidebar Data (Moved from Pages)
-    protected readonly folders = signal<import('../../../models/folder.model').Folder[]>([
-        { id: '1', name: 'Amazon', icon: 'pi-amazon', color: '#FF9900', profileCount: 5 },
-        { id: '2', name: 'Crypto', icon: 'pi-wallet', color: '#71717a', profileCount: 3 },
-        { id: '3', name: 'New Folder', icon: 'pi-folder', color: '#71717a', profileCount: 0 },
-        { id: '4', name: 'Facebook', icon: 'pi-facebook', color: '#1877F2', profileCount: 2 },
-    ]);
-    protected readonly selectedFolderId = signal<string | null>('1');
+    // Feature 2.2: Smart Folders - auto-filtering based on criteria
+    protected readonly smartFolders = computed<import('../../../models/folder.model').Folder[]>(() => {
+        const profiles = this.profiles();
+        const ONE_GB = 1024 * 1024 * 1024;
+        const THIRTY_DAYS_AGO = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+        // Count profiles for each smart folder
+        const allCount = profiles.length;
+        const favoritesCount = profiles.filter(p => p.metadata?.isFavorite).length;
+        const largeCount = profiles.filter(p => (p.size || 0) > ONE_GB).length;
+        const unusedCount = profiles.filter(p => {
+            const lastOpened = p.metadata?.lastOpened ? new Date(p.metadata.lastOpened).getTime() : 0;
+            return lastOpened > 0 && lastOpened < THIRTY_DAYS_AGO;
+        }).length;
+        const hiddenCount = profiles.filter(p => p.metadata?.isHidden).length;
+
+        return [
+            { id: 'all', name: 'All Profiles', icon: 'pi-th-large', color: '#3b82f6', profileCount: allCount },
+            { id: 'favorites', name: 'Favorites', icon: 'pi-heart', color: '#ef4444', profileCount: favoritesCount },
+            { id: 'large', name: 'Large (>1GB)', icon: 'pi-database', color: '#f97316', profileCount: largeCount },
+            { id: 'unused', name: 'Unused (30+ days)', icon: 'pi-clock', color: '#eab308', profileCount: unusedCount },
+            { id: 'hidden', name: 'Hidden', icon: 'pi-eye-slash', color: '#6b7280', profileCount: hiddenCount },
+        ];
+    });
+    protected readonly folders = this.smartFolders;
+    protected readonly selectedFolderId = signal<string | null>('all');
 
     // Tabs
     protected readonly tabs: Tab[] = [
@@ -193,14 +212,38 @@ export class Home implements OnInit, OnDestroy {
         const group = this.filterGroup();
         const showHiddenValue = this.showHidden();
         const favoritesOnly = this.filterFavoritesOnly();
+        const selectedFolder = this.selectedFolderId();
 
-        // Phase 2: Filter out hidden profiles unless showHidden is true
-        if (!showHiddenValue) {
+        // Feature 2.2: Smart Folder filtering
+        const ONE_GB = 1024 * 1024 * 1024;
+        const THIRTY_DAYS_AGO = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+        switch (selectedFolder) {
+            case 'favorites':
+                result = result.filter(p => p.metadata?.isFavorite);
+                break;
+            case 'large':
+                result = result.filter(p => (p.size || 0) > ONE_GB);
+                break;
+            case 'unused':
+                result = result.filter(p => {
+                    const lastOpened = p.metadata?.lastOpened ? new Date(p.metadata.lastOpened).getTime() : 0;
+                    return lastOpened > 0 && lastOpened < THIRTY_DAYS_AGO;
+                });
+                break;
+            case 'hidden':
+                result = result.filter(p => p.metadata?.isHidden);
+                break;
+            // 'all' shows everything (no filter)
+        }
+
+        // Phase 2: Filter out hidden profiles unless showHidden is true or viewing hidden folder
+        if (!showHiddenValue && selectedFolder !== 'hidden') {
             result = result.filter((p) => !p.metadata?.isHidden);
         }
 
-        // Feature 2.4: Filter favorites only
-        if (favoritesOnly) {
+        // Feature 2.4: Filter favorites only (from header toggle)
+        if (favoritesOnly && selectedFolder !== 'favorites') {
             result = result.filter((p) => p.metadata?.isFavorite);
         }
 
@@ -1082,6 +1125,119 @@ export class Home implements OnInit, OnDestroy {
             detail: 'Profile order has been saved.',
             life: 2000,
         });
+    }
+
+    // ==== Feature 4.1: Bulk Export ====
+    async bulkExport(): Promise<void> {
+        const profiles = this.selectedProfiles();
+        if (profiles.length === 0) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'No Selection',
+                detail: 'Please select profiles to export',
+            });
+            return;
+        }
+
+        try {
+            const profilePaths = profiles.map(p => p.path);
+            const result = await this.profileService.bulkExportProfiles(profilePaths);
+
+            if (result.successful.length > 0) {
+                const totalMB = (result.totalSize / (1024 * 1024)).toFixed(1);
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Export Complete',
+                    detail: `Exported ${result.successful.length} profiles (${totalMB} MB)`,
+                });
+            }
+
+            if (result.failed.length > 0) {
+                this.messageService.add({
+                    severity: 'warn',
+                    summary: 'Some Exports Failed',
+                    detail: result.failed.join(', '),
+                });
+            }
+
+            this.clearSelection();
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            // Don't show error if user cancelled
+            if (msg !== 'Export cancelled') {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Export Failed',
+                    detail: msg,
+                });
+            }
+        }
+    }
+
+    // ==== Feature 5.2: Restore from Backup ====
+    async restoreFromBackup(): Promise<void> {
+        try {
+            // Dynamic import for dialog
+            const { open } = await import('@tauri-apps/plugin-dialog');
+
+            const filePath = await open({
+                title: 'Select Backup ZIP File',
+                multiple: false,
+                filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
+            });
+
+            if (!filePath) return; // User cancelled
+
+            // Confirm before restore
+            this.confirmationService.confirm({
+                key: 'confirmDialog',
+                message: 'Restore profile from this backup? If a profile with the same name exists, it will be renamed.',
+                header: 'Restore Profile',
+                icon: 'pi pi-upload',
+                accept: async () => {
+                    try {
+                        const result = await this.profileService.restoreFromBackup(
+                            filePath as string,
+                            this.profilesPath(),
+                            'rename'
+                        );
+
+                        let detail = `Restored "${result.profileName}"`;
+                        if (result.wasRenamed) {
+                            detail += ' (renamed to avoid conflict)';
+                        }
+
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Restore Complete',
+                            detail,
+                        });
+
+                        // Log activity
+                        this.activityLogService.log(
+                            'create',
+                            result.profileName,
+                            result.restoredPath,
+                            undefined,
+                            'Restored from backup'
+                        );
+                    } catch (e) {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Restore Failed',
+                            detail: e instanceof Error ? e.message : String(e),
+                        });
+                    }
+                },
+            });
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: msg,
+            });
+        }
     }
 
 }

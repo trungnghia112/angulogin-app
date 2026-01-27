@@ -612,4 +612,50 @@ export class ProfileService {
             throw e;
         }
     }
+
+    /**
+     * Feature 4.1: Bulk Export multiple profiles to ZIP files
+     * Opens a folder dialog for user to choose destination
+     * @param profilePaths - Array of profile paths to export
+     * @returns Export result with successful/failed exports
+     */
+    async bulkExportProfiles(profilePaths: string[]): Promise<{ successful: string[]; failed: string[]; totalSize: number }> {
+        if (!isTauriAvailable()) {
+            debugLog('Mock bulkExportProfiles:', profilePaths);
+            return {
+                successful: profilePaths.map(p => p.split('/').pop() || 'profile'),
+                failed: [],
+                totalSize: 1024 * 1024 * 50, // mock 50MB
+            };
+        }
+
+        // Import open dialog for folder selection
+        const { open } = await import('@tauri-apps/plugin-dialog');
+        
+        const destinationFolder = await open({
+            title: 'Select Export Destination Folder',
+            directory: true,
+            multiple: false,
+        });
+
+        if (!destinationFolder) {
+            throw new Error('Export cancelled');
+        }
+
+        try {
+            const result = await invoke<{ successful: string[]; failed: string[]; total_size: number }>(
+                'bulk_export_profiles',
+                { profilePaths, destinationFolder }
+            );
+            return {
+                successful: result.successful,
+                failed: result.failed,
+                totalSize: result.total_size,
+            };
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
 }

@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.0.0",
-        "updated_at": "2026-01-25T16:00:00+07:00"
+        "updated_at": "2026-01-26T13:56:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
@@ -102,7 +102,9 @@
                 "isPinned",
                 "color",
                 "isHidden",
-                "sortOrder"
+                "sortOrder",
+                "isFavorite",
+                "customFlags"
             ]
         },
         {
@@ -159,6 +161,26 @@
                 "restore from ZIP backup",
                 "conflict handling"
             ]
+        },
+        {
+            "name": "Favorites (2.4)",
+            "status": "implemented",
+            "description": "Mark profiles as favorites with heart icon, filter Favorites view"
+        },
+        {
+            "name": "Custom Chrome Flags (3.6)",
+            "status": "implemented",
+            "description": "User-defined launch flags like --disable-gpu, saved in metadata and passed to browser"
+        },
+        {
+            "name": "Clear Profile Cookies (4.2)",
+            "status": "implemented",
+            "description": "One-click delete cookies, cache, session storage, local storage, IndexedDB (14+ data types)"
+        },
+        {
+            "name": "Compact Mode (6.7)",
+            "status": "implemented",
+            "description": "Toggle to display more profiles on screen (8-10 columns vs 4-5), persisted in localStorage"
         }
     ],
     "api_endpoints": [
@@ -167,8 +189,8 @@
             "description": "Quét folder và trả về danh sách profiles với size"
         },
         {
-            "command": "launch_profile",
-            "description": "Mở browser với profile, track usage stats"
+            "command": "launch_browser",
+            "description": "Mở browser với profile, track usage stats, support custom flags"
         },
         {
             "command": "create_profile",
@@ -187,7 +209,7 @@
             "description": "Đổi tên folder profile"
         },
         {
-            "command": "backup_profile_to_zip",
+            "command": "backup_profile",
             "description": "Nén profile thành file ZIP backup"
         },
         {
@@ -196,11 +218,15 @@
         },
         {
             "command": "save_profile_metadata",
-            "description": "Lưu metadata vào .profile-meta.json"
+            "description": "Lưu metadata (emoji, tags, isFavorite, customFlags...) vào .profile-meta.json"
         },
         {
-            "command": "load_profile_metadata",
+            "command": "get_profile_metadata",
             "description": "Đọc metadata từ .profile-meta.json"
+        },
+        {
+            "command": "clear_profile_cookies",
+            "description": "Xóa cookies, cache, IndexedDB, session/local storage (14+ data types)"
         }
     ],
     "knowledge_items": {
@@ -228,6 +254,11 @@
                 "name": "Tailwind v4 Source Configuration",
                 "code": "@import 'tailwindcss' source(none);\n@source '../src/**/*.html';\n@source '../src/**/*.ts';",
                 "note": "Disable auto-detection with source(none), then explicitly define paths to prevent scanning unintended files"
+            },
+            {
+                "name": "localStorage Signal Initialization",
+                "code": "signal<boolean>(typeof localStorage !== 'undefined' && localStorage.getItem('key') === 'true')",
+                "note": "Safe pattern for SSR-compatible localStorage initialization with signals"
             }
         ],
         "gotchas": [
@@ -253,7 +284,7 @@
             },
             {
                 "issue": "Tailwind v4 CSS warning: Expected identifier but found - (invalid class like [-:|])",
-                "solution": "Add source(none) to @import 'tailwindcss' and explicitly define @source paths to prevent Tailwind from scanning unintended files"
+                "solution": "Add source(none) to @import 'tailwindcss' and explicitly define @source paths"
             },
             {
                 "issue": "NG8107 warning: optional chain operator not needed",
@@ -265,7 +296,8 @@
             "Use async/await + firstValueFrom for user actions",
             "Commit after every significant change with semantic format",
             "All surfaces need dark: variants for dark mode (bg-surface-0 dark:bg-surface-900)",
-            "Use PrimeNG Charts for visualization, not raw Chart.js"
+            "Use PrimeNG Charts for visualization, not raw Chart.js",
+            "New features added to ProfileMetadata must be updated in: TS model, Rust struct, save_profile_metadata, and service method"
         ]
     }
 }

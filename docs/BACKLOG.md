@@ -10,9 +10,9 @@
 
 | Trạng thái | Số lượng |
 |------------|----------|
-| ✅ Done | 22 |
+| ✅ Done | 33 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 27 |
+| 📋 Backlog | 16 |
 
 ---
 
@@ -79,9 +79,9 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
 | 2.1 | Tags System ⭐ | Gắn nhiều tags (Work, Personal, Testing...) | 🟢 Dễ | ✅ |
-| 2.2 | Smart Folders | Folder tự động dựa trên filter (VD: "Profiles > 1GB") | 🟡 TB | 📋 |
+| 2.2 | Smart Folders | Folder tự động dựa trên filter (VD: "Profiles > 1GB") | 🟡 TB | ✅ |
 | 2.3 | Color Coding | Gán màu cho profile/group để nhận diện nhanh | 🟢 Dễ | ✅ |
-| 2.4 | Favorites | Danh sách yêu thích riêng biệt | 🟢 Dễ | 📋 |
+| 2.4 | Favorites | Danh sách yêu thích riêng biệt | 🟢 Dễ | ✅ |
 | 2.5 | Folder Management | Group profiles into custom folders | 🟡 TB | 📋 |
 
 ---
@@ -95,7 +95,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | 3.3 | Scheduled Launch | Hẹn giờ mở profile (VD: 8AM mở Work profile) | 🟡 TB | 📋 |
 | 3.4 | Launch with Extensions | Toggle on/off extensions khi launch | 🔴 Khó | 📋 |
 | 3.5 | Incognito Mode | Launch profile ở chế độ incognito | 🟢 Dễ | ✅ |
-| 3.6 | Custom Chrome Flags | Thêm flags như `--disable-gpu`, `--no-sandbox` | 🟢 Dễ | 📋 |
+| 3.6 | Custom Chrome Flags | Thêm flags như `--disable-gpu`, `--no-sandbox` | 🟢 Dễ | ✅ |
 | 3.7 | Window Position | Mở Chrome ở vị trí/kích thước cố định | 🟡 TB | 📋 |
 
 ---
@@ -117,11 +117,13 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
 | 5.1 | Profile Backup | Zip & backup profile ra file riêng | 🟡 TB | ✅ |
-| 5.2 | Profile Restore | Restore từ backup file | 🟡 TB | 📋 |
-| 5.3 | Auto Backup | Tự động backup theo schedule | 🟡 TB | 📋 |
-| 5.4 | Cloud Sync (Optional) | Sync metadata lên cloud (không sync data) | 🔴 Khó | 📋 |
-| 5.5 | Profile Export | Export profile settings (không data) để chia sẻ | 🟢 Dễ | 📋 |
-| 5.6 | Backup Encryption | Mã hóa file backup | 🟡 TB | 📋 |
+| 5.2 | Profile Restore | Restore từ backup file | 🟡 TB | ✅ |
+| 5.3 | Bulk Export | Export nhiều profiles ra ZIP cùng lúc | 🟡 TB | ✅ |
+| 5.4 | Auto Backup | Tự động backup theo schedule | 🟡 TB | 📋 |
+| 5.5 | Cloud Sync (Optional) | Sync metadata lên cloud (không sync data) | 🔴 Khó | 📋 |
+| 5.6 | Profile Export | Export profile settings (không data) để chia sẻ | 🟢 Dễ | 📋 |
+| 5.7 | Backup Encryption | Mã hóa file backup | 🟡 TB | 📋 |
+| 5.8 | Clear Profile Cookies | Xóa cookies, cache, browsing data của profile | 🟢 Dễ | ✅ |
 
 ---
 
@@ -133,9 +135,9 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | 6.2 | Dark/Light Theme | Toggle theme | 🟢 Dễ | ✅ |
 | 6.3 | Keyboard Shortcuts | ⌘+1 mở profile 1, ⌘+N tạo mới... | 🟡 TB | ✅ |
 | 6.4 | Quick Search (⌘+K) | Command palette style search | 🟡 TB | ✅ |
-| 6.5 | Drag & Drop | Kéo thả để sắp xếp, di chuyển vào group | 🟡 TB | 📋 |
+| 6.5 | Drag & Drop | Kéo thả để sắp xếp, di chuyển vào group | 🟡 TB | ✅ |
 | 6.6 | Profile Preview | Hover để xem preview/info nhanh | 🟢 Dễ | ✅ |
-| 6.7 | Compact Mode | UI thu gọn cho màn hình nhỏ | 🟢 Dễ | 📋 |
+| 6.7 | Compact Mode | UI thu gọn cho màn hình nhỏ | 🟢 Dễ | ✅ |
 | 6.8 | Custom Themes | Cho phép user tạo theme riêng | 🟡 TB | 📋 |
 
 ---
@@ -169,7 +171,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
-| 9.1 | Storage Dashboard | Biểu đồ dung lượng từng profile | 🟢 Dễ | 📋 |
+| 9.1 | Storage Dashboard | Biểu đồ dung lượng từng profile | 🟢 Dễ | ✅ |
 | 9.2 | Usage Heatmap | Calendar view hiển thị ngày dùng profile | 🟡 TB | 📋 |
 | 9.3 | Profile Health Check | Kiểm tra profile có lỗi, corrupted không | 🟡 TB | 📋 |
 | 9.4 | Cleanup Suggestions | Gợi ý xóa cache, profile không dùng | 🟡 TB | 📋 |
@@ -221,6 +223,7 @@ Những ý tưởng táo bạo hơn cho future versions:
 
 | Ngày | Thay đổi |
 |------|----------|
+| 2026-01-27 | Hoàn thành: Bulk Export, Drag & Drop, Smart Folders, Storage Dashboard, Profile Restore, Favorites, Custom Chrome Flags, Compact Mode |
 | 2026-01-25 | Hoàn thành: Color Coding, Hidden Profiles, Activity Log, Profile Preview |
 | 2026-01-23 | Khởi tạo backlog với 45+ tính năng từ brainstorm session |
 
