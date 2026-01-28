@@ -206,6 +206,46 @@ export class Home implements OnInit, OnDestroy {
         return labels[this.sortBy()] || 'Sort';
     });
 
+    // More Actions Menu for header
+    protected readonly moreActionsMenuItems = computed<MenuItem[]>(() => [
+        {
+            label: 'View Options',
+            items: [
+                {
+                    label: this.compactMode() ? 'Normal View' : 'Compact View',
+                    icon: this.compactMode() ? 'pi pi-arrows-alt' : 'pi pi-minus',
+                    command: () => this.toggleCompactMode(),
+                },
+                {
+                    label: this.showHidden() ? 'Hide Hidden Profiles' : 'Show Hidden Profiles',
+                    icon: this.showHidden() ? 'pi pi-eye-slash' : 'pi pi-eye',
+                    command: () => this.showHidden.set(!this.showHidden()),
+                },
+                {
+                    label: this.filterFavoritesOnly() ? 'Show All Profiles' : `Show Favorites Only (${this.favoriteCount()})`,
+                    icon: 'pi pi-heart',
+                    command: () => this.filterFavoritesOnly.set(!this.filterFavoritesOnly()),
+                },
+            ],
+        },
+        { separator: true },
+        {
+            label: 'Actions',
+            items: [
+                {
+                    label: 'Restore from Backup',
+                    icon: 'pi pi-upload',
+                    command: () => this.restoreFromBackup(),
+                },
+                {
+                    label: 'Storage Dashboard',
+                    icon: 'pi pi-chart-pie',
+                    command: () => this.router.navigate(['/storage']),
+                },
+            ],
+        },
+    ]);
+
     protected readonly filteredProfiles = computed(() => {
         let result = this.profiles();
         const search = this.searchText().toLowerCase().trim();

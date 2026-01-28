@@ -18,8 +18,8 @@
 
         <!-- Actions -->
         <div id="home-header-actions" class="flex items-center gap-2">
-            <p-button id="home-header-refresh-btn" (click)="scanProfiles()" icon="pi pi-refresh" label="Refresh"
-                severity="secondary" [outlined]="true" />
+            <p-button id="home-header-refresh-btn" (click)="scanProfiles()" icon="pi pi-refresh" severity="secondary"
+                [outlined]="true" pTooltip="Refresh" />
 
             <!-- Sort Menu -->
             <p-menu #sortMenu [model]="sortMenuItems()" [popup]="true" />
@@ -29,46 +29,32 @@
             <!-- Filters Menu -->
             <p-menu #filterMenu [model]="filterMenuItems()" [popup]="true" />
             <p-button id="home-header-filters-btn" (click)="filterMenu.toggle($event)" icon="pi pi-filter"
-                label="Filters" severity="secondary" [outlined]="true"
-                [badge]="activeFilterCount() > 0 ? activeFilterCount().toString() : undefined" />
+                severity="secondary" [outlined]="true"
+                [badge]="activeFilterCount() > 0 ? activeFilterCount().toString() : undefined" pTooltip="Filters" />
 
             <!-- View Mode Toggle -->
             <p-buttonGroup>
                 <p-button icon="pi pi-list" (onClick)="viewMode.set('table')" [outlined]="viewMode() !== 'table'"
-                    severity="secondary" />
+                    severity="secondary" pTooltip="Table View" />
                 <p-button icon="pi pi-th-large" (onClick)="viewMode.set('grid')" [outlined]="viewMode() !== 'grid'"
-                    severity="secondary" />
+                    severity="secondary" pTooltip="Grid View" />
             </p-buttonGroup>
 
-            <!-- Feature 6.7: Compact Mode Toggle -->
-            <p-button id="home-header-compact-toggle" (click)="toggleCompactMode()"
-                [icon]="compactMode() ? 'pi pi-arrows-alt' : 'pi pi-minus'"
-                [pTooltip]="compactMode() ? 'Normal View' : 'Compact View'" severity="secondary" [outlined]="true"
-                [class]="compactMode() ? 'ring-1 ring-primary' : ''" />
+            <!-- Visual separator -->
+            <div class="w-px h-6 bg-surface-300 dark:bg-surface-600"></div>
 
-            <!-- Phase 2: Show Hidden Toggle -->
-            <p-button id="home-header-hidden-toggle" (click)="showHidden.set(!showHidden())"
-                [icon]="showHidden() ? 'pi pi-eye' : 'pi pi-eye-slash'"
-                [label]="showHidden() ? 'Hide Hidden' : 'Show Hidden'" severity="secondary" [outlined]="true"
-                [class]="showHidden() ? 'ring-1 ring-primary' : ''" />
+            <!-- More Actions Menu -->
+            <p-menu #moreMenu [model]="moreActionsMenuItems()" [popup]="true" />
+            <p-button id="home-header-more-btn" (click)="moreMenu.toggle($event)" icon="pi pi-ellipsis-v"
+                severity="secondary" [outlined]="true" pTooltip="More Actions"
+                [badge]="(showHidden() || filterFavoritesOnly() || compactMode()) ? '•' : undefined" />
 
-            <!-- Feature 2.4: Favorites Filter -->
-            <p-button id="home-header-favorites-toggle" (click)="filterFavoritesOnly.set(!filterFavoritesOnly())"
-                icon="pi pi-heart"
-                [label]="filterFavoritesOnly() ? 'All Profiles' : 'Favorites (' + favoriteCount() + ')'"
-                severity="secondary" [outlined]="true" [class]="filterFavoritesOnly() ? 'ring-1 ring-primary' : ''" />
-
-            <!-- Phase 3: Activity Log -->
+            <!-- Activity Log (keep visible for quick access) -->
             <p-button id="home-header-activity-log-btn" (click)="showActivityLog.set(true)" icon="pi pi-history"
                 severity="secondary" [outlined]="true" pTooltip="Activity Log"
                 [badge]="activityLog.todayEntries().length > 0 ? activityLog.todayEntries().length.toString() : undefined" />
 
-            <!-- Feature 5.2: Restore from Backup Button -->
-            <p-button id="home-header-restore-btn" (click)="restoreFromBackup()" icon="pi pi-upload" label="Restore"
-                severity="secondary" [outlined]="true" pTooltip="Restore profile from backup ZIP" />
-
-            <p-button id="home-header-create-btn" (click)="openCreateDialog()" icon="pi pi-plus"
-                label="Create profile" />
+            <p-button id="home-header-create-btn" (click)="openCreateDialog()" icon="pi pi-plus" label="Create" />
         </div>
     </header>
 
