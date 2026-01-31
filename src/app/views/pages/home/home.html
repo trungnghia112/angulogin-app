@@ -1,30 +1,37 @@
-<!-- Sidebar -->
-<app-home-sidebar [folders]="folders()" [selectedFolderId]="selectedFolderId()"
-    (folderSelected)="onFolderSelected($event)" (addFolderClicked)="onAddFolder()" (settingsClicked)="onSettings()" />
+<!-- Sidebar (responsive: drawer on mobile, static on desktop) -->
+<app-home-sidebar [folders]="folders()" [selectedFolderId]="selectedFolderId()" [isOpen]="sidebarOpen()"
+    (folderSelected)="onFolderSelected($event)" (addFolderClicked)="onAddFolder()" (settingsClicked)="onSettings()"
+    (closeSidebar)="sidebarOpen.set(false)" />
 
 <!-- Main Content -->
 <div id="home-container" class="flex-1 flex flex-col min-h-0 text-color overflow-hidden">
     <!-- Header Toolbar -->
     <header id="home-header"
-        class="flex items-center gap-4 px-6 h-[var(--spacing-header)] shrink-0 border-b border-surface">
-        <!-- Search (full width) -->
-        <div id="home-header-search" class="flex-1">
+        class="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 h-[var(--spacing-header)] shrink-0 border-b border-surface">
+        <!-- Hamburger Menu (mobile only) -->
+        <p-button id="home-header-menu-btn" icon="pi pi-bars" severity="secondary" [text]="true"
+            (click)="sidebarOpen.set(true)" pTooltip="Open menu" class="lg:hidden shrink-0" />
+
+        <!-- Search (responsive) -->
+        <div id="home-header-search" class="flex-1 min-w-0">
             <p-iconfield class="w-full">
                 <p-inputicon class="pi pi-search" />
-                <input id="home-header-search-input" pInputText type="text" placeholder="Search profiles..."
-                    class="w-full" [ngModel]="searchText()" (ngModelChange)="onSearchInput($event)" />
+                <input id="home-header-search-input" pInputText type="text" placeholder="Search..." class="w-full"
+                    [ngModel]="searchText()" (ngModelChange)="onSearchInput($event)" />
             </p-iconfield>
         </div>
 
-        <!-- Actions -->
-        <div id="home-header-actions" class="flex items-center gap-2">
+        <!-- Actions (responsive) -->
+        <div id="home-header-actions" class="flex items-center gap-1 sm:gap-2 shrink-0">
             <p-button id="home-header-refresh-btn" (click)="scanProfiles()" icon="pi pi-refresh" severity="secondary"
-                [outlined]="true" pTooltip="Refresh" />
+                [outlined]="true" pTooltip="Refresh" class="hidden sm:inline-flex" />
 
-            <!-- Sort Menu -->
+            <!-- Sort Menu (hidden on mobile, shown on sm+) -->
             <p-menu #sortMenu [model]="sortMenuItems()" [popup]="true" />
             <p-button id="home-header-sort-btn" (click)="sortMenu.toggle($event)" icon="pi pi-sort-alt"
-                [label]="currentSortLabel()" severity="secondary" [outlined]="true" />
+                [label]="currentSortLabel()" severity="secondary" [outlined]="true" class="hidden md:inline-flex" />
+            <p-button id="home-header-sort-btn-mobile" (click)="sortMenu.toggle($event)" icon="pi pi-sort-alt"
+                severity="secondary" [outlined]="true" pTooltip="Sort" class="md:hidden" />
 
             <!-- Filters Menu -->
             <p-menu #filterMenu [model]="filterMenuItems()" [popup]="true" />
@@ -32,16 +39,16 @@
                 severity="secondary" [outlined]="true"
                 [badge]="activeFilterCount() > 0 ? activeFilterCount().toString() : undefined" pTooltip="Filters" />
 
-            <!-- View Mode Toggle -->
-            <p-buttonGroup>
+            <!-- View Mode Toggle (hidden on mobile) -->
+            <p-buttonGroup class="hidden sm:flex">
                 <p-button icon="pi pi-list" (onClick)="viewMode.set('table')" [outlined]="viewMode() !== 'table'"
                     severity="secondary" pTooltip="Table View" />
                 <p-button icon="pi pi-th-large" (onClick)="viewMode.set('grid')" [outlined]="viewMode() !== 'grid'"
                     severity="secondary" pTooltip="Grid View" />
             </p-buttonGroup>
 
-            <!-- Visual separator -->
-            <div class="w-px h-6 bg-surface-300 dark:bg-surface-600"></div>
+            <!-- Visual separator (hidden on mobile) -->
+            <div class="w-px h-6 bg-surface-300 dark:bg-surface-600 hidden sm:block"></div>
 
             <!-- More Actions Menu -->
             <p-menu #moreMenu [model]="moreActionsMenuItems()" [popup]="true" />
@@ -49,32 +56,37 @@
                 severity="secondary" [outlined]="true" pTooltip="More Actions"
                 [badge]="(showHidden() || filterFavoritesOnly() || compactMode()) ? '•' : undefined" />
 
-            <!-- Activity Log (keep visible for quick access) -->
+            <!-- Activity Log (hidden on mobile) -->
             <p-button id="home-header-activity-log-btn" (click)="showActivityLog.set(true)" icon="pi pi-history"
-                severity="secondary" [outlined]="true" pTooltip="Activity Log"
+                severity="secondary" [outlined]="true" pTooltip="Activity Log" class="hidden sm:inline-flex"
                 [badge]="activityLog.todayEntries().length > 0 ? activityLog.todayEntries().length.toString() : undefined" />
 
-            <p-button id="home-header-create-btn" (click)="openCreateDialog()" icon="pi pi-plus" label="Create" />
+            <!-- Create button (icon only on mobile) -->
+            <p-button id="home-header-create-btn" (click)="openCreateDialog()" icon="pi pi-plus" label="Create"
+                class="hidden sm:inline-flex" />
+            <p-button id="home-header-create-btn-mobile" (click)="openCreateDialog()" icon="pi pi-plus"
+                severity="primary" class="sm:hidden" pTooltip="Create" />
         </div>
     </header>
 
-    <!-- Tabs -->
-    <div id="home-tabs" class="flex items-center justify-between px-6 py-3 border-b border-surface shrink-0">
-        <nav id="home-tabs-nav" class="flex items-center gap-6">
+    <!-- Tabs (scrollable on mobile) -->
+    <div id="home-tabs"
+        class="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 border-b border-surface shrink-0">
+        <nav id="home-tabs-nav"
+            class="flex items-center gap-3 sm:gap-6 overflow-x-auto scrollbar-hide whitespace-nowrap">
             @for (tab of tabs; track tab.key; let i = $index) {
             <button [id]="'home-tab-' + i"
-                class="flex items-center gap-2 pb-2 text-sm font-medium transition-colors border-b-2 -mb-[13px]"
+                class="flex items-center gap-1.5 sm:gap-2 pb-2 text-xs sm:text-sm font-medium transition-colors border-b-2 -mb-[9px] sm:-mb-[13px] shrink-0"
                 [class]="activeTab() === tab.key
             ? 'text-color border-primary'
             : 'text-muted-color border-transparent hover:text-muted-color'" (click)="setActiveTab(tab.key)">
-                <i [class]="'pi ' + tab.icon + ' text-sm'"></i>
-                <span>{{ tab.label }}</span>
+                <i [class]="'pi ' + tab.icon + ' text-xs sm:text-sm'"></i>
+                <span class="hidden sm:inline">{{ tab.label }}</span>
             </button>
             }
         </nav>
-        <span id="home-tabs-usage" class="text-sm text-muted-color">{{ profilesUsed() }} of {{
-            maxProfiles() }} profiles
-            used</span>
+        <span id="home-tabs-usage" class="text-xs sm:text-sm text-muted-color shrink-0 ml-2">{{ profilesUsed() }} / {{
+            maxProfiles() }}</span>
     </div>
 
     <!-- Content -->
@@ -414,7 +426,7 @@
 
     <!-- Create Profile Dialog -->
     <p-dialog id="home-create-dialog" header="Create New Profile" [(visible)]="showCreateDialog" [modal]="true"
-        [style]="{ width: '400px' }" [draggable]="false" [resizable]="false">
+        [style]="{ width: 'min(400px, 95vw)' }" [draggable]="false" [resizable]="false">
         <div id="home-create-dialog-content">
             <label for="home-create-dialog-name-input">Profile Name</label>
             <input pInputText id="home-create-dialog-name-input" type="text" [ngModel]="newProfileName()"
@@ -429,7 +441,7 @@
 
     <!-- Rename Profile Dialog -->
     <p-dialog id="home-rename-dialog" header="Rename Profile" [(visible)]="showRenameDialog" [modal]="true"
-        [style]="{ width: '400px' }" [draggable]="false" [resizable]="false">
+        [style]="{ width: 'min(400px, 95vw)' }" [draggable]="false" [resizable]="false">
         <div id="home-rename-dialog-content">
             <label for="home-rename-dialog-name-input">New Name</label>
             <input pInputText id="home-rename-dialog-name-input" type="text" [ngModel]="renameProfileName()"
@@ -444,7 +456,7 @@
 
     <!-- Edit Profile Dialog -->
     <p-dialog id="home-edit-dialog" header="Edit Profile" [(visible)]="showEditDialog" [modal]="true"
-        [style]="{ width: '500px' }" [draggable]="false" [resizable]="false">
+        [style]="{ width: 'min(500px, 95vw)' }" [draggable]="false" [resizable]="false">
         <div id="home-edit-dialog-content" class="py-2 space-y-5">
             <!-- Icon -->
             <div id="home-edit-dialog-icon-section">
@@ -608,7 +620,7 @@
 
     <!-- Duplicate Profile Dialog -->
     <p-dialog id="home-duplicate-dialog" header="Duplicate Profile" [(visible)]="showDuplicateDialog" [modal]="true"
-        [style]="{ width: '400px' }" [draggable]="false" [resizable]="false">
+        [style]="{ width: 'min(400px, 95vw)' }" [draggable]="false" [resizable]="false">
         <div id="home-duplicate-dialog-content" class="py-2">
             <p class="text-sm text-muted-color mb-4">Create a copy of "{{ selectedProfile()?.name
                 }}"</p>
@@ -628,7 +640,7 @@
 
     <!-- Phase 3: Activity Log Dialog -->
     <p-dialog id="home-activity-log-dialog" header="Activity Log" [(visible)]="showActivityLog" [modal]="true"
-        [style]="{ width: '500px', maxHeight: '70vh' }" [draggable]="false" [resizable]="false">
+        [style]="{ width: 'min(500px, 95vw)', maxHeight: '70vh' }" [draggable]="false" [resizable]="false">
         <div id="home-activity-log-content" class="py-2">
             @if (activityLog.entries().length === 0) {
             <div class="flex flex-col items-center justify-center py-8 text-center">

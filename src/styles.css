@@ -41,3 +41,15 @@ body {
     background-color: var(--p-content-background, var(--p-surface-ground, #ffffff));
     color: var(--p-text-color, #000000);
 }
+
+/**
+ * Utility: Hide scrollbar while maintaining scroll functionality
+ * Used for horizontal scrolling tabs on mobile
+ */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}

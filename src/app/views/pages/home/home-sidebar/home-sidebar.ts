@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, output, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
@@ -15,12 +15,16 @@ export class HomeSidebar {
     // Inputs
     readonly folders = input<Folder[]>([]);
     readonly selectedFolderId = input<string | null>(null);
+    /** Controls visibility on mobile (drawer mode) */
+    readonly isOpen = input<boolean>(false);
 
     // Outputs
     readonly folderSelected = output<string | null>();
     readonly addFolderClicked = output<void>();
     readonly settingsClicked = output<void>();
     readonly folderSettingsClicked = output<void>();
+    /** Emits when user closes sidebar on mobile */
+    readonly closeSidebar = output<void>();
 
     protected selectFolder(folderId: string | null): void {
         this.folderSelected.emit(folderId);

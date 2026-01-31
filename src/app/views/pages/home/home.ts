@@ -130,6 +130,8 @@ export class Home implements OnInit, OnDestroy {
     });
     protected readonly folders = this.smartFolders;
     protected readonly selectedFolderId = signal<string | null>('all');
+    /** Controls mobile sidebar drawer visibility */
+    protected readonly sidebarOpen = signal(false);
 
     // Tabs
     protected readonly tabs: Tab[] = [

@@ -1,10 +1,28 @@
+<!-- Backdrop overlay for mobile (only visible when sidebar is open on mobile) -->
+@if (isOpen()) {
+<div class="fixed inset-0 bg-black/50 z-40 lg:hidden" (click)="closeSidebar.emit()" aria-hidden="true"></div>
+}
+
+<!-- Sidebar: Fixed drawer on mobile, static on desktop -->
 <aside id="home-sidebar"
-    class="flex flex-col h-full w-60 border-r border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shrink-0">
+    class="flex flex-col h-full w-60 border-r border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shrink-0 transition-transform duration-300 ease-in-out"
+    [class.fixed]="true"
+    [class.inset-y-0]="true"
+    [class.left-0]="true"
+    [class.z-50]="true"
+    [class.-translate-x-full]="!isOpen()"
+    [class.translate-x-0]="isOpen()"
+    [class.lg:translate-x-0]="true"
+    [class.lg:static]="true"
+    [class.lg:z-auto]="true">
     <!-- Feature Header - matches header height -->
     <div id="home-sidebar-header"
         class="flex items-center justify-between px-4 h-[var(--spacing-header)] shrink-0 border-b border-surface-200 dark:border-surface-700">
         <span id="home-sidebar-header-title" class="text-base font-semibold text-color">Browsers</span>
         <div id="home-sidebar-header-actions" class="flex items-center gap-2">
+            <!-- Close button for mobile -->
+            <p-button id="home-sidebar-header-close-btn" icon="pi pi-times" [rounded]="true" [text]="true"
+                (click)="closeSidebar.emit()" pTooltip="Close" tooltipPosition="bottom" class="lg:hidden" />
             <p-button id="home-sidebar-header-add-btn" icon="pi pi-plus" [rounded]="true" [text]="true"
                 (click)="onAddFolder()" pTooltip="Add folder" tooltipPosition="bottom" />
         </div>
@@ -23,7 +41,7 @@
             class="w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-all duration-150 cursor-pointer"
             [class]="selectedFolderId() === folder.id
           ? 'text-color'
-          : 'text-muted-color hover:text-color /50'" (click)="selectFolder(folder.id)">
+          : 'text-muted-color hover:text-color /50'" (click)="selectFolder(folder.id); closeSidebar.emit()">
             <i [class]="'pi ' + getFolderIcon(folder) + ' text-base'" [style.color]="getFolderColor(folder)"></i>
             <span class="text-sm font-medium truncate flex-1 text-left">{{ folder.name }}</span>
             @if (folder.profileCount !== undefined) {
