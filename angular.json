@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "chrome-profile-manager": {
+    "angulogin": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:class": {
@@ -82,10 +82,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "chrome-profile-manager:build:production"
+              "buildTarget": "angulogin:build:production"
             },
             "development": {
-              "buildTarget": "chrome-profile-manager:build:development"
+              "buildTarget": "angulogin:build:development"
             }
           },
           "defaultConfiguration": "development"

@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.0.0",
-        "updated_at": "2026-01-26T13:56:00+07:00"
+        "updated_at": "2026-02-01T13:23:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
@@ -181,6 +181,18 @@
             "name": "Compact Mode (6.7)",
             "status": "implemented",
             "description": "Toggle to display more profiles on screen (8-10 columns vs 4-5), persisted in localStorage"
+        },
+        {
+            "name": "Mobile Responsive UI",
+            "status": "implemented",
+            "description": "Fully responsive layout for mobile/tablet with collapsible sidebar drawer, hamburger menu, icon-only tabs, and responsive dialogs",
+            "includes": [
+                "Sidebar drawer with backdrop (hidden on mobile, slides in on tap)",
+                "Hamburger menu button (visible only on mobile)",
+                "Responsive header toolbar (icon-only buttons on mobile)",
+                "Scrollable tabs with icon-only on mobile",
+                "Responsive dialog widths min(Xpx, 95vw)"
+            ]
         }
     ],
     "api_endpoints": [
@@ -259,6 +271,21 @@
                 "name": "localStorage Signal Initialization",
                 "code": "signal<boolean>(typeof localStorage !== 'undefined' && localStorage.getItem('key') === 'true')",
                 "note": "Safe pattern for SSR-compatible localStorage initialization with signals"
+            },
+            {
+                "name": "Mobile Sidebar Drawer",
+                "code": "[class.-translate-x-full]=\"!isOpen()\" [class.lg:translate-x-0]=\"true\" [class.lg:static]=\"true\"",
+                "note": "Use translate-x with lg: breakpoint for sidebar that's hidden on mobile but fixed on desktop"
+            },
+            {
+                "name": "Responsive Dialog Width",
+                "code": "[style]=\"{ width: 'min(400px, 95vw)' }\"",
+                "note": "Use CSS min() function for dialogs that adapt to viewport width on mobile"
+            },
+            {
+                "name": "Responsive Button Visibility",
+                "code": "class=\"hidden sm:inline-flex\" for desktop-only, class=\"sm:hidden\" for mobile-only",
+                "note": "Pattern for showing different buttons on mobile vs desktop"
             }
         ],
         "gotchas": [
@@ -289,6 +316,14 @@
             {
                 "issue": "NG8107 warning: optional chain operator not needed",
                 "solution": "Replace ?.property ?? 'fallback' with @if control flow when signal type doesn't include undefined"
+            },
+            {
+                "issue": "Horizontal tabs overflow on mobile",
+                "solution": "Add overflow-x-auto scrollbar-hide whitespace-nowrap to nav container"
+            },
+            {
+                "issue": "Sidebar blocks content on mobile",
+                "solution": "Use fixed positioning with -translate-x-full to hide, lg:static lg:translate-x-0 to show on desktop"
             }
         ],
         "conventions": [

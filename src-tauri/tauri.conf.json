@@ -1,10 +1,10 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Chrome Profile Manager",
+  "productName": "Angulogin",
   "version": "0.1.0",
-  "identifier": "com.user.chrome-manager",
+  "identifier": "com.johntran.angulogin",
   "build": {
-    "frontendDist": "../dist/chrome-profile-manager/browser",
+    "frontendDist": "../dist/angulogin/browser",
     "devUrl": "http://localhost:4200",
     "beforeDevCommand": "npm run start",
     "beforeBuildCommand": "npm run build"
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Chrome Profile Manager",
+        "title": "Angulogin",
         "width": 1200,
         "height": 800,
         "resizable": true,
