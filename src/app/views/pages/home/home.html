@@ -16,7 +16,8 @@
         (showHiddenChange)="showHidden.set($event)" (filterFavoritesOnlyChange)="filterFavoritesOnly.set($event)"
         (compactModeChange)="toggleCompactMode()" (scan)="scanProfiles()" (create)="openCreateDialog()"
         (openSidebar)="sidebarOpen.set(true)" (showActivityLog)="showActivityLog.set(true)"
-        (restoreFromBackup)="restoreFromBackup()" (clearFilters)="clearFilters()" />
+        (restoreFromBackup)="restoreFromBackup()" (clearFilters)="clearFilters()" (exportProfiles)="exportProfiles()"
+        (importProfiles)="importProfiles()" />
 
     <!-- Tabs (scrollable on mobile) -->
     <div id="home-tabs"

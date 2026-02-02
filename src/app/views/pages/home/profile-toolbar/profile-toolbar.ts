@@ -63,6 +63,8 @@ export class ProfileToolbar {
     readonly showActivityLog = output<void>();
     readonly restoreFromBackup = output<void>();
     readonly clearFilters = output<void>();
+    readonly exportProfiles = output<void>();
+    readonly importProfiles = output<void>();
 
     // Local state
     protected readonly localSearch = signal('');
@@ -171,6 +173,22 @@ export class ProfileToolbar {
                     label: 'Usage Statistics',
                     icon: 'pi pi-chart-bar',
                     command: () => this.router.navigate(['/usage']),
+                },
+            ],
+        },
+        { separator: true },
+        {
+            label: 'Import / Export',
+            items: [
+                {
+                    label: 'Export Profiles',
+                    icon: 'pi pi-download',
+                    command: () => this.exportProfiles.emit(),
+                },
+                {
+                    label: 'Import Profiles',
+                    icon: 'pi pi-upload',
+                    command: () => this.importProfiles.emit(),
                 },
             ],
         },

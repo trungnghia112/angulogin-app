@@ -1105,4 +1105,124 @@ export class Home implements OnInit, OnDestroy {
         }
     }
 
+    // ==== Feature 5.6: Export Profiles Settings ====
+    exportProfiles(): void {
+        const profiles = this.profiles();
+        if (profiles.length === 0) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'No Profiles',
+                detail: 'No profiles available to export',
+            });
+            return;
+        }
+
+        // Build export data
+        const exportData = {
+            version: '1.0',
+            exportDate: new Date().toISOString(),
+            profilesPath: this.profilesPath(),
+            profiles: profiles.map(p => ({
+                name: p.name,
+                path: p.path,
+                metadata: p.metadata || {},
+            })),
+        };
+
+        // Create JSON and download
+        const jsonStr = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `profiles-export-${new Date().toISOString().slice(0, 10)}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+
+        this.messageService.add({
+            severity: 'success',
+            summary: 'Exported',
+            detail: `Exported settings for ${profiles.length} profiles`,
+        });
+    }
+
+    // ==== Feature 5.6: Import Profiles Settings ====
+    importProfiles(): void {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async (event: Event) => {
+            const file = (event.target as HTMLInputElement).files?.[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+
+                // Validate structure
+                if (!data.profiles || !Array.isArray(data.profiles)) {
+                    throw new Error('Invalid export file format');
+                }
+
+                // Confirm import
+                this.confirmationService.confirm({
+                    key: 'confirmDialog',
+                    message: `Import settings for ${data.profiles.length} profiles? This will update metadata for matching profiles.`,
+                    header: 'Import Profile Settings',
+                    icon: 'pi pi-upload',
+                    accept: async () => {
+                        let updated = 0;
+                        let skipped = 0;
+
+                        for (const importedProfile of data.profiles) {
+                            // Find matching profile by path or name
+                            const existingProfile = this.profiles().find(
+                                p => p.path === importedProfile.path || p.name === importedProfile.name
+                            );
+
+                            if (existingProfile && importedProfile.metadata) {
+                                try {
+                                    const meta = importedProfile.metadata;
+                                    await this.profileService.saveProfileMetadata(
+                                        existingProfile.path,
+                                        meta.emoji || null,
+                                        meta.notes || null,
+                                        meta.group || null,
+                                        meta.shortcut || null,
+                                        meta.browser || null,
+                                        meta.tags || null,
+                                        meta.launchUrl || null,
+                                        meta.isPinned || null,
+                                        meta.color || null,
+                                        meta.isHidden || null,
+                                        meta.isFavorite || null,
+                                        meta.customFlags || null,
+                                    );
+                                    updated++;
+                                } catch {
+                                    skipped++;
+                                }
+                            } else {
+                                skipped++;
+                            }
+                        }
+
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Import Complete',
+                            detail: `Updated ${updated} profiles${skipped > 0 ? `, skipped ${skipped}` : ''}`,
+                        });
+                    },
+                });
+            } catch (e) {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Import Failed',
+                    detail: e instanceof Error ? e.message : 'Invalid file format',
+                });
+            }
+        };
+        input.click();
+    }
+
 }
