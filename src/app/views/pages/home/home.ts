@@ -519,7 +519,8 @@ export class Home implements OnInit, OnDestroy {
             const url = profile.metadata?.launchUrl || undefined;
             const proxy = profile.metadata?.proxyServer || undefined;
             const customFlags = profile.metadata?.customFlags || undefined; // Feature 3.6
-            await this.profileService.launchBrowser(profile.path, browser, url, false, proxy, customFlags);
+            const windowPosition = profile.metadata?.windowPosition || undefined; // Feature 3.7
+            await this.profileService.launchBrowser(profile.path, browser, url, false, proxy, customFlags, windowPosition);
 
             // Phase 3: Log activity
             this.activityLogService.logLaunch(profile.name, profile.path, browser);

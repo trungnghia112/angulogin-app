@@ -418,10 +418,18 @@ export class ProfileService {
         }
     }
 
-    async launchBrowser(profilePath: string, browser: string, url?: string, incognito?: boolean, proxyServer?: string, customFlags?: string): Promise<void> {
+    async launchBrowser(
+        profilePath: string,
+        browser: string,
+        url?: string,
+        incognito?: boolean,
+        proxyServer?: string,
+        customFlags?: string,
+        windowPosition?: { x?: number | null; y?: number | null; width?: number | null; height?: number | null; maximized?: boolean } | null
+    ): Promise<void> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            debugLog('Mock launchBrowser:', profilePath, browser, url, incognito, proxyServer, customFlags);
+            debugLog('Mock launchBrowser:', profilePath, browser, url, incognito, proxyServer, customFlags, windowPosition);
             // Simulate running state change
             this.profiles.update(profiles =>
                 profiles.map(p => p.path === profilePath ? { ...p, isRunning: true } : p)
@@ -436,7 +444,12 @@ export class ProfileService {
                 url: url || null,
                 incognito: incognito || null,
                 proxyServer: proxyServer || null,
-                customFlags: customFlags || null
+                customFlags: customFlags || null,
+                windowX: windowPosition?.x ?? null,
+                windowY: windowPosition?.y ?? null,
+                windowWidth: windowPosition?.width ?? null,
+                windowHeight: windowPosition?.height ?? null,
+                windowMaximized: windowPosition?.maximized ?? null,
             });
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);

@@ -34,6 +34,17 @@ export interface ProfileMetadata {
     isFavorite?: boolean;
     // Custom Chrome Flags (3.6)
     customFlags?: string | null;
+    // Window Position Settings (3.7)
+    windowPosition?: WindowPosition | null;
+}
+
+// Window position and size for launching browser
+export interface WindowPosition {
+    x?: number | null;
+    y?: number | null;
+    width?: number | null;
+    height?: number | null;
+    maximized?: boolean;
 }
 
 export interface Profile {
