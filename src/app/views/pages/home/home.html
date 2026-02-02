@@ -39,7 +39,8 @@
     </div>
 
     <!-- Content -->
-    <div id="home-content" class="flex-1 min-h-0 overflow-auto p-6 pb-4">
+    <div id="home-content" class="flex-1 min-h-0 p-6 pb-4" [class.overflow-hidden]="viewMode() === 'table'"
+        [class.overflow-auto]="viewMode() !== 'table'">
         @if (loading()) {
         <div id="home-loading" class="flex flex-col items-center justify-center py-16 gap-4 text-muted-color">
             <p-progressSpinner strokeWidth="3" />
