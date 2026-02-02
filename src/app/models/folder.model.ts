@@ -14,6 +14,9 @@ export interface ProfileProxy {
     host: string;
     port: number;
     type: 'http' | 'socks5';
+    username?: string | null;
+    password?: string | null;
+    group?: string | null;
 }
 
 export interface ProfileTag {
