@@ -102,26 +102,33 @@ export class Home implements OnInit, OnDestroy {
     private readonly destroyRef = inject(DestroyRef);
     private readonly searchSubject = new Subject<string>();
     private statusInterval: ReturnType<typeof setInterval> | null = null;
+    // PERF FIX: Cache tooltips to avoid string creation on every render
+    private readonly tooltipCache = new Map<string, string>();
 
     // Sidebar Data (Moved from Pages)
     // Feature 2.2: Smart Folders - auto-filtering based on criteria
+    // PERF FIX: Single-pass counting instead of 5 separate .filter() calls
     protected readonly smartFolders = computed<import('../../../models/folder.model').Folder[]>(() => {
         const profiles = this.profiles();
         const ONE_GB = 1024 * 1024 * 1024;
         const THIRTY_DAYS_AGO = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-        // Count profiles for each smart folder
-        const allCount = profiles.length;
-        const favoritesCount = profiles.filter(p => p.metadata?.isFavorite).length;
-        const largeCount = profiles.filter(p => (p.size || 0) > ONE_GB).length;
-        const unusedCount = profiles.filter(p => {
+        // Single-pass counting - O(n) instead of O(5n)
+        let favoritesCount = 0;
+        let largeCount = 0;
+        let unusedCount = 0;
+        let hiddenCount = 0;
+
+        for (const p of profiles) {
+            if (p.metadata?.isFavorite) favoritesCount++;
+            if ((p.size || 0) > ONE_GB) largeCount++;
             const lastOpened = p.metadata?.lastOpened ? new Date(p.metadata.lastOpened).getTime() : 0;
-            return lastOpened > 0 && lastOpened < THIRTY_DAYS_AGO;
-        }).length;
-        const hiddenCount = profiles.filter(p => p.metadata?.isHidden).length;
+            if (lastOpened > 0 && lastOpened < THIRTY_DAYS_AGO) unusedCount++;
+            if (p.metadata?.isHidden) hiddenCount++;
+        }
 
         return [
-            { id: 'all', name: 'All Profiles', icon: 'pi-th-large', color: '#3b82f6', profileCount: allCount },
+            { id: 'all', name: 'All Profiles', icon: 'pi-th-large', color: '#3b82f6', profileCount: profiles.length },
             { id: 'favorites', name: 'Favorites', icon: 'pi-heart', color: '#ef4444', profileCount: favoritesCount },
             { id: 'large', name: 'Large (>1GB)', icon: 'pi-database', color: '#f97316', profileCount: largeCount },
             { id: 'unused', name: 'Unused (30+ days)', icon: 'pi-clock', color: '#eab308', profileCount: unusedCount },
@@ -248,60 +255,51 @@ export class Home implements OnInit, OnDestroy {
         },
     ]);
 
+    // PERF FIX: Single-pass filtering + sorting instead of multiple .filter() chains
     protected readonly filteredProfiles = computed(() => {
-        let result = this.profiles();
+        const profiles = this.profiles();
         const search = this.searchText().toLowerCase().trim();
         const group = this.filterGroup();
         const showHiddenValue = this.showHidden();
         const favoritesOnly = this.filterFavoritesOnly();
         const selectedFolder = this.selectedFolderId();
 
-        // Feature 2.2: Smart Folder filtering
+        // Feature 2.2: Smart Folder filtering constants
         const ONE_GB = 1024 * 1024 * 1024;
         const THIRTY_DAYS_AGO = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-        switch (selectedFolder) {
-            case 'favorites':
-                result = result.filter(p => p.metadata?.isFavorite);
-                break;
-            case 'large':
-                result = result.filter(p => (p.size || 0) > ONE_GB);
-                break;
-            case 'unused':
-                result = result.filter(p => {
-                    const lastOpened = p.metadata?.lastOpened ? new Date(p.metadata.lastOpened).getTime() : 0;
-                    return lastOpened > 0 && lastOpened < THIRTY_DAYS_AGO;
-                });
-                break;
-            case 'hidden':
-                result = result.filter(p => p.metadata?.isHidden);
-                break;
-            // 'all' shows everything (no filter)
-        }
+        // Single-pass filtering - O(n) instead of O(5n)
+        const result: Profile[] = [];
 
-        // Phase 2: Filter out hidden profiles unless showHidden is true or viewing hidden folder
-        if (!showHiddenValue && selectedFolder !== 'hidden') {
-            result = result.filter((p) => !p.metadata?.isHidden);
-        }
+        for (const p of profiles) {
+            // Smart Folder filter
+            if (selectedFolder === 'favorites' && !p.metadata?.isFavorite) continue;
+            if (selectedFolder === 'large' && (p.size || 0) <= ONE_GB) continue;
+            if (selectedFolder === 'hidden' && !p.metadata?.isHidden) continue;
+            if (selectedFolder === 'unused') {
+                const lastOpened = p.metadata?.lastOpened ? new Date(p.metadata.lastOpened).getTime() : 0;
+                if (!(lastOpened > 0 && lastOpened < THIRTY_DAYS_AGO)) continue;
+            }
 
-        // Feature 2.4: Filter favorites only (from header toggle)
-        if (favoritesOnly && selectedFolder !== 'favorites') {
-            result = result.filter((p) => p.metadata?.isFavorite);
-        }
+            // Hidden filter (unless showHidden or viewing hidden folder)
+            if (!showHiddenValue && selectedFolder !== 'hidden' && p.metadata?.isHidden) continue;
 
-        // Apply search filter
-        if (search) {
-            result = result.filter(
-                (p) =>
-                    p.name.toLowerCase().includes(search) ||
-                    p.metadata?.notes?.toLowerCase().includes(search) ||
-                    p.metadata?.group?.toLowerCase().includes(search)
-            );
-        }
+            // Favorites only filter
+            if (favoritesOnly && selectedFolder !== 'favorites' && !p.metadata?.isFavorite) continue;
 
-        // Apply group filter
-        if (group) {
-            result = result.filter((p) => p.metadata?.group === group);
+            // Search filter
+            if (search) {
+                const matchesName = p.name.toLowerCase().includes(search);
+                const matchesNotes = p.metadata?.notes?.toLowerCase().includes(search);
+                const matchesGroup = p.metadata?.group?.toLowerCase().includes(search);
+                if (!matchesName && !matchesNotes && !matchesGroup) continue;
+            }
+
+            // Group filter
+            if (group && p.metadata?.group !== group) continue;
+
+            // Passed all filters
+            result.push(p);
         }
 
         // Sort: pinned profiles first, then by selected criteria
@@ -538,7 +536,15 @@ export class Home implements OnInit, OnDestroy {
     }
 
     // Phase 4: Profile Preview Tooltip
+    // PERF FIX: Use cache to avoid string creation on every render
     getProfileTooltip(profile: Profile): string {
+        // Create cache key from profile path and relevant metadata
+        const cacheKey = `${profile.path}|${profile.size || 0}|${profile.metadata?.launchCount || 0}|${profile.metadata?.lastOpened || ''}`;
+
+        // Return cached value if exists
+        const cached = this.tooltipCache.get(cacheKey);
+        if (cached !== undefined) return cached;
+
         const lines: string[] = [];
 
         // Name is already displayed, add additional info
@@ -575,7 +581,11 @@ export class Home implements OnInit, OnDestroy {
             lines.push(`Launch URL: ${profile.metadata.launchUrl}`);
         }
 
-        return lines.length > 0 ? lines.join('\n') : 'Click to edit profile';
+        const result = lines.length > 0 ? lines.join('\n') : 'Click to edit profile';
+
+        // Cache and return
+        this.tooltipCache.set(cacheKey, result);
+        return result;
     }
 
     // Usage Statistics helper

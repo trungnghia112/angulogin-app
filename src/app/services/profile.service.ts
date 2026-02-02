@@ -484,13 +484,17 @@ export class ProfileService {
 
     async loadProfileSizes(): Promise<void> {
         const current = this.profiles();
-        // Load sizes one by one to avoid blocking
-        for (const profile of current) {
-            const size = await this.getProfileSize(profile.path);
-            this.profiles.update((profiles) =>
-                profiles.map((p) => (p.path === profile.path ? { ...p, size } : p))
-            );
-        }
+        if (current.length === 0) return;
+
+        // PERF FIX: Load all sizes in parallel and update signal ONCE
+        const sizes = await Promise.all(
+            current.map((profile) => this.getProfileSize(profile.path))
+        );
+
+        // Single update to avoid multiple re-renders
+        this.profiles.update((profiles) =>
+            profiles.map((p, index) => ({ ...p, size: sizes[index] }))
+        );
     }
 
     async duplicateProfile(sourcePath: string, newName: string, basePath: string): Promise<string> {
@@ -631,7 +635,7 @@ export class ProfileService {
 
         // Import open dialog for folder selection
         const { open } = await import('@tauri-apps/plugin-dialog');
-        
+
         const destinationFolder = await open({
             title: 'Select Export Destination Folder',
             directory: true,
