@@ -12,6 +12,7 @@ import {
 import { Router } from '@angular/router';
 import { HomeSidebar } from './home-sidebar/home-sidebar';
 import { ProfileToolbar, SortByType, ViewModeType } from './profile-toolbar/profile-toolbar';
+import { ProfileEditDialog, ProfileEditData } from './profile-edit-dialog/profile-edit-dialog';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -35,20 +36,7 @@ import { SettingsService } from '../../../core/services/settings.service';
 import { ActivityLogService } from '../../../services/activity-log.service';
 import { BrowserType, Profile } from '../../../models/profile.model';
 
-const EMOJI_OPTIONS = ['💼', '🏠', '🛠️', '🎮', '📱', '💻', '🔒', '🌐', '📧', '🛒'];
-const GROUP_OPTIONS = ['Work', 'Personal', 'Development', 'Social', 'Shopping', 'Other'];
 
-// Phase 1: Color options for profile color coding
-const COLOR_OPTIONS = [
-    { name: 'red', hex: '#ef4444', label: 'Red' },
-    { name: 'orange', hex: '#f97316', label: 'Orange' },
-    { name: 'yellow', hex: '#eab308', label: 'Yellow' },
-    { name: 'green', hex: '#22c55e', label: 'Green' },
-    { name: 'blue', hex: '#3b82f6', label: 'Blue' },
-    { name: 'purple', hex: '#a855f7', label: 'Purple' },
-    { name: 'pink', hex: '#ec4899', label: 'Pink' },
-    { name: 'gray', hex: '#6b7280', label: 'Gray' },
-];
 
 const BROWSER_INFO: Record<string, { name: string; icon: string }> = {
     chrome: { name: 'Chrome', icon: 'pi-google' },
@@ -92,6 +80,7 @@ interface Tab {
         HomeSidebar,
         DragDropModule,
         ProfileToolbar,
+        ProfileEditDialog,
     ],
 })
 export class Home implements OnInit, OnDestroy {
@@ -163,11 +152,6 @@ export class Home implements OnInit, OnDestroy {
     protected readonly first = signal(0);
     protected readonly viewMode = signal<'table' | 'grid'>('table');
 
-    // Options
-    protected readonly emojiOptions = EMOJI_OPTIONS;
-    protected readonly groupOptions = GROUP_OPTIONS;
-    protected readonly shortcutOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    protected readonly browserInfo = BROWSER_INFO;
     protected readonly availableBrowsers = signal<string[]>(['chrome']);
 
     // Search & Filter
@@ -293,20 +277,6 @@ export class Home implements OnInit, OnDestroy {
     protected readonly newProfileName = signal('');
     protected readonly renameProfileName = signal('');
     protected readonly selectedProfile = signal<Profile | null>(null);
-    protected readonly editEmoji = signal<string | null>(null);
-    protected readonly editNotes = signal<string | null>(null);
-    protected readonly editGroup = signal<string | null>(null);
-    protected readonly editShortcut = signal<number | null>(null);
-    protected readonly editBrowser = signal<BrowserType | null>(null);
-    // New edit signals for Tags, Launch URL, Pinning
-    protected readonly editTags = signal<string[]>([]);
-    protected readonly editLaunchUrl = signal<string | null>(null);
-    protected readonly editIsPinned = signal<boolean>(false);
-    // Phase 1: Color coding
-    protected readonly editColor = signal<string | null>(null);
-    protected readonly colorOptions = COLOR_OPTIONS;
-    // Feature 3.6: Custom Chrome Flags
-    protected readonly editCustomFlags = signal<string | null>(null);
 
     // Duplicate dialog
     protected readonly showDuplicateDialog = signal(false);
@@ -668,86 +638,28 @@ export class Home implements OnInit, OnDestroy {
     openEditDialog(profile: Profile, event: Event): void {
         event.stopPropagation();
         this.selectedProfile.set(profile);
-        this.editEmoji.set(profile.metadata?.emoji || null);
-        this.editNotes.set(profile.metadata?.notes || null);
-        this.editGroup.set(profile.metadata?.group || null);
-        this.editShortcut.set(profile.metadata?.shortcut || null);
-        this.editBrowser.set(profile.metadata?.browser || null);
-        this.editTags.set(profile.metadata?.tags || []);
-        this.editLaunchUrl.set(profile.metadata?.launchUrl || null);
-        this.editIsPinned.set(profile.metadata?.isPinned || false);
-        // Phase 1: Load color
-        this.editColor.set(profile.metadata?.color || null);
-        // Feature 3.6: Load custom flags
-        this.editCustomFlags.set(profile.metadata?.customFlags || null);
         this.showEditDialog.set(true);
     }
 
-    selectEmoji(emoji: string): void {
-        this.editEmoji.set(this.editEmoji() === emoji ? null : emoji);
-    }
 
-    selectGroup(group: string): void {
-        this.editGroup.set(this.editGroup() === group ? null : group);
-    }
-
-    selectShortcut(num: number): void {
-        const profile = this.selectedProfile();
-        const existing = this.profiles().find(
-            (p) => p.metadata?.shortcut === num && p.path !== profile?.path
-        );
-        if (existing) {
-            this.messageService.add({
-                severity: 'warn',
-                summary: 'Warning',
-                detail: `Shortcut Cmd+${num} already used by "${existing.name}"`,
-            });
-            return;
-        }
-        this.editShortcut.set(this.editShortcut() === num ? null : num);
-    }
-
-    selectBrowser(browser: BrowserType): void {
-        this.editBrowser.set(this.editBrowser() === browser ? null : browser);
-    }
-
-    // Phase 1: Color selection
-    selectColor(color: string | null): void {
-        this.editColor.set(this.editColor() === color ? null : color);
-    }
-
-    addTag(event: Event): void {
-        const input = event.target as HTMLInputElement;
-        const tag = input.value.trim();
-        if (tag && !this.editTags().includes(tag)) {
-            this.editTags.update((tags) => [...tags, tag]);
-            input.value = '';
-        }
-        event.preventDefault();
-    }
-
-    removeTag(index: number): void {
-        this.editTags.update((tags) => tags.filter((_, i) => i !== index));
-    }
-
-    async saveProfileEdit(): Promise<void> {
+    async onEditDialogSave(data: ProfileEditData): Promise<void> {
         const profile = this.selectedProfile();
         if (!profile) return;
         try {
             await this.profileService.saveProfileMetadata(
                 profile.path,
-                this.editEmoji(),
-                this.editNotes(),
-                this.editGroup(),
-                this.editShortcut(),
-                this.editBrowser(),
-                this.editTags().length > 0 ? this.editTags() : null,
-                this.editLaunchUrl(),
-                this.editIsPinned() || null,
-                this.editColor(),
+                data.emoji,
+                data.notes,
+                data.group,
+                data.shortcut,
+                data.browser,
+                data.tags && data.tags.length > 0 ? data.tags : null,
+                data.launchUrl,
+                data.isPinned || null,
+                data.color,
                 profile.metadata?.isHidden || null, // Preserve hidden state
                 profile.metadata?.isFavorite || null, // Preserve favorite state
-                this.editCustomFlags(), // Feature 3.6: Pass custom flags
+                data.customFlags,
             );
             this.showEditDialog.set(false);
             this.messageService.add({
