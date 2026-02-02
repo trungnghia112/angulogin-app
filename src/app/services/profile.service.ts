@@ -383,17 +383,34 @@ export class ProfileService {
         const current = this.profiles();
         if (current.length === 0) return;
 
+        // PERF FIX: Process in chunks of 10 to avoid overwhelming Tauri
+        const CHUNK_SIZE = 10;
         let hasChanges = false;
-        const updated = await Promise.all(
-            current.map(async (p) => {
-                const isRunning = await this.isProfileRunning(p.path);
-                if (p.isRunning !== isRunning) {
-                    hasChanges = true;
-                    return { ...p, isRunning };
-                }
-                return p; // Keep same reference if no change
-            })
-        );
+        const updatedMap = new Map<string, boolean>();
+
+        for (let i = 0; i < current.length; i += CHUNK_SIZE) {
+            const chunk = current.slice(i, i + CHUNK_SIZE);
+            const results = await Promise.all(
+                chunk.map(async (p) => {
+                    const isRunning = await this.isProfileRunning(p.path);
+                    return { path: p.path, isRunning };
+                })
+            );
+
+            for (const r of results) {
+                updatedMap.set(r.path, r.isRunning);
+            }
+        }
+
+        // Build updated array with same reference for unchanged items
+        const updated = current.map((p) => {
+            const newRunning = updatedMap.get(p.path);
+            if (newRunning !== undefined && p.isRunning !== newRunning) {
+                hasChanges = true;
+                return { ...p, isRunning: newRunning };
+            }
+            return p; // Keep same reference if no change
+        });
 
         // Only trigger re-render if something actually changed
         if (hasChanges) {

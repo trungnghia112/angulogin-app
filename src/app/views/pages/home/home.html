@@ -124,10 +124,10 @@
         } @else if (activeTab() === 'profiles') {
         <!-- Profiles View - Table or Grid -->
         @if (viewMode() === 'table') {
-        <!-- Profiles Table -->
+        <!-- Profiles Table with Virtual Scrolling -->
         <p-table id="home-profiles-table" [value]="filteredProfiles()" [(selection)]="selectedProfiles"
             (selectionChange)="onSelectionChange($event)" [first]="first()" [rows]="rowsPerPage()" dataKey="path"
-            [scrollable]="true">
+            [scrollable]="true" scrollHeight="flex" [virtualScroll]="true" [virtualScrollItemSize]="48">
 
             <!-- Header -->
             <ng-template pTemplate="header">
