@@ -167,6 +167,11 @@ export class ProfileToolbar {
                     icon: 'pi pi-chart-pie',
                     command: () => this.router.navigate(['/storage']),
                 },
+                {
+                    label: 'Usage Statistics',
+                    icon: 'pi pi-chart-bar',
+                    command: () => this.router.navigate(['/usage']),
+                },
             ],
         },
     ]);

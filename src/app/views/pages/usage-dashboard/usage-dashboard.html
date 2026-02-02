@@ -1,0 +1,174 @@
+<!-- Usage Statistics Dashboard -->
+<div class="flex flex-col h-full bg-surface-50 dark:bg-surface-950">
+    <!-- Header -->
+    <header id="usage-header"
+        class="flex items-center justify-between px-6 py-4 border-b border-surface bg-surface-0 dark:bg-surface-900 shrink-0">
+        <div class="flex items-center gap-4">
+            <p-button id="usage-back-btn" icon="pi pi-arrow-left" severity="secondary" [outlined]="true"
+                (click)="goBack()" pTooltip="Back to Home" />
+            <div>
+                <h1 class="text-xl font-semibold text-color">Usage Statistics</h1>
+                <p class="text-sm text-muted-color">Track profile usage and activity patterns</p>
+            </div>
+        </div>
+        <p-button id="usage-export-btn" icon="pi pi-download" label="Export CSV" severity="secondary" [outlined]="true"
+            (click)="exportToCSV()" pTooltip="Export usage report" />
+    </header>
+
+    <!-- Content -->
+    <div id="usage-content" class="flex-1 overflow-auto p-6">
+        <!-- Summary Cards -->
+        <div id="usage-summary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div
+                class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <i class="pi pi-play text-xl text-blue-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-muted-color">Total Launches</p>
+                    <p class="text-2xl font-bold text-color">{{ totalLaunches() }}</p>
+                </div>
+            </div>
+
+            <div
+                class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+                    <i class="pi pi-clock text-xl text-green-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-muted-color">Total Usage Time</p>
+                    <p class="text-2xl font-bold text-color">{{ formatMinutes(totalUsageMinutes()) }}</p>
+                </div>
+            </div>
+
+            <div
+                class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                    <i class="pi pi-star text-xl text-purple-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-muted-color">Most Used Profile</p>
+                    <p class="text-lg font-bold text-color truncate max-w-[150px]">
+                        @if (mostUsedProfile(); as profile) {
+                        {{ profile.name }}
+                        } @else {
+                        N/A
+                        }
+                    </p>
+                </div>
+            </div>
+
+            <div
+                class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                    <i class="pi pi-calendar text-xl text-orange-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-muted-color">Today's Launches</p>
+                    <p class="text-2xl font-bold text-color">{{ todayLaunches() }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Heatmap -->
+        <div id="usage-heatmap"
+            class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm mb-6">
+            <h3 class="text-lg font-semibold text-color mb-4">
+                <i class="pi pi-calendar-plus text-blue-500 mr-2"></i>
+                Weekly Activity
+            </h3>
+            <div class="flex gap-2 justify-center">
+                @for (day of weeklyActivity(); track day.date) {
+                <div class="flex flex-col items-center gap-1">
+                    <div class="w-12 h-12 rounded-lg flex items-center justify-center text-lg font-bold" [class]="{
+                        'bg-surface-100 dark:bg-surface-800 text-muted-color': day.count === 0,
+                        'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400': day.count > 0 && day.count < 5,
+                        'bg-blue-300 dark:bg-blue-700/50 text-blue-700 dark:text-blue-300': day.count >= 5 && day.count < 10,
+                        'bg-blue-500 text-white': day.count >= 10
+                    }">
+                        {{ day.count }}
+                    </div>
+                    <span class="text-xs text-muted-color">{{ day.label }}</span>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div id="usage-charts" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Bar Chart - Launches -->
+            <div class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm">
+                <h3 class="text-lg font-semibold text-color mb-4">Top 10 Profiles by Launches</h3>
+                @if (topProfilesByLaunches().length > 0) {
+                <div class="h-[300px]">
+                    <p-chart type="bar" [data]="launchesChartData()" [options]="launchesChartOptions" />
+                </div>
+                } @else {
+                <div class="h-[300px] flex items-center justify-center text-muted-color">
+                    <i class="pi pi-chart-bar text-4xl"></i>
+                    <p class="ml-3">No usage data yet</p>
+                </div>
+                }
+            </div>
+
+            <!-- Pie Chart - Usage Time -->
+            <div class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm">
+                <h3 class="text-lg font-semibold text-color mb-4">Usage Time Distribution</h3>
+                @if (topProfilesByUsage().length > 0) {
+                <div class="h-[300px]">
+                    <p-chart type="pie" [data]="usageChartData()" [options]="usageChartOptions" />
+                </div>
+                } @else {
+                <div class="h-[300px] flex items-center justify-center text-muted-color">
+                    <i class="pi pi-chart-pie text-4xl"></i>
+                    <p class="ml-3">No usage data yet</p>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Recent Activity Log -->
+        <div id="usage-activity"
+            class="bg-surface-0 dark:bg-surface-900 rounded-xl p-4 border border-surface shadow-sm">
+            <h3 class="text-lg font-semibold text-color mb-4">
+                <i class="pi pi-history text-purple-500 mr-2"></i>
+                Recent Activity
+            </h3>
+            @if (recentActivity().length > 0) {
+            <div class="space-y-2">
+                @for (entry of recentActivity(); track entry.id; let i = $index) {
+                <div [id]="'usage-activity-' + i"
+                    class="flex items-center justify-between p-3 rounded-lg border border-surface hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" [class]="{
+                            'bg-green-500/20 text-green-500': entry.type === 'launch',
+                            'bg-blue-500/20 text-blue-500': entry.type === 'create',
+                            'bg-red-500/20 text-red-500': entry.type === 'delete',
+                            'bg-purple-500/20 text-purple-500': entry.type === 'duplicate',
+                            'bg-orange-500/20 text-orange-500': entry.type === 'edit'
+                        }">
+                            <i [class]="'pi ' + getTypeIcon(entry.type)"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-color">{{ entry.profileName }}</p>
+                            <p class="text-sm text-muted-color">{{ getTypeLabel(entry.type) }}
+                                @if (entry.browser) {
+                                with {{ entry.browser }}
+                                }
+                            </p>
+                        </div>
+                    </div>
+                    <span class="text-sm text-muted-color">{{ formatTimestamp(entry.timestamp) }}</span>
+                </div>
+                }
+            </div>
+            } @else {
+            <div class="flex flex-col items-center justify-center py-8 text-center">
+                <i class="pi pi-inbox text-4xl text-muted-color mb-3"></i>
+                <p class="text-color font-medium">No activity yet</p>
+                <p class="text-sm text-muted-color mt-1">Start using your profiles to see activity here</p>
+            </div>
+            }
+        </div>
+    </div>
+</div>

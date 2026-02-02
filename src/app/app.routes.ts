@@ -39,6 +39,11 @@ export const routes: Routes = [
                 loadComponent: () =>
                     import('./views/pages/storage-dashboard/storage-dashboard').then((m) => m.StorageDashboard),
             },
+            {
+                path: 'usage',
+                loadComponent: () =>
+                    import('./views/pages/usage-dashboard/usage-dashboard').then((m) => m.UsageDashboard),
+            },
         ],
     },
 ];
