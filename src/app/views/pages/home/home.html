@@ -6,68 +6,17 @@
 <!-- Main Content -->
 <div id="home-container" class="flex-1 flex flex-col min-h-0 text-color overflow-hidden">
     <!-- Header Toolbar -->
-    <header id="home-header"
-        class="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 h-[var(--spacing-header)] shrink-0 border-b border-surface">
-        <!-- Hamburger Menu (mobile only) -->
-        <p-button id="home-header-menu-btn" icon="pi pi-bars" severity="secondary" [text]="true"
-            (click)="sidebarOpen.set(true)" pTooltip="Open menu" class="lg:hidden shrink-0" />
-
-        <!-- Search (responsive) -->
-        <div id="home-header-search" class="flex-1 min-w-0">
-            <p-iconfield class="w-full">
-                <p-inputicon class="pi pi-search" />
-                <input id="home-header-search-input" pInputText type="text" placeholder="Search..." class="w-full"
-                    [ngModel]="searchText()" (ngModelChange)="onSearchInput($event)" />
-            </p-iconfield>
-        </div>
-
-        <!-- Actions (responsive) -->
-        <div id="home-header-actions" class="flex items-center gap-1 sm:gap-2 shrink-0">
-            <p-button id="home-header-refresh-btn" (click)="scanProfiles()" icon="pi pi-refresh" severity="secondary"
-                [outlined]="true" pTooltip="Refresh" class="hidden sm:inline-flex" />
-
-            <!-- Sort Menu (hidden on mobile, shown on sm+) -->
-            <p-menu #sortMenu [model]="sortMenuItems()" [popup]="true" />
-            <p-button id="home-header-sort-btn" (click)="sortMenu.toggle($event)" icon="pi pi-sort-alt"
-                [label]="currentSortLabel()" severity="secondary" [outlined]="true" class="hidden md:inline-flex" />
-            <p-button id="home-header-sort-btn-mobile" (click)="sortMenu.toggle($event)" icon="pi pi-sort-alt"
-                severity="secondary" [outlined]="true" pTooltip="Sort" class="md:hidden" />
-
-            <!-- Filters Menu -->
-            <p-menu #filterMenu [model]="filterMenuItems()" [popup]="true" />
-            <p-button id="home-header-filters-btn" (click)="filterMenu.toggle($event)" icon="pi pi-filter"
-                severity="secondary" [outlined]="true"
-                [badge]="activeFilterCount() > 0 ? activeFilterCount().toString() : undefined" pTooltip="Filters" />
-
-            <!-- View Mode Toggle (hidden on mobile) -->
-            <p-buttonGroup class="hidden sm:flex">
-                <p-button icon="pi pi-list" (onClick)="viewMode.set('table')" [outlined]="viewMode() !== 'table'"
-                    severity="secondary" pTooltip="Table View" />
-                <p-button icon="pi pi-th-large" (onClick)="viewMode.set('grid')" [outlined]="viewMode() !== 'grid'"
-                    severity="secondary" pTooltip="Grid View" />
-            </p-buttonGroup>
-
-            <!-- Visual separator (hidden on mobile) -->
-            <div class="w-px h-6 bg-surface-300 dark:bg-surface-600 hidden sm:block"></div>
-
-            <!-- More Actions Menu -->
-            <p-menu #moreMenu [model]="moreActionsMenuItems()" [popup]="true" />
-            <p-button id="home-header-more-btn" (click)="moreMenu.toggle($event)" icon="pi pi-ellipsis-v"
-                severity="secondary" [outlined]="true" pTooltip="More Actions"
-                [badge]="(showHidden() || filterFavoritesOnly() || compactMode()) ? '•' : undefined" />
-
-            <!-- Activity Log (hidden on mobile) -->
-            <p-button id="home-header-activity-log-btn" (click)="showActivityLog.set(true)" icon="pi pi-history"
-                severity="secondary" [outlined]="true" pTooltip="Activity Log" class="hidden sm:inline-flex"
-                [badge]="activityLog.todayEntries().length > 0 ? activityLog.todayEntries().length.toString() : undefined" />
-
-            <!-- Create button (icon only on mobile) -->
-            <p-button id="home-header-create-btn" (click)="openCreateDialog()" icon="pi pi-plus" label="Create"
-                class="hidden sm:inline-flex" />
-            <p-button id="home-header-create-btn-mobile" (click)="openCreateDialog()" icon="pi pi-plus"
-                severity="primary" class="sm:hidden" pTooltip="Create" />
-        </div>
-    </header>
+    <app-profile-toolbar [searchText]="searchText()" [viewMode]="viewMode()" [sortBy]="sortBy()"
+        [sortOrder]="sortOrder()" [selectedCount]="selectedProfiles().length" [uniqueGroups]="uniqueGroups()"
+        [filterGroup]="filterGroup()" [activeFilterCount]="activeFilterCount()" [showHidden]="showHidden()"
+        [filterFavoritesOnly]="filterFavoritesOnly()" [favoriteCount]="favoriteCount()" [compactMode]="compactMode()"
+        [todayActivityCount]="activityLog.todayEntries().length" (searchChange)="onSearchInput($event)"
+        (viewModeChange)="viewMode.set($event)" (sortByChange)="sortBy.set($event)"
+        (sortOrderChange)="sortOrder.set($event)" (filterGroupChange)="setFilterGroup($event)"
+        (showHiddenChange)="showHidden.set($event)" (filterFavoritesOnlyChange)="filterFavoritesOnly.set($event)"
+        (compactModeChange)="toggleCompactMode()" (scan)="scanProfiles()" (create)="openCreateDialog()"
+        (openSidebar)="sidebarOpen.set(true)" (showActivityLog)="showActivityLog.set(true)"
+        (restoreFromBackup)="restoreFromBackup()" (clearFilters)="clearFilters()" />
 
     <!-- Tabs (scrollable on mobile) -->
     <div id="home-tabs"

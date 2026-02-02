@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { HomeSidebar } from './home-sidebar/home-sidebar';
+import { ProfileToolbar, SortByType, ViewModeType } from './profile-toolbar/profile-toolbar';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -90,6 +91,7 @@ interface Tab {
         MenuModule,
         HomeSidebar,
         DragDropModule,
+        ProfileToolbar,
     ],
 })
 export class Home implements OnInit, OnDestroy {
@@ -179,81 +181,9 @@ export class Home implements OnInit, OnDestroy {
     // Sorting
     protected readonly sortBy = signal<'name' | 'size' | 'lastOpened' | 'custom'>('name');
     protected readonly sortOrder = signal<'asc' | 'desc'>('asc');
-    // Feature 6.7: Compact Mode - display more profiles in less space
     protected readonly compactMode = signal<boolean>(
         typeof localStorage !== 'undefined' && localStorage.getItem('home-compact-mode') === 'true'
     );
-    protected readonly sortMenuItems = computed<MenuItem[]>(() => [
-        {
-            label: 'Sort By',
-            items: [
-                {
-                    label: 'Name',
-                    icon: this.sortBy() === 'name' ? (this.sortOrder() === 'asc' ? 'pi pi-arrow-up' : 'pi pi-arrow-down') : undefined,
-                    command: () => this.setSortBy('name'),
-                },
-                {
-                    label: 'Size',
-                    icon: this.sortBy() === 'size' ? (this.sortOrder() === 'asc' ? 'pi pi-arrow-up' : 'pi pi-arrow-down') : undefined,
-                    command: () => this.setSortBy('size'),
-                },
-                {
-                    label: 'Last Used',
-                    icon: this.sortBy() === 'lastOpened' ? (this.sortOrder() === 'asc' ? 'pi pi-arrow-up' : 'pi pi-arrow-down') : undefined,
-                    command: () => this.setSortBy('lastOpened'),
-                },
-                {
-                    label: 'Custom (Drag & Drop)',
-                    icon: this.sortBy() === 'custom' ? 'pi pi-check' : undefined,
-                    command: () => this.setSortBy('custom'),
-                },
-            ],
-        },
-    ]);
-    protected readonly currentSortLabel = computed(() => {
-        const labels: Record<string, string> = { name: 'Name', size: 'Size', lastOpened: 'Last Used', custom: 'Custom' };
-        return labels[this.sortBy()] || 'Sort';
-    });
-
-    // More Actions Menu for header
-    protected readonly moreActionsMenuItems = computed<MenuItem[]>(() => [
-        {
-            label: 'View Options',
-            items: [
-                {
-                    label: this.compactMode() ? 'Normal View' : 'Compact View',
-                    icon: this.compactMode() ? 'pi pi-arrows-alt' : 'pi pi-minus',
-                    command: () => this.toggleCompactMode(),
-                },
-                {
-                    label: this.showHidden() ? 'Hide Hidden Profiles' : 'Show Hidden Profiles',
-                    icon: this.showHidden() ? 'pi pi-eye-slash' : 'pi pi-eye',
-                    command: () => this.showHidden.set(!this.showHidden()),
-                },
-                {
-                    label: this.filterFavoritesOnly() ? 'Show All Profiles' : `Show Favorites Only (${this.favoriteCount()})`,
-                    icon: 'pi pi-heart',
-                    command: () => this.filterFavoritesOnly.set(!this.filterFavoritesOnly()),
-                },
-            ],
-        },
-        { separator: true },
-        {
-            label: 'Actions',
-            items: [
-                {
-                    label: 'Restore from Backup',
-                    icon: 'pi pi-upload',
-                    command: () => this.restoreFromBackup(),
-                },
-                {
-                    label: 'Storage Dashboard',
-                    icon: 'pi pi-chart-pie',
-                    command: () => this.router.navigate(['/storage']),
-                },
-            ],
-        },
-    ]);
 
     // PERF FIX: Single-pass filtering + sorting instead of multiple .filter() chains
     protected readonly filteredProfiles = computed(() => {
@@ -336,35 +266,6 @@ export class Home implements OnInit, OnDestroy {
             .map((p) => p.metadata?.group)
             .filter((g): g is string => !!g);
         return [...new Set(groups)];
-    });
-
-    protected readonly filterMenuItems = computed<MenuItem[]>(() => {
-        const groups = this.uniqueGroups();
-        const currentFilter = this.filterGroup();
-
-        const groupItems: MenuItem[] = groups.length > 0
-            ? groups.map((group) => ({
-                label: group,
-                icon: currentFilter === group ? 'pi pi-check' : undefined,
-                command: () => this.setFilterGroup(group),
-            }))
-            : [{ label: 'No groups available', disabled: true }];
-
-        return [
-            {
-                label: 'Filter by Group',
-                items: [
-                    ...groupItems,
-                    { separator: true },
-                    {
-                        label: 'Clear All',
-                        icon: 'pi pi-times',
-                        disabled: !this.hasActiveFilters(),
-                        command: () => this.clearFilters(),
-                    },
-                ],
-            },
-        ];
     });
 
     protected readonly hasActiveFilters = computed(
