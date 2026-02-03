@@ -78,7 +78,7 @@
         <!-- Profiles Table with Virtual Scrolling -->
         <p-table id="home-profiles-table" [value]="filteredProfiles()" [(selection)]="selectedProfiles"
             (selectionChange)="onSelectionChange($event)" [first]="first()" [rows]="rowsPerPage()" dataKey="path"
-            [scrollable]="true" scrollHeight="flex" [virtualScroll]="true" [virtualScrollItemSize]="48">
+            [scrollable]="true" scrollHeight="flex">
 
             <!-- Header -->
             <ng-template pTemplate="header">
