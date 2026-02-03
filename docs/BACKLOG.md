@@ -120,7 +120,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | 5.1 | Profile Backup | Zip & backup profile ra file riêng | 🟡 TB | ✅ |
 | 5.2 | Profile Restore | Restore từ backup file | 🟡 TB | ✅ |
 | 5.3 | Bulk Export | Export nhiều profiles ra ZIP cùng lúc | 🟡 TB | ✅ |
-| 5.4 | Auto Backup | Tự động backup theo schedule | 🟡 TB | 📋 |
+| 5.4 | Auto Backup | Scheduled backup tự động | 🟡 TB | ✅ |
 | 5.5 | Cloud Sync (Optional) | Sync metadata lên cloud (không sync data) | 🔴 Khó | 📋 |
 | 5.6 | Profile Export | Export profile settings (không data) để chia sẻ | 🟢 Dễ | ✅ |
 | 5.7 | Backup Encryption | Mã hóa file backup | 🟡 TB | 📋 |
@@ -173,7 +173,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
 | 9.1 | Storage Dashboard | Biểu đồ dung lượng từng profile | 🟢 Dễ | ✅ |
-| 9.2 | Usage Heatmap | Calendar view hiển thị ngày dùng profile | 🟡 TB | 📋 |
+| 9.2 | Usage Heatmap | Calendar heatmap showing daily activity | 🟡 TB | ✅ |
 | 9.3 | Profile Health Check | Kiểm tra profile có lỗi, corrupted không | 🟡 TB | 📋 |
 | 9.4 | Cleanup Suggestions | Gợi ý xóa cache, profile không dùng | 🟡 TB | 📋 |
 | 9.5 | Export Reports | Xuất báo cáo usage dưới dạng CSV/PDF | 🟢 Dễ | 📋 |

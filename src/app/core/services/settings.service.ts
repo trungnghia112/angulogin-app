@@ -57,10 +57,18 @@ export interface BrowserSettings {
     profilesPath: string;
 }
 
+export interface AutoBackupSettings {
+    enabled: boolean;
+    intervalDays: number; // 1, 7, 14, 30
+    destinationFolder: string;
+    lastBackupDate: string | null; // ISO timestamp
+}
+
 export interface AppSettings {
     appearance: AppearanceSettings;
     general: GeneralSettings;
     browser: BrowserSettings;
+    autoBackup: AutoBackupSettings;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -79,6 +87,12 @@ const DEFAULT_SETTINGS: AppSettings = {
     },
     browser: {
         profilesPath: '',
+    },
+    autoBackup: {
+        enabled: false,
+        intervalDays: 7,
+        destinationFolder: '',
+        lastBackupDate: null,
     },
 };
 
@@ -100,6 +114,7 @@ export class SettingsService {
     readonly general = computed(() => this._settings().general || DEFAULT_SETTINGS.general);
     readonly browser = computed(() => this._settings().browser);
     readonly isDarkMode = computed(() => this._settings().appearance.isDarkMode);
+    readonly autoBackup = computed(() => this._settings().autoBackup || DEFAULT_SETTINGS.autoBackup);
 
     constructor() {
         // Apply initial theme on load
@@ -245,6 +260,32 @@ export class SettingsService {
         }));
     }
 
+    /**
+     * Update auto-backup settings
+     */
+    setAutoBackupSetting<K extends keyof AutoBackupSettings>(key: K, value: AutoBackupSettings[K]): void {
+        this._settings.update((s) => ({
+            ...s,
+            autoBackup: {
+                ...s.autoBackup,
+                [key]: value
+            }
+        }));
+    }
+
+    /**
+     * Update multiple auto-backup settings at once
+     */
+    updateAutoBackup(updates: Partial<AutoBackupSettings>): void {
+        this._settings.update((s) => ({
+            ...s,
+            autoBackup: {
+                ...s.autoBackup,
+                ...updates
+            }
+        }));
+    }
+
     // === Data Management Methods ===
 
     /**
@@ -280,7 +321,8 @@ export class SettingsService {
                 ...data.settings,
                 appearance: { ...DEFAULT_SETTINGS.appearance, ...data.settings.appearance },
                 general: { ...DEFAULT_SETTINGS.general, ...data.settings.general },
-                browser: { ...DEFAULT_SETTINGS.browser, ...data.settings.browser }
+                browser: { ...DEFAULT_SETTINGS.browser, ...data.settings.browser },
+                autoBackup: { ...DEFAULT_SETTINGS.autoBackup, ...data.settings.autoBackup }
             };
 
             this._settings.set(restoredSettings);
@@ -330,7 +372,8 @@ export class SettingsService {
                     ...parsed,
                     appearance: { ...DEFAULT_SETTINGS.appearance, ...parsed.appearance },
                     general: { ...DEFAULT_SETTINGS.general, ...parsed.general },
-                    browser: { ...DEFAULT_SETTINGS.browser, ...parsed.browser }
+                    browser: { ...DEFAULT_SETTINGS.browser, ...parsed.browser },
+                    autoBackup: { ...DEFAULT_SETTINGS.autoBackup, ...parsed.autoBackup }
                 };
             }
         } catch (e) {

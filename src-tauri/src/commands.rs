@@ -828,3 +828,124 @@ pub fn check_proxy_health(host: String, port: u16) -> ProxyHealthResult {
         }
     }
 }
+
+/// Feature 5.4: Auto Backup All Profiles
+/// Backs up all profiles in a source directory to a destination folder
+#[derive(Serialize)]
+pub struct AutoBackupResult {
+    pub backed_up: Vec<String>,
+    pub failed: Vec<String>,
+    pub total_size: u64,
+}
+
+#[tauri::command]
+pub fn auto_backup_all_profiles(
+    source_dir: String,
+    destination_dir: String,
+) -> Result<AutoBackupResult, String> {
+    
+    let source = std::path::Path::new(&source_dir);
+    let dest = std::path::Path::new(&destination_dir);
+    
+    if !source.exists() {
+        return Err("Source directory does not exist".to_string());
+    }
+    
+    // Create destination directory if it doesn't exist
+    if !dest.exists() {
+        fs::create_dir_all(dest)
+            .map_err(|e| format!("Failed to create destination directory: {}", e))?;
+    }
+    
+    let mut backed_up = Vec::new();
+    let mut failed = Vec::new();
+    let mut total_size: u64 = 0;
+    
+    // Get timestamp for backup filenames
+    let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S").to_string();
+    
+    // Scan for profiles
+    let entries = fs::read_dir(source)
+        .map_err(|e| format!("Failed to read source directory: {}", e))?;
+    
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        
+        let name = match path.file_name().and_then(|n| n.to_str()) {
+            Some(n) => n,
+            None => continue,
+        };
+        
+        // Skip non-profile directories
+        if !name.starts_with("Profile") && name != "Default" {
+            continue;
+        }
+        
+        // Create backup filename
+        let backup_name = format!("{}_{}.zip", name, timestamp);
+        let backup_path = dest.join(&backup_name);
+        
+        // Create ZIP
+        match create_profile_backup(&path, &backup_path) {
+            Ok(size) => {
+                backed_up.push(name.to_string());
+                total_size += size;
+            }
+            Err(e) => {
+                failed.push(format!("{}: {}", name, e));
+            }
+        }
+    }
+    
+    Ok(AutoBackupResult {
+        backed_up,
+        failed,
+        total_size,
+    })
+}
+
+fn create_profile_backup(profile_path: &std::path::Path, backup_path: &std::path::Path) -> Result<u64, String> {
+    use std::io::{Read, Write};
+    use zip::write::FileOptions;
+    
+    let file = fs::File::create(backup_path)
+        .map_err(|e| format!("Failed to create backup file: {}", e))?;
+    
+    let mut zip = zip::ZipWriter::new(file);
+    let options = FileOptions::default()
+        .compression_method(zip::CompressionMethod::Deflated);
+    
+    fn add_to_zip<W: Write + std::io::Seek>(
+        zip: &mut zip::ZipWriter<W>,
+        path: &std::path::Path,
+        base: &std::path::Path,
+        opts: FileOptions,
+    ) -> Result<u64, String> {
+        let mut size = 0u64;
+        if path.is_dir() {
+            if let Ok(entries) = fs::read_dir(path) {
+                for entry in entries.flatten() {
+                    size += add_to_zip(zip, &entry.path(), base, opts)?;
+                }
+            }
+        } else {
+            let rel = path.strip_prefix(base).map_err(|_| "Path error")?;
+            zip.start_file(rel.to_string_lossy(), opts)
+                .map_err(|e| format!("Zip error: {}", e))?;
+            let mut f = fs::File::open(path).map_err(|e| format!("File error: {}", e))?;
+            let mut buf = Vec::new();
+            f.read_to_end(&mut buf).map_err(|e| format!("Read error: {}", e))?;
+            size = buf.len() as u64;
+            zip.write_all(&buf).map_err(|e| format!("Write error: {}", e))?;
+        }
+        Ok(size)
+    }
+    
+    let size = add_to_zip(&mut zip, profile_path, profile_path, options)?;
+    zip.finish().map_err(|e| format!("Finish error: {}", e))?;
+    Ok(size)
+}
+

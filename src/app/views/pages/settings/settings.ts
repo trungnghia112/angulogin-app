@@ -105,9 +105,23 @@ export class Settings {
         { label: 'Skip', value: 'skip' }
     ];
 
+    // Auto Backup state (Feature 5.4)
+    protected readonly backingUp = signal(false);
+    protected readonly backupIntervalOptions = [
+        { label: 'Daily', value: 1 },
+        { label: 'Weekly', value: 7 },
+        { label: 'Every 2 Weeks', value: 14 },
+        { label: 'Monthly', value: 30 }
+    ];
+
     // Navigate to category
     selectCategory(id: string): void {
         this.activeCategory.set(id);
+    }
+
+    // Check if running in Tauri
+    private isTauriEnvironment(): boolean {
+        return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
     }
 
     // Theme methods
@@ -375,6 +389,103 @@ export class Settings {
         if (proxy.isAlive === null || proxy.isAlive === undefined) return 'Not checked';
         if (proxy.isAlive) return `Online (${proxy.latencyMs ?? 0}ms)`;
         return 'Offline';
+    }
+
+    // === Auto Backup Methods (Feature 5.4) ===
+
+    updateAutoBackup(key: 'enabled' | 'intervalDays', event: { checked?: boolean; value?: number }): void {
+        if (key === 'enabled' && event.checked !== undefined) {
+            this.settingsService.setAutoBackupSetting('enabled', event.checked);
+        } else if (key === 'intervalDays' && event.value !== undefined) {
+            this.settingsService.setAutoBackupSetting('intervalDays', event.value);
+        }
+    }
+
+    async browseBackupFolder(): Promise<void> {
+        if (!this.isTauriEnvironment()) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Not Available',
+                detail: 'Folder selection is only available in desktop app'
+            });
+            return;
+        }
+
+        const { open } = await import('@tauri-apps/plugin-dialog');
+        const selected = await open({
+            directory: true,
+            multiple: false,
+            title: 'Select Backup Folder'
+        });
+
+        if (selected && typeof selected === 'string') {
+            this.settingsService.setAutoBackupSetting('destinationFolder', selected);
+        }
+    }
+
+    formatBackupDate(dateStr: string | null): string {
+        if (!dateStr) return 'Never';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    async runManualBackup(): Promise<void> {
+        const backupSettings = this.settingsService.autoBackup();
+        if (!backupSettings.destinationFolder) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'No Destination',
+                detail: 'Please select a backup destination folder first'
+            });
+            return;
+        }
+
+        const profilesPath = this.settingsService.browser().profilesPath;
+        if (!profilesPath) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'No Profiles Path',
+                detail: 'Please configure the profiles path in Browser settings first'
+            });
+            return;
+        }
+
+        this.backingUp.set(true);
+        try {
+            const { invoke } = await import('@tauri-apps/api/core');
+            const result = await invoke<{ backed_up: string[]; failed: string[]; total_size: number }>(
+                'auto_backup_all_profiles',
+                {
+                    sourceDir: profilesPath,
+                    destinationDir: backupSettings.destinationFolder
+                }
+            );
+
+            // Update last backup date
+            this.settingsService.setAutoBackupSetting('lastBackupDate', new Date().toISOString());
+
+            const sizeKB = Math.round(result.total_size / 1024);
+            this.messageService.add({
+                severity: result.failed.length === 0 ? 'success' : 'warn',
+                summary: 'Backup Complete',
+                detail: `Backed up ${result.backed_up.length} profiles (${sizeKB}KB)` +
+                    (result.failed.length > 0 ? `, ${result.failed.length} failed` : '')
+            });
+        } catch (error) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Backup Failed',
+                detail: error instanceof Error ? error.message : String(error)
+            });
+        } finally {
+            this.backingUp.set(false);
+        }
     }
 }
 
