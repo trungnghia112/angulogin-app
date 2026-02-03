@@ -160,7 +160,107 @@ export class UsageDashboard {
         return days;
     });
 
+    // GitHub-style yearly heatmap (Feature 9.2)
+    readonly yearlyHeatmap = computed(() => {
+        const weeks: { date: Date; count: number }[][] = [];
+        const now = new Date();
+        const oneYearAgo = new Date(now);
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        oneYearAgo.setDate(oneYearAgo.getDate() + 1); // Start from tomorrow last year
+
+        // Align to Sunday (start of week)
+        const startDay = oneYearAgo.getDay();
+        if (startDay !== 0) {
+            oneYearAgo.setDate(oneYearAgo.getDate() - startDay);
+        }
+
+        // Build activity count map by date string
+        const activityMap = new Map<string, number>();
+        for (const entry of this.activityLog()) {
+            const dateStr = new Date(entry.timestamp).toDateString();
+            activityMap.set(dateStr, (activityMap.get(dateStr) || 0) + 1);
+        }
+
+        // Generate days
+        let currentDate = new Date(oneYearAgo);
+        let currentWeek: { date: Date; count: number }[] = [];
+
+        while (currentDate <= now) {
+            const count = activityMap.get(currentDate.toDateString()) || 0;
+            currentWeek.push({ date: new Date(currentDate), count });
+
+            if (currentWeek.length === 7) {
+                weeks.push(currentWeek);
+                currentWeek = [];
+            }
+
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        // Push remaining days
+        if (currentWeek.length > 0) {
+            weeks.push(currentWeek);
+        }
+
+        return weeks;
+    });
+
+    // Month labels for yearly heatmap
+    readonly heatmapMonths = computed(() => {
+        const weeks = this.yearlyHeatmap();
+        const months: { label: string; weekIndex: number }[] = [];
+        let lastMonth = -1;
+
+        for (let i = 0; i < weeks.length; i++) {
+            const firstDay = weeks[i][0];
+            if (firstDay) {
+                const month = firstDay.date.getMonth();
+                if (month !== lastMonth) {
+                    months.push({
+                        label: firstDay.date.toLocaleDateString('en-US', { month: 'short' }),
+                        weekIndex: i
+                    });
+                    lastMonth = month;
+                }
+            }
+        }
+
+        return months;
+    });
+
+    // Max activity count for scaling heatmap colors
+    readonly maxDailyActivity = computed(() => {
+        let max = 0;
+        for (const week of this.yearlyHeatmap()) {
+            for (const day of week) {
+                if (day.count > max) max = day.count;
+            }
+        }
+        return Math.max(max, 1); // Avoid division by zero
+    });
+
     // Helpers
+    getHeatmapColor(count: number): string {
+        if (count === 0) return 'bg-surface-100 dark:bg-surface-800';
+        const max = this.maxDailyActivity();
+        const intensity = count / max;
+        if (intensity <= 0.25) return 'bg-green-200 dark:bg-green-900';
+        if (intensity <= 0.5) return 'bg-green-400 dark:bg-green-700';
+        if (intensity <= 0.75) return 'bg-green-500 dark:bg-green-600';
+        return 'bg-green-600 dark:bg-green-500';
+    }
+
+    getHeatmapTooltip(day: { date: Date; count: number }): string {
+        const dateStr = day.date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+        if (day.count === 0) return `${dateStr}: No activity`;
+        const s = day.count === 1 ? '' : 's';
+        return `${dateStr}: ${day.count} action${s}`;
+    }
+
     formatMinutes(minutes: number): string {
         if (!minutes) return '0m';
         if (minutes < 60) return `${Math.round(minutes)}m`;

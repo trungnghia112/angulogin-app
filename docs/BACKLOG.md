@@ -107,7 +107,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 |---|-----------|-------|--------|--------|
 | 4.1 | Proxy Assignment ⭐ | Gán proxy cho từng profile | 🟡 TB | ✅ |
 | 4.2 | Proxy Rotation | Tự động đổi proxy theo schedule | 🔴 Khó | 📋 |
-| 4.3 | Proxy Health Check | Test proxy còn hoạt động không | 🟡 TB | 📋 |
+| 4.3 | Proxy Health Check | Test if proxy is alive | 🟡 TB | ✅ |
 | 4.4 | Proxy Import/Export | Import danh sách proxy từ file | 🟢 Dễ | ✅ |
 | 4.5 | Proxy Groups | Nhóm proxy theo region/provider | 🟢 Dễ | ✅ |
 
