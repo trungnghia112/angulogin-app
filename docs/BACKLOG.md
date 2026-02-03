@@ -10,9 +10,10 @@
 
 | Trạng thái | Số lượng |
 |------------|----------|
-| ✅ Done | 33 |
+| ✅ Done | 36 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 16 |
+| 📋 Backlog | 9 |
+| ❌ Cancelled | 10 |
 
 ---
 
@@ -96,7 +97,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | 3.4 | Launch with Extensions | Toggle on/off extensions khi launch | 🔴 Khó | 📋 |
 | 3.5 | Incognito Mode | Launch profile ở chế độ incognito | 🟢 Dễ | ✅ |
 | 3.6 | Custom Chrome Flags | Thêm flags như `--disable-gpu`, `--no-sandbox` | 🟢 Dễ | ✅ |
-| 3.7 | Window Position | Mở Chrome ở vị trí/kích thước cố định | 🟡 TB | 📋 |
+| 3.7 | Window Position | Mở Chrome ở vị trí/kích thước cố định | 🟡 TB | ✅ |
 
 ---
 
@@ -107,8 +108,8 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | 4.1 | Proxy Assignment ⭐ | Gán proxy cho từng profile | 🟡 TB | ✅ |
 | 4.2 | Proxy Rotation | Tự động đổi proxy theo schedule | 🔴 Khó | 📋 |
 | 4.3 | Proxy Health Check | Test proxy còn hoạt động không | 🟡 TB | 📋 |
-| 4.4 | Proxy Import/Export | Import danh sách proxy từ file | 🟢 Dễ | 📋 |
-| 4.5 | Proxy Groups | Nhóm proxy theo region/provider | 🟢 Dễ | 📋 |
+| 4.4 | Proxy Import/Export | Import danh sách proxy từ file | 🟢 Dễ | ✅ |
+| 4.5 | Proxy Groups | Nhóm proxy theo region/provider | 🟢 Dễ | ✅ |
 
 ---
 
@@ -121,7 +122,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | 5.3 | Bulk Export | Export nhiều profiles ra ZIP cùng lúc | 🟡 TB | ✅ |
 | 5.4 | Auto Backup | Tự động backup theo schedule | 🟡 TB | 📋 |
 | 5.5 | Cloud Sync (Optional) | Sync metadata lên cloud (không sync data) | 🔴 Khó | 📋 |
-| 5.6 | Profile Export | Export profile settings (không data) để chia sẻ | 🟢 Dễ | 📋 |
+| 5.6 | Profile Export | Export profile settings (không data) để chia sẻ | 🟢 Dễ | ✅ |
 | 5.7 | Backup Encryption | Mã hóa file backup | 🟡 TB | 📋 |
 | 5.8 | Clear Profile Cookies | Xóa cookies, cache, browsing data của profile | 🟢 Dễ | ✅ |
 
@@ -142,28 +143,28 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 ---
 
-## 🔧 NHÓM 7: Automation & Integration
+## 🔧 NHÓM 7: Automation & Integration ❌ CANCELLED
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
-| 7.1 | CLI Support | `cpm launch "Profile1"` từ terminal | 🟡 TB | 📋 |
-| 7.2 | Alfred/Raycast Integration | Quick launch từ launcher | 🟡 TB | 📋 |
-| 7.3 | Spotlight-like Search | Global hotkey để search & launch | 🟡 TB | 📋 |
-| 7.4 | AppleScript Support | Automation với macOS scripts | 🔴 Khó | 📋 |
-| 7.5 | Webhook Notifications | Notify khi profile được mở/đóng | 🔴 Khó | 📋 |
-| 7.6 | URL Scheme | `cpm://launch/Profile1` để mở từ browser | 🟡 TB | 📋 |
+| 7.1 | CLI Support | `cpm launch "Profile1"` từ terminal | 🟡 TB | ❌ |
+| 7.2 | Alfred/Raycast Integration | Quick launch từ launcher | 🟡 TB | ❌ |
+| 7.3 | Spotlight-like Search | Global hotkey để search & launch | 🟡 TB | ❌ |
+| 7.4 | AppleScript Support | Automation với macOS scripts | 🔴 Khó | ❌ |
+| 7.5 | Webhook Notifications | Notify khi profile được mở/đóng | 🔴 Khó | ❌ |
+| 7.6 | URL Scheme | `cpm://launch/Profile1` để mở từ browser | 🟡 TB | ❌ |
 
 ---
 
-## 🔒 NHÓM 8: Security & Privacy
+## 🔒 NHÓM 8: Security & Privacy ❌ CANCELLED
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
-| 8.1 | Profile Lock | Khóa profile bằng password/TouchID | 🟡 TB | 📋 |
+| 8.1 | Profile Lock | Khóa profile bằng password/TouchID | 🟡 TB | ❌ |
 | 8.2 | Hidden Profiles | Ẩn profile khỏi view mặc định | 🟢 Dễ | ✅ |
-| 8.3 | Auto-clear Data | Tự động xóa cache/cookies khi đóng | 🟡 TB | 📋 |
+| 8.3 | Auto-clear Data | Tự động xóa cache/cookies khi đóng | 🟡 TB | ❌ |
 | 8.4 | Activity Log | Ghi log ai mở profile nào, khi nào | 🟢 Dễ | ✅ |
-| 8.5 | App Lock | Khóa toàn bộ app bằng password/TouchID | 🟡 TB | 📋 |
+| 8.5 | App Lock | Khóa toàn bộ app bằng password/TouchID | 🟡 TB | ❌ |
 
 ---
 
@@ -223,6 +224,7 @@ Những ý tưởng táo bạo hơn cho future versions:
 
 | Ngày | Thay đổi |
 |------|----------|
+| 2026-02-04 | Hoàn thành: Window Position, Proxy Import/Export, Profile Export, Proxy Groups. Cancelled: Security (8.1, 8.3, 8.5), Automation (7.1-7.6) |
 | 2026-01-27 | Hoàn thành: Bulk Export, Drag & Drop, Smart Folders, Storage Dashboard, Profile Restore, Favorites, Custom Chrome Flags, Compact Mode |
 | 2026-01-25 | Hoàn thành: Color Coding, Hidden Profiles, Activity Log, Profile Preview |
 | 2026-01-23 | Khởi tạo backlog với 45+ tính năng từ brainstorm session |
