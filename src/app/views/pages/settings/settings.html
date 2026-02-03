@@ -307,6 +307,101 @@
         </div>
         }
 
+        <!-- Proxy Section -->
+        @if (activeCategory() === 'proxy') {
+        <div class="max-w-3xl flex flex-col gap-8">
+
+            <!-- Proxy List -->
+            <section
+                class="bg-surface-0 dark:bg-surface-900 p-6 rounded-xl border border-surface-200 dark:border-surface-700">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-base font-semibold text-color">Proxy Servers</h3>
+                        <p class="text-sm text-muted-color">{{ proxyService.proxyCount() }} proxies configured</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <p-button label="Check All" icon="pi pi-sync" [outlined]="true" size="small"
+                            [loading]="checkingAll()" (click)="checkAllProxiesHealth()"
+                            [disabled]="proxyService.proxyCount() === 0" />
+                        <p-button label="Export" icon="pi pi-download" [outlined]="true" size="small"
+                            (click)="proxyService.exportProxies()" [disabled]="proxyService.proxyCount() === 0" />
+                    </div>
+                </div>
+
+                @if (proxyService.proxies().length === 0) {
+                <div class="flex flex-col items-center justify-center py-8 text-center">
+                    <i class="pi pi-globe text-3xl text-muted-color mb-3"></i>
+                    <p class="text-muted-color">No proxies configured</p>
+                    <p class="text-xs text-muted-color mt-1">Proxies are assigned to profiles in the profile edit dialog
+                    </p>
+                </div>
+                } @else {
+                <div class="flex flex-col gap-3">
+                    @for (proxy of proxyService.proxies(); track proxy.id; let i = $index) {
+                    <div class="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-800/50 rounded-lg">
+                        <div class="flex items-center gap-4">
+                            <!-- Health Status Indicator -->
+                            <i [class]="getHealthStatusIcon(proxy)" pTooltip="{{ getHealthStatusText(proxy) }}"></i>
+
+                            <!-- Proxy Info -->
+                            <div>
+                                <p class="text-sm font-medium text-color">{{ proxy.name }}</p>
+                                <p class="text-xs text-muted-color">{{ proxy.type }}://{{ proxy.host }}:{{ proxy.port }}
+                                </p>
+                            </div>
+
+                            <!-- Group Badge -->
+                            @if (proxy.group) {
+                            <span class="px-2 py-0.5 bg-primary/20 text-primary text-xs rounded">{{ proxy.group
+                                }}</span>
+                            }
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <!-- Latency -->
+                            @if (proxy.isAlive && proxy.latencyMs) {
+                            <span class="text-xs text-muted-color">{{ proxy.latencyMs }}ms</span>
+                            }
+
+                            <!-- Check Button -->
+                            <p-button icon="pi pi-sync" [rounded]="true" [text]="true" severity="secondary" size="small"
+                                pTooltip="Check Health" [loading]="checkingProxyId() === proxy.id"
+                                (click)="checkProxyHealth(proxy)" />
+
+                            <!-- Delete Button -->
+                            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+                                pTooltip="Remove Proxy" (click)="proxyService.remove(proxy.id)" />
+                        </div>
+                    </div>
+                    }
+                </div>
+                }
+            </section>
+
+            <!-- Health Check Info -->
+            <section
+                class="bg-surface-0 dark:bg-surface-900 p-6 rounded-xl border border-surface-200 dark:border-surface-700">
+                <h3 class="text-sm font-semibold text-muted-color mb-4 uppercase tracking-wider">Health Status Legend
+                </h3>
+                <div class="flex gap-6">
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-circle-fill text-green-500"></i>
+                        <span class="text-sm text-muted-color">Online</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-circle-fill text-red-500"></i>
+                        <span class="text-sm text-muted-color">Offline</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-circle text-gray-400"></i>
+                        <span class="text-sm text-muted-color">Not Checked</span>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+        }
+
     </div>
 </div>
 

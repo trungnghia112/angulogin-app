@@ -205,4 +205,60 @@ export class ProxyService {
         this._proxies.set([]);
         this.saveToStorage();
     }
+
+    // === Health Check (Feature 4.3) ===
+
+    async checkHealth(proxy: ProfileProxy): Promise<{ isAlive: boolean; latencyMs?: number; error?: string }> {
+        try {
+            // Check if running in Tauri
+            if (typeof (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ === 'undefined') {
+                // Mock response for browser dev
+                return { isAlive: true, latencyMs: Math.floor(Math.random() * 200) + 50 };
+            }
+
+            const { invoke } = await import('@tauri-apps/api/core');
+            const result = await invoke<{ is_alive: boolean; latency_ms: number | null; error: string | null }>(
+                'check_proxy_health',
+                { host: proxy.host, port: proxy.port }
+            );
+
+            // Update proxy with health status
+            this.update(proxy.id, {
+                isAlive: result.is_alive,
+                latencyMs: result.latency_ms ?? undefined,
+                lastChecked: new Date().toISOString(),
+            });
+
+            return {
+                isAlive: result.is_alive,
+                latencyMs: result.latency_ms ?? undefined,
+                error: result.error ?? undefined,
+            };
+        } catch (e) {
+            const error = e instanceof Error ? e.message : 'Unknown error';
+            this.update(proxy.id, {
+                isAlive: false,
+                latencyMs: undefined,
+                lastChecked: new Date().toISOString(),
+            });
+            return { isAlive: false, error };
+        }
+    }
+
+    async checkAllHealth(): Promise<{ checked: number; alive: number; dead: number }> {
+        const proxies = this._proxies();
+        let alive = 0;
+        let dead = 0;
+
+        for (const proxy of proxies) {
+            const result = await this.checkHealth(proxy);
+            if (result.isAlive) {
+                alive++;
+            } else {
+                dead++;
+            }
+        }
+
+        return { checked: proxies.length, alive, dead };
+    }
 }

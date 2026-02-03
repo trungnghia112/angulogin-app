@@ -17,6 +17,10 @@ export interface ProfileProxy {
     username?: string | null;
     password?: string | null;
     group?: string | null;
+    // Health check status (Feature 4.3)
+    lastChecked?: string | null;  // ISO timestamp
+    isAlive?: boolean | null;     // Last health check result
+    latencyMs?: number | null;    // Response time in ms
 }
 
 export interface ProfileTag {

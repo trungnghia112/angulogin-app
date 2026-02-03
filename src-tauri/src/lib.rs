@@ -35,7 +35,8 @@ pub fn run() {
             commands::backup_profile,
             commands::restore_from_backup,
             commands::clear_profile_cookies,
-            commands::bulk_export_profiles
+            commands::bulk_export_profiles,
+            commands::check_proxy_health
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

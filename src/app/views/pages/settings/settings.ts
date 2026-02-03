@@ -23,6 +23,8 @@ import {
     GeneralSettings
 } from '../../../core/services/settings.service';
 import { ProfileService } from '../../../services/profile.service';
+import { ProxyService } from '../../../services/proxy.service';
+import { ProfileProxy } from '../../../models/folder.model';
 
 interface SettingsCategory {
     id: string;
@@ -52,6 +54,7 @@ interface SettingsCategory {
 export class Settings {
     protected readonly settingsService = inject(SettingsService);
     protected readonly profileService = inject(ProfileService);
+    protected readonly proxyService = inject(ProxyService);
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
 
@@ -60,8 +63,13 @@ export class Settings {
         { id: 'general', label: 'General', icon: 'pi pi-cog' },
         { id: 'appearance', label: 'Appearance', icon: 'pi pi-palette' },
         { id: 'browser', label: 'Browser Paths', icon: 'pi pi-folder' },
+        { id: 'proxy', label: 'Proxy', icon: 'pi pi-globe' },
         { id: 'data', label: 'Data', icon: 'pi pi-database' },
     ];
+
+    // Proxy Health Check state
+    protected readonly checkingProxyId = signal<string | null>(null);
+    protected readonly checkingAll = signal(false);
 
     // Active category
     protected readonly activeCategory = signal<string>('appearance');
@@ -324,6 +332,49 @@ export class Settings {
         } finally {
             this.restoring.set(false);
         }
+    }
+
+    // === Proxy Health Check Methods ===
+
+    async checkProxyHealth(proxy: ProfileProxy): Promise<void> {
+        this.checkingProxyId.set(proxy.id);
+        try {
+            const result = await this.proxyService.checkHealth(proxy);
+            this.messageService.add({
+                severity: result.isAlive ? 'success' : 'warn',
+                summary: result.isAlive ? 'Proxy Online' : 'Proxy Offline',
+                detail: result.isAlive
+                    ? `${proxy.host}:${proxy.port} is reachable (${result.latencyMs}ms)`
+                    : `${proxy.host}:${proxy.port} - ${result.error || 'Connection failed'}`,
+            });
+        } finally {
+            this.checkingProxyId.set(null);
+        }
+    }
+
+    async checkAllProxiesHealth(): Promise<void> {
+        this.checkingAll.set(true);
+        try {
+            const result = await this.proxyService.checkAllHealth();
+            this.messageService.add({
+                severity: result.dead === 0 ? 'success' : 'warn',
+                summary: 'Health Check Complete',
+                detail: `${result.alive} online, ${result.dead} offline out of ${result.checked} proxies`,
+            });
+        } finally {
+            this.checkingAll.set(false);
+        }
+    }
+
+    getHealthStatusIcon(proxy: ProfileProxy): string {
+        if (proxy.isAlive === null || proxy.isAlive === undefined) return 'pi pi-circle text-gray-400';
+        return proxy.isAlive ? 'pi pi-circle-fill text-green-500' : 'pi pi-circle-fill text-red-500';
+    }
+
+    getHealthStatusText(proxy: ProfileProxy): string {
+        if (proxy.isAlive === null || proxy.isAlive === undefined) return 'Not checked';
+        if (proxy.isAlive) return `Online (${proxy.latencyMs ?? 0}ms)`;
+        return 'Offline';
     }
 }
 

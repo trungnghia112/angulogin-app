@@ -769,3 +769,62 @@ pub fn bulk_export_profiles(
         total_size,
     })
 }
+
+/// Feature 4.3: Proxy Health Check
+/// Test if a proxy server is reachable via TCP connection
+#[derive(Serialize)]
+pub struct ProxyHealthResult {
+    pub is_alive: bool,
+    pub latency_ms: Option<u64>,
+    pub error: Option<String>,
+}
+
+#[tauri::command]
+pub fn check_proxy_health(host: String, port: u16) -> ProxyHealthResult {
+    use std::net::{TcpStream, ToSocketAddrs};
+    use std::time::{Duration, Instant};
+    
+    let address = format!("{}:{}", host, port);
+    
+    // Resolve the address
+    let socket_addrs: Vec<_> = match address.to_socket_addrs() {
+        Ok(addrs) => addrs.collect(),
+        Err(e) => {
+            return ProxyHealthResult {
+                is_alive: false,
+                latency_ms: None,
+                error: Some(format!("Failed to resolve address: {}", e)),
+            };
+        }
+    };
+    
+    if socket_addrs.is_empty() {
+        return ProxyHealthResult {
+            is_alive: false,
+            latency_ms: None,
+            error: Some("No addresses found for host".to_string()),
+        };
+    }
+    
+    // Try to connect with 5 second timeout
+    let start = Instant::now();
+    let timeout = Duration::from_secs(5);
+    
+    match TcpStream::connect_timeout(&socket_addrs[0], timeout) {
+        Ok(_stream) => {
+            let latency = start.elapsed().as_millis() as u64;
+            ProxyHealthResult {
+                is_alive: true,
+                latency_ms: Some(latency),
+                error: None,
+            }
+        }
+        Err(e) => {
+            ProxyHealthResult {
+                is_alive: false,
+                latency_ms: None,
+                error: Some(format!("Connection failed: {}", e)),
+            }
+        }
+    }
+}
