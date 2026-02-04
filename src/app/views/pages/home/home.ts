@@ -153,7 +153,7 @@ export class Home implements OnInit, OnDestroy {
     protected readonly selectedProfiles = signal<Profile[]>([]);
 
     // Table config
-    protected readonly rowsPerPage = signal(5);
+    protected readonly rowsPerPage = signal(10);
     protected readonly first = signal(0);
     protected readonly viewMode = signal<'table' | 'grid'>('table');
 
@@ -274,6 +274,14 @@ export class Home implements OnInit, OnDestroy {
     protected readonly favoriteCount = computed(() =>
         this.profiles().filter(p => p.metadata?.isFavorite).length
     );
+
+    // Paginated profiles for table display
+    protected readonly paginatedProfiles = computed(() => {
+        const all = this.filteredProfiles();
+        const start = this.first();
+        const end = start + this.rowsPerPage();
+        return all.slice(start, end);
+    });
 
     // Dialog states
     protected readonly showCreateDialog = signal(false);
