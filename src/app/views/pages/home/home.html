@@ -40,7 +40,7 @@
     </div>
 
     <!-- Content -->
-    <div id="home-content" class="flex-1 min-h-0 p-6 pb-4" [class.overflow-hidden]="viewMode() === 'table'"
+    <div id="home-content" class="flex-1 min-h-0" [class.overflow-hidden]="viewMode() === 'table'"
         [class.overflow-auto]="viewMode() !== 'table'">
         @if (loading()) {
         <div id="home-loading" class="flex flex-col items-center justify-center py-16 gap-4 text-muted-color">
@@ -73,6 +73,7 @@
             </button>
         </div>
         } @else if (activeTab() === 'profiles') {
+
         <!-- Profiles View - Table or Grid -->
         @if (viewMode() === 'table') {
         <!-- Profiles Table with Virtual Scrolling -->
@@ -226,12 +227,7 @@
             </ng-template>
         </p-table>
 
-        <!-- Paginator inside table container -->
-        @if (filteredProfiles().length > 0) {
-        <p-paginator [rows]="rowsPerPage()" [totalRecords]="filteredProfiles().length" [first]="first()"
-            [rowsPerPageOptions]="[5, 10, 20]" (onPageChange)="onPaginatorChange($event)" [showCurrentPageReport]="true"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} profiles" />
-        }
+
         } @else {
         <!-- Grid View -->
         <!-- Feature 6.7: Compact mode adds more columns -->
@@ -338,39 +334,51 @@
         }
     </div>
 
-    <!-- Bottom Actions Bar (Fixed at bottom, like sidebar-bottom) -->
-    @if (selectedProfiles().length > 0 && activeTab() === 'profiles') {
-    <div id="home-bottom" class="shrink-0 border-t border-surface p-3">
-        <div id="home-bottom-actions" class="flex items-center gap-3">
-            <button id="home-bottom-clear-btn" (click)="clearSelection()"
-                class="w-8 h-8 rounded-md border border-surface text-muted-color hover:text-color transition-colors flex items-center justify-center"
-                title="Clear selection">
-                <i class="pi pi-times"></i>
-            </button>
-            <div class="w-px h-6 bg-border"></div>
-            <button id="home-bottom-start-all-btn" (click)="bulkLaunch()"
-                class="h-8 flex items-center gap-2 px-3 rounded-md border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
-                title="Launch all selected">
-                <i class="pi pi-play text-sm"></i>
-                <span class="text-sm font-medium">Launch All</span>
-            </button>
-            <!-- Feature 4.1: Bulk Export Button -->
-            <button id="home-bottom-export-btn" (click)="bulkExport()"
-                class="h-8 flex items-center gap-2 px-3 rounded-md border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white transition-colors"
-                title="Export selected to ZIP">
-                <i class="pi pi-download text-sm"></i>
-                <span class="text-sm font-medium">Export</span>
-            </button>
-            <button id="home-bottom-delete-btn" (click)="bulkDelete()"
-                class="h-8 flex items-center gap-2 px-3 rounded-md border border-error text-error hover:bg-error hover:text-white transition-colors"
-                title="Delete selected">
-                <i class="pi pi-trash text-sm"></i>
-                <span class="text-sm font-medium">Delete</span>
-            </button>
-            <div class="flex-1"></div>
-            <span id="home-bottom-selected-count" class="text-sm font-medium text-primary">
-                {{ selectedProfiles().length }} profiles selected
-            </span>
+    <!-- Bottom Bar (Always visible with paginator, actions appear when selection) -->
+    @if (activeTab() === 'profiles' && filteredProfiles().length > 0) {
+    <div id="home-bottom"
+        class="shrink-0 border-t border-surface p-3 sticky bottom-0 bg-surface-0 dark:bg-surface-900 z-10">
+        <div class="flex items-center justify-between gap-3">
+            <!-- Left: Paginator -->
+            <div id="home-bottom-paginator" class="flex-shrink-0">
+                <p-paginator [rows]="rowsPerPage()" [totalRecords]="filteredProfiles().length" [first]="first()"
+                    [rowsPerPageOptions]="[5, 10, 20]" (onPageChange)="onPaginatorChange($event)"
+                    [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} / {totalRecords}" />
+            </div>
+
+            <!-- Right: Actions (only when selection) -->
+            @if (selectedProfiles().length > 0) {
+            <div id="home-bottom-actions" class="flex items-center gap-3 flex-shrink-0">
+                <span id="home-bottom-selected-count" class="text-sm font-medium text-primary">
+                    {{ selectedProfiles().length }} selected
+                </span>
+                <div class="w-px h-6 bg-border"></div>
+                <button id="home-bottom-start-all-btn" (click)="bulkLaunch()"
+                    class="h-8 flex items-center gap-2 px-3 rounded-md border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
+                    title="Launch all selected">
+                    <i class="pi pi-play text-sm"></i>
+                    <span class="text-sm font-medium hidden sm:inline">Launch All</span>
+                </button>
+                <!-- Feature 4.1: Bulk Export Button -->
+                <button id="home-bottom-export-btn" (click)="bulkExport()"
+                    class="h-8 flex items-center gap-2 px-3 rounded-md border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white transition-colors"
+                    title="Export selected to ZIP">
+                    <i class="pi pi-download text-sm"></i>
+                    <span class="text-sm font-medium hidden sm:inline">Export</span>
+                </button>
+                <button id="home-bottom-delete-btn" (click)="bulkDelete()"
+                    class="h-8 flex items-center gap-2 px-3 rounded-md border border-error text-error hover:bg-error hover:text-white transition-colors"
+                    title="Delete selected">
+                    <i class="pi pi-trash text-sm"></i>
+                    <span class="text-sm font-medium hidden sm:inline">Delete</span>
+                </button>
+                <button id="home-bottom-clear-btn" (click)="clearSelection()"
+                    class="w-8 h-8 rounded-md border border-surface text-muted-color hover:text-color transition-colors flex items-center justify-center"
+                    title="Clear selection">
+                    <i class="pi pi-times"></i>
+                </button>
+            </div>
+            }
         </div>
     </div>
     }
