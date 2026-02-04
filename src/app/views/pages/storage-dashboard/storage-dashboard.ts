@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
@@ -25,9 +25,13 @@ interface CleanupSuggestion {
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
     imports: [CommonModule, ChartModule, ButtonModule, CardModule, TooltipModule, TableModule],
 })
-export class StorageDashboard {
+export class StorageDashboard implements OnInit, OnDestroy {
     private readonly profileService = inject(ProfileService);
     private readonly router = inject(Router);
+    private observer: MutationObserver | null = null;
+
+    // Dark mode signal
+    readonly isDarkMode = signal(false);
 
     // Data
     readonly profiles = this.profileService.profiles;
@@ -72,25 +76,28 @@ export class StorageDashboard {
         };
     });
 
-    readonly pieOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'right' as const,
-                labels: {
-                    usePointStyle: true,
-                    color: 'var(--p-text-color)'
-                }
-            },
-            tooltip: {
-                callbacks: {
-                    label: (context: { label?: string; raw?: number }) =>
-                        `${context.label}: ${context.raw} MB`
+    readonly pieOptions = computed(() => {
+        const textColor = this.isDarkMode() ? '#e5e7eb' : '#374151';
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right' as const,
+                    labels: {
+                        usePointStyle: true,
+                        color: textColor
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context: { label?: string; raw?: number }) =>
+                            `${context.label}: ${context.raw} MB`
+                    }
                 }
             }
-        }
-    };
+        };
+    });
 
     // Bar Chart Data
     readonly barData = computed(() => {
@@ -106,24 +113,40 @@ export class StorageDashboard {
         };
     });
 
-    readonly barOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        indexAxis: 'y' as const,
-        plugins: {
-            legend: { display: false }
-        },
-        scales: {
-            x: {
-                ticks: { color: 'var(--p-text-color)' },
-                grid: { color: 'var(--p-surface-border)' }
+    readonly barOptions = computed(() => {
+        const textColor = this.isDarkMode() ? '#e5e7eb' : '#374151';
+        const gridColor = this.isDarkMode() ? '#374151' : '#e5e7eb';
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y' as const,
+            plugins: {
+                legend: { display: false }
             },
-            y: {
-                ticks: { color: 'var(--p-text-color)' },
-                grid: { display: false }
+            scales: {
+                x: {
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
+                },
+                y: {
+                    ticks: { color: textColor },
+                    grid: { display: false }
+                }
             }
-        }
-    };
+        };
+    });
+
+    ngOnInit(): void {
+        this.isDarkMode.set(document.documentElement.classList.contains('dark'));
+        this.observer = new MutationObserver(() => {
+            this.isDarkMode.set(document.documentElement.classList.contains('dark'));
+        });
+        this.observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    ngOnDestroy(): void {
+        this.observer?.disconnect();
+    }
 
     // Cleanup Suggestions
     readonly cleanupSuggestions = computed<CleanupSuggestion[]>(() => {

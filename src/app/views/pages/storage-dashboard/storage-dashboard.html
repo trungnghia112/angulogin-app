@@ -75,7 +75,7 @@
                 <h3 class="text-lg font-semibold text-color mb-4">Storage Distribution (Top 10)</h3>
                 @if (profiles().length > 0) {
                 <div class="h-[300px]">
-                    <p-chart type="pie" [data]="pieData()" [options]="pieOptions" />
+                    <p-chart type="pie" [data]="pieData()" [options]="pieOptions()" />
                 </div>
                 } @else {
                 <div class="h-[300px] flex items-center justify-center text-muted-color">
@@ -90,7 +90,7 @@
                 <h3 class="text-lg font-semibold text-color mb-4">Top 10 Profiles by Size</h3>
                 @if (profiles().length > 0) {
                 <div class="h-[300px]">
-                    <p-chart type="bar" [data]="barData()" [options]="barOptions" />
+                    <p-chart type="bar" [data]="barData()" [options]="barOptions()" />
                 </div>
                 } @else {
                 <div class="h-[300px] flex items-center justify-center text-muted-color">
