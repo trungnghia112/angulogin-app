@@ -337,48 +337,62 @@
     <!-- Bottom Bar (Always visible with paginator, actions appear when selection) -->
     @if (activeTab() === 'profiles' && filteredProfiles().length > 0) {
     <div id="home-bottom"
-        class="shrink-0 border-t border-surface p-3 sticky bottom-0 bg-surface-0 dark:bg-surface-900 z-10">
-        <div class="flex items-center justify-between gap-3">
-            <!-- Left: Paginator -->
-            <div id="home-bottom-paginator" class="flex-shrink-0">
-                <p-paginator [rows]="rowsPerPage()" [totalRecords]="filteredProfiles().length" [first]="first()"
-                    [rowsPerPageOptions]="[5, 10, 20]" (onPageChange)="onPaginatorChange($event)"
-                    [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} / {totalRecords}" />
-            </div>
-
-            <!-- Right: Actions (only when selection) -->
+        class="shrink-0 border-t border-surface px-4 py-2 sticky bottom-0 bg-surface-0 dark:bg-surface-900 z-10">
+        <div class="flex items-center justify-end gap-4">
+            <!-- Actions (only when selection) - appears first (left of paginator) -->
             @if (selectedProfiles().length > 0) {
-            <div id="home-bottom-actions" class="flex items-center gap-3 flex-shrink-0">
+            <div id="home-bottom-actions" class="flex items-center gap-2">
                 <span id="home-bottom-selected-count" class="text-sm font-medium text-primary">
                     {{ selectedProfiles().length }} selected
                 </span>
-                <div class="w-px h-6 bg-border"></div>
+                <div class="w-px h-5 bg-border"></div>
                 <button id="home-bottom-start-all-btn" (click)="bulkLaunch()"
-                    class="h-8 flex items-center gap-2 px-3 rounded-md border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
+                    class="h-7 flex items-center gap-1.5 px-2.5 rounded border border-primary text-primary hover:bg-primary hover:text-white transition-colors text-xs font-medium"
                     title="Launch all selected">
-                    <i class="pi pi-play text-sm"></i>
-                    <span class="text-sm font-medium hidden sm:inline">Launch All</span>
+                    <i class="pi pi-play text-xs"></i>
+                    <span class="hidden sm:inline">Launch</span>
                 </button>
-                <!-- Feature 4.1: Bulk Export Button -->
                 <button id="home-bottom-export-btn" (click)="bulkExport()"
-                    class="h-8 flex items-center gap-2 px-3 rounded-md border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white transition-colors"
+                    class="h-7 flex items-center gap-1.5 px-2.5 rounded border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white transition-colors text-xs font-medium"
                     title="Export selected to ZIP">
-                    <i class="pi pi-download text-sm"></i>
-                    <span class="text-sm font-medium hidden sm:inline">Export</span>
+                    <i class="pi pi-download text-xs"></i>
+                    <span class="hidden sm:inline">Export</span>
                 </button>
                 <button id="home-bottom-delete-btn" (click)="bulkDelete()"
-                    class="h-8 flex items-center gap-2 px-3 rounded-md border border-error text-error hover:bg-error hover:text-white transition-colors"
+                    class="h-7 flex items-center gap-1.5 px-2.5 rounded border border-error text-error hover:bg-error hover:text-white transition-colors text-xs font-medium"
                     title="Delete selected">
-                    <i class="pi pi-trash text-sm"></i>
-                    <span class="text-sm font-medium hidden sm:inline">Delete</span>
+                    <i class="pi pi-trash text-xs"></i>
+                    <span class="hidden sm:inline">Delete</span>
                 </button>
                 <button id="home-bottom-clear-btn" (click)="clearSelection()"
-                    class="w-8 h-8 rounded-md border border-surface text-muted-color hover:text-color transition-colors flex items-center justify-center"
+                    class="w-7 h-7 rounded border border-surface text-muted-color hover:text-color transition-colors flex items-center justify-center"
                     title="Clear selection">
-                    <i class="pi pi-times"></i>
+                    <i class="pi pi-times text-xs"></i>
                 </button>
+                <div class="w-px h-5 bg-border"></div>
             </div>
             }
+
+            <!-- Right: Minimal Paginator -->
+            <div id="home-bottom-paginator" class="flex items-center gap-3 text-sm">
+                <span class="text-muted-color">Rows per page:</span>
+                <p-select
+                    [options]="[{label: '10', value: 10}, {label: '25', value: 25}, {label: '50', value: 50}, {label: '100', value: 100}, {label: '500', value: 500}]"
+                    [ngModel]="rowsPerPage()" (ngModelChange)="onRowsPerPageChange($event)" optionLabel="label"
+                    optionValue="value" class="w-16" [style]="{'min-width': '4rem'}" />
+                <span class="text-muted-color">{{ first() + 1 }}-{{ Math.min(first() + rowsPerPage(),
+                    filteredProfiles().length) }} of {{ filteredProfiles().length }}</span>
+                <div class="flex items-center">
+                    <button (click)="onPagePrev()" [disabled]="first() === 0"
+                        class="w-7 h-7 flex items-center justify-center text-muted-color hover:text-color disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        <i class="pi pi-chevron-left text-xs"></i>
+                    </button>
+                    <button (click)="onPageNext()" [disabled]="first() + rowsPerPage() >= filteredProfiles().length"
+                        class="w-7 h-7 flex items-center justify-center text-muted-color hover:text-color disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        <i class="pi pi-chevron-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
     }

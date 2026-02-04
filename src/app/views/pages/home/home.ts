@@ -28,6 +28,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
+import { Select } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { MenuModule } from 'primeng/menu';
 import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
@@ -81,6 +82,7 @@ interface Tab {
         DragDropModule,
         ProfileToolbar,
         ProfileEditDialog,
+        Select,
     ],
 })
 export class Home implements OnInit, OnDestroy {
@@ -95,6 +97,9 @@ export class Home implements OnInit, OnDestroy {
     private statusInterval: ReturnType<typeof setInterval> | null = null;
     // PERF FIX: Cache tooltips to avoid string creation on every render
     private readonly tooltipCache = new Map<string, string>();
+
+    // Expose Math for template
+    protected Math = Math;
 
     // Sidebar Data (Moved from Pages)
     // Feature 2.2: Smart Folders - auto-filtering based on criteria
@@ -886,6 +891,22 @@ export class Home implements OnInit, OnDestroy {
         if (event.rows !== undefined) {
             this.rowsPerPage.set(event.rows);
         }
+    }
+
+    onRowsPerPageChange(rows: number): void {
+        this.rowsPerPage.set(rows);
+        this.first.set(0); // Reset to first page when changing rows
+    }
+
+    onPagePrev(): void {
+        const newFirst = Math.max(0, this.first() - this.rowsPerPage());
+        this.first.set(newFirst);
+    }
+
+    onPageNext(): void {
+        const maxFirst = this.filteredProfiles().length - this.rowsPerPage();
+        const newFirst = Math.min(maxFirst, this.first() + this.rowsPerPage());
+        this.first.set(Math.max(0, newFirst));
     }
 
     // ==== Bulk Actions ====
