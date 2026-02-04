@@ -338,8 +338,8 @@
     @if (activeTab() === 'profiles' && filteredProfiles().length > 0) {
     <div id="home-bottom"
         class="shrink-0 border-t border-surface px-4 py-2 sticky bottom-0 bg-surface-0 dark:bg-surface-900 z-10">
-        <div class="flex items-center justify-end gap-4">
-            <!-- Actions (only when selection) - appears first (left of paginator) -->
+        <div class="flex items-center justify-between gap-4">
+            <!-- Left: Actions (only when selection) -->
             @if (selectedProfiles().length > 0) {
             <div id="home-bottom-actions" class="flex items-center gap-2">
                 <span id="home-bottom-selected-count" class="text-sm font-medium text-primary">
@@ -369,8 +369,9 @@
                     title="Clear selection">
                     <i class="pi pi-times text-xs"></i>
                 </button>
-                <div class="w-px h-5 bg-border"></div>
             </div>
+            } @else {
+            <div></div>
             }
 
             <!-- Right: Minimal Paginator -->
