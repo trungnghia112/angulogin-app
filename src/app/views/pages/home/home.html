@@ -141,8 +141,18 @@
 
                     <!-- Proxy -->
                     <td>
+                        @if (profile.metadata?.proxy) {
+                        <span
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-100 dark:bg-surface-800 border border-surface rounded text-xs text-color font-mono"
+                            [pTooltip]="profile.metadata?.proxy" tooltipPosition="top">
+                            <i class="pi pi-globe text-[10px] text-primary"></i>
+                            <span class="max-w-[120px] truncate">{{ profile.metadata?.proxy }}</span>
+                        </span>
+                        } @else {
                         <p-button [id]="'home-profile-' + i + '-proxy-btn'" icon="pi pi-plus" [rounded]="true"
-                            [text]="true" severity="secondary" size="small" />
+                            [text]="true" severity="secondary" size="small" (click)="openEditDialog(profile, $event)"
+                            pTooltip="Add Proxy" />
+                        }
                     </td>
 
                     <!-- Tags -->
@@ -247,6 +257,17 @@
                 <div
                     class="absolute top-2 right-2 text-muted-color opacity-0 group-hover:opacity-100 transition-opacity">
                     <i class="pi pi-arrows-alt text-xs"></i>
+                </div>
+                }
+                <!-- Phase 0: Proxy Indicator (Grid) -->
+                @if (profile.metadata?.proxy) {
+                <div class="absolute top-2 right-2 z-10"
+                    [class.right-8]="profile.metadata?.isPinned && sortBy() !== 'custom'">
+                    <span
+                        class="w-6 h-6 rounded-full bg-surface-0/80 dark:bg-surface-900/80 backdrop-blur-sm shadow-sm flex items-center justify-center border border-surface"
+                        [pTooltip]="'Proxy: ' + profile.metadata?.proxy" tooltipPosition="left">
+                        <i class="pi pi-globe text-primary text-xs"></i>
+                    </span>
                 </div>
                 }
                 <!-- Phase 1: Color indicator -->

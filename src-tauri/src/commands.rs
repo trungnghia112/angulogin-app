@@ -231,6 +231,8 @@ pub struct ProfileMetadata {
     pub is_favorite: Option<bool>,
     // Custom Chrome Flags (3.6)
     pub custom_flags: Option<String>,
+    // Phase 0: Proxy Manager
+    pub proxy: Option<String>,
 }
 
 #[tauri::command]
@@ -267,12 +269,13 @@ pub fn save_profile_metadata(
     last_session_duration: Option<u32>,
     is_favorite: Option<bool>,
     custom_flags: Option<String>,
+    proxy: Option<String>,
 ) -> Result<(), String> {
     let meta_file = format!("{}/.profile-meta.json", profile_path);
     
     let metadata = ProfileMetadata { 
         emoji, notes, group, shortcut, browser, tags, launch_url, is_pinned, last_opened, 
-        color, is_hidden, launch_count, total_usage_minutes, last_session_duration, is_favorite, custom_flags
+        color, is_hidden, launch_count, total_usage_minutes, last_session_duration, is_favorite, custom_flags, proxy
     };
     
     let content = serde_json::to_string_pretty(&metadata)
@@ -949,3 +952,131 @@ fn create_profile_backup(profile_path: &std::path::Path, backup_path: &std::path
     Ok(size)
 }
 
+/// Feature 9.3: Profile Health Check
+/// Validates Chrome profile integrity by checking critical files
+#[derive(Serialize)]
+pub struct ProfileHealthResult {
+    pub is_healthy: bool,
+    pub issues: Vec<String>,
+    pub warnings: Vec<String>,
+    pub checked_files: u32,
+}
+
+#[tauri::command]
+pub fn check_profile_health(profile_path: String) -> ProfileHealthResult {
+    let path = std::path::Path::new(&profile_path);
+    let mut issues: Vec<String> = Vec::new();
+    let mut warnings: Vec<String> = Vec::new();
+    let mut checked_files: u32 = 0;
+    
+    // Check if profile directory exists
+    if !path.exists() {
+        return ProfileHealthResult {
+            is_healthy: false,
+            issues: vec!["Profile directory does not exist".to_string()],
+            warnings: vec![],
+            checked_files: 0,
+        };
+    }
+    
+    // Check if directory is writable
+    let test_file = path.join(".health-check-test");
+    match fs::write(&test_file, "test") {
+        Ok(_) => {
+            let _ = fs::remove_file(&test_file);
+            checked_files += 1;
+        }
+        Err(_) => {
+            issues.push("Profile directory is not writable".to_string());
+        }
+    }
+    
+    // Check Preferences file (critical for Chrome profiles)
+    let prefs_file = path.join("Preferences");
+    if prefs_file.exists() {
+        checked_files += 1;
+        match fs::read_to_string(&prefs_file) {
+            Ok(content) => {
+                // Validate JSON format
+                if serde_json::from_str::<serde_json::Value>(&content).is_err() {
+                    issues.push("Preferences file is corrupted (invalid JSON)".to_string());
+                }
+            }
+            Err(_) => {
+                issues.push("Cannot read Preferences file".to_string());
+            }
+        }
+    } else {
+        // Not an error for managed profiles created by our app
+        let meta_file = path.join(".profile-meta.json");
+        if !meta_file.exists() {
+            warnings.push("No Preferences file (may be a new or empty profile)".to_string());
+        }
+    }
+    
+    // Check History file (SQLite database)
+    let history_file = path.join("History");
+    if history_file.exists() {
+        checked_files += 1;
+        // Check if file is readable and has valid SQLite header
+        match fs::read(&history_file) {
+            Ok(content) => {
+                // SQLite files start with "SQLite format 3\0"
+                if content.len() >= 16 {
+                    let header = String::from_utf8_lossy(&content[0..15]);
+                    if !header.starts_with("SQLite format 3") {
+                        issues.push("History file is corrupted (invalid SQLite header)".to_string());
+                    }
+                }
+            }
+            Err(_) => {
+                warnings.push("Cannot read History file (may be in use)".to_string());
+            }
+        }
+    }
+    
+    // Check Bookmarks file
+    let bookmarks_file = path.join("Bookmarks");
+    if bookmarks_file.exists() {
+        checked_files += 1;
+        match fs::read_to_string(&bookmarks_file) {
+            Ok(content) => {
+                if serde_json::from_str::<serde_json::Value>(&content).is_err() {
+                    issues.push("Bookmarks file is corrupted (invalid JSON)".to_string());
+                }
+            }
+            Err(_) => {
+                warnings.push("Cannot read Bookmarks file".to_string());
+            }
+        }
+    }
+    
+    // Check our custom metadata file
+    let meta_file = path.join(".profile-meta.json");
+    if meta_file.exists() {
+        checked_files += 1;
+        match fs::read_to_string(&meta_file) {
+            Ok(content) => {
+                if serde_json::from_str::<serde_json::Value>(&content).is_err() {
+                    warnings.push("Metadata file is corrupted (will be recreated)".to_string());
+                }
+            }
+            Err(_) => {
+                warnings.push("Cannot read metadata file".to_string());
+            }
+        }
+    }
+    
+    // Check for unusually small profile size (might indicate corruption)
+    let profile_size = get_profile_size(profile_path.clone()).unwrap_or(0);
+    if profile_size > 0 && profile_size < 1024 {
+        warnings.push("Profile size is unusually small (< 1KB)".to_string());
+    }
+    
+    ProfileHealthResult {
+        is_healthy: issues.is_empty(),
+        issues,
+        warnings,
+        checked_files,
+    }
+}

@@ -36,6 +36,8 @@ export interface ProfileMetadata {
     customFlags?: string | null;
     // Window Position Settings (3.7)
     windowPosition?: WindowPosition | null;
+    // Phase 0: Proxy Manager
+    proxy?: string | null;
 }
 
 // Window position and size for launching browser

@@ -128,6 +128,14 @@
             </button>
         </div>
 
+        <!-- Proxy Setting -->
+        <div id="home-edit-dialog-proxy-section">
+            <label for="home-edit-dialog-proxy-input" class="block text-xs font-medium text-color mb-2">Proxy Server</label>
+            <input id="home-edit-dialog-proxy-input" pInputText type="text" [ngModel]="editProxy()"
+                (ngModelChange)="editProxy.set($event)" placeholder="scheme://host:port (e.g., http://127.0.0.1:8080)" class="w-full" />
+            <p class="text-xs text-muted-color mt-1">Leave empty to use system proxy</p>
+        </div>
+
         <!-- Custom Chrome Flags -->
         <div id="home-edit-dialog-flags-section">
             <label for="home-edit-dialog-flags-input" class="block text-xs font-medium text-color mb-2">Custom Chrome

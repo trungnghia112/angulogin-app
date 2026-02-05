@@ -49,6 +49,7 @@ export interface ProfileEditData {
     isPinned: boolean;
     color: string | null;
     customFlags: string | null;
+    proxy: string | null;
 }
 
 @Component({
@@ -95,6 +96,7 @@ export class ProfileEditDialog {
     protected readonly editIsPinned = signal(false);
     protected readonly editColor = signal<string | null>(null);
     protected readonly editCustomFlags = signal<string | null>(null);
+    protected readonly editProxy = signal<string | null>(null);
 
     // Load profile data when dialog opens
     loadProfile(profile: Profile): void {
@@ -108,6 +110,7 @@ export class ProfileEditDialog {
         this.editIsPinned.set(profile.metadata?.isPinned || false);
         this.editColor.set(profile.metadata?.color || null);
         this.editCustomFlags.set(profile.metadata?.customFlags || null);
+        this.editProxy.set(profile.metadata?.proxy || null);
     }
 
     protected selectEmoji(emoji: string): void {
@@ -172,6 +175,7 @@ export class ProfileEditDialog {
             isPinned: this.editIsPinned(),
             color: this.editColor(),
             customFlags: this.editCustomFlags(),
+            proxy: this.editProxy(),
         });
     }
 

@@ -10,9 +10,9 @@
 
 | Trạng thái | Số lượng |
 |------------|----------|
-| ✅ Done | 36 |
+| ✅ Done | 40 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 9 |
+| 📋 Backlog | 5 |
 | ❌ Cancelled | 10 |
 
 ---
@@ -71,7 +71,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | 1.3 | Profile Sorting | Sort theo tên, ngày tạo, size, lần dùng gần nhất | 🟢 Dễ | ✅ |
 | 1.4 | Profile Pinning | Ghim profile hay dùng lên đầu | 🟢 Dễ | ✅ |
 | 1.5 | Last Opened Tracking | Hiển thị "dùng gần nhất" cho mỗi profile | 🟢 Dễ | ✅ |
-| 1.6 | Usage Statistics | Đếm số lần mở, tổng thời gian dùng | 🟡 TB | 📋 |
+| 1.6 | Usage Statistics | Đếm số lần mở, tổng thời gian dùng | 🟡 TB | ✅ |
 
 ---
 
@@ -174,9 +174,9 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 |---|-----------|-------|--------|--------|
 | 9.1 | Storage Dashboard | Biểu đồ dung lượng từng profile | 🟢 Dễ | ✅ |
 | 9.2 | Usage Heatmap | Calendar heatmap showing daily activity | 🟡 TB | ✅ |
-| 9.3 | Profile Health Check | Kiểm tra profile có lỗi, corrupted không | 🟡 TB | 📋 |
-| 9.4 | Cleanup Suggestions | Gợi ý xóa cache, profile không dùng | 🟡 TB | 📋 |
-| 9.5 | Export Reports | Xuất báo cáo usage dưới dạng CSV/PDF | 🟢 Dễ | 📋 |
+| 9.3 | Profile Health Check | Kiểm tra profile có lỗi, corrupted không | 🟡 TB | ✅ |
+| 9.4 | Cleanup Suggestions | Gợi ý xóa cache, profile không dùng | 🟡 TB | ✅ |
+| 9.5 | Export Reports | Xuất báo cáo usage dưới dạng CSV/PDF | 🟢 Dễ | ✅ |
 
 ---
 

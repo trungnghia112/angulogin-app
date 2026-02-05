@@ -17,6 +17,14 @@ interface CleanupSuggestion {
     reason: string;
 }
 
+interface HealthCheckResult {
+    profile: Profile;
+    isHealthy: boolean;
+    issues: string[];
+    warnings: string[];
+    checkedFiles: number;
+}
+
 @Component({
     selector: 'app-storage-dashboard',
     templateUrl: './storage-dashboard.html',
@@ -32,6 +40,10 @@ export class StorageDashboard implements OnInit, OnDestroy {
 
     // Dark mode signal
     readonly isDarkMode = signal(false);
+
+    // Health check state
+    readonly healthChecking = signal(false);
+    readonly healthResults = signal<HealthCheckResult[]>([]);
 
     // Data
     readonly profiles = this.profileService.profiles;
@@ -201,4 +213,46 @@ export class StorageDashboard implements OnInit, OnDestroy {
     openProfile(profile: Profile): void {
         this.router.navigate(['/'], { queryParams: { profile: profile.path } });
     }
+
+    async runHealthCheck(): Promise<void> {
+        if (this.healthChecking()) return;
+
+        this.healthChecking.set(true);
+        this.healthResults.set([]);
+
+        try {
+            const profiles = this.profiles();
+            const results: HealthCheckResult[] = [];
+
+            // Check each profile
+            for (const profile of profiles) {
+                const result = await this.profileService.checkProfileHealth(profile.path);
+                results.push({
+                    profile,
+                    isHealthy: result.isHealthy,
+                    issues: result.issues,
+                    warnings: result.warnings,
+                    checkedFiles: result.checkedFiles,
+                });
+            }
+
+            // Sort: unhealthy first, then by number of issues
+            results.sort((a, b) => {
+                if (a.isHealthy !== b.isHealthy) return a.isHealthy ? 1 : -1;
+                return b.issues.length - a.issues.length;
+            });
+
+            this.healthResults.set(results);
+        } finally {
+            this.healthChecking.set(false);
+        }
+    }
+
+    readonly healthySummary = computed(() => {
+        const results = this.healthResults();
+        if (results.length === 0) return null;
+        const healthy = results.filter(r => r.isHealthy).length;
+        const unhealthy = results.length - healthy;
+        return { healthy, unhealthy, total: results.length };
+    });
 }

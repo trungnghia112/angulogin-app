@@ -196,14 +196,15 @@ export class ProfileService {
         isHidden: boolean | null = null,
         isFavorite: boolean | null = null,
         customFlags: string | null = null,
+        proxy: string | null = null,
     ): Promise<void> {
         // Mock mode for web development
         if (!isTauriAvailable()) {
-            debugLog('Mock saveProfileMetadata:', profilePath, { emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden, isFavorite, customFlags });
+            debugLog('Mock saveProfileMetadata:', profilePath, { emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden, isFavorite, customFlags, proxy });
             this.profiles.update((profiles) =>
                 profiles.map((p) =>
                     p.path === profilePath
-                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined, isFavorite: isFavorite || undefined, customFlags } }
+                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined, isFavorite: isFavorite || undefined, customFlags, proxy } }
                         : p
                 )
             );
@@ -211,11 +212,11 @@ export class ProfileService {
         }
 
         try {
-            await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden, isFavorite, customFlags });
+            await invoke('save_profile_metadata', { profilePath, emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden, isFavorite, customFlags, proxy });
             this.profiles.update((profiles) =>
                 profiles.map((p) =>
                     p.path === profilePath
-                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined, isFavorite: isFavorite || undefined, customFlags } }
+                        ? { ...p, metadata: { ...p.metadata, emoji, notes, group, shortcut, browser: browser as BrowserType | null, tags: tags || undefined, launchUrl, isPinned: isPinned || undefined, color, isHidden: isHidden || undefined, isFavorite: isFavorite || undefined, customFlags, proxy } }
                         : p
                 )
             );
@@ -249,6 +250,8 @@ export class ProfileService {
             meta.color ?? null,
             meta.isHidden ?? null,
             newFavoriteStatus,
+            meta.customFlags ?? null,
+            meta.proxy ?? null
         );
     }
 
@@ -287,7 +290,9 @@ export class ProfileService {
                 isPinned: existingMetadata.isPinned || null,
                 color: existingMetadata.color || null,
                 isHidden: existingMetadata.isHidden || null,
-                isFavorite: existingMetadata.isFavorite || null
+                isFavorite: existingMetadata.isFavorite || null,
+                customFlags: existingMetadata.customFlags || null,
+                proxy: existingMetadata.proxy || null
             });
             this.profiles.update((profiles) =>
                 profiles.map((p): Profile =>
@@ -353,6 +358,8 @@ export class ProfileService {
                 totalUsageMinutes,
                 lastSessionDuration,
                 isFavorite: meta.isFavorite || null,
+                customFlags: meta.customFlags || null,
+                proxy: meta.proxy || null
             });
 
             this.profiles.update(profiles =>
@@ -685,6 +692,49 @@ export class ProfileService {
                 successful: result.successful,
                 failed: result.failed,
                 totalSize: result.total_size,
+            };
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
+
+    /**
+     * Feature 9.3: Profile Health Check
+     * Validates Chrome profile integrity by checking critical files
+     * @param profilePath - Full path to the profile directory
+     * @returns Health check result with issues and warnings
+     */
+    async checkProfileHealth(profilePath: string): Promise<{
+        isHealthy: boolean;
+        issues: string[];
+        warnings: string[];
+        checkedFiles: number;
+    }> {
+        // Mock mode for web development
+        if (!isTauriAvailable()) {
+            debugLog('Mock checkProfileHealth:', profilePath);
+            return {
+                isHealthy: true,
+                issues: [],
+                warnings: [],
+                checkedFiles: 4,
+            };
+        }
+
+        try {
+            const result = await invoke<{
+                is_healthy: boolean;
+                issues: string[];
+                warnings: string[];
+                checked_files: number;
+            }>('check_profile_health', { profilePath });
+            return {
+                isHealthy: result.is_healthy,
+                issues: result.issues,
+                warnings: result.warnings,
+                checkedFiles: result.checked_files,
             };
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
