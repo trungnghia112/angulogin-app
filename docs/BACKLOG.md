@@ -1,8 +1,8 @@
 # 📋 BACKLOG: Chrome Profile Manager
 
 **Ngày tạo:** 2026-01-23
-**Cập nhật lần cuối:** 2026-01-23
-**Tổng số tính năng:** 45+
+**Cập nhật lần cuối:** 2026-02-06
+**Tổng số tính năng:** 55+
 
 ---
 
@@ -10,9 +10,9 @@
 
 | Trạng thái | Số lượng |
 |------------|----------|
-| ✅ Done | 40 |
+| ✅ Done | 44 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 5 |
+| 📋 Backlog | 11 |
 | ❌ Cancelled | 10 |
 
 ---
@@ -224,6 +224,7 @@ Những ý tưởng táo bạo hơn cho future versions:
 
 | Ngày | Thay đổi |
 |------|----------|
+| 2026-02-06 | Sync docs: Auto-backup (5.4), Usage Heatmap (9.2), Proxy Health Check (4.3), Profile Health Check (9.3), Cleanup Suggestions (9.4) đã được implement |
 | 2026-02-04 | Hoàn thành: Window Position, Proxy Import/Export, Profile Export, Proxy Groups. Cancelled: Security (8.1, 8.3, 8.5), Automation (7.1-7.6) |
 | 2026-01-27 | Hoàn thành: Bulk Export, Drag & Drop, Smart Folders, Storage Dashboard, Profile Restore, Favorites, Custom Chrome Flags, Compact Mode |
 | 2026-01-25 | Hoàn thành: Color Coding, Hidden Profiles, Activity Log, Profile Preview |
