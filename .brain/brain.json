@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.0.0",
-        "updated_at": "2026-02-06T03:45:00+07:00"
+        "updated_at": "2026-02-06T12:24:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
@@ -193,6 +193,36 @@
                 "Scrollable tabs with icon-only on mobile",
                 "Responsive dialog widths min(Xpx, 95vw)"
             ]
+        },
+        {
+            "name": "Proxy Management (4.x)",
+            "status": "implemented",
+            "includes": [
+                "Proxy assignment per profile",
+                "Proxy health check",
+                "Proxy import/export",
+                "Proxy groups by region/provider"
+            ]
+        },
+        {
+            "name": "Auto Backup (5.4)",
+            "status": "implemented",
+            "description": "Scheduled automatic backup with configurable intervals"
+        },
+        {
+            "name": "Usage Heatmap (9.2)",
+            "status": "implemented",
+            "description": "GitHub-style yearly activity calendar showing daily usage"
+        },
+        {
+            "name": "Profile Health Check (9.3)",
+            "status": "implemented",
+            "description": "Validate Chrome profile integrity - check for Preferences file, corrupted JSON, required folders"
+        },
+        {
+            "name": "Cleanup Suggestions (9.4)",
+            "status": "implemented",
+            "description": "Suggest profiles to clean based on size and usage patterns"
         }
     ],
     "api_endpoints": [
@@ -239,6 +269,10 @@
         {
             "command": "clear_profile_cookies",
             "description": "Xóa cookies, cache, IndexedDB, session/local storage (14+ data types)"
+        },
+        {
+            "command": "check_profile_health",
+            "description": "Kiểm tra integrity của profile: Preferences file, JSON validity, required folders"
         }
     ],
     "knowledge_items": {
