@@ -1,107 +1,77 @@
-<div id="extensions-container" class="flex-1 flex flex-col p-8">
-    <!-- Header -->
-    <div id="extensions-header" class="flex items-center justify-between mb-8">
-        <div id="extensions-header-info">
-            <h1 id="extensions-header-title" class="text-2xl font-bold text-color mb-2">
-                Extensions</h1>
-            <p id="extensions-header-subtitle" class="text-sm text-muted-color">Manage Chrome
-                extensions for your profiles
-            </p>
+<!-- Top Bar: Installation Controls -->
+<div class="px-6 py-4 border-b border-surface bg-surface-0 dark:bg-surface-900 sticky top-0 z-10 flex flex-col gap-4">
+    <div class="flex items-start gap-4">
+        <div class="flex-1">
+            <label for="ext-url-input" class="block text-sm font-medium text-color mb-1">Chrome Web Store URL</label>
+            <p-iconField iconPosition="left" class="w-full">
+                <p-inputIcon styleClass="pi pi-link" />
+                <input pInputText id="ext-url-input" [(ngModel)]="installUrl" 
+                       placeholder="https://chromewebstore.google.com/detail/..." 
+                       class="w-full" />
+            </p-iconField>
+            <p class="text-xs text-muted-color mt-1">Paste the full URL of the extension. Selected profiles will launch directly to this page.</p>
         </div>
-        <p-button id="extensions-header-add-btn" icon="pi pi-plus" label="Add Extension" />
+        <div class="pt-6">
+            <p-button label="Open in Selected" icon="pi pi-external-link" 
+                      (click)="onInstall()" 
+                      [loading]="isLaunching()" 
+                      [disabled]="!installUrl() || selectedProfiles().length === 0" />
+        </div>
+    </div>
+</div>
+
+<!-- Main Content: Profile Selector -->
+<div class="flex-1 overflow-auto p-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Select Profiles ({{selectedProfiles().length}})</h2>
+        <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" [(ngModel)]="searchText" placeholder="Search profiles..." class="p-inputtext-sm" />
+        </span>
     </div>
 
-    <!-- Extensions Grid -->
-    <div id="extensions-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Sample Extension Cards -->
-        <article id="extensions-card-0"
-            class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-all duration-300 cursor-pointer hover:shadow-md hover:-translate-y-1">
-            <div id="extensions-card-0-header" class="flex items-start gap-3 mb-3">
-                <div id="extensions-card-0-icon"
-                    class="w-12 h-12 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white text-xl">
-                    <i class="pi pi-shield"></i>
-                </div>
-                <div id="extensions-card-0-info" class="flex-1 min-w-0">
-                    <h3 id="extensions-card-0-name" class="font-semibold text-color truncate">
-                        AdBlock Pro</h3>
-                    <p id="extensions-card-0-desc" class="text-xs text-muted-color">Block ads and
-                        trackers</p>
-                </div>
-                <span id="extensions-card-0-status"
-                    class="px-2 py-0.5 bg-primary/20 text-primary text-xs rounded">Active</span>
-            </div>
-            <p id="extensions-card-0-usage" class="text-xs text-muted-color mb-3">Used in 12
-                profiles</p>
-            <div id="extensions-card-0-actions" class="flex items-center gap-2">
-                <button id="extensions-card-0-configure-btn" aria-label="Configure AdBlock Pro"
-                    class="flex-1 py-2 bg-surface-200 dark:bg-surface-700 border border-surface rounded-lg text-xs text-muted-color hover:text-color transition-colors cursor-pointer">
-                    Configure
-                </button>
-                <button id="extensions-card-0-delete-btn" aria-label="Delete AdBlock Pro"
-                    class="w-9 h-9 rounded-lg border border-surface text-muted-color hover:text-error hover:border-error transition-colors flex items-center justify-center cursor-pointer">
-                    <i class="pi pi-trash text-xs"></i>
-                </button>
-            </div>
-        </article>
-
-        <article id="extensions-card-1"
-            class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-all duration-300 cursor-pointer hover:shadow-md hover:-translate-y-1">
-            <div id="extensions-card-1-header" class="flex items-start gap-3 mb-3">
-                <div id="extensions-card-1-icon"
-                    class="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-xl">
-                    <i class="pi pi-key"></i>
-                </div>
-                <div id="extensions-card-1-info" class="flex-1 min-w-0">
-                    <h3 id="extensions-card-1-name" class="font-semibold text-color truncate">
-                        Password Manager</h3>
-                    <p id="extensions-card-1-desc" class="text-xs text-muted-color">Secure
-                        password storage</p>
-                </div>
-                <span id="extensions-card-1-status"
-                    class="px-2 py-0.5 bg-primary/20 text-primary text-xs rounded">Active</span>
-            </div>
-            <p id="extensions-card-1-usage" class="text-xs text-muted-color mb-3">Used in 8
-                profiles</p>
-            <div id="extensions-card-1-actions" class="flex items-center gap-2">
-                <button id="extensions-card-1-configure-btn" aria-label="Configure Password Manager"
-                    class="flex-1 py-2 bg-surface-200 dark:bg-surface-700 border border-surface rounded-lg text-xs text-muted-color hover:text-color transition-colors cursor-pointer">
-                    Configure
-                </button>
-                <button id="extensions-card-1-delete-btn" aria-label="Delete Password Manager"
-                    class="w-9 h-9 rounded-lg border border-surface text-muted-color hover:text-error hover:border-error transition-colors flex items-center justify-center cursor-pointer">
-                    <i class="pi pi-trash text-xs"></i>
-                </button>
-            </div>
-        </article>
-
-        <article id="extensions-card-2"
-            class="border border-surface rounded-xl p-4 hover:border-primary/50 transition-all duration-300 cursor-pointer hover:shadow-md hover:-translate-y-1">
-            <div id="extensions-card-2-header" class="flex items-start gap-3 mb-3">
-                <div id="extensions-card-2-icon"
-                    class="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xl">
-                    <i class="pi pi-globe"></i>
-                </div>
-                <div id="extensions-card-2-info" class="flex-1 min-w-0">
-                    <h3 id="extensions-card-2-name" class="font-semibold text-color truncate">
-                        VPN Proxy</h3>
-                    <p id="extensions-card-2-desc" class="text-xs text-muted-color">Secure
-                        browsing</p>
-                </div>
-                <span id="extensions-card-2-status"
-                    class="px-2 py-0.5 bg-surface-300 text-muted-color text-xs rounded">Inactive</span>
-            </div>
-            <p id="extensions-card-2-usage" class="text-xs text-muted-color mb-3">Used in 5
-                profiles</p>
-            <div id="extensions-card-2-actions" class="flex items-center gap-2">
-                <button id="extensions-card-2-configure-btn" aria-label="Configure VPN Proxy"
-                    class="flex-1 py-2 bg-surface-200 dark:bg-surface-700 border border-surface rounded-lg text-xs text-muted-color hover:text-color transition-colors cursor-pointer">
-                    Configure
-                </button>
-                <button id="extensions-card-2-delete-btn" aria-label="Delete VPN Proxy"
-                    class="w-9 h-9 rounded-lg border border-surface text-muted-color hover:text-error hover:border-error transition-colors flex items-center justify-center cursor-pointer">
-                    <i class="pi pi-trash text-xs"></i>
-                </button>
-            </div>
-        </article>
+    <div class="border border-surface rounded-xl overflow-hidden bg-surface-0 dark:bg-surface-900">
+        <p-table [value]="filteredProfiles()" [(selection)]="selectedProfiles" dataKey="path"
+                 [scrollable]="true" scrollHeight="flex" 
+                 styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th style="width: 3rem">
+                        <p-tableHeaderCheckbox />
+                    </th>
+                    <th>Name</th>
+                    <th>Browser</th>
+                    <th>Status</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-profile>
+                <tr [class.bg-primary-50]="profile.metadata?.browser === 'chrome'">
+                    <td>
+                        <p-tableCheckbox [value]="profile" />
+                    </td>
+                    <td class="font-medium">{{ profile.name }}</td>
+                    <td>
+                        <i class="pi" [class.pi-google]="!profile.metadata?.browser || profile.metadata?.browser === 'chrome'"
+                           [class.pi-shield]="profile.metadata?.browser === 'brave'"
+                           [class.pi-microsoft]="profile.metadata?.browser === 'edge'"></i>
+                        <span class="ml-2 capitalize">{{ profile.metadata?.browser || 'Chrome' }}</span>
+                    </td>
+                    <td>
+                        @if (profile.isRunning) {
+                            <span class="text-green-500 text-xs font-bold px-2 py-1 bg-green-100 rounded">Running</span>
+                        } @else {
+                            <span class="text-muted-color text-xs">Offline</span>
+                        }
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="4" class="text-center py-8 text-muted-color">
+                        No profiles found matching your search.
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
     </div>
 </div>

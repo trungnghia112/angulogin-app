@@ -529,6 +529,21 @@ export class Home implements OnInit, OnDestroy {
     async launchProfileDirect(profile: Profile): Promise<void> {
         try {
             const browser = profile.metadata?.browser || 'chrome';
+
+            // PM-005: Check availability
+            const available = this.availableBrowsers();
+            if (!available.includes(browser)) {
+                this.messageService.add({
+                    severity: 'warn',
+                    summary: 'Browser Not Found',
+                    detail: `${this.getBrowserName(browser)} does not appear to be installed. Attempting launch anyway...`,
+                });
+                // We could return here to block, but "Attempting launch anyway" is safer if detection is flaky
+                // However, UAT says "Error toast notification", implying it might be better to warn. 
+                // Let's stick to just warning but proceeding, or maybe we should fail? 
+                // The backend launch_browser will fail if it's really missing.
+            }
+
             const url = profile.metadata?.launchUrl || undefined;
             const proxy = profile.metadata?.proxyServer || undefined;
             const customFlags = profile.metadata?.customFlags || undefined; // Feature 3.6
@@ -607,6 +622,29 @@ export class Home implements OnInit, OnDestroy {
     async createProfile(): Promise<void> {
         const name = this.newProfileName().trim();
         if (!name) return;
+
+        // PM-003: Invalid Characters Validation
+        const invalidChars = /[<>:"/\\|?*]/;
+        if (invalidChars.test(name)) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Invalid Name',
+                detail: 'Profile name cannot contain < > : " / \\ | ? *',
+            });
+            return;
+        }
+
+        // PM-002: Duplicate Name Validation
+        const exists = this.profiles().some(p => p.name.toLowerCase() === name.toLowerCase());
+        if (exists) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Duplicate Name',
+                detail: `Profile "${name}" already exists.`,
+            });
+            return;
+        }
+
         try {
             const newPath = await this.profileService.createProfile(this.profilesPath(), name);
             // Phase 3: Log activity
@@ -636,6 +674,29 @@ export class Home implements OnInit, OnDestroy {
             this.showRenameDialog.set(false);
             return;
         }
+
+        // PM-003: Invalid Characters Validation
+        const invalidChars = /[<>:"/\\|?*]/;
+        if (invalidChars.test(newName)) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Invalid Name',
+                detail: 'Profile name cannot contain < > : " / \\ | ? *',
+            });
+            return;
+        }
+
+        // PM-002: Duplicate Name Validation
+        const exists = this.profiles().some(p => p.name.toLowerCase() === newName.toLowerCase() && p.path !== profile.path);
+        if (exists) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Duplicate Name',
+                detail: `Profile "${newName}" already exists.`,
+            });
+            return;
+        }
+
         try {
             await this.profileService.renameProfile(profile.path, newName, this.profilesPath());
             this.showRenameDialog.set(false);

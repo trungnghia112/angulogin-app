@@ -142,7 +142,7 @@ export class Settings {
     }
 
     // General Settings Methods
-    updateGeneral<K extends keyof GeneralSettings>(key: K, event: any): void {
+    updateGeneral<K extends keyof GeneralSettings>(key: K, event: { checked?: boolean; value?: any } | boolean | string | number): void {
         // Handle different event types (p-inputSwitch emits event.checked or direct value for SelectButton)
         let value: any;
         if (event && typeof event === 'object' && 'checked' in event) {
@@ -169,7 +169,12 @@ export class Settings {
                 this.settingsService.setProfilesPath(selected);
             }
         } catch (err) {
-            console.error('Failed to open folder picker:', err);
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Folder Selection Failed',
+                detail: errorMsg
+            });
         }
     }
 
@@ -211,11 +216,11 @@ export class Settings {
                 });
             }
         } catch (err) {
-            console.error('Export failed:', err);
+            const errorMsg = err instanceof Error ? err.message : String(err);
             this.messageService.add({
                 severity: 'error',
                 summary: 'Export Failed',
-                detail: 'Could not save the configuration file.',
+                detail: 'Could not save the configuration file: ' + errorMsg,
             });
         }
     }
@@ -247,11 +252,11 @@ export class Settings {
                 }
             }
         } catch (err) {
-            console.error('Import failed:', err);
+            const errorMsg = err instanceof Error ? err.message : String(err);
             this.messageService.add({
                 severity: 'error',
                 summary: 'Import Failed',
-                detail: 'Could not read the configuration file.',
+                detail: 'Could not read the configuration file: ' + errorMsg,
             });
         }
     }
@@ -294,7 +299,12 @@ export class Settings {
                 this.selectedBackupPath.set(filePath);
             }
         } catch (err) {
-            console.error('Failed to select backup file:', err);
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Selection Failed',
+                detail: errorMsg,
+            });
         }
     }
 
