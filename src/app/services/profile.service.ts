@@ -11,9 +11,6 @@ import { ProfileBackend } from './profile.backend.interface';
 @Injectable({
     providedIn: 'root',
 })
-@Injectable({
-    providedIn: 'root',
-})
 export class ProfileService {
     private readonly backend: ProfileBackend;
 
@@ -177,9 +174,18 @@ export class ProfileService {
         isFavorite: boolean | null = null,
         customFlags: string | null = null,
         proxy: string | null = null,
+        // Feature 2.5: Folder Management
+        folderId: string | null = null,
+        // Feature 3.4: Launch with Extensions
+        disableExtensions: boolean = false,
+        // Feature 4.2: Proxy Rotation
+        proxyRotation: { enabled: boolean; mode: 'per_launch' | 'hourly' | 'daily'; proxyGroupId?: string | null } | null = null,
     ): Promise<void> {
         try {
-            const metadata = { emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden, isFavorite, customFlags, proxy };
+            const metadata = {
+                emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden, isFavorite, customFlags, proxy,
+                folderId, disableExtensions, proxyRotation
+            };
             await this.backend.saveProfileMetadata(profilePath, metadata);
 
             this.profiles.update((profiles) =>
@@ -200,7 +206,10 @@ export class ProfileService {
                         isHidden: isHidden ?? undefined,
                         isFavorite: isFavorite ?? undefined,
                         customFlags: customFlags ?? undefined,
-                        proxy: proxy ?? undefined
+                        proxy: proxy ?? undefined,
+                        folderId: folderId ?? undefined,
+                        disableExtensions: disableExtensions ?? undefined,
+                        proxyRotation: proxyRotation ?? undefined,
                     };
                     return { ...p, metadata: updatedMeta };
                 })
@@ -343,16 +352,23 @@ export class ProfileService {
         incognito?: boolean,
         proxyServer?: string,
         customFlags?: string,
-        windowPosition?: { x?: number | null; y?: number | null; width?: number | null; height?: number | null; maximized?: boolean } | null
+        windowPosition?: { x?: number | null; y?: number | null; width?: number | null; height?: number | null; maximized?: boolean } | null,
+        disableExtensions?: boolean
     ): Promise<void> {
         try {
+            // Feature 3.4: Build flags with --disable-extensions if requested
+            let finalFlags = customFlags || '';
+            if (disableExtensions) {
+                finalFlags = finalFlags ? `${finalFlags} --disable-extensions` : '--disable-extensions';
+            }
+
             await this.backend.launchBrowser({
                 profilePath,
                 browser,
                 url: url || null,
                 incognito: incognito || null,
                 proxyServer: proxyServer || null,
-                customFlags: customFlags || null,
+                customFlags: finalFlags || null,
                 windowX: windowPosition?.x ?? null,
                 windowY: windowPosition?.y ?? null,
                 windowWidth: windowPosition?.width ?? null,
@@ -561,5 +577,36 @@ export class ProfileService {
             this.error.set(errorMsg);
             throw e;
         }
+    }
+
+    // Feature 4.2: Update proxy rotation state (currentProxyIndex and lastRotatedAt)
+    async saveProxyRotationState(profilePath: string, newIndex: number): Promise<void> {
+        const profile = this.profiles().find((p: Profile) => p.path === profilePath);
+        if (!profile) return;
+
+        const currentRotation = profile.metadata?.proxyRotation;
+        if (!currentRotation) return;
+
+        const updatedRotation = {
+            ...currentRotation,
+            currentProxyIndex: newIndex,
+            lastRotatedAt: new Date().toISOString(),
+        };
+
+        // Build updated metadata, preserving existing values
+        const updatedMetadata = {
+            ...(profile.metadata || {}),
+            proxyRotation: updatedRotation,
+        } as ProfileMetadata;
+
+        // Update in-memory state
+        this.profiles.update((profiles: Profile[]) =>
+            profiles.map((p: Profile) =>
+                p.path === profilePath ? { ...p, metadata: updatedMetadata } : p
+            )
+        );
+
+        // Persist to metadata file
+        await this.backend.saveProfileMetadata(profilePath, updatedMetadata);
     }
 }

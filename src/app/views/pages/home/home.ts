@@ -35,6 +35,8 @@ import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { ProfileService } from '../../../services/profile.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { ActivityLogService } from '../../../services/activity-log.service';
+import { FolderService } from '../../../services/folder.service';
+import { ProxyService } from '../../../services/proxy.service';
 import { BrowserType, Profile } from '../../../models/profile.model';
 
 
@@ -90,6 +92,8 @@ export class Home implements OnInit, OnDestroy {
     private readonly profileService = inject(ProfileService);
     private readonly settingsService = inject(SettingsService);
     private readonly activityLogService = inject(ActivityLogService);
+    private readonly folderService = inject(FolderService);
+    private readonly proxyService = inject(ProxyService);
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
     private readonly destroyRef = inject(DestroyRef);
@@ -132,6 +136,17 @@ export class Home implements OnInit, OnDestroy {
         ];
     });
     protected readonly folders = this.smartFolders;
+    // Feature 2.5: Custom folders from FolderService for edit dialog
+    protected readonly allFolders = this.folderService.folders;
+    // Feature 4.2: Proxy group options for edit dialog
+    protected readonly proxyGroups = computed(() => {
+        const proxies = this.proxyService.proxies();
+        const groups = new Set<string>();
+        for (const p of proxies) {
+            if (p.group) groups.add(p.group);
+        }
+        return Array.from(groups);
+    });
     protected readonly selectedFolderId = signal<string | null>('all');
     /** Controls mobile sidebar drawer visibility */
     protected readonly sidebarOpen = signal(false);
@@ -538,17 +553,46 @@ export class Home implements OnInit, OnDestroy {
                     summary: 'Browser Not Found',
                     detail: `${this.getBrowserName(browser)} does not appear to be installed. Attempting launch anyway...`,
                 });
-                // We could return here to block, but "Attempting launch anyway" is safer if detection is flaky
-                // However, UAT says "Error toast notification", implying it might be better to warn. 
-                // Let's stick to just warning but proceeding, or maybe we should fail? 
-                // The backend launch_browser will fail if it's really missing.
             }
 
             const url = profile.metadata?.launchUrl || undefined;
-            const proxy = profile.metadata?.proxyServer || undefined;
-            const customFlags = profile.metadata?.customFlags || undefined; // Feature 3.6
-            const windowPosition = profile.metadata?.windowPosition || undefined; // Feature 3.7
-            await this.profileService.launchBrowser(profile.path, browser, url, false, proxy, customFlags, windowPosition);
+            let proxy = profile.metadata?.proxy || undefined;
+            const customFlags = profile.metadata?.customFlags || undefined;
+            const windowPosition = profile.metadata?.windowPosition || undefined;
+            const disableExtensions = profile.metadata?.disableExtensions || false;
+
+            // Feature 4.2: Proxy Rotation
+            const rotation = profile.metadata?.proxyRotation;
+            if (rotation?.enabled) {
+                const nextResult = this.proxyService.getNextProxy(
+                    rotation.proxyGroupId,
+                    rotation.currentProxyIndex
+                );
+                if (nextResult) {
+                    proxy = this.proxyService.formatProxyUrl(nextResult.proxy);
+                    // Update profile with new rotation index via metadata
+                    await this.profileService.saveProxyRotationState(
+                        profile.path,
+                        nextResult.nextIndex
+                    );
+                    this.messageService.add({
+                        severity: 'info',
+                        summary: 'Proxy Rotated',
+                        detail: `Using proxy: ${nextResult.proxy.name || proxy}`,
+                    });
+                }
+            }
+
+            await this.profileService.launchBrowser(
+                profile.path,
+                browser,
+                url,
+                false,
+                proxy,
+                customFlags,
+                windowPosition,
+                disableExtensions
+            );
 
             // Phase 3: Log activity
             this.activityLogService.logLaunch(profile.name, profile.path, browser);
@@ -557,7 +601,6 @@ export class Home implements OnInit, OnDestroy {
             const currentCount = profile.metadata?.launchCount || 0;
             const currentMinutes = profile.metadata?.totalUsageMinutes || 0;
             const lastSession = profile.metadata?.lastSessionDuration || 0;
-            // Add estimated session time from last session (default 15 min for first launch)
             const estimatedSessionMinutes = lastSession > 0 ? lastSession : 15;
             this.profileService.updateUsageStats(
                 profile.path,
@@ -735,6 +778,13 @@ export class Home implements OnInit, OnDestroy {
                 profile.metadata?.isHidden || null, // Preserve hidden state
                 profile.metadata?.isFavorite || null, // Preserve favorite state
                 data.customFlags,
+                data.proxy,
+                // Feature 2.5: Folder Management
+                data.folderId,
+                // Feature 3.4: Launch with Extensions
+                data.disableExtensions,
+                // Feature 4.2: Proxy Rotation
+                data.proxyRotation,
             );
             this.showEditDialog.set(false);
             this.messageService.add({

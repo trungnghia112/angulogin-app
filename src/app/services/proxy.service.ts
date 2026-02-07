@@ -261,4 +261,30 @@ export class ProxyService {
 
         return { checked: proxies.length, alive, dead };
     }
+
+    // === Proxy Rotation (Feature 4.2) ===
+
+    /**
+     * Get proxies available for rotation, optionally filtered by group.
+     * Only returns proxies that are alive (if health check was performed).
+     */
+    getProxiesForRotation(groupId?: string | null): ProfileProxy[] {
+        const all = this._proxies();
+        let filtered = groupId ? all.filter(p => p.group === groupId) : all;
+        // Prefer alive proxies, but fall back to all if none have been checked
+        const aliveOnly = filtered.filter(p => p.isAlive === true);
+        return aliveOnly.length > 0 ? aliveOnly : filtered;
+    }
+
+    /**
+     * Get the next proxy in rotation sequence.
+     * Returns null if no proxies available.
+     */
+    getNextProxy(groupId?: string | null, currentIndex?: number): { proxy: ProfileProxy; nextIndex: number } | null {
+        const proxies = this.getProxiesForRotation(groupId);
+        if (proxies.length === 0) return null;
+
+        const nextIndex = ((currentIndex ?? -1) + 1) % proxies.length;
+        return { proxy: proxies[nextIndex], nextIndex };
+    }
 }

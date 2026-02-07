@@ -38,7 +38,21 @@ export interface ProfileMetadata {
     windowPosition?: WindowPosition | null;
     // Phase 0: Proxy Manager
     proxy?: string | null;
+    // Feature 3.4: Launch with Extensions toggle
+    disableExtensions?: boolean;
+    // Feature 4.2: Proxy Rotation
+    proxyRotation?: ProxyRotationConfig | null;
 }
+
+// Proxy Rotation Configuration (Feature 4.2)
+export interface ProxyRotationConfig {
+    enabled: boolean;
+    mode: 'per_launch' | 'hourly' | 'daily';
+    proxyGroupId?: string | null;
+    lastRotatedAt?: string | null;
+    currentProxyIndex?: number;
+}
+
 
 // Window position and size for launching browser
 export interface WindowPosition {

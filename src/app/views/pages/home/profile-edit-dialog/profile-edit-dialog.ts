@@ -12,7 +12,10 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
-import { Profile, BrowserType } from '../../../../models/profile.model';
+import { SelectModule } from 'primeng/select';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { Profile, BrowserType, ProxyRotationConfig } from '../../../../models/profile.model';
+import { Folder } from '../../../../models/folder.model';
 import { MessageService } from 'primeng/api';
 
 // Options
@@ -50,6 +53,12 @@ export interface ProfileEditData {
     color: string | null;
     customFlags: string | null;
     proxy: string | null;
+    // Feature 2.5: Folder Management
+    folderId: string | null;
+    // Feature 3.4: Launch with Extensions
+    disableExtensions: boolean;
+    // Feature 4.2: Proxy Rotation
+    proxyRotation: ProxyRotationConfig | null;
 }
 
 @Component({
@@ -63,6 +72,8 @@ export interface ProfileEditData {
         ButtonModule,
         InputTextModule,
         TextareaModule,
+        SelectModule,
+        ToggleSwitchModule,
     ],
 })
 export class ProfileEditDialog {
@@ -73,6 +84,10 @@ export class ProfileEditDialog {
     readonly profile = input<Profile | null>(null);
     readonly allProfiles = input<Profile[]>([]);
     readonly availableBrowsers = input<string[]>([]);
+    // Feature 2.5: Folders input
+    readonly folders = input<Folder[]>([]);
+    // Feature 4.2: Proxy groups input
+    readonly proxyGroups = input<string[]>([]);
 
     // Outputs
     readonly visibleChange = output<boolean>();
@@ -97,6 +112,26 @@ export class ProfileEditDialog {
     protected readonly editColor = signal<string | null>(null);
     protected readonly editCustomFlags = signal<string | null>(null);
     protected readonly editProxy = signal<string | null>(null);
+    // Feature 2.5: Folder Management
+    protected readonly editFolderId = signal<string | null>(null);
+    // Feature 3.4: Disable Extensions
+    protected readonly editDisableExtensions = signal(false);
+    // Feature 4.2: Proxy Rotation
+    protected readonly editProxyRotationEnabled = signal(false);
+    protected readonly editProxyRotationMode = signal<'per_launch' | 'hourly' | 'daily'>('per_launch');
+    protected readonly editProxyRotationGroupId = signal<string | null>(null);
+
+    // Options for proxy rotation mode
+    protected readonly proxyRotationModeOptions = [
+        { label: 'Per Launch', value: 'per_launch' },
+        { label: 'Hourly', value: 'hourly' },
+        { label: 'Daily', value: 'daily' },
+    ];
+
+    // Computed: custom folders only (excluding system folders)
+    protected readonly customFolderOptions = computed(() => {
+        return this.folders().filter(f => !['all', 'favorites', 'hidden'].includes(f.id));
+    });
 
     // Load profile data when dialog opens
     loadProfile(profile: Profile): void {
@@ -111,6 +146,15 @@ export class ProfileEditDialog {
         this.editColor.set(profile.metadata?.color || null);
         this.editCustomFlags.set(profile.metadata?.customFlags || null);
         this.editProxy.set(profile.metadata?.proxy || null);
+        // Feature 2.5
+        this.editFolderId.set(profile.metadata?.folderId || null);
+        // Feature 3.4
+        this.editDisableExtensions.set(profile.metadata?.disableExtensions || false);
+        // Feature 4.2
+        const rotation = profile.metadata?.proxyRotation;
+        this.editProxyRotationEnabled.set(rotation?.enabled || false);
+        this.editProxyRotationMode.set(rotation?.mode || 'per_launch');
+        this.editProxyRotationGroupId.set(rotation?.proxyGroupId || null);
     }
 
     protected selectEmoji(emoji: string): void {
@@ -164,6 +208,15 @@ export class ProfileEditDialog {
     }
 
     protected onSave(): void {
+        // Build proxy rotation config
+        const proxyRotation: ProxyRotationConfig | null = this.editProxyRotationEnabled()
+            ? {
+                enabled: true,
+                mode: this.editProxyRotationMode(),
+                proxyGroupId: this.editProxyRotationGroupId(),
+            }
+            : null;
+
         this.save.emit({
             emoji: this.editEmoji(),
             notes: this.editNotes(),
@@ -176,6 +229,9 @@ export class ProfileEditDialog {
             color: this.editColor(),
             customFlags: this.editCustomFlags(),
             proxy: this.editProxy(),
+            folderId: this.editFolderId(),
+            disableExtensions: this.editDisableExtensions(),
+            proxyRotation,
         });
     }
 

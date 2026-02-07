@@ -146,6 +146,71 @@
                 --disable-gpu)</p>
         </div>
 
+        <!-- Feature 2.5: Folder Management -->
+        <div id="home-edit-dialog-folder-section">
+            <label for="home-edit-dialog-folder-select" class="block text-xs font-medium text-color mb-2">Folder</label>
+            <p-select id="home-edit-dialog-folder-select"
+                [options]="customFolderOptions()"
+                optionLabel="name"
+                optionValue="id"
+                [ngModel]="editFolderId()"
+                (ngModelChange)="editFolderId.set($event)"
+                placeholder="No folder"
+                [showClear]="true"
+                class="w-full" />
+            <p class="text-xs text-muted-color mt-1">Organize this profile into a folder</p>
+        </div>
+
+        <!-- Feature 3.4: Disable Extensions -->
+        <div id="home-edit-dialog-extensions-section" class="flex items-center justify-between">
+            <div>
+                <label class="block text-xs font-medium text-color">Disable Extensions on Launch</label>
+                <p class="text-xs text-muted-color">Launch browser with all extensions disabled</p>
+            </div>
+            <p-toggleSwitch id="home-edit-dialog-extensions-toggle"
+                [ngModel]="editDisableExtensions()"
+                (ngModelChange)="editDisableExtensions.set($event)" />
+        </div>
+
+        <!-- Feature 4.2: Proxy Rotation -->
+        <div id="home-edit-dialog-proxy-rotation-section" class="space-y-3 p-3 rounded-lg border border-surface-200 dark:border-surface-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <label class="block text-xs font-medium text-color">Proxy Rotation</label>
+                    <p class="text-xs text-muted-color">Auto-rotate proxy for this profile</p>
+                </div>
+                <p-toggleSwitch id="home-edit-dialog-proxy-rotation-toggle"
+                    [ngModel]="editProxyRotationEnabled()"
+                    (ngModelChange)="editProxyRotationEnabled.set($event)" />
+            </div>
+            @if (editProxyRotationEnabled()) {
+            <div class="space-y-3 pt-2 border-t border-surface-100 dark:border-surface-800">
+                <div>
+                    <label for="home-edit-dialog-rotation-mode" class="block text-xs font-medium text-color mb-1">Rotation Mode</label>
+                    <p-select id="home-edit-dialog-rotation-mode"
+                        [options]="proxyRotationModeOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        [ngModel]="editProxyRotationMode()"
+                        (ngModelChange)="editProxyRotationMode.set($event)"
+                        class="w-full" />
+                </div>
+                @if (proxyGroups().length > 0) {
+                <div>
+                    <label for="home-edit-dialog-rotation-group" class="block text-xs font-medium text-color mb-1">Proxy Group (Optional)</label>
+                    <p-select id="home-edit-dialog-rotation-group"
+                        [options]="proxyGroups()"
+                        [ngModel]="editProxyRotationGroupId()"
+                        (ngModelChange)="editProxyRotationGroupId.set($event)"
+                        placeholder="All proxies"
+                        [showClear]="true"
+                        class="w-full" />
+                </div>
+                }
+            </div>
+            }
+        </div>
+
         <!-- Notes -->
         <div id="home-edit-dialog-notes-section">
             <label for="home-edit-dialog-notes-input" class="block text-xs font-medium text-color mb-2">Notes</label>
