@@ -40,6 +40,11 @@ const BROWSER_INFO: Record<string, { name: string; icon: string; color: string }
     vivaldi: { name: 'Vivaldi', icon: 'pi-palette', color: '#EF3939' },
     opera: { name: 'Opera', icon: 'pi-globe', color: '#FF1B2D' },
 };
+const PROXY_ROTATION_MODE_OPTIONS = [
+    { label: 'Per Launch', value: 'per_launch' },
+    { label: 'Hourly', value: 'hourly' },
+    { label: 'Daily', value: 'daily' },
+];
 
 export interface ProfileEditData {
     emoji: string | null;
@@ -121,12 +126,8 @@ export class ProfileEditDialog {
     protected readonly editProxyRotationMode = signal<'per_launch' | 'hourly' | 'daily'>('per_launch');
     protected readonly editProxyRotationGroupId = signal<string | null>(null);
 
-    // Options for proxy rotation mode
-    protected readonly proxyRotationModeOptions = [
-        { label: 'Per Launch', value: 'per_launch' },
-        { label: 'Hourly', value: 'hourly' },
-        { label: 'Daily', value: 'daily' },
-    ];
+    // Options for proxy rotation mode - use file-level constant
+    protected readonly proxyRotationModeOptions = PROXY_ROTATION_MODE_OPTIONS;
 
     // Computed: custom folders only (excluding system folders)
     protected readonly customFolderOptions = computed(() => {

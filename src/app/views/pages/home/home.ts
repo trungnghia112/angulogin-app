@@ -138,15 +138,8 @@ export class Home implements OnInit, OnDestroy {
     protected readonly folders = this.smartFolders;
     // Feature 2.5: Custom folders from FolderService for edit dialog
     protected readonly allFolders = this.folderService.folders;
-    // Feature 4.2: Proxy group options for edit dialog
-    protected readonly proxyGroups = computed(() => {
-        const proxies = this.proxyService.proxies();
-        const groups = new Set<string>();
-        for (const p of proxies) {
-            if (p.group) groups.add(p.group);
-        }
-        return Array.from(groups);
-    });
+    // Feature 4.2: Proxy group options for edit dialog - use service's computed signal
+    protected readonly proxyGroups = this.proxyService.proxyGroups;
     protected readonly selectedFolderId = signal<string | null>('all');
     /** Controls mobile sidebar drawer visibility */
     protected readonly sidebarOpen = signal(false);

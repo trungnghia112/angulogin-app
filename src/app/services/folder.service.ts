@@ -23,19 +23,23 @@ export class FolderService {
         const profiles = this.profileService.profiles();
         const custom = this._customFolders();
 
-        // Count profiles per folder
+        // Single-pass counting - O(n) instead of O(4n)
         const countMap = new Map<string, number>();
+        let allCount = 0;
+        let favCount = 0;
+        let hiddenCount = 0;
+
         for (const p of profiles) {
+            // Count by folderId
             const fid = p.metadata?.folderId;
             if (fid) {
                 countMap.set(fid, (countMap.get(fid) || 0) + 1);
             }
+            // Count system folders
+            if (!p.metadata?.isHidden) allCount++;
+            if (p.metadata?.isFavorite) favCount++;
+            if (p.metadata?.isHidden) hiddenCount++;
         }
-
-        // Compute system folder counts
-        const allCount = profiles.filter(p => !p.metadata?.isHidden).length;
-        const favCount = profiles.filter(p => p.metadata?.isFavorite).length;
-        const hiddenCount = profiles.filter(p => p.metadata?.isHidden).length;
 
         const systemWithCounts: Folder[] = [
             { ...SYSTEM_FOLDERS[0], profileCount: allCount },
