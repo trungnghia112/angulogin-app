@@ -322,10 +322,17 @@ export class Home implements OnInit, OnDestroy {
 
     constructor() {
         // Auto-scan whenever the profiles path changes
+        // PERF FIX: Only scan if profiles not already loaded (prevents 87 I/O calls on tab switch)
         effect(() => {
             const path = this.profilesPath();
             if (path) {
-                // Ensure directory exists, then scan
+                // Skip scan if profiles already loaded for this path
+                const existingProfiles = this.profileService.profiles();
+                if (existingProfiles.length > 0) {
+                    // Profiles already loaded, skip expensive rescan
+                    return;
+                }
+                // First load: ensure directory exists, then scan
                 this.profileService.ensureProfilesDirectory(path).then(() => {
                     this.scanProfiles();
                 }).catch(err => {
@@ -521,7 +528,8 @@ export class Home implements OnInit, OnDestroy {
                 summary: 'Success',
                 detail: `Found ${this.profiles().length} profiles`,
             });
-            this.profileService.loadProfileSizes();
+            // PERF FIX: Defer size loading to allow UI to render first
+            setTimeout(() => this.profileService.loadProfileSizes(), 100);
         } catch (e) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
         }
