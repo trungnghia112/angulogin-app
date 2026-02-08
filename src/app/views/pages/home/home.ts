@@ -313,9 +313,11 @@ export class Home implements OnInit, OnDestroy {
         return [...new Set(all)];
     });
 
-    async ngOnInit(): Promise<void> {
-        const browsers = await this.profileService.listAvailableBrowsers();
-        this.availableBrowsers.set(browsers);
+    ngOnInit(): void {
+        // Non-blocking: load available browsers in background
+        this.profileService.listAvailableBrowsers().then(browsers => {
+            this.availableBrowsers.set(browsers);
+        });
     }
 
     constructor() {
