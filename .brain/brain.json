@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.0.0",
-        "updated_at": "2026-02-06T12:24:00+07:00"
+        "updated_at": "2026-02-08T14:24:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
@@ -223,6 +223,26 @@
             "name": "Cleanup Suggestions (9.4)",
             "status": "implemented",
             "description": "Suggest profiles to clean based on size and usage patterns"
+        },
+        {
+            "name": "Folder Management (2.5)",
+            "status": "implemented",
+            "description": "Group profiles into custom folders. Includes 'Large' (>1GB) and 'Unused' (>30 days) system folders.",
+            "includes": [
+                "Custom Folders (Create/Edit/Delete)",
+                "System Folders (Large, Unused)",
+                "Profile Assignment"
+            ]
+        },
+        {
+            "name": "Launch with Extensions Toggle (3.4)",
+            "status": "implemented",
+            "description": "Option to launch browser with --disable-extensions flag"
+        },
+        {
+            "name": "Proxy Rotation (4.2)",
+            "status": "implemented",
+            "description": "Auto-rotate proxies per_launch, hourly, or daily with proxyGroupId"
         }
     ],
     "api_endpoints": [
@@ -358,6 +378,22 @@
             {
                 "issue": "Sidebar blocks content on mobile",
                 "solution": "Use fixed positioning with -translate-x-full to hide, lg:static lg:translate-x-0 to show on desktop"
+            },
+            {
+                "issue": "App freezes when switching to Browsers tab (29 profiles)",
+                "solution": "Root cause: 29 profiles × 3 I/O calls = 87 concurrent Tauri invokes. Fix: (1) Skip re-scan if profiles already loaded, (2) Defer loadProfileSizes with setTimeout"
+            },
+            {
+                "issue": "Duplicate computed signals (proxyGroups in home.ts)",
+                "solution": "Use service's existing computed signal directly instead of recreating"
+            },
+            {
+                "issue": "Multiple .filter() calls in computed signals",
+                "solution": "Use single-pass counting O(n) instead of O(4n) with multiple filter loops"
+            },
+            {
+                "issue": "async ngOnInit blocks initial render",
+                "solution": "Use fire-and-forget pattern: .then() instead of await in ngOnInit"
             }
         ],
         "conventions": [

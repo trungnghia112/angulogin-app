@@ -4,12 +4,7 @@ import { ProfileService } from './profile.service';
 
 const STORAGE_KEY = 'cpm_folders';
 
-// System folders that cannot be deleted
-const SYSTEM_FOLDERS: Folder[] = [
-    { id: 'all', name: 'All Profiles', icon: 'pi-th-large', color: null },
-    { id: 'favorites', name: 'Favorites', icon: 'pi-star', color: '#eab308' },
-    { id: 'hidden', name: 'Hidden', icon: 'pi-eye-slash', color: '#71717a' },
-];
+// System folders are now defined dynamically in the computed property
 
 @Injectable({ providedIn: 'root' })
 export class FolderService {
@@ -22,12 +17,16 @@ export class FolderService {
     readonly folders = computed<Folder[]>(() => {
         const profiles = this.profileService.profiles();
         const custom = this._customFolders();
+        const ONE_GB = 1024 * 1024 * 1024;
+        const THIRTY_DAYS_AGO = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
         // Single-pass counting - O(n) instead of O(4n)
         const countMap = new Map<string, number>();
         let allCount = 0;
         let favCount = 0;
         let hiddenCount = 0;
+        let largeCount = 0;
+        let unusedCount = 0;
 
         for (const p of profiles) {
             // Count by folderId
@@ -36,15 +35,30 @@ export class FolderService {
                 countMap.set(fid, (countMap.get(fid) || 0) + 1);
             }
             // Count system folders
-            if (!p.metadata?.isHidden) allCount++;
+            // 'All' count: usually excludes hidden, depending on requirements. 
+            // Previous Home logic: profiles.length (includes hidden? SmartFolder 'all' in Home used profiles.length)
+            // Let's stick to Home logic: All includes everything? 
+            // Actually Home 'smartFolders' used profiles.length.
+            // But let's verify if we want 'All' to show hidden.
+            // Home logic: "All Profiles" count = profiles.length.
+            allCount++;
+
             if (p.metadata?.isFavorite) favCount++;
             if (p.metadata?.isHidden) hiddenCount++;
+
+            if ((p.size || 0) > ONE_GB) largeCount++;
+
+            const lastOpened = p.metadata?.lastOpened ? new Date(p.metadata.lastOpened).getTime() : 0;
+            if (lastOpened > 0 && lastOpened < THIRTY_DAYS_AGO) unusedCount++;
         }
 
-        const systemWithCounts: Folder[] = [
-            { ...SYSTEM_FOLDERS[0], profileCount: allCount },
-            { ...SYSTEM_FOLDERS[1], profileCount: favCount },
-            { ...SYSTEM_FOLDERS[2], profileCount: hiddenCount },
+        // System folders definition
+        const systemFolders: Folder[] = [
+            { id: 'all', name: 'All Profiles', icon: 'pi-th-large', color: '#3b82f6', profileCount: allCount },
+            { id: 'favorites', name: 'Favorites', icon: 'pi-heart', color: '#ef4444', profileCount: favCount },
+            { id: 'large', name: 'Large (>1GB)', icon: 'pi-database', color: '#f97316', profileCount: largeCount },
+            { id: 'unused', name: 'Unused (30+ days)', icon: 'pi-clock', color: '#eab308', profileCount: unusedCount },
+            { id: 'hidden', name: 'Hidden', icon: 'pi-eye-slash', color: '#6b7280', profileCount: hiddenCount },
         ];
 
         const customWithCounts = custom.map(f => ({
@@ -52,7 +66,7 @@ export class FolderService {
             profileCount: countMap.get(f.id) || 0,
         }));
 
-        return [...systemWithCounts, ...customWithCounts];
+        return [...systemFolders, ...customWithCounts];
     });
 
     constructor() {
@@ -100,7 +114,8 @@ export class FolderService {
 
     remove(id: string): void {
         // Do not allow removing system folders
-        if (SYSTEM_FOLDERS.some(sf => sf.id === id)) return;
+        const systemIds = ['all', 'favorites', 'large', 'unused', 'hidden'];
+        if (systemIds.includes(id)) return;
         this._customFolders.update(list => list.filter(f => f.id !== id));
         this.saveToStorage();
     }
@@ -110,6 +125,7 @@ export class FolderService {
     }
 
     isSystemFolder(id: string): boolean {
-        return SYSTEM_FOLDERS.some(sf => sf.id === id);
+        const systemIds = ['all', 'favorites', 'large', 'unused', 'hidden'];
+        return systemIds.includes(id);
     }
 }

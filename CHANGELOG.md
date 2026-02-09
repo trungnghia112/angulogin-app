@@ -1,6 +1,21 @@
 # Changelog
 
-## [2026-01-24]
+## [2026-02-09]
+### Added
+- **Folder Management (2.5)**: 
+    - Full support for creating, editing, and deleting custom folders.
+    - **System Folders**: Added "Large Files (>1GB)" and "Unused (>30 days)" auto-categorization.
+    - **Manage Folders Dialog**: New UI to manage custom folders directly from the Home screen.
+- **UI Enhancements**:
+    - Added "Create Folder" and "Manage Folders" dialogs to Home component.
+    - Integrated folder management into the Sidebar interactions.
+
+### Changed
+- **FolderService**: Refactored to include logic for system folders (Large/Unused) and optimized profile counting.
+- **Home Component**: 
+    - Updated to use `FolderService` signal directly.
+    - Fixed visibility of `folderService` for template access.
+
 ### Added
 - **Dark/Light Mode Support**: Comprehensive implementation across all containers (`bg-surface-50 dark:bg-surface-950`).
 - **Theme Persistence**: Dark mode choice is now saved to `localStorage`.

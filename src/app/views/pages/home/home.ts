@@ -92,7 +92,7 @@ export class Home implements OnInit, OnDestroy {
     private readonly profileService = inject(ProfileService);
     private readonly settingsService = inject(SettingsService);
     private readonly activityLogService = inject(ActivityLogService);
-    private readonly folderService = inject(FolderService);
+    protected readonly folderService = inject(FolderService);
     private readonly proxyService = inject(ProxyService);
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
@@ -106,36 +106,9 @@ export class Home implements OnInit, OnDestroy {
     protected Math = Math;
 
     // Sidebar Data (Moved from Pages)
-    // Feature 2.2: Smart Folders - auto-filtering based on criteria
-    // PERF FIX: Single-pass counting instead of 5 separate .filter() calls
-    protected readonly smartFolders = computed<import('../../../models/folder.model').Folder[]>(() => {
-        const profiles = this.profiles();
-        const ONE_GB = 1024 * 1024 * 1024;
-        const THIRTY_DAYS_AGO = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    // Feature 2.2: Smart Folders - now centralized in FolderService
+    protected readonly folders = this.folderService.folders;
 
-        // Single-pass counting - O(n) instead of O(5n)
-        let favoritesCount = 0;
-        let largeCount = 0;
-        let unusedCount = 0;
-        let hiddenCount = 0;
-
-        for (const p of profiles) {
-            if (p.metadata?.isFavorite) favoritesCount++;
-            if ((p.size || 0) > ONE_GB) largeCount++;
-            const lastOpened = p.metadata?.lastOpened ? new Date(p.metadata.lastOpened).getTime() : 0;
-            if (lastOpened > 0 && lastOpened < THIRTY_DAYS_AGO) unusedCount++;
-            if (p.metadata?.isHidden) hiddenCount++;
-        }
-
-        return [
-            { id: 'all', name: 'All Profiles', icon: 'pi-th-large', color: '#3b82f6', profileCount: profiles.length },
-            { id: 'favorites', name: 'Favorites', icon: 'pi-heart', color: '#ef4444', profileCount: favoritesCount },
-            { id: 'large', name: 'Large (>1GB)', icon: 'pi-database', color: '#f97316', profileCount: largeCount },
-            { id: 'unused', name: 'Unused (30+ days)', icon: 'pi-clock', color: '#eab308', profileCount: unusedCount },
-            { id: 'hidden', name: 'Hidden', icon: 'pi-eye-slash', color: '#6b7280', profileCount: hiddenCount },
-        ];
-    });
-    protected readonly folders = this.smartFolders;
     // Feature 2.5: Custom folders from FolderService for edit dialog
     protected readonly allFolders = this.folderService.folders;
     // Feature 4.2: Proxy group options for edit dialog - use service's computed signal
@@ -195,23 +168,36 @@ export class Home implements OnInit, OnDestroy {
         const ONE_GB = 1024 * 1024 * 1024;
         const THIRTY_DAYS_AGO = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-        // Single-pass filtering - O(n) instead of O(5n)
+        // Single-pass filtering - O(n)
         const result: Profile[] = [];
 
         for (const p of profiles) {
-            // Smart Folder filter
-            if (selectedFolder === 'favorites' && !p.metadata?.isFavorite) continue;
-            if (selectedFolder === 'large' && (p.size || 0) <= ONE_GB) continue;
-            if (selectedFolder === 'hidden' && !p.metadata?.isHidden) continue;
-            if (selectedFolder === 'unused') {
+            // Smart Folder & Custom Folder filter
+            if (selectedFolder === 'favorites') {
+                if (!p.metadata?.isFavorite) continue;
+            } else if (selectedFolder === 'large') {
+                if ((p.size || 0) <= ONE_GB) continue;
+            } else if (selectedFolder === 'unused') {
                 const lastOpened = p.metadata?.lastOpened ? new Date(p.metadata.lastOpened).getTime() : 0;
                 if (!(lastOpened > 0 && lastOpened < THIRTY_DAYS_AGO)) continue;
+            } else if (selectedFolder === 'hidden') {
+                if (!p.metadata?.isHidden) continue;
+            } else if (selectedFolder && selectedFolder !== 'all') {
+                // Custom folder
+                if (p.metadata?.folderId !== selectedFolder) continue;
             }
 
             // Hidden filter (unless showHidden or viewing hidden folder)
-            if (!showHiddenValue && selectedFolder !== 'hidden' && p.metadata?.isHidden) continue;
+            // If viewing specific folder, we usually show items even if hidden, or stick to showHidden toggle?
+            // "Hidden" folder obviously shows hidden.
+            // "All" keeps logic: hide hidden unless showHidden is true.
+            // Custom folders: probably show only if not hidden? Or show if in folder?
+            // Let's stick to consistent logic: isHidden hides it everywhere unless showHidden is true OR we are IN the 'hidden' folder.
+            if (selectedFolder !== 'hidden' && !this.showHidden() && p.metadata?.isHidden) {
+                continue;
+            }
 
-            // Favorites only filter
+            // Favorites only filter (superimposed on other filters)
             if (favoritesOnly && selectedFolder !== 'favorites' && !p.metadata?.isFavorite) continue;
 
             // Search filter
@@ -800,6 +786,105 @@ export class Home implements OnInit, OnDestroy {
         }
     }
 
+    // Folder Management
+    protected onFolderSelected(folderId: string | null): void {
+        this.selectedFolderId.set(folderId || 'all');
+        this.first.set(0); // Reset pagination
+    }
+
+    // Create Folder Dialog
+    protected readonly showCreateFolderDialog = signal(false);
+    protected readonly newFolderName = signal('');
+
+    onAddFolder(): void {
+        this.newFolderName.set('');
+        this.showCreateFolderDialog.set(true);
+    }
+
+    createFolder(): void {
+        const name = this.newFolderName().trim();
+        if (!name) return;
+
+        try {
+            this.folderService.add(name);
+            this.showCreateFolderDialog.set(false);
+            this.messageService.add({ severity: 'success', summary: 'Folder Created', detail: name });
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to create folder' });
+        }
+    }
+
+    // Edit Folder available context menu or settings?
+    // For now, let's keep it simple. If we need to edit/delete folders, we might need a settings UI or context menu in sidebar.
+    // The design mentioned "Design Folder Management UI (list, create, edit, delete)".
+    // Sidebar usually has context menu on right click. 
+    // Or we can add a "Folder Settings" dialog that lists all folders to manage them.
+    // Let's implement a "Manage Folders" dialog.
+
+    protected readonly showManageFoldersDialog = signal(false);
+
+    onSettings(): void {
+        // This was mapped to general settings, but sidebar has 'Settings' button.
+        // We can redirect to /settings route or open dialog.
+        this.router.navigate(['/settings']);
+    }
+
+    // Since sidebar emits 'settingsClicked', let's use it for app settings.
+    // We need a way to manage folders. 
+    // Maybe the sidebar items can have a 'edit' button/icon or we use the 'Manage Folders' approach.
+    // Let's rely on a separate 'Manage' button or just Context Menu.
+    // For MVP Folder Management, 'Create' is done. 
+    // Let's add 'Edit/Delete' via a management dialog accessible from Sidebar (maybe a 'cog' icon next to custom folders?). 
+    // Or simpler: Add 'Manage Folders' button in sidebar? 
+    // The Sidebar component has `onSettings`, `onAddFolder`.
+    // Let's add `onEditFolder(folder)` support if we modify sidebar.
+    // For now, let's stick to: Create is supported. 
+    // To support Delete/Edit, I'll add a 'Manage Folders' button in the Create dialog or a separate place.
+    // Actually, `home.html` has `app-home-sidebar`.
+    // Let's add a context menu or similar.
+
+    // Let's add a simple "Manage Folders" dialog.
+    openManageFolders(): void {
+        this.showManageFoldersDialog.set(true);
+    }
+
+    deleteFolder(id: string): void {
+        this.confirmationService.confirm({
+            message: 'Are you sure you want to delete this folder?',
+            header: 'Delete Folder',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                this.folderService.remove(id);
+                if (this.selectedFolderId() === id) {
+                    this.selectedFolderId.set('all');
+                }
+                this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'Folder deleted' });
+            }
+        });
+    }
+
+    // Edit Folder
+    protected readonly editingFolderId = signal<string | null>(null);
+    protected readonly editFolderName = signal('');
+
+    startEditFolder(folder: { id: string, name: string }): void {
+        this.editingFolderId.set(folder.id);
+        this.editFolderName.set(folder.name);
+    }
+
+    saveEditFolder(): void {
+        const id = this.editingFolderId();
+        const name = this.editFolderName().trim();
+        if (id && name) {
+            this.folderService.update(id, { name });
+            this.editingFolderId.set(null);
+        }
+    }
+
+    cancelEditFolder(): void {
+        this.editingFolderId.set(null);
+    }
+
     async togglePin(profile: Profile, event: Event): Promise<void> {
         event.stopPropagation();
         const newPinned = !profile.metadata?.isPinned;
@@ -1096,18 +1181,7 @@ export class Home implements OnInit, OnDestroy {
         this.selectedProfiles.set([]);
     }
 
-    // ==== Sidebar Actions (Moved from Pages) ====
-    protected onFolderSelected(folderId: string | null): void {
-        this.selectedFolderId.set(folderId);
-    }
 
-    protected onAddFolder(): void {
-        // TODO: Implement folder creation UI
-    }
-
-    protected onSettings(): void {
-        this.router.navigate(['/settings']);
-    }
 
     // Drag & Drop Reordering
     protected async onProfileDrop(event: CdkDragDrop<Profile[]>): Promise<void> {

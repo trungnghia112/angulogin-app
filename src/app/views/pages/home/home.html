@@ -1,7 +1,7 @@
 <!-- Sidebar (responsive: drawer on mobile, static on desktop) -->
 <app-home-sidebar [folders]="folders()" [selectedFolderId]="selectedFolderId()" [isOpen]="sidebarOpen()"
     (folderSelected)="onFolderSelected($event)" (addFolderClicked)="onAddFolder()" (settingsClicked)="onSettings()"
-    (closeSidebar)="sidebarOpen.set(false)" />
+    (folderSettingsClicked)="openManageFolders()" (closeSidebar)="sidebarOpen.set(false)" />
 
 <!-- Main Content -->
 <div id="home-container" class="flex-1 flex flex-col min-h-0 text-color overflow-hidden">
@@ -529,6 +529,72 @@
                 <p-button id="home-activity-log-close-btn" label="Close" severity="secondary"
                     (click)="showActivityLog.set(false)" />
             </div>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Create Folder Dialog -->
+    <p-dialog [(visible)]="showCreateFolderDialog" header="Create Folder" [modal]="true" [style]="{ width: '400px' }"
+        [draggable]="false" [resizable]="false">
+        <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-2">
+                <label for="folderName" class="font-medium">Folder Name</label>
+                <input pInputText id="folderName" [(ngModel)]="newFolderName" (keydown.enter)="createFolder()"
+                    autofocus />
+            </div>
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Cancel" (click)="showCreateFolderDialog.set(false)" [text]="true" severity="secondary" />
+            <p-button label="Create" (click)="createFolder()" [disabled]="!newFolderName().trim()" />
+        </ng-template>
+    </p-dialog>
+
+    <!-- Manage Folders Dialog -->
+    <p-dialog [(visible)]="showManageFoldersDialog" header="Manage Folders" [modal]="true" [style]="{ width: '500px' }"
+        [draggable]="false" [resizable]="false">
+        <div class="flex flex-col gap-2">
+            <div class="text-muted-color text-sm mb-2">Custom folders only. System folders cannot be changed.</div>
+
+            @if (allFolders().length === 0) {
+            <div class="text-center p-4 text-muted-color">No custom folders.</div>
+            }
+
+            <div class="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
+                @for (folder of allFolders(); track folder.id) {
+                @if (!folderService.isSystemFolder(folder.id)) {
+                <div
+                    class="flex items-center justify-between p-3 border border-surface-200 dark:border-surface-700 rounded-lg bg-surface-50 dark:bg-surface-900">
+                    @if (editingFolderId() === folder.id) {
+                    <div class="flex items-center gap-2 flex-1 mr-2">
+                        <input pInputText [(ngModel)]="editFolderName" class="w-full p-inputtext-sm"
+                            (keydown.enter)="saveEditFolder()" />
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <p-button icon="pi pi-check" [text]="true" [rounded]="true" severity="success"
+                            (click)="saveEditFolder()" />
+                        <p-button icon="pi pi-times" [text]="true" [rounded]="true" severity="secondary"
+                            (click)="cancelEditFolder()" />
+                    </div>
+                    } @else {
+                    <div class="flex items-center gap-3 flex-1 overflow-hidden">
+                        <i [class]="'pi ' + (folder.icon || 'pi-folder')" [style.color]="folder.color"></i>
+                        <span class="font-medium truncate">{{ folder.name }}</span>
+                        <span class="text-xs text-muted-color">({{ folder.profileCount || 0 }})</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="secondary"
+                            (click)="startEditFolder(folder)" />
+                        <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger"
+                            (click)="deleteFolder(folder.id)" />
+                    </div>
+                    }
+                </div>
+                }
+                }
+            </div>
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Close" (click)="showManageFoldersDialog.set(false)" [text]="true" />
+            <p-button icon="pi pi-plus" label="New Folder" (click)="onAddFolder()" [text]="true" severity="info" />
         </ng-template>
     </p-dialog>
 </div>
