@@ -1,4 +1,5 @@
 mod commands;
+mod proxy_relay;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

@@ -379,31 +379,32 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
     let (user_data_dir, profile_directory) = if let Some(parent) = path.parent() {
         let local_state = parent.join("Local State");
         if local_state.exists() {
-            // Native Chrome profile: use parent as user-data-dir and folder name as profile-directory
             let folder_name = path.file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or("Default");
             (parent.to_string_lossy().to_string(), Some(folder_name.to_string()))
         } else {
-            // Managed profile: use the profile path directly as user-data-dir
             (profile_path.clone(), None)
         }
     } else {
-        // No parent, use as-is
         (profile_path.clone(), None)
     };
     
-    let user_data_arg = format!("--user-data-dir={}", user_data_dir);
-    
-    let app_name = match browser.as_str() {
-        "chrome" => "Google Chrome",
-        "brave" => "Brave Browser",
-        "edge" => "Microsoft Edge",
-        "arc" => "Arc",
+    // Resolve browser binary path (direct binary, NOT via `open`)
+    let browser_binary = match browser.as_str() {
+        "chrome" => "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "brave" => "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+        "edge" => "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+        "arc" => "/Applications/Arc.app/Contents/MacOS/Arc",
         _ => return Err(format!("Unknown browser: {}", browser)),
     };
     
-    // Determine incognito flag based on browser
+    if !std::path::Path::new(browser_binary).exists() {
+        return Err(format!("{} not found at {}", browser, browser_binary));
+    }
+    
+    let user_data_arg = format!("--user-data-dir={}", user_data_dir);
+    
     let incognito_flag = if incognito.unwrap_or(false) {
         match browser.as_str() {
             "brave" => Some("--incognito"),
@@ -415,88 +416,57 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
         None
     };
     
-    let mut args = vec!["-n", "-a", app_name, "--args", &user_data_arg];
+    let mut args: Vec<String> = vec![user_data_arg];
     
     // Add profile-directory flag for native Chrome profiles
-    let profile_dir_arg: String;
     if let Some(dir) = profile_directory {
-        profile_dir_arg = format!("--profile-directory={}", dir);
-        args.push(&profile_dir_arg);
+        args.push(format!("--profile-directory={}", dir));
     }
     
     // Add incognito flag if applicable
-    let incognito_owned: String;
     if let Some(flag) = incognito_flag {
-        incognito_owned = flag.to_string();
-        args.push(&incognito_owned);
+        args.push(flag.to_string());
     }
     
-    // Add proxy server if provided
-    let proxy_owned: String;
+    // Add proxy server - with optional local relay for authenticated proxies
     if let Some(ref proxy) = proxy_server {
-        proxy_owned = format!("--proxy-server={}", proxy);
-        args.push(&proxy_owned);
-    }
-    
-    // Proxy Auth Extension: create a temp extension to auto-fill proxy credentials
-    let ext_path_owned: String;
-    let load_ext_arg: String;
-    if let (Some(ref username), Some(ref password)) = (&proxy_username, &proxy_password) {
-        if !username.is_empty() && !password.is_empty() {
-            let ext_dir = std::path::Path::new(&profile_path).join(".proxy_auth_ext");
-            std::fs::create_dir_all(&ext_dir)
-                .map_err(|e| format!("Failed to create proxy auth extension dir: {}", e))?;
-            
-            // Write manifest.json
-            let manifest = r#"{
-  "manifest_version": 3,
-  "name": "Proxy Auth Helper",
-  "version": "1.0",
-  "permissions": ["webRequest", "webRequestAuthProvider"],
-  "host_permissions": ["<all_urls>"],
-  "background": {
-    "service_worker": "background.js"
-  }
-}"#;
-            std::fs::write(ext_dir.join("manifest.json"), manifest)
-                .map_err(|e| format!("Failed to write proxy extension manifest: {}", e))?;
-            
-            // Write background.js with the credentials
-            // Escape special chars in username/password for JS string
-            let escaped_user = username.replace('\\', "\\\\").replace('\'', "\\'");
-            let escaped_pass = password.replace('\\', "\\\\").replace('\'', "\\'");
-            let background = format!(
-                r#"chrome.webRequest.onAuthRequired.addListener(
-  (details, callbackFn) => {{
-    callbackFn({{
-      authCredentials: {{
-        username: '{}',
-        password: '{}'
-      }}
-    }});
-  }},
-  {{ urls: ['<all_urls>'] }},
-  ['asyncBlocking']
-);"#,
-                escaped_user, escaped_pass
-            );
-            std::fs::write(ext_dir.join("background.js"), background)
-                .map_err(|e| format!("Failed to write proxy extension background.js: {}", e))?;
-            
-            ext_path_owned = ext_dir.to_string_lossy().to_string();
-            load_ext_arg = format!("--load-extension={}", ext_path_owned);
-            args.push(&load_ext_arg);
+        let use_relay = match (&proxy_username, &proxy_password) {
+            (Some(ref u), Some(ref p)) if !u.is_empty() && !p.is_empty() => true,
+            _ => false,
+        };
+
+        if use_relay {
+            // Parse upstream proxy host:port from proxy URL
+            let proxy_trimmed = proxy
+                .trim_start_matches("http://")
+                .trim_start_matches("https://")
+                .trim_start_matches("socks5://")
+                .trim_start_matches("socks4://");
+            let parts: Vec<&str> = proxy_trimmed.splitn(2, ':').collect();
+            let host = parts.first().unwrap_or(&"");
+            let port: u16 = parts.get(1)
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(80);
+
+            let username = proxy_username.as_ref().unwrap();
+            let password = proxy_password.as_ref().unwrap();
+
+            // Start local proxy relay (127.0.0.1:random_port -> upstream with auth)
+            let local_port = crate::proxy_relay::start_proxy_relay(host, port, username, password)?;
+            args.push(format!("--proxy-server=http://127.0.0.1:{}", local_port));
+        } else {
+            // No auth needed, use proxy directly
+            args.push(format!("--proxy-server={}", proxy));
         }
     }
     
     // Security: Sanitize custom flags to block dangerous Chrome flags
-    let custom_flags_vec: Vec<String>;
     if let Some(flags) = custom_flags {
         let dangerous_prefixes = [
             "--remote-debugging",
             "--disable-web-security",
-            "--user-data-dir",    // prevent override
-            "--profile-directory", // prevent override
+            "--user-data-dir",
+            "--profile-directory",
             "--load-extension",
             "--disable-extensions-except",
             "--enable-automation",
@@ -504,36 +474,29 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
             "--disable-site-isolation",
         ];
         
-        custom_flags_vec = flags.split_whitespace()
-            .filter(|flag| {
-                let lower = flag.to_lowercase();
-                !dangerous_prefixes.iter().any(|p| lower.starts_with(p))
-            })
-            .map(|s| s.to_string())
-            .collect();
-    } else {
-        custom_flags_vec = Vec::new();
-    }
-    let custom_flags_refs: Vec<&str> = custom_flags_vec.iter().map(|s| s.as_str()).collect();
-    for flag in &custom_flags_refs {
-        args.push(flag);
+        for flag in flags.split_whitespace() {
+            let lower = flag.to_lowercase();
+            if !dangerous_prefixes.iter().any(|p| lower.starts_with(p)) {
+                args.push(flag.to_string());
+            }
+        }
     }
     
     // Add URL if provided (validate scheme)
-    let url_owned: String;
     if let Some(u) = url {
         let lower = u.to_lowercase();
         if lower.starts_with("javascript:") || lower.starts_with("data:") || lower.starts_with("vbscript:") {
             return Err("Unsafe URL scheme".to_string());
         }
-        url_owned = u;
-        args.push(&url_owned);
+        args.push(u);
     }
     
-    Command::new("open")
-        .args(&args)
+    // Launch browser binary directly (NOT via `open -a`) to guarantee all args are passed
+    let arg_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    Command::new(browser_binary)
+        .args(&arg_refs)
         .spawn()
-        .map_err(|e| format!("Failed to launch {}: {}", app_name, e))?;
+        .map_err(|e| format!("Failed to launch {}: {}", browser_binary, e))?;
     
     Ok(())
 }
