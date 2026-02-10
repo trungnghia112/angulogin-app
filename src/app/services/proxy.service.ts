@@ -108,10 +108,22 @@ export class ProxyService {
                     continue;
                 }
 
+                const hostError = this.validateHost(proxy.host);
+                if (hostError) {
+                    errors.push(`Skipped ${proxy.host}: ${hostError}`);
+                    continue;
+                }
+
+                const port = Number(proxy.port);
+                if (!this.isValidPort(port)) {
+                    errors.push(`Skipped ${proxy.host}: invalid port ${proxy.port}`);
+                    continue;
+                }
+
                 this.add({
-                    name: proxy.name || `${proxy.host}:${proxy.port}`,
+                    name: proxy.name || `${proxy.host}:${port}`,
                     host: proxy.host,
-                    port: Number(proxy.port),
+                    port,
                     type: proxy.type === 'socks5' ? 'socks5' : 'http',
                     username: proxy.username || null,
                     password: proxy.password || null,
@@ -141,9 +153,15 @@ export class ProxyService {
             }
 
             const [host, portStr, username, password] = parts;
-            const port = parseInt(portStr, 10);
 
-            if (isNaN(port)) {
+            const hostError = this.validateHost(host);
+            if (hostError) {
+                errors.push(`${line}: ${hostError}`);
+                continue;
+            }
+
+            const port = parseInt(portStr, 10);
+            if (!this.isValidPort(port)) {
                 errors.push(`Invalid port in: ${line}`);
                 continue;
             }
@@ -195,13 +213,30 @@ export class ProxyService {
 
     // === Helpers ===
 
+    private validateHost(host: string): string | null {
+        if (!host || !host.trim()) return 'Host is empty';
+        if (/\s/.test(host)) return 'Host contains whitespace';
+        if (/[<>"|;`$\\]/.test(host)) return 'Host contains invalid characters';
+        if (host.length > 253) return 'Host is too long';
+        return null;
+    }
+
+    private isValidPort(port: number): boolean {
+        return Number.isInteger(port) && port >= 1 && port <= 65535;
+    }
+
     private generateId(): string {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return `proxy-${crypto.randomUUID()}`;
+        }
         return `proxy-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     }
 
     formatProxyUrl(proxy: ProfileProxy): string {
-        const auth = proxy.username ? `${proxy.username}:${proxy.password || ''}@` : '';
-        return `${proxy.type}://${auth}${proxy.host}:${proxy.port}`;
+        // NOTE: Chrome's --proxy-server flag does NOT support auth in URL.
+        // Including user:pass@ would leak credentials into process args (visible via ps).
+        // Chrome handles proxy auth via a login prompt or PAC/extensions.
+        return `${proxy.type}://${proxy.host}:${proxy.port}`;
     }
 
     clearAll(): void {
@@ -253,12 +288,16 @@ export class ProxyService {
         let alive = 0;
         let dead = 0;
 
-        for (const proxy of proxies) {
-            const result = await this.checkHealth(proxy);
+        for (let i = 0; i < proxies.length; i++) {
+            const result = await this.checkHealth(proxies[i]);
             if (result.isAlive) {
                 alive++;
             } else {
                 dead++;
+            }
+            // Throttle: 200ms between checks to avoid overwhelming network
+            if (i < proxies.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 200));
             }
         }
 
