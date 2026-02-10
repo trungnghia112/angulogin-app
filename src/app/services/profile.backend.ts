@@ -1,7 +1,13 @@
 import { invoke } from '@tauri-apps/api/core';
 import { debugLog } from '../core/utils/logger.util';
 import { MOCK_PROFILES, MOCK_AVAILABLE_BROWSERS, getMockProfileByPath } from '../mocks/profile.mock';
-import { ProfileBackend } from './profile.backend.interface';
+import {
+    ClearCookiesResult,
+    LaunchBrowserOptions,
+    ProfileBackend,
+    ProfileHealthCheckResult,
+    RestoreBackupResult,
+} from './profile.backend.interface';
 import { ProfileMetadata } from '../models/profile.model';
 
 export class MockProfileBackend implements ProfileBackend {
@@ -39,7 +45,7 @@ export class MockProfileBackend implements ProfileBackend {
         return profile?.metadata || { emoji: null, notes: null, group: null, shortcut: null, browser: null };
     }
 
-    async saveProfileMetadata(profilePath: string, metadata: any): Promise<void> {
+    async saveProfileMetadata(profilePath: string, metadata: Partial<ProfileMetadata>): Promise<void> {
         debugLog('Mock saveProfileMetadata:', profilePath, metadata);
     }
 
@@ -48,7 +54,7 @@ export class MockProfileBackend implements ProfileBackend {
         return profile?.isRunning || false;
     }
 
-    async launchBrowser(options: any): Promise<void> {
+    async launchBrowser(options: LaunchBrowserOptions): Promise<void> {
         debugLog('Mock launchBrowser:', options);
     }
 
@@ -61,7 +67,7 @@ export class MockProfileBackend implements ProfileBackend {
         return MOCK_AVAILABLE_BROWSERS;
     }
 
-    async clearProfileCookies(profilePath: string): Promise<any> {
+    async clearProfileCookies(profilePath: string): Promise<ClearCookiesResult> {
         debugLog('Mock clearProfileCookies:', profilePath);
         return { deleted_count: 5, freed_bytes: 1024 * 1024 * 10, failed_items: [] };
     }
@@ -72,12 +78,12 @@ export class MockProfileBackend implements ProfileBackend {
         return `${basePath}/${newName}`;
     }
 
-    async checkProfileHealth(profilePath: string): Promise<any> {
+    async checkProfileHealth(profilePath: string): Promise<ProfileHealthCheckResult> {
         debugLog('Mock checkProfileHealth:', profilePath);
         return { is_healthy: true, issues: [], warnings: [], checked_files: 4 };
     }
 
-    async restoreFromBackup(backupPath: string, targetBasePath: string, conflictAction: string): Promise<any> {
+    async restoreFromBackup(backupPath: string, targetBasePath: string, conflictAction: string): Promise<RestoreBackupResult> {
         debugLog('Mock restoreFromBackup:', backupPath, targetBasePath, conflictAction);
         return { success: true, restored_path: targetBasePath + '/RestoredProfile', profile_name: 'RestoredProfile', was_renamed: false };
     }
@@ -116,7 +122,7 @@ export class TauriProfileBackend implements ProfileBackend {
         }
     }
 
-    async saveProfileMetadata(profilePath: string, metadata: any): Promise<void> {
+    async saveProfileMetadata(profilePath: string, metadata: Partial<ProfileMetadata>): Promise<void> {
         return await invoke('save_profile_metadata', { profilePath, ...metadata });
     }
 
@@ -128,7 +134,7 @@ export class TauriProfileBackend implements ProfileBackend {
         }
     }
 
-    async launchBrowser(options: any): Promise<void> {
+    async launchBrowser(options: LaunchBrowserOptions): Promise<void> {
         return await invoke('launch_browser', options);
     }
 
@@ -140,19 +146,19 @@ export class TauriProfileBackend implements ProfileBackend {
         return await invoke<string[]>('list_available_browsers');
     }
 
-    async clearProfileCookies(profilePath: string): Promise<any> {
-        return await invoke('clear_profile_cookies', { profilePath });
+    async clearProfileCookies(profilePath: string): Promise<ClearCookiesResult> {
+        return await invoke<ClearCookiesResult>('clear_profile_cookies', { profilePath });
     }
 
     async duplicateProfile(sourcePath: string, newName: string): Promise<string> {
         return await invoke<string>('duplicate_profile', { sourcePath, newName });
     }
 
-    async checkProfileHealth(profilePath: string): Promise<any> {
-        return await invoke('check_profile_health', { profilePath });
+    async checkProfileHealth(profilePath: string): Promise<ProfileHealthCheckResult> {
+        return await invoke<ProfileHealthCheckResult>('check_profile_health', { profilePath });
     }
 
-    async restoreFromBackup(backupPath: string, targetBasePath: string, conflictAction: string): Promise<any> {
-        return await invoke('restore_from_backup', { backupPath, targetBasePath, conflictAction });
+    async restoreFromBackup(backupPath: string, targetBasePath: string, conflictAction: string): Promise<RestoreBackupResult> {
+        return await invoke<RestoreBackupResult>('restore_from_backup', { backupPath, targetBasePath, conflictAction });
     }
 }

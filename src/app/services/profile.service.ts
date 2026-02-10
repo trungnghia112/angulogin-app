@@ -55,7 +55,7 @@ export class ProfileService {
 
     async launchChrome(profilePath: string): Promise<void> {
         try {
-            await this.backend.launchBrowser({ profilePath });
+            await this.backend.launchBrowser({ profilePath, browser: 'chrome' });
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
             this.error.set(errorMsg);
@@ -182,9 +182,17 @@ export class ProfileService {
         proxyRotation: { enabled: boolean; mode: 'per_launch' | 'hourly' | 'daily'; proxyGroupId?: string | null } | null = null,
     ): Promise<void> {
         try {
-            const metadata = {
-                emoji, notes, group, shortcut, browser, tags, launchUrl, isPinned, color, isHidden, isFavorite, customFlags, proxy,
-                folderId, disableExtensions, proxyRotation
+            const metadata: Partial<ProfileMetadata> = {
+                emoji, notes, group, shortcut,
+                browser: browser as BrowserType | null,
+                tags: tags ?? undefined,
+                launchUrl, isPinned: isPinned ?? undefined,
+                color, isHidden: isHidden ?? undefined,
+                isFavorite: isFavorite ?? undefined,
+                customFlags, proxy,
+                folderId: folderId ?? undefined,
+                disableExtensions: disableExtensions ?? undefined,
+                proxyRotation: proxyRotation ?? undefined,
             };
             await this.backend.saveProfileMetadata(profilePath, metadata);
 

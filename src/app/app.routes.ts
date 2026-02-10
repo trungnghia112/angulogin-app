@@ -44,6 +44,10 @@ export const routes: Routes = [
                 loadComponent: () =>
                     import('./views/pages/usage-dashboard/usage-dashboard').then((m) => m.UsageDashboard),
             },
+            {
+                path: '**',
+                redirectTo: 'browsers',
+            },
         ],
     },
 ];

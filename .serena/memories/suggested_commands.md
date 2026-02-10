@@ -2,15 +2,25 @@
 
 ## Development
 ```bash
-npm start          # Start dev server at localhost:4200
-npm run build      # Production build to dist/
-npm run watch      # Build with watch mode
-npm test           # Run unit tests
+npm start              # Start Angular dev server at localhost:4200 (browser mode, mock backend)
+npm run build          # Production build to dist/
+npm run watch          # Build with watch mode
+npm run tauri dev      # Start Tauri desktop dev (Angular + Rust backend)
+npm run tauri build    # Build production desktop app
 ```
 
-## Git Commands
+## Firebase
 ```bash
-git add -A && git commit -m "feat: description"  # Semantic commits
+firebase emulators:start   # Start Firebase emulators (Firestore, Functions, Auth)
+firebase deploy            # Deploy to Firebase Hosting + Functions
+```
+
+## Git Commands (Semantic Commits)
+```bash
+git add -A && git commit -m "feat: description"
+git add -A && git commit -m "fix: description"
+git add -A && git commit -m "refactor: description"
+git add -A && git commit -m "chore: description"
 git push origin main
 ```
 
@@ -21,9 +31,7 @@ ng generate service services/service-name     # Generate service
 ng serve --port 4201                          # Custom port
 ```
 
-## System (macOS/Darwin)
+## Build Validation
 ```bash
-ls -la          # List files
-find . -name "*.ts"   # Find files
-grep -r "pattern" src/  # Search in files
+npm run build    # MUST run after every code change (per project rules)
 ```

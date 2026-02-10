@@ -1,6 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { ProfileProxy } from '../models/folder.model';
 import { MOCK_PROXIES } from '../mocks/profile.mock';
+import { isWebDevMode } from '../core/utils/platform.util';
 
 const STORAGE_KEY = 'chrome-profile-manager-proxies';
 
@@ -178,8 +179,10 @@ export class ProxyService {
             console.warn('Failed to load proxies from storage');
         }
 
-        // Default to mock data in development
-        this._proxies.set([...MOCK_PROXIES]);
+        // Only load mock data in web development mode
+        if (isWebDevMode()) {
+            this._proxies.set([...MOCK_PROXIES]);
+        }
     }
 
     private saveToStorage(): void {
