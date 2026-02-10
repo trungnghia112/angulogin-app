@@ -451,7 +451,8 @@
     <!-- Edit Profile Dialog -->
     <app-profile-edit-dialog [visible]="showEditDialog()" [profile]="selectedProfile()" [allProfiles]="profiles()"
         [availableBrowsers]="availableBrowsers()" [folders]="allFolders()" [proxyGroups]="proxyGroups()"
-        (visibleChange)="showEditDialog.set($event)" (save)="onEditDialogSave($event)" #editDialog />
+        [savedProxies]="proxyService.proxies()" (visibleChange)="showEditDialog.set($event)"
+        (save)="onEditDialogSave($event)" #editDialog />
 
     <!-- Duplicate Profile Dialog -->
     <p-dialog id="home-duplicate-dialog" header="Duplicate Profile" [(visible)]="showDuplicateDialog" [modal]="true"

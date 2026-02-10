@@ -128,12 +128,130 @@
             </button>
         </div>
 
-        <!-- Proxy Setting -->
-        <div id="home-edit-dialog-proxy-section">
-            <label for="home-edit-dialog-proxy-input" class="block text-xs font-medium text-color mb-2">Proxy Server</label>
-            <input id="home-edit-dialog-proxy-input" pInputText type="text" [ngModel]="editProxy()"
-                (ngModelChange)="editProxy.set($event)" placeholder="scheme://host:port (e.g., http://127.0.0.1:8080)" class="w-full" />
-            <p class="text-xs text-muted-color mt-1">Leave empty to use system proxy</p>
+        <!-- Proxy Setting (Upgraded) -->
+        <div id="home-edit-dialog-proxy-section"
+            class="space-y-3 p-3 rounded-lg border border-surface-200 dark:border-surface-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <label class="block text-xs font-medium text-color">Proxy</label>
+                    <p class="text-xs text-muted-color">Assign a proxy to this profile</p>
+                </div>
+            </div>
+
+            <!-- Mode Selector -->
+            <div class="flex gap-1">
+                @for (opt of proxyModeOptions; track opt.value) {
+                <button [id]="'home-edit-dialog-proxy-mode-' + opt.value"
+                    class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-all"
+                    [class]="proxyMode() === opt.value
+                        ? 'bg-primary border-primary text-white'
+                        : 'border-surface text-muted-color hover:border-primary'"
+                    (click)="onProxyModeChange($any(opt.value))">
+                    <i [class]="opt.icon + ' text-xs'"></i>
+                    {{ opt.label }}
+                </button>
+                }
+            </div>
+
+            <!-- Saved Proxy Dropdown -->
+            @if (proxyMode() === 'saved') {
+            <div class="space-y-3">
+                <p-select id="home-edit-dialog-proxy-select" [options]="savedProxies()" optionLabel="name"
+                    optionValue="id" [ngModel]="selectedProxyId()"
+                    (ngModelChange)="selectedProxyId.set($event); proxyCheckResult.set(null)"
+                    placeholder="Select a proxy..." [showClear]="true" [filter]="true"
+                    filterPlaceholder="Search proxies..." class="w-full">
+                    <ng-template let-proxy pTemplate="item">
+                        <div class="flex items-center gap-3">
+                            <i class="pi pi-globe text-xs text-primary"></i>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium">{{ proxy.host }}:{{ proxy.port }}</span>
+                                <span class="text-xs text-muted-color">{{ proxy.type | uppercase }} {{ proxy.group ? '•
+                                    ' + proxy.group : '' }}</span>
+                            </div>
+                            @if (proxy.isAlive !== null && proxy.isAlive !== undefined) {
+                            <span class="ml-auto">
+                                <i
+                                    [class]="proxy.isAlive ? 'pi pi-circle-fill text-green-500 text-xs' : 'pi pi-circle-fill text-red-500 text-xs'"></i>
+                            </span>
+                            }
+                        </div>
+                    </ng-template>
+                </p-select>
+
+                @if (selectedProxyId()) {
+                <div class="flex items-center gap-2">
+                    <p-button icon="pi pi-sync" label="Check" [outlined]="true" size="small" [loading]="checkingProxy()"
+                        (click)="checkProxyInline()" />
+                    @if (proxyCheckResult(); as result) {
+                    <span class="flex items-center gap-1.5 text-xs font-medium"
+                        [class]="result.isAlive ? 'text-green-500' : 'text-red-500'">
+                        <i [class]="result.isAlive ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
+                        {{ result.isAlive ? 'Online ' + result.latencyMs + 'ms' : 'Offline' }}
+                    </span>
+                    }
+                </div>
+                }
+            </div>
+            }
+
+            <!-- Manual Proxy Input -->
+            @if (proxyMode() === 'manual') {
+            <div class="space-y-3">
+                <!-- Type -->
+                <div class="flex gap-1">
+                    @for (opt of proxyTypeOptions; track opt.value) {
+                    <button class="flex-1 px-3 py-1.5 text-xs font-medium rounded border transition-all" [class]="manualProxyType() === opt.value
+                            ? 'bg-primary border-primary text-white'
+                            : 'border-surface text-muted-color hover:border-primary'"
+                        (click)="manualProxyType.set($any(opt.value))">
+                        {{ opt.label }}
+                    </button>
+                    }
+                </div>
+
+                <!-- Host + Port -->
+                <div class="flex gap-3">
+                    <div class="flex-1">
+                        <input pInputText [ngModel]="manualProxyHost()" (ngModelChange)="manualProxyHost.set($event)"
+                            placeholder="Host (e.g., 31.59.20.176)" class="w-full" />
+                    </div>
+                    <div class="w-24">
+                        <input pInputText type="number" [ngModel]="manualProxyPort()"
+                            (ngModelChange)="manualProxyPort.set($event)" placeholder="Port" class="w-full" />
+                    </div>
+                </div>
+
+                <!-- Username + Password (optional) -->
+                <div class="flex gap-3">
+                    <div class="flex-1">
+                        <input pInputText [ngModel]="manualProxyUsername()"
+                            (ngModelChange)="manualProxyUsername.set($event)" placeholder="Username (optional)"
+                            class="w-full" />
+                    </div>
+                    <div class="flex-1">
+                        <input pInputText type="password" [ngModel]="manualProxyPassword()"
+                            (ngModelChange)="manualProxyPassword.set($event)" placeholder="Password (optional)"
+                            class="w-full" />
+                    </div>
+                </div>
+
+                <!-- Check button -->
+                @if (manualProxyHost() && manualProxyPort()) {
+                <div class="flex items-center gap-2">
+                    <p-button icon="pi pi-sync" label="Check" [outlined]="true" size="small" [loading]="checkingProxy()"
+                        (click)="checkProxyInline()" />
+                    @if (proxyCheckResult(); as result) {
+                    <span class="flex items-center gap-1.5 text-xs font-medium"
+                        [class]="result.isAlive ? 'text-green-500' : 'text-red-500'">
+                        <i [class]="result.isAlive ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
+                        {{ result.isAlive ? 'Online ' + result.latencyMs + 'ms' : 'Offline' }}
+                    </span>
+                    }
+                </div>
+                }
+            </div>
+            }
         </div>
 
         <!-- Custom Chrome Flags -->
@@ -149,15 +267,9 @@
         <!-- Feature 2.5: Folder Management -->
         <div id="home-edit-dialog-folder-section">
             <label for="home-edit-dialog-folder-select" class="block text-xs font-medium text-color mb-2">Folder</label>
-            <p-select id="home-edit-dialog-folder-select"
-                [options]="customFolderOptions()"
-                optionLabel="name"
-                optionValue="id"
-                [ngModel]="editFolderId()"
-                (ngModelChange)="editFolderId.set($event)"
-                placeholder="No folder"
-                [showClear]="true"
-                class="w-full" />
+            <p-select id="home-edit-dialog-folder-select" [options]="customFolderOptions()" optionLabel="name"
+                optionValue="id" [ngModel]="editFolderId()" (ngModelChange)="editFolderId.set($event)"
+                placeholder="No folder" [showClear]="true" class="w-full" />
             <p class="text-xs text-muted-color mt-1">Organize this profile into a folder</p>
         </div>
 
@@ -167,44 +279,37 @@
                 <label class="block text-xs font-medium text-color">Disable Extensions on Launch</label>
                 <p class="text-xs text-muted-color">Launch browser with all extensions disabled</p>
             </div>
-            <p-toggleSwitch id="home-edit-dialog-extensions-toggle"
-                [ngModel]="editDisableExtensions()"
+            <p-toggleSwitch id="home-edit-dialog-extensions-toggle" [ngModel]="editDisableExtensions()"
                 (ngModelChange)="editDisableExtensions.set($event)" />
         </div>
 
         <!-- Feature 4.2: Proxy Rotation -->
-        <div id="home-edit-dialog-proxy-rotation-section" class="space-y-3 p-3 rounded-lg border border-surface-200 dark:border-surface-700">
+        <div id="home-edit-dialog-proxy-rotation-section"
+            class="space-y-3 p-3 rounded-lg border border-surface-200 dark:border-surface-700">
             <div class="flex items-center justify-between">
                 <div>
                     <label class="block text-xs font-medium text-color">Proxy Rotation</label>
                     <p class="text-xs text-muted-color">Auto-rotate proxy for this profile</p>
                 </div>
-                <p-toggleSwitch id="home-edit-dialog-proxy-rotation-toggle"
-                    [ngModel]="editProxyRotationEnabled()"
+                <p-toggleSwitch id="home-edit-dialog-proxy-rotation-toggle" [ngModel]="editProxyRotationEnabled()"
                     (ngModelChange)="editProxyRotationEnabled.set($event)" />
             </div>
             @if (editProxyRotationEnabled()) {
             <div class="space-y-3 pt-2 border-t border-surface-100 dark:border-surface-800">
                 <div>
-                    <label for="home-edit-dialog-rotation-mode" class="block text-xs font-medium text-color mb-1">Rotation Mode</label>
-                    <p-select id="home-edit-dialog-rotation-mode"
-                        [options]="proxyRotationModeOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        [ngModel]="editProxyRotationMode()"
-                        (ngModelChange)="editProxyRotationMode.set($event)"
-                        class="w-full" />
+                    <label for="home-edit-dialog-rotation-mode"
+                        class="block text-xs font-medium text-color mb-1">Rotation Mode</label>
+                    <p-select id="home-edit-dialog-rotation-mode" [options]="proxyRotationModeOptions"
+                        optionLabel="label" optionValue="value" [ngModel]="editProxyRotationMode()"
+                        (ngModelChange)="editProxyRotationMode.set($event)" class="w-full" />
                 </div>
                 @if (proxyGroups().length > 0) {
                 <div>
-                    <label for="home-edit-dialog-rotation-group" class="block text-xs font-medium text-color mb-1">Proxy Group (Optional)</label>
-                    <p-select id="home-edit-dialog-rotation-group"
-                        [options]="proxyGroups()"
-                        [ngModel]="editProxyRotationGroupId()"
-                        (ngModelChange)="editProxyRotationGroupId.set($event)"
-                        placeholder="All proxies"
-                        [showClear]="true"
-                        class="w-full" />
+                    <label for="home-edit-dialog-rotation-group" class="block text-xs font-medium text-color mb-1">Proxy
+                        Group (Optional)</label>
+                    <p-select id="home-edit-dialog-rotation-group" [options]="proxyGroups()"
+                        [ngModel]="editProxyRotationGroupId()" (ngModelChange)="editProxyRotationGroupId.set($event)"
+                        placeholder="All proxies" [showClear]="true" class="w-full" />
                 </div>
                 }
             </div>

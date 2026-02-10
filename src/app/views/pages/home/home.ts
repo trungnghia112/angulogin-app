@@ -94,7 +94,7 @@ export class Home implements OnInit, OnDestroy {
     private readonly settingsService = inject(SettingsService);
     private readonly activityLogService = inject(ActivityLogService);
     protected readonly folderService = inject(FolderService);
-    private readonly proxyService = inject(ProxyService);
+    protected readonly proxyService = inject(ProxyService);
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
     private readonly destroyRef = inject(DestroyRef);
@@ -768,6 +768,7 @@ export class Home implements OnInit, OnDestroy {
                     color: data.color ?? undefined,
                     customFlags: data.customFlags ?? undefined,
                     proxy: data.proxy ?? undefined,
+                    proxyId: data.proxyId ?? undefined,
                     folderId: data.folderId ?? undefined,
                     disableExtensions: data.disableExtensions || undefined,
                     proxyRotation: data.proxyRotation ?? undefined,

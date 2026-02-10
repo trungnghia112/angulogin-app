@@ -14,9 +14,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { UpperCasePipe } from '@angular/common';
 import { Profile, BrowserType, ProxyRotationConfig } from '../../../../models/profile.model';
-import { Folder } from '../../../../models/folder.model';
+import { Folder, ProfileProxy } from '../../../../models/folder.model';
 import { MessageService } from 'primeng/api';
+import { ProxyService } from '../../../../services/proxy.service';
 
 // Options
 const EMOJI_OPTIONS = ['🌐', '💼', '🎮', '📧', '🛒', '📚', '🎬', '🔒', '🧪', '👤'];
@@ -58,6 +60,7 @@ export interface ProfileEditData {
     color: string | null;
     customFlags: string | null;
     proxy: string | null;
+    proxyId: string | null;
     // Feature 2.5: Folder Management
     folderId: string | null;
     // Feature 3.4: Launch with Extensions
@@ -79,10 +82,12 @@ export interface ProfileEditData {
         TextareaModule,
         SelectModule,
         ToggleSwitchModule,
+        UpperCasePipe,
     ],
 })
 export class ProfileEditDialog {
     private readonly messageService = inject(MessageService);
+    private readonly proxyService = inject(ProxyService);
 
     // Inputs
     readonly visible = input<boolean>(false);
@@ -93,6 +98,8 @@ export class ProfileEditDialog {
     readonly folders = input<Folder[]>([]);
     // Feature 4.2: Proxy groups input
     readonly proxyGroups = input<string[]>([]);
+    // New: saved proxies list from ProxyService
+    readonly savedProxies = input<ProfileProxy[]>([]);
 
     // Outputs
     readonly visibleChange = output<boolean>();
@@ -129,6 +136,28 @@ export class ProfileEditDialog {
     // Options for proxy rotation mode - use file-level constant
     protected readonly proxyRotationModeOptions = PROXY_ROTATION_MODE_OPTIONS;
 
+    // Proxy mode: 'none' | 'saved' | 'manual'
+    protected readonly proxyMode = signal<'none' | 'saved' | 'manual'>('none');
+    protected readonly selectedProxyId = signal<string | null>(null);
+    protected readonly manualProxyHost = signal('');
+    protected readonly manualProxyPort = signal<number | null>(null);
+    protected readonly manualProxyType = signal<'http' | 'socks5'>('http');
+    protected readonly manualProxyUsername = signal('');
+    protected readonly manualProxyPassword = signal('');
+    // Inline health check
+    protected readonly checkingProxy = signal(false);
+    protected readonly proxyCheckResult = signal<{ isAlive: boolean; latencyMs: number } | null>(null);
+
+    protected readonly proxyModeOptions = [
+        { label: 'None', value: 'none', icon: 'pi pi-ban' },
+        { label: 'Saved Proxy', value: 'saved', icon: 'pi pi-list' },
+        { label: 'Manual', value: 'manual', icon: 'pi pi-pencil' },
+    ];
+    protected readonly proxyTypeOptions = [
+        { label: 'HTTP', value: 'http' },
+        { label: 'SOCKS5', value: 'socks5' },
+    ];
+
     // Computed: custom folders only (excluding system folders)
     protected readonly customFolderOptions = computed(() => {
         return this.folders().filter(f => !['all', 'favorites', 'hidden'].includes(f.id));
@@ -156,6 +185,30 @@ export class ProfileEditDialog {
         this.editProxyRotationEnabled.set(rotation?.enabled || false);
         this.editProxyRotationMode.set(rotation?.mode || 'per_launch');
         this.editProxyRotationGroupId.set(rotation?.proxyGroupId || null);
+
+        // Proxy: determine mode from stored data
+        this.proxyCheckResult.set(null);
+        const proxyId = profile.metadata?.proxyId;
+        const proxyStr = profile.metadata?.proxy;
+        if (proxyId && this.proxyService.getById(proxyId)) {
+            this.proxyMode.set('saved');
+            this.selectedProxyId.set(proxyId);
+            this.manualProxyHost.set('');
+            this.manualProxyPort.set(null);
+        } else if (proxyStr) {
+            // Parse manual proxy URL
+            this.proxyMode.set('manual');
+            this.selectedProxyId.set(null);
+            this.parseProxyUrl(proxyStr);
+        } else {
+            this.proxyMode.set('none');
+            this.selectedProxyId.set(null);
+            this.manualProxyHost.set('');
+            this.manualProxyPort.set(null);
+            this.manualProxyType.set('http');
+            this.manualProxyUsername.set('');
+            this.manualProxyPassword.set('');
+        }
     }
 
     protected selectEmoji(emoji: string): void {
@@ -218,6 +271,26 @@ export class ProfileEditDialog {
             }
             : null;
 
+        // Build proxy string from mode
+        let proxyValue: string | null = null;
+        let proxyIdValue: string | null = null;
+        if (this.proxyMode() === 'saved') {
+            const saved = this.selectedProxyId();
+            if (saved) {
+                const p = this.proxyService.getById(saved);
+                if (p) {
+                    proxyValue = this.proxyService.formatProxyUrl(p);
+                    proxyIdValue = saved;
+                }
+            }
+        } else if (this.proxyMode() === 'manual') {
+            const host = this.manualProxyHost().trim();
+            const port = this.manualProxyPort();
+            if (host && port) {
+                proxyValue = `${this.manualProxyType()}://${host}:${port}`;
+            }
+        }
+
         this.save.emit({
             emoji: this.editEmoji(),
             notes: this.editNotes(),
@@ -229,7 +302,8 @@ export class ProfileEditDialog {
             isPinned: this.editIsPinned(),
             color: this.editColor(),
             customFlags: this.editCustomFlags(),
-            proxy: this.editProxy(),
+            proxy: proxyValue,
+            proxyId: proxyIdValue,
             folderId: this.editFolderId(),
             disableExtensions: this.editDisableExtensions(),
             proxyRotation,
@@ -238,5 +312,75 @@ export class ProfileEditDialog {
 
     protected onCancel(): void {
         this.visibleChange.emit(false);
+    }
+
+    // === Proxy helpers ===
+
+    private parseProxyUrl(url: string): void {
+        try {
+            // Format: scheme://host:port
+            const match = url.match(/^(https?|socks5):\/\/([^:]+):(\d+)$/);
+            if (match) {
+                this.manualProxyType.set(match[1] as 'http' | 'socks5');
+                this.manualProxyHost.set(match[2]);
+                this.manualProxyPort.set(parseInt(match[3], 10));
+            } else {
+                // Fallback: just set as host
+                this.manualProxyHost.set(url);
+                this.manualProxyPort.set(null);
+            }
+        } catch {
+            this.manualProxyHost.set(url);
+        }
+        this.manualProxyUsername.set('');
+        this.manualProxyPassword.set('');
+    }
+
+    protected onProxyModeChange(mode: 'none' | 'saved' | 'manual'): void {
+        this.proxyMode.set(mode);
+        this.proxyCheckResult.set(null);
+        if (mode === 'none') {
+            this.selectedProxyId.set(null);
+            this.manualProxyHost.set('');
+            this.manualProxyPort.set(null);
+        }
+    }
+
+    protected async checkProxyInline(): Promise<void> {
+        let host = '';
+        let port = 0;
+
+        if (this.proxyMode() === 'saved') {
+            const id = this.selectedProxyId();
+            if (!id) return;
+            const p = this.proxyService.getById(id);
+            if (!p) return;
+            host = p.host;
+            port = p.port;
+        } else if (this.proxyMode() === 'manual') {
+            host = this.manualProxyHost().trim();
+            port = this.manualProxyPort() || 0;
+        }
+
+        if (!host || !port) {
+            this.messageService.add({ severity: 'warn', summary: 'Missing', detail: 'Host and port required.' });
+            return;
+        }
+
+        this.checkingProxy.set(true);
+        this.proxyCheckResult.set(null);
+        try {
+            const result = await this.proxyService.checkHealth({ id: '', name: '', host, port, type: 'http' });
+            this.proxyCheckResult.set({ isAlive: result.isAlive, latencyMs: result.latencyMs ?? 0 });
+        } finally {
+            this.checkingProxy.set(false);
+        }
+    }
+
+    protected getSelectedProxyLabel(): string {
+        const id = this.selectedProxyId();
+        if (!id) return 'Select a proxy...';
+        const p = this.proxyService.getById(id);
+        return p ? `${p.host}:${p.port}` : 'Unknown';
     }
 }
