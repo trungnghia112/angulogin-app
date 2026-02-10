@@ -38,7 +38,7 @@
 | **C5** | Home Sidebar | Component | ⬜ Pending | - | - |
 | **D1** | ProfileService | Service | ✅🔧 Fixed | 6W + 5S | 7/11 |
 | **D2** | ProfileBackend | Service | ⬜ Pending | - | - |
-| **D3** | ProxyService | Service | ⬜ Pending | - | - |
+| **D3** | ProxyService | Service | ✅🔧 Fixed | 5W + 3S | 5/8 |
 | **D4** | FolderService | Service | ⬜ Pending | - | - |
 | **D5** | NavigationService | Service | ⬜ Pending | - | - |
 | **D6** | ActivityLogService | Service | ⬜ Pending | - | - |
@@ -57,7 +57,7 @@ Suggested order (highest risk first):
 1. **D1 ProfileService** — ~~Central service, 621 LOC, touches everything~~ ✅ DONE (519 LOC after refactor)
 2. **B1 Profile CRUD** — ~~Core business logic (create/rename/delete/duplicate)~~ ✅ DONE
 3. **B2 Profile Launch** — ~~Security-sensitive (spawns processes)~~ ✅ DONE
-4. **D3 ProxyService** — Security-sensitive (passwords, network)
+4. **D3 ProxyService** — ~~Security-sensitive (passwords, network)~~ ✅ DONE
 5. **E1-E14 Rust Backend** — Native code, input sanitization
 6. **B9 Backup & Restore** — File system operations, ZIP handling
 7. **A3 Settings** — App configuration, persistence
@@ -222,6 +222,42 @@ Suggested order (highest risk first):
 #### Impact Summary
 - **Files changed:** 6
 - **Insertions:** 39, **Deletions:** 31
+
+---
+
+### D3 ProxyService — Audit (2026-02-11)
+
+**Scope:** Full service audit (294→332 LOC) — CRUD, import/export, health check, proxy rotation  
+**Files:** `proxy.service.ts`  
+**Audit Type:** Full Audit + Security Focus  
+**Commit:** `fix(proxy-service): audit D3 fixes`
+
+#### 🔴 Critical Issues
+- None
+
+#### 🟡 Warnings (5 found, 4 fixed)
+- W1: Passwords in plain text in localStorage → ⬜ Needs OS keychain (Tauri secure storage) — backlog
+- W2: `importFromText` no host/port validation → ✅ Added `validateHost()` + `isValidPort()` helpers
+- W3: `importFromJson` no host/port validation → ✅ Added same validation
+- W4: `formatProxyUrl` leaked credentials + Chrome ignores auth anyway → ✅ Removed auth from URL
+- W5: `checkAllHealth` no throttle → ✅ Added 200ms delay between checks
+
+#### 🟢 Suggestions (3 found, 1 fixed)
+- S1: `generateId` collision risk → ✅ Use `crypto.randomUUID()` with fallback
+- S2: No validation on proxy `name` → ⬜ Low risk (Angular auto-sanitizes)
+- S3: `clearAll` no confirmation guard → ⬜ UI concern
+
+#### Actions Taken
+| # | Issue | Fix | Status |
+|---|-------|-----|--------|
+| 1 | W2+W3: import validation | Added `validateHost()` + `isValidPort()` to both import methods | ✅ |
+| 2 | W4: password leak in formatProxyUrl | Removed auth from proxy URL (Chrome doesn't support it) | ✅ |
+| 3 | W5: checkAllHealth no throttle | Added 200ms delay between checks | ✅ |
+| 4 | S1: weak ID generation | Use `crypto.randomUUID()` with fallback | ✅ |
+
+#### Impact Summary
+- **Files changed:** 1 (`proxy.service.ts`)
+- **Insertions:** 47, **Deletions:** 8
 
 -->
 
