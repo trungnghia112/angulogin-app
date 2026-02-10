@@ -53,16 +53,6 @@ export class ProfileService {
         }
     }
 
-    async launchChrome(profilePath: string): Promise<void> {
-        try {
-            await this.backend.launchBrowser({ profilePath, browser: 'chrome' });
-        } catch (e) {
-            const errorMsg = e instanceof Error ? e.message : String(e);
-            this.error.set(errorMsg);
-            throw e;
-        }
-    }
-
     async checkPathExists(path: string): Promise<boolean> {
         try {
             return await this.backend.checkPathExists(path);

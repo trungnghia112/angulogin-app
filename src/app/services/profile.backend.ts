@@ -135,7 +135,7 @@ export class TauriProfileBackend implements ProfileBackend {
     }
 
     async launchBrowser(options: LaunchBrowserOptions): Promise<void> {
-        return await invoke('launch_browser', options);
+        return await invoke('launch_browser', options as unknown as Record<string, unknown>);
     }
 
     async getProfileSize(profilePath: string): Promise<number> {

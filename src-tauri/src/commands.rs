@@ -135,18 +135,6 @@ pub fn scan_profiles(path: String) -> Result<Vec<String>, String> {
 }
 
 #[tauri::command]
-pub fn launch_chrome(profile_path: String) -> Result<(), String> {
-    let user_data_arg = format!("--user-data-dir={}", profile_path);
-
-    Command::new("open")
-        .args(["-n", "-a", "Google Chrome", "--args", &user_data_arg])
-        .spawn()
-        .map_err(|e| format!("Failed to launch Chrome: {}", e))?;
-
-    Ok(())
-}
-
-#[tauri::command]
 pub fn check_path_exists(path: String) -> bool {
     std::path::Path::new(&path).exists()
 }
@@ -359,12 +347,18 @@ pub fn save_profile_metadata(
 
 #[tauri::command]
 pub fn is_chrome_running_for_profile(profile_path: String) -> bool {
+    // Use -f for full command match, with exact user-data-dir path
+    let search_pattern = format!("--user-data-dir={}", profile_path);
     let output = Command::new("pgrep")
-        .args(["-f", &format!("--user-data-dir={}", profile_path)])
+        .args(["-f", &search_pattern])
         .output();
     
     match output {
-        Ok(out) => !out.stdout.is_empty(),
+        Ok(out) => {
+            // Verify output contains actual PIDs (not just whitespace)
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            stdout.trim().lines().any(|line| line.trim().parse::<u32>().is_ok())
+        },
         Err(_) => false,
     }
 }
@@ -437,11 +431,26 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
         args.push(&proxy_owned);
     }
     
-    // Feature 3.6: Add custom flags if provided
-    // Parse space-separated flags and add each one
+    // Security: Sanitize custom flags to block dangerous Chrome flags
     let custom_flags_vec: Vec<String>;
     if let Some(flags) = custom_flags {
+        let dangerous_prefixes = [
+            "--remote-debugging",
+            "--disable-web-security",
+            "--user-data-dir",    // prevent override
+            "--profile-directory", // prevent override
+            "--load-extension",
+            "--disable-extensions-except",
+            "--enable-automation",
+            "--allow-running-insecure-content",
+            "--disable-site-isolation",
+        ];
+        
         custom_flags_vec = flags.split_whitespace()
+            .filter(|flag| {
+                let lower = flag.to_lowercase();
+                !dangerous_prefixes.iter().any(|p| lower.starts_with(p))
+            })
             .map(|s| s.to_string())
             .collect();
     } else {
@@ -452,9 +461,13 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
         args.push(flag);
     }
     
-    // Add URL if provided
+    // Add URL if provided (validate scheme)
     let url_owned: String;
     if let Some(u) = url {
+        let lower = u.to_lowercase();
+        if lower.starts_with("javascript:") || lower.starts_with("data:") || lower.starts_with("vbscript:") {
+            return Err("Unsafe URL scheme".to_string());
+        }
         url_owned = u;
         args.push(&url_owned);
     }

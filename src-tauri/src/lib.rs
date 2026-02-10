@@ -19,7 +19,6 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::scan_profiles,
-            commands::launch_chrome,
             commands::check_path_exists,
             commands::ensure_profiles_directory,
             commands::create_profile,

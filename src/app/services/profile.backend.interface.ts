@@ -2,7 +2,6 @@ import { ProfileMetadata } from '../models/profile.model';
 
 /** Options for launching a browser with a specific profile */
 export interface LaunchBrowserOptions {
-    [key: string]: unknown;
     profilePath: string;
     browser: string;
     url?: string | null;

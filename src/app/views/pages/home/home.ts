@@ -942,6 +942,7 @@ export class Home implements OnInit, OnDestroy {
         const url = profile.metadata?.launchUrl || undefined;
         try {
             await this.profileService.launchBrowser(profile.path, browser, url, true);
+            this.activityLogService.logLaunch(profile.name, profile.path, browser);
             this.messageService.add({
                 severity: 'success',
                 summary: 'Launched',
@@ -1125,11 +1126,17 @@ export class Home implements OnInit, OnDestroy {
         const profiles = this.selectedProfiles();
         if (profiles.length === 0) return;
 
+        let launched = 0;
         for (const profile of profiles) {
             const browser = profile.metadata?.browser || 'chrome';
             const url = profile.metadata?.launchUrl || undefined;
             try {
                 await this.profileService.launchBrowser(profile.path, browser, url);
+                launched++;
+                // Throttle: 500ms delay between launches to prevent system overload
+                if (launched < profiles.length) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
             } catch (e) {
                 this.messageService.add({
                     severity: 'error',
@@ -1142,7 +1149,7 @@ export class Home implements OnInit, OnDestroy {
         this.messageService.add({
             severity: 'success',
             summary: 'Launched',
-            detail: `${profiles.length} profiles launched`,
+            detail: `${launched}/${profiles.length} profiles launched`,
         });
     }
 
