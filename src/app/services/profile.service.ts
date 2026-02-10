@@ -1,10 +1,9 @@
 import { Injectable, signal } from '@angular/core';
 import { invoke } from '@tauri-apps/api/core';
 import { save } from '@tauri-apps/plugin-dialog';
-import { BrowserType, Profile, ProfileMetadata } from '../models/profile.model';
+import { Profile, ProfileMetadata } from '../models/profile.model';
 import { isTauriAvailable } from '../core/utils/platform.util';
 import { debugLog } from '../core/utils/logger.util';
-import { MOCK_PROFILES } from '../mocks/profile.mock';
 import { MockProfileBackend, TauriProfileBackend } from './profile.backend';
 import { ProfileBackend } from './profile.backend.interface';
 
@@ -161,65 +160,21 @@ export class ProfileService {
 
     async saveProfileMetadata(
         profilePath: string,
-        emoji: string | null,
-        notes: string | null,
-        group: string | null,
-        shortcut: number | null,
-        browser: string | null,
-        tags: string[] | null = null,
-        launchUrl: string | null = null,
-        isPinned: boolean | null = null,
-        color: string | null = null,
-        isHidden: boolean | null = null,
-        isFavorite: boolean | null = null,
-        customFlags: string | null = null,
-        proxy: string | null = null,
-        // Feature 2.5: Folder Management
-        folderId: string | null = null,
-        // Feature 3.4: Launch with Extensions
-        disableExtensions: boolean = false,
-        // Feature 4.2: Proxy Rotation
-        proxyRotation: { enabled: boolean; mode: 'per_launch' | 'hourly' | 'daily'; proxyGroupId?: string | null } | null = null,
+        updates: Partial<ProfileMetadata>,
     ): Promise<void> {
         try {
-            const metadata: Partial<ProfileMetadata> = {
-                emoji, notes, group, shortcut,
-                browser: browser as BrowserType | null,
-                tags: tags ?? undefined,
-                launchUrl, isPinned: isPinned ?? undefined,
-                color, isHidden: isHidden ?? undefined,
-                isFavorite: isFavorite ?? undefined,
-                customFlags, proxy,
-                folderId: folderId ?? undefined,
-                disableExtensions: disableExtensions ?? undefined,
-                proxyRotation: proxyRotation ?? undefined,
+            const profile = this.profiles().find(p => p.path === profilePath);
+            const merged: Partial<ProfileMetadata> = {
+                ...profile?.metadata,
+                ...updates,
             };
-            await this.backend.saveProfileMetadata(profilePath, metadata);
+
+            await this.backend.saveProfileMetadata(profilePath, merged);
 
             this.profiles.update((profiles) =>
                 profiles.map((p) => {
                     if (p.path !== profilePath) return p;
-
-                    const updatedMeta: ProfileMetadata = {
-                        ...p.metadata,
-                        emoji: emoji ?? null,
-                        notes: notes ?? null,
-                        group: group ?? null,
-                        shortcut: shortcut ?? null,
-                        browser: (browser as BrowserType) ?? null,
-                        tags: tags ?? undefined,
-                        launchUrl: launchUrl ?? undefined,
-                        isPinned: isPinned ?? undefined,
-                        color: color ?? undefined,
-                        isHidden: isHidden ?? undefined,
-                        isFavorite: isFavorite ?? undefined,
-                        customFlags: customFlags ?? undefined,
-                        proxy: proxy ?? undefined,
-                        folderId: folderId ?? undefined,
-                        disableExtensions: disableExtensions ?? undefined,
-                        proxyRotation: proxyRotation ?? undefined,
-                    };
-                    return { ...p, metadata: updatedMeta };
+                    return { ...p, metadata: { ...p.metadata, ...updates } as ProfileMetadata };
                 })
             );
         } catch (e) {
@@ -233,53 +188,13 @@ export class ProfileService {
         const profile = this.profiles().find(p => p.path === profilePath);
         if (!profile) return;
 
-        const meta = profile.metadata || { emoji: null, notes: null, group: null, shortcut: null, browser: null };
-        const newFavoriteStatus = !meta.isFavorite;
-
-        await this.saveProfileMetadata(
-            profilePath,
-            meta.emoji ?? null,
-            meta.notes ?? null,
-            meta.group ?? null,
-            meta.shortcut ?? null,
-            meta.browser ?? null,
-            meta.tags || null,
-            meta.launchUrl ?? null,
-            meta.isPinned ?? null,
-            meta.color ?? null,
-            meta.isHidden ?? null,
-            newFavoriteStatus,
-            meta.customFlags ?? null,
-            meta.proxy ?? null
-        );
+        await this.saveProfileMetadata(profilePath, {
+            isFavorite: !profile.metadata?.isFavorite,
+        });
     }
 
     async updateSortOrder(profilePath: string, sortOrder: number): Promise<void> {
-        const profile = this.profiles().find(p => p.path === profilePath);
-        const existingMetadata = profile?.metadata || { emoji: null, notes: null, group: null, shortcut: null, browser: null };
-
-        try {
-            // We need to pass all fields to backend if it expects them, or backend handles partial updates.
-            // Based on previous code, it seemed to expect all fields. 
-            // Ideally backend supports partial, but let's send everything to be safe.
-            const metadata = {
-                ...existingMetadata,
-                sortOrder
-            };
-            await this.backend.saveProfileMetadata(profilePath, metadata);
-
-            this.profiles.update((profiles) =>
-                profiles.map((p): Profile =>
-                    p.path === profilePath
-                        ? { ...p, metadata: { ...p.metadata, sortOrder } } as Profile
-                        : p
-                )
-            );
-        } catch (e) {
-            const errorMsg = e instanceof Error ? e.message : String(e);
-            this.error.set(errorMsg);
-            throw e;
-        }
+        await this.saveProfileMetadata(profilePath, { sortOrder });
     }
 
     async updateUsageStats(
@@ -288,27 +203,14 @@ export class ProfileService {
         totalUsageMinutes: number,
         lastSessionDuration: number | null = null
     ): Promise<void> {
-        const profile = this.profiles().find(p => p.path === profilePath);
-        if (!profile) return;
-
-        const meta = profile.metadata || { emoji: null, notes: null, group: null, shortcut: null, browser: null };
-        const updatedMeta: ProfileMetadata = {
-            ...meta,
-            launchCount,
-            totalUsageMinutes,
-            lastSessionDuration: lastSessionDuration ?? undefined,
-        };
-
         try {
-            await this.backend.saveProfileMetadata(profilePath, updatedMeta);
-
-            this.profiles.update(profiles =>
-                profiles.map(p =>
-                    p.path === profilePath ? { ...p, metadata: updatedMeta } : p
-                )
-            );
+            await this.saveProfileMetadata(profilePath, {
+                launchCount,
+                totalUsageMinutes,
+                lastSessionDuration: lastSessionDuration ?? undefined,
+            });
         } catch (e) {
-            console.error('Failed to update usage stats:', e);
+            debugLog('Failed to update usage stats:', e);
         }
     }
 
@@ -423,16 +325,43 @@ export class ProfileService {
         const current = this.profiles();
         if (current.length === 0) return;
 
-        const sizes = await Promise.all(
-            current.map((profile) => this.getProfileSize(profile.path))
-        );
+        const CHUNK_SIZE = 10;
+        const sizeMap = new Map<string, number>();
 
-        this.profiles.update((profiles) =>
-            profiles.map((p, index) => ({ ...p, size: sizes[index] }))
-        );
+        for (let i = 0; i < current.length; i += CHUNK_SIZE) {
+            const chunk = current.slice(i, i + CHUNK_SIZE);
+            const results = await Promise.all(
+                chunk.map(async (p) => ({
+                    path: p.path,
+                    size: await this.getProfileSize(p.path).catch(() => 0),
+                }))
+            );
+            for (const r of results) {
+                sizeMap.set(r.path, r.size);
+            }
+        }
+
+        let hasChanges = false;
+        const updated = current.map((p) => {
+            const newSize = sizeMap.get(p.path);
+            if (newSize !== undefined && p.size !== newSize) {
+                hasChanges = true;
+                return { ...p, size: newSize };
+            }
+            return p;
+        });
+
+        if (hasChanges) {
+            this.profiles.set(updated);
+        }
     }
 
     async duplicateProfile(sourcePath: string, newName: string, basePath: string): Promise<string> {
+        // Input validation (same as createProfile/renameProfile)
+        if (/[<>:"/\\|?*]/.test(newName)) {
+            throw new Error('Invalid profile name');
+        }
+
         try {
             const newPath = await this.backend.duplicateProfile(sourcePath, newName);
 
@@ -480,15 +409,6 @@ export class ProfileService {
         }
 
         try {
-            // Backup logic is specifically desktop-only and UI interactive (dialog), so it might be harder to abstract purely into backend if it calls `save`. 
-            // However, `save` is a dialog plugin. 
-            // Let's assume for now we keep the `invoke` part abstract if we wanted, but here `invoke` is direct.
-            // Actually, `invoke` 'backup_profile' is what we need to verify.
-            // For now, let's keep this method as is but wrapped in try/catch if needed.
-            // The backend interface didn't include `backupProfile` because of the `save` dialog dependency which is UI. 
-            // Wait, I can abstract the `invoke` part.
-            // Let's just leave it for now as it's specific.
-
             const result = await invoke<string>('backup_profile', {
                 profilePath,
                 backupPath: filePath
@@ -524,8 +444,6 @@ export class ProfileService {
         }
     }
 
-    // ... bulkExportProfiles and checkProfileHealth can be similarly updated or left if they are mixed UI/Logic.
-    // checkProfileHealth IS in backend interface.
     async checkProfileHealth(profilePath: string): Promise<{
         isHealthy: boolean;
         issues: string[];
@@ -547,18 +465,15 @@ export class ProfileService {
         }
     }
 
-    // bulkExportProfiles ... (keeping it simple for now)
     async bulkExportProfiles(profilePaths: string[]): Promise<{ successful: string[]; failed: string[]; totalSize: number }> {
         if (!isTauriAvailable()) {
             return {
                 successful: profilePaths.map(p => p.split('/').pop() || 'profile'),
                 failed: [],
-                totalSize: 1024 * 1024 * 50, // mock 50MB
+                totalSize: 1024 * 1024 * 50,
             };
         }
 
-        // This method has UI dialog logic, so we keep it here or abstract the `invoke` part.
-        // For "Auto Fix", we've cleaned up the majority.
         const { open } = await import('@tauri-apps/plugin-dialog');
         const destinationFolder = await open({
             title: 'Select Export Destination Folder',
@@ -590,31 +505,14 @@ export class ProfileService {
     // Feature 4.2: Update proxy rotation state (currentProxyIndex and lastRotatedAt)
     async saveProxyRotationState(profilePath: string, newIndex: number): Promise<void> {
         const profile = this.profiles().find((p: Profile) => p.path === profilePath);
-        if (!profile) return;
+        if (!profile?.metadata?.proxyRotation) return;
 
-        const currentRotation = profile.metadata?.proxyRotation;
-        if (!currentRotation) return;
-
-        const updatedRotation = {
-            ...currentRotation,
-            currentProxyIndex: newIndex,
-            lastRotatedAt: new Date().toISOString(),
-        };
-
-        // Build updated metadata, preserving existing values
-        const updatedMetadata = {
-            ...(profile.metadata || {}),
-            proxyRotation: updatedRotation,
-        } as ProfileMetadata;
-
-        // Update in-memory state
-        this.profiles.update((profiles: Profile[]) =>
-            profiles.map((p: Profile) =>
-                p.path === profilePath ? { ...p, metadata: updatedMetadata } : p
-            )
-        );
-
-        // Persist to metadata file
-        await this.backend.saveProfileMetadata(profilePath, updatedMetadata);
+        await this.saveProfileMetadata(profilePath, {
+            proxyRotation: {
+                ...profile.metadata.proxyRotation,
+                currentProxyIndex: newIndex,
+                lastRotatedAt: new Date().toISOString(),
+            },
+        });
     }
 }

@@ -755,25 +755,22 @@ export class Home implements OnInit, OnDestroy {
         try {
             await this.profileService.saveProfileMetadata(
                 profile.path,
-                data.emoji,
-                data.notes,
-                data.group,
-                data.shortcut,
-                data.browser,
-                data.tags && data.tags.length > 0 ? data.tags : null,
-                data.launchUrl,
-                data.isPinned || null,
-                data.color,
-                profile.metadata?.isHidden || null, // Preserve hidden state
-                profile.metadata?.isFavorite || null, // Preserve favorite state
-                data.customFlags,
-                data.proxy,
-                // Feature 2.5: Folder Management
-                data.folderId,
-                // Feature 3.4: Launch with Extensions
-                data.disableExtensions,
-                // Feature 4.2: Proxy Rotation
-                data.proxyRotation,
+                {
+                    emoji: data.emoji,
+                    notes: data.notes,
+                    group: data.group,
+                    shortcut: data.shortcut,
+                    browser: data.browser,
+                    tags: data.tags && data.tags.length > 0 ? data.tags : undefined,
+                    launchUrl: data.launchUrl ?? undefined,
+                    isPinned: data.isPinned || undefined,
+                    color: data.color ?? undefined,
+                    customFlags: data.customFlags ?? undefined,
+                    proxy: data.proxy ?? undefined,
+                    folderId: data.folderId ?? undefined,
+                    disableExtensions: data.disableExtensions || undefined,
+                    proxyRotation: data.proxyRotation ?? undefined,
+                },
             );
             this.showEditDialog.set(false);
             this.messageService.add({
@@ -891,16 +888,7 @@ export class Home implements OnInit, OnDestroy {
         try {
             await this.profileService.saveProfileMetadata(
                 profile.path,
-                profile.metadata?.emoji || null,
-                profile.metadata?.notes || null,
-                profile.metadata?.group || null,
-                profile.metadata?.shortcut || null,
-                profile.metadata?.browser || null,
-                profile.metadata?.tags || null,
-                profile.metadata?.launchUrl || null,
-                newPinned,
-                profile.metadata?.color || null,
-                profile.metadata?.isHidden || null,
+                { isPinned: newPinned },
             );
             this.messageService.add({
                 severity: 'success',
@@ -919,16 +907,7 @@ export class Home implements OnInit, OnDestroy {
         try {
             await this.profileService.saveProfileMetadata(
                 profile.path,
-                profile.metadata?.emoji || null,
-                profile.metadata?.notes || null,
-                profile.metadata?.group || null,
-                profile.metadata?.shortcut || null,
-                profile.metadata?.browser || null,
-                profile.metadata?.tags || null,
-                profile.metadata?.launchUrl || null,
-                profile.metadata?.isPinned || null,
-                profile.metadata?.color || null,
-                newHidden,
+                { isHidden: newHidden },
             );
             this.messageService.add({
                 severity: 'success',
@@ -1403,18 +1382,20 @@ export class Home implements OnInit, OnDestroy {
                                     const meta = importedProfile.metadata;
                                     await this.profileService.saveProfileMetadata(
                                         existingProfile.path,
-                                        meta.emoji || null,
-                                        meta.notes || null,
-                                        meta.group || null,
-                                        meta.shortcut || null,
-                                        meta.browser || null,
-                                        meta.tags || null,
-                                        meta.launchUrl || null,
-                                        meta.isPinned || null,
-                                        meta.color || null,
-                                        meta.isHidden || null,
-                                        meta.isFavorite || null,
-                                        meta.customFlags || null,
+                                        {
+                                            emoji: meta.emoji || null,
+                                            notes: meta.notes || null,
+                                            group: meta.group || null,
+                                            shortcut: meta.shortcut || null,
+                                            browser: meta.browser || null,
+                                            tags: meta.tags || undefined,
+                                            launchUrl: meta.launchUrl || undefined,
+                                            isPinned: meta.isPinned || undefined,
+                                            color: meta.color || undefined,
+                                            isHidden: meta.isHidden || undefined,
+                                            isFavorite: meta.isFavorite || undefined,
+                                            customFlags: meta.customFlags || undefined,
+                                        },
                                     );
                                     updated++;
                                 } catch {
