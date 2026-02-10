@@ -38,6 +38,7 @@ import { ActivityLogService } from '../../../services/activity-log.service';
 import { FolderService } from '../../../services/folder.service';
 import { ProxyService } from '../../../services/proxy.service';
 import { BrowserType, Profile } from '../../../models/profile.model';
+import { validateProfileName } from '../../../core/utils/validation.util';
 
 
 
@@ -655,13 +656,13 @@ export class Home implements OnInit, OnDestroy {
         const name = this.newProfileName().trim();
         if (!name) return;
 
-        // PM-003: Invalid Characters Validation
-        const invalidChars = /[<>:"/\\|?*]/;
-        if (invalidChars.test(name)) {
+        // Unified validation
+        const validationError = validateProfileName(name);
+        if (validationError) {
             this.messageService.add({
                 severity: 'error',
                 summary: 'Invalid Name',
-                detail: 'Profile name cannot contain < > : " / \\ | ? *',
+                detail: validationError,
             });
             return;
         }
@@ -707,13 +708,13 @@ export class Home implements OnInit, OnDestroy {
             return;
         }
 
-        // PM-003: Invalid Characters Validation
-        const invalidChars = /[<>:"/\\|?*]/;
-        if (invalidChars.test(newName)) {
+        // Unified validation
+        const validationError = validateProfileName(newName);
+        if (validationError) {
             this.messageService.add({
                 severity: 'error',
                 summary: 'Invalid Name',
-                detail: 'Profile name cannot contain < > : " / \\ | ? *',
+                detail: validationError,
             });
             return;
         }
@@ -991,6 +992,29 @@ export class Home implements OnInit, OnDestroy {
             this.showDuplicateDialog.set(false);
             return;
         }
+
+        // Validation (matching create/rename)
+        const validationError = validateProfileName(newName);
+        if (validationError) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Invalid Name',
+                detail: validationError,
+            });
+            return;
+        }
+
+        // Duplicate name check
+        const nameExists = this.profiles().some(p => p.name.toLowerCase() === newName.toLowerCase());
+        if (nameExists) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Duplicate Name',
+                detail: `Profile "${newName}" already exists.`,
+            });
+            return;
+        }
+
         try {
             const newPath = await this.profileService.duplicateProfile(profile.path, newName, this.profilesPath());
             // Phase 3: Log activity

@@ -4,6 +4,7 @@ import { save } from '@tauri-apps/plugin-dialog';
 import { Profile, ProfileMetadata } from '../models/profile.model';
 import { isTauriAvailable } from '../core/utils/platform.util';
 import { debugLog } from '../core/utils/logger.util';
+import { validateProfileName } from '../core/utils/validation.util';
 import { MockProfileBackend, TauriProfileBackend } from './profile.backend';
 import { ProfileBackend } from './profile.backend.interface';
 
@@ -81,9 +82,9 @@ export class ProfileService {
     }
 
     async createProfile(basePath: string, name: string): Promise<string> {
-        // Sanitize input at service level
-        if (/[<>:"/\\|?*]/.test(name)) {
-            throw new Error('Invalid profile name');
+        const validationError = validateProfileName(name);
+        if (validationError) {
+            throw new Error(validationError);
         }
 
         try {
@@ -127,9 +128,9 @@ export class ProfileService {
     }
 
     async renameProfile(oldPath: string, newName: string, basePath: string): Promise<string> {
-        // Sanitize input
-        if (/[<>:"/\\|?*]/.test(newName)) {
-            throw new Error('Invalid new profile name');
+        const validationError = validateProfileName(newName);
+        if (validationError) {
+            throw new Error(validationError);
         }
 
         try {
@@ -357,9 +358,9 @@ export class ProfileService {
     }
 
     async duplicateProfile(sourcePath: string, newName: string, basePath: string): Promise<string> {
-        // Input validation (same as createProfile/renameProfile)
-        if (/[<>:"/\\|?*]/.test(newName)) {
-            throw new Error('Invalid profile name');
+        const validationError = validateProfileName(newName);
+        if (validationError) {
+            throw new Error(validationError);
         }
 
         try {

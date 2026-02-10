@@ -20,6 +20,14 @@ fn sanitize_profile_name(name: &str) -> Result<String, String> {
         return Err("Profile name contains invalid characters (..  / \\)".to_string());
     }
     
+    // Reject filesystem-unsafe characters
+    if trimmed.contains('<') || trimmed.contains('>') || trimmed.contains(':')
+        || trimmed.contains('"') || trimmed.contains('|')
+        || trimmed.contains('?') || trimmed.contains('*')
+    {
+        return Err("Profile name contains invalid characters (< > : \" | ? *)".to_string());
+    }
+    
     // Reject null bytes
     if trimmed.contains('\0') {
         return Err("Profile name contains invalid characters".to_string());
@@ -175,8 +183,34 @@ pub fn create_profile(base_path: String, name: String) -> Result<String, String>
 
 #[tauri::command]
 pub fn delete_profile(profile_path: String) -> Result<(), String> {
-    if !std::path::Path::new(&profile_path).exists() {
+    let path = std::path::Path::new(&profile_path);
+    
+    if !path.exists() {
         return Err("Profile does not exist".to_string());
+    }
+    
+    // Safety: must be a directory, not a file
+    if !path.is_dir() {
+        return Err("Path is not a directory".to_string());
+    }
+    
+    // Safety: reject symlinks to prevent following links to unintended locations
+    if path.symlink_metadata()
+        .map(|m| m.file_type().is_symlink())
+        .unwrap_or(false)
+    {
+        return Err("Cannot delete symlinked directories".to_string());
+    }
+    
+    // Safety: path must have at least 3 components (e.g. /Users/x/profiles/name)
+    // to prevent accidental deletion of system directories
+    if path.components().count() < 3 {
+        return Err("Path is too shallow to be a profile directory".to_string());
+    }
+    
+    // Safety: reject paths containing traversal
+    if profile_path.contains("..") {
+        return Err("Path contains invalid traversal".to_string());
     }
     
     fs::remove_dir_all(&profile_path)
@@ -227,17 +261,19 @@ pub fn duplicate_profile(source_path: String, new_name: String) -> Result<String
         return Err(format!("Profile '{}' already exists", safe_name));
     }
     
-    let options = fs_extra::dir::CopyOptions::new();
-    fs_extra::dir::copy(&source_path, parent, &options)
-        .map_err(|e| format!("Failed to copy profile: {}", e))?;
+    // Create destination directory first
+    fs::create_dir_all(&dest_path)
+        .map_err(|e| format!("Failed to create destination: {}", e))?;
     
-    // Rename the copied folder to the new name
-    let copied_name = source.file_name()
-        .ok_or("Cannot get source folder name")?;
-    let copied_path = parent.join(copied_name);
+    // Copy contents directly into destination (not the whole directory)
+    let mut options = fs_extra::dir::CopyOptions::new();
+    options.content_only = true;
     
-    fs::rename(&copied_path, &dest_path)
-        .map_err(|e| format!("Failed to rename copied profile: {}", e))?;
+    if let Err(e) = fs_extra::dir::copy(&source_path, &dest_path, &options) {
+        // Cleanup on failure
+        let _ = fs::remove_dir_all(&dest_path);
+        return Err(format!("Failed to copy profile: {}", e));
+    }
     
     Ok(dest_path.to_string_lossy().to_string())
 }
