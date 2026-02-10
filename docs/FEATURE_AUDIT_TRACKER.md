@@ -16,7 +16,7 @@
 | **A3** | Settings | Page | ⬜ Pending | - | - |
 | **A4** | Storage Dashboard | Page | ⬜ Pending | - | - |
 | **A5** | Usage Dashboard | Page | ⬜ Pending | - | - |
-| **B1** | Profile CRUD | Feature | ⬜ Pending | - | - |
+| **B1** | Profile CRUD | Feature | ✅🔧 Fixed | 4W + 3S | 4/7 |
 | **B2** | Profile Launch | Feature | ⬜ Pending | - | - |
 | **B3** | Profile Metadata | Feature | ⬜ Pending | - | - |
 | **B4** | Folder Management | Feature | ⬜ Pending | - | - |
@@ -55,7 +55,7 @@
 Suggested order (highest risk first):
 
 1. **D1 ProfileService** — ~~Central service, 621 LOC, touches everything~~ ✅ DONE (519 LOC after refactor)
-2. **B1 Profile CRUD** — Core business logic (create/rename/delete/duplicate)
+2. **B1 Profile CRUD** — ~~Core business logic (create/rename/delete/duplicate)~~ ✅ DONE
 3. **B2 Profile Launch** — Security-sensitive (spawns processes)
 4. **D3 ProxyService** — Security-sensitive (passwords, network)
 5. **E1-E14 Rust Backend** — Native code, input sanitization
@@ -147,6 +147,41 @@ Suggested order (highest risk first):
 - **Lines removed:** 121 (621 → 519 LOC)
 - **Files changed:** 2 (`profile.service.ts`, `home.ts`)
 - **Insertions:** 94, **Deletions:** 215
+
+---
+
+### B1 Profile CRUD — Audit (2026-02-11)
+
+**Scope:** Create/Rename/Delete/Duplicate across 4 layers (UI → Service → Backend → Rust)  
+**Files:** `home.ts`, `profile.service.ts`, `profile.backend.ts`, `commands.rs`, NEW `validation.util.ts`  
+**Audit Type:** Full Audit + Security Focus  
+**Commit:** `fix(profile-crud): audit B1 fixes`
+
+#### 🔴 Critical Issues
+- None
+
+#### 🟡 Warnings (4 found, 4 fixed)
+- W1: `duplicateProfile` (home.ts) had no validation unlike create/rename → ✅ Added full validation + duplicate name check
+- W2: `duplicate_profile` (Rust) used broken copy-then-rename pattern → ✅ Fixed with `content_only` + cleanup on failure
+- W3: `delete_profile` (Rust) could delete ANY directory → ✅ Added safety checks (dir-only, no symlinks, min depth, no traversal)
+- W4: Validation rules mismatched across 3 layers → ✅ Created shared `validateProfileName()` utility, unified Rust `sanitize_profile_name`
+
+#### 🟢 Suggestions (3 found, 0 fixed — low risk)
+- S1: Unify duplicate name check (case-insensitive) at service layer → ⬜ Low risk
+- S2: Delete path scope against registered base directory → ⬜ Needs app-state changes
+- S3: Transaction pattern for multi-step FS operations → ⬜ Backlog
+
+#### Actions Taken
+| # | Issue | Fix | Status |
+|---|-------|-----|--------|
+| 1 | W1: duplicateProfile no validation | Added validateProfileName + duplicate name check in home.ts | ✅ |
+| 2 | W2: Rust duplicate copy-then-rename | Use `content_only: true` + cleanup on failure | ✅ |
+| 3 | W3: delete_profile no path scope | Added 4 safety checks (is_dir, no symlink, min depth, no traversal) | ✅ |
+| 4 | W4: Validation mismatch | Created `validation.util.ts`, updated Rust to also reject `<>:"|?*` | ✅ |
+
+#### Impact Summary
+- **Files changed:** 4 (`commands.rs`, `validation.util.ts` (NEW), `profile.service.ts`, `home.ts`)
+- **Insertions:** 120, **Deletions:** 27
 
 -->
 
