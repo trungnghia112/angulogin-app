@@ -547,9 +547,26 @@ export class Home implements OnInit, OnDestroy {
 
             const url = profile.metadata?.launchUrl || undefined;
             let proxy = profile.metadata?.proxy || undefined;
+            let proxyUsername: string | undefined;
+            let proxyPassword: string | undefined;
             const customFlags = profile.metadata?.customFlags || undefined;
             const windowPosition = profile.metadata?.windowPosition || undefined;
             const disableExtensions = profile.metadata?.disableExtensions || false;
+
+            // Look up proxy credentials from saved proxy or metadata
+            const proxyId = profile.metadata?.proxyId;
+            if (proxyId) {
+                const savedProxy = this.proxyService.getById(proxyId);
+                if (savedProxy) {
+                    proxy = this.proxyService.formatProxyUrl(savedProxy);
+                    proxyUsername = savedProxy.username || undefined;
+                    proxyPassword = savedProxy.password || undefined;
+                }
+            } else if (proxy) {
+                // Manual proxy: credentials stored in metadata
+                proxyUsername = profile.metadata?.proxyUsername || undefined;
+                proxyPassword = profile.metadata?.proxyPassword || undefined;
+            }
 
             // Feature 4.2: Proxy Rotation
             const rotation = profile.metadata?.proxyRotation;
@@ -560,6 +577,8 @@ export class Home implements OnInit, OnDestroy {
                 );
                 if (nextResult) {
                     proxy = this.proxyService.formatProxyUrl(nextResult.proxy);
+                    proxyUsername = nextResult.proxy.username || undefined;
+                    proxyPassword = nextResult.proxy.password || undefined;
                     // Update profile with new rotation index via metadata
                     await this.profileService.saveProxyRotationState(
                         profile.path,
@@ -581,7 +600,9 @@ export class Home implements OnInit, OnDestroy {
                 proxy,
                 customFlags,
                 windowPosition,
-                disableExtensions
+                disableExtensions,
+                proxyUsername,
+                proxyPassword
             );
 
             // Phase 3: Log activity
@@ -769,6 +790,8 @@ export class Home implements OnInit, OnDestroy {
                     customFlags: data.customFlags ?? undefined,
                     proxy: data.proxy ?? undefined,
                     proxyId: data.proxyId ?? undefined,
+                    proxyUsername: data.proxyUsername ?? undefined,
+                    proxyPassword: data.proxyPassword ?? undefined,
                     folderId: data.folderId ?? undefined,
                     disableExtensions: data.disableExtensions || undefined,
                     proxyRotation: data.proxyRotation ?? undefined,

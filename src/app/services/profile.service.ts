@@ -254,7 +254,9 @@ export class ProfileService {
         proxyServer?: string,
         customFlags?: string,
         windowPosition?: { x?: number | null; y?: number | null; width?: number | null; height?: number | null; maximized?: boolean } | null,
-        disableExtensions?: boolean
+        disableExtensions?: boolean,
+        proxyUsername?: string,
+        proxyPassword?: string
     ): Promise<void> {
         try {
             // Feature 3.4: Build flags with --disable-extensions if requested
@@ -269,6 +271,8 @@ export class ProfileService {
                 url: url || null,
                 incognito: incognito || null,
                 proxyServer: proxyServer || null,
+                proxyUsername: proxyUsername || null,
+                proxyPassword: proxyPassword || null,
                 customFlags: finalFlags || null,
                 windowX: windowPosition?.x ?? null,
                 windowY: windowPosition?.y ?? null,

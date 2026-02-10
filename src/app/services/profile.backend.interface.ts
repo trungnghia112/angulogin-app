@@ -7,6 +7,8 @@ export interface LaunchBrowserOptions {
     url?: string | null;
     incognito?: boolean | null;
     proxyServer?: string | null;
+    proxyUsername?: string | null;
+    proxyPassword?: string | null;
     customFlags?: string | null;
     windowX?: number | null;
     windowY?: number | null;

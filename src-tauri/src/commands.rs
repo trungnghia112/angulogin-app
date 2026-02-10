@@ -291,6 +291,9 @@ pub struct ProfileMetadata {
     pub custom_flags: Option<String>,
     // Phase 0: Proxy Manager
     pub proxy: Option<String>,
+    pub proxy_id: Option<String>,
+    pub proxy_username: Option<String>,
+    pub proxy_password: Option<String>,
 }
 
 #[tauri::command]
@@ -328,12 +331,16 @@ pub fn save_profile_metadata(
     is_favorite: Option<bool>,
     custom_flags: Option<String>,
     proxy: Option<String>,
+    proxy_id: Option<String>,
+    proxy_username: Option<String>,
+    proxy_password: Option<String>,
 ) -> Result<(), String> {
     let meta_file = format!("{}/.profile-meta.json", profile_path);
     
     let metadata = ProfileMetadata { 
         emoji, notes, group, shortcut, browser, tags, launch_url, is_pinned, last_opened, 
-        color, is_hidden, launch_count, total_usage_minutes, last_session_duration, is_favorite, custom_flags, proxy
+        color, is_hidden, launch_count, total_usage_minutes, last_session_duration, is_favorite, custom_flags, proxy,
+        proxy_id, proxy_username, proxy_password
     };
     
     let content = serde_json::to_string_pretty(&metadata)
@@ -364,7 +371,7 @@ pub fn is_chrome_running_for_profile(profile_path: String) -> bool {
 }
 
 #[tauri::command]
-pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>, custom_flags: Option<String>) -> Result<(), String> {
+pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>, custom_flags: Option<String>, proxy_username: Option<String>, proxy_password: Option<String>) -> Result<(), String> {
     let path = std::path::Path::new(&profile_path);
     
     // Detect if this is a native Chrome profile (parent has "Local State" file)
@@ -426,9 +433,60 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
     
     // Add proxy server if provided
     let proxy_owned: String;
-    if let Some(proxy) = proxy_server {
+    if let Some(ref proxy) = proxy_server {
         proxy_owned = format!("--proxy-server={}", proxy);
         args.push(&proxy_owned);
+    }
+    
+    // Proxy Auth Extension: create a temp extension to auto-fill proxy credentials
+    let ext_path_owned: String;
+    let load_ext_arg: String;
+    if let (Some(ref username), Some(ref password)) = (&proxy_username, &proxy_password) {
+        if !username.is_empty() && !password.is_empty() {
+            let ext_dir = std::path::Path::new(&profile_path).join(".proxy_auth_ext");
+            std::fs::create_dir_all(&ext_dir)
+                .map_err(|e| format!("Failed to create proxy auth extension dir: {}", e))?;
+            
+            // Write manifest.json
+            let manifest = r#"{
+  "manifest_version": 3,
+  "name": "Proxy Auth Helper",
+  "version": "1.0",
+  "permissions": ["webRequest", "webRequestAuthProvider"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  }
+}"#;
+            std::fs::write(ext_dir.join("manifest.json"), manifest)
+                .map_err(|e| format!("Failed to write proxy extension manifest: {}", e))?;
+            
+            // Write background.js with the credentials
+            // Escape special chars in username/password for JS string
+            let escaped_user = username.replace('\\', "\\\\").replace('\'', "\\'");
+            let escaped_pass = password.replace('\\', "\\\\").replace('\'', "\\'");
+            let background = format!(
+                r#"chrome.webRequest.onAuthRequired.addListener(
+  (details, callbackFn) => {{
+    callbackFn({{
+      authCredentials: {{
+        username: '{}',
+        password: '{}'
+      }}
+    }});
+  }},
+  {{ urls: ['<all_urls>'] }},
+  ['asyncBlocking']
+);"#,
+                escaped_user, escaped_pass
+            );
+            std::fs::write(ext_dir.join("background.js"), background)
+                .map_err(|e| format!("Failed to write proxy extension background.js: {}", e))?;
+            
+            ext_path_owned = ext_dir.to_string_lossy().to_string();
+            load_ext_arg = format!("--load-extension={}", ext_path_owned);
+            args.push(&load_ext_arg);
+        }
     }
     
     // Security: Sanitize custom flags to block dangerous Chrome flags

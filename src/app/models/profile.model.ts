@@ -38,6 +38,8 @@ export interface ProfileMetadata {
     windowPosition?: WindowPosition | null;
     // Phase 0: Proxy Manager
     proxy?: string | null;
+    proxyUsername?: string | null;
+    proxyPassword?: string | null;
     // Feature 3.4: Launch with Extensions toggle
     disableExtensions?: boolean;
     // Feature 4.2: Proxy Rotation

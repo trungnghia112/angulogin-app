@@ -61,6 +61,8 @@ export interface ProfileEditData {
     customFlags: string | null;
     proxy: string | null;
     proxyId: string | null;
+    proxyUsername: string | null;
+    proxyPassword: string | null;
     // Feature 2.5: Folder Management
     folderId: string | null;
     // Feature 3.4: Launch with Extensions
@@ -200,6 +202,8 @@ export class ProfileEditDialog {
             this.proxyMode.set('manual');
             this.selectedProxyId.set(null);
             this.parseProxyUrl(proxyStr);
+            this.manualProxyUsername.set(profile.metadata?.proxyUsername || '');
+            this.manualProxyPassword.set(profile.metadata?.proxyPassword || '');
         } else {
             this.proxyMode.set('none');
             this.selectedProxyId.set(null);
@@ -304,6 +308,8 @@ export class ProfileEditDialog {
             customFlags: this.editCustomFlags(),
             proxy: proxyValue,
             proxyId: proxyIdValue,
+            proxyUsername: this.proxyMode() === 'manual' ? (this.manualProxyUsername() || null) : null,
+            proxyPassword: this.proxyMode() === 'manual' ? (this.manualProxyPassword() || null) : null,
             folderId: this.editFolderId(),
             disableExtensions: this.editDisableExtensions(),
             proxyRotation,
