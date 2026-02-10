@@ -11,6 +11,7 @@
     "dialog:default",
     "os:default",
     "fs:default",
+    "core:window:allow-start-dragging",
     {
       "identifier": "fs:allow-write-text-file",
       "allow": [
