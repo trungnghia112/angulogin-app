@@ -17,7 +17,7 @@
 | **A4** | Storage Dashboard | Page | ⬜ Pending | - | - |
 | **A5** | Usage Dashboard | Page | ⬜ Pending | - | - |
 | **B1** | Profile CRUD | Feature | ✅🔧 Fixed | 4W + 3S | 4/7 |
-| **B2** | Profile Launch | Feature | ⬜ Pending | - | - |
+| **B2** | Profile Launch | Feature | ✅🔧 Fixed | 6W + 3S | 7/9 |
 | **B3** | Profile Metadata | Feature | ⬜ Pending | - | - |
 | **B4** | Folder Management | Feature | ⬜ Pending | - | - |
 | **B5** | Profile Views (Card/Table) | Feature | ⬜ Pending | - | - |
@@ -56,7 +56,7 @@ Suggested order (highest risk first):
 
 1. **D1 ProfileService** — ~~Central service, 621 LOC, touches everything~~ ✅ DONE (519 LOC after refactor)
 2. **B1 Profile CRUD** — ~~Core business logic (create/rename/delete/duplicate)~~ ✅ DONE
-3. **B2 Profile Launch** — Security-sensitive (spawns processes)
+3. **B2 Profile Launch** — ~~Security-sensitive (spawns processes)~~ ✅ DONE
 4. **D3 ProxyService** — Security-sensitive (passwords, network)
 5. **E1-E14 Rust Backend** — Native code, input sanitization
 6. **B9 Backup & Restore** — File system operations, ZIP handling
@@ -183,5 +183,46 @@ Suggested order (highest risk first):
 - **Files changed:** 4 (`commands.rs`, `validation.util.ts` (NEW), `profile.service.ts`, `home.ts`)
 - **Insertions:** 120, **Deletions:** 27
 
+---
+
+### B2 Profile Launch — Audit (2026-02-11)
+
+**Scope:** Launch flow across 4 layers (3 entry points: direct, incognito, bulk)  
+**Files:** `commands.rs`, `lib.rs`, `profile.service.ts`, `profile.backend.ts`, `profile.backend.interface.ts`, `home.ts`  
+**Audit Type:** Full Audit + Security Focus  
+**Commit:** `fix(profile-launch): audit B2 fixes`
+
+#### 🔴 Critical Issues
+- None
+
+#### 🟡 Warnings (6 found, 6 fixed)
+- W1: `custom_flags` allowed dangerous Chrome flags → ✅ Block 9 dangerous prefixes (remote-debugging, disable-web-security, etc.)
+- W2: `launch_url` had no scheme validation → ✅ Reject javascript:/data:/vbscript: schemes
+- W3: `launch_chrome` was dead code → ✅ Removed from Rust, TS service, and Tauri registration
+- W4: `LaunchBrowserOptions` had `[key: string]: unknown` → ✅ Removed index signature, explicit cast
+- W5: `is_chrome_running_for_profile` used fragile pgrep → ✅ Verify actual PIDs in output
+- W6: `bulkLaunch` had no throttle → ✅ 500ms delay between launches
+
+#### 🟢 Suggestions (3 found, 1 fixed)
+- S1: `launchBrowser` service has 8 positional params → ⬜ Refactor to object (backlog)
+- S2: `launchProfileIncognito` no activity logging → ✅ Added logLaunch call
+- S3: Window position is dead feature (TS sends, Rust ignores) → ⬜ Bug/backlog
+
+#### Actions Taken
+| # | Issue | Fix | Status |
+|---|-------|-----|--------|
+| 1 | W1: custom_flags injection | Block 9 dangerous Chrome flag prefixes | ✅ |
+| 2 | W2: unsafe URL schemes | Reject javascript:/data:/vbscript: | ✅ |
+| 3 | W3: dead launch_chrome | Removed from Rust + lib.rs + TS service | ✅ |
+| 4 | W4: index signature bypass | Removed, use explicit cast | ✅ |
+| 5 | W5: fragile pgrep | Verify PIDs in output | ✅ |
+| 6 | W6: bulk launch no throttle | 500ms delay between launches | ✅ |
+| 7 | S2: incognito no logging | Added activityLogService.logLaunch | ✅ |
+
+#### Impact Summary
+- **Files changed:** 6
+- **Insertions:** 39, **Deletions:** 31
+
 -->
+
 
