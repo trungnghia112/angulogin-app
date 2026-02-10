@@ -13,6 +13,7 @@ import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DialogModule } from 'primeng/dialog';
+import { TextareaModule } from 'primeng/textarea';
 
 // Services
 import {
@@ -48,7 +49,8 @@ interface SettingsCategory {
         InputGroupModule,
         InputGroupAddonModule,
         ToggleSwitchModule,
-        DialogModule
+        DialogModule,
+        TextareaModule,
     ],
 })
 export class Settings {
@@ -112,6 +114,31 @@ export class Settings {
         { label: 'Weekly', value: 7 },
         { label: 'Every 2 Weeks', value: 14 },
         { label: 'Monthly', value: 30 }
+    ];
+
+    // Import Proxy Dialog state
+    protected readonly showImportProxyDialog = signal(false);
+    protected readonly importProxyText = signal('');
+    protected readonly importProxyFormat = signal<'ip:port' | 'ip:port:user:pass'>('ip:port:user:pass');
+    protected readonly importingProxy = signal(false);
+
+    protected readonly proxyFormatOptions = [
+        { label: 'ip:port', value: 'ip:port' },
+        { label: 'ip:port:user:pass', value: 'ip:port:user:pass' }
+    ];
+
+    // Add Single Proxy Dialog state
+    protected readonly showAddProxyDialog = signal(false);
+    protected readonly newProxyHost = signal('');
+    protected readonly newProxyPort = signal<number | null>(null);
+    protected readonly newProxyType = signal<'http' | 'socks5'>('http');
+    protected readonly newProxyUsername = signal('');
+    protected readonly newProxyPassword = signal('');
+    protected readonly newProxyGroup = signal('');
+
+    protected readonly proxyTypeOptions = [
+        { label: 'HTTP', value: 'http' },
+        { label: 'SOCKS5', value: 'socks5' }
     ];
 
     // Navigate to category
@@ -399,6 +426,92 @@ export class Settings {
         if (proxy.isAlive === null || proxy.isAlive === undefined) return 'Not checked';
         if (proxy.isAlive) return `Online (${proxy.latencyMs ?? 0}ms)`;
         return 'Offline';
+    }
+
+    // === Import Proxy Methods ===
+
+    openImportProxyDialog(): void {
+        this.showImportProxyDialog.set(true);
+        this.importProxyText.set('');
+        this.importProxyFormat.set('ip:port:user:pass');
+    }
+
+    async importProxies(): Promise<void> {
+        const text = this.importProxyText();
+        if (!text.trim()) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Empty Input',
+                detail: 'Please paste proxy list first.',
+            });
+            return;
+        }
+
+        this.importingProxy.set(true);
+        try {
+            const result = this.proxyService.importFromText(text, this.importProxyFormat());
+            this.showImportProxyDialog.set(false);
+
+            if (result.imported > 0) {
+                this.messageService.add({
+                    severity: result.errors.length > 0 ? 'warn' : 'success',
+                    summary: 'Import Complete',
+                    detail: `${result.imported} proxies imported` +
+                        (result.errors.length > 0 ? `, ${result.errors.length} errors` : ''),
+                });
+            } else {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Import Failed',
+                    detail: result.errors.length > 0 ? result.errors[0] : 'No valid proxies found.',
+                });
+            }
+        } finally {
+            this.importingProxy.set(false);
+        }
+    }
+
+    // === Add Single Proxy Methods ===
+
+    openAddProxyDialog(): void {
+        this.showAddProxyDialog.set(true);
+        this.newProxyHost.set('');
+        this.newProxyPort.set(null);
+        this.newProxyType.set('http');
+        this.newProxyUsername.set('');
+        this.newProxyPassword.set('');
+        this.newProxyGroup.set('');
+    }
+
+    addSingleProxy(): void {
+        const host = this.newProxyHost().trim();
+        const port = this.newProxyPort();
+
+        if (!host || !port) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Missing Fields',
+                detail: 'Host and Port are required.',
+            });
+            return;
+        }
+
+        this.proxyService.add({
+            name: `${host}:${port}`,
+            host,
+            port,
+            type: this.newProxyType(),
+            username: this.newProxyUsername() || null,
+            password: this.newProxyPassword() || null,
+            group: this.newProxyGroup() || null,
+        });
+
+        this.showAddProxyDialog.set(false);
+        this.messageService.add({
+            severity: 'success',
+            summary: 'Proxy Added',
+            detail: `${host}:${port} has been added.`,
+        });
     }
 
     // === Auto Backup Methods (Feature 5.4) ===

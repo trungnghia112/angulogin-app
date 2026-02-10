@@ -384,6 +384,10 @@
                         <p class="text-sm text-muted-color">{{ proxyService.proxyCount() }} proxies configured</p>
                     </div>
                     <div class="flex gap-2">
+                        <p-button label="Add" icon="pi pi-plus" [outlined]="true" size="small"
+                            (click)="openAddProxyDialog()" />
+                        <p-button label="Import" icon="pi pi-upload" [outlined]="true" size="small"
+                            (click)="openImportProxyDialog()" />
                         <p-button label="Check All" icon="pi pi-sync" [outlined]="true" size="small"
                             [loading]="checkingAll()" (click)="checkAllProxiesHealth()"
                             [disabled]="proxyService.proxyCount() === 0" />
@@ -505,6 +509,98 @@
             <p-button label="Cancel" [text]="true" severity="secondary" (click)="showRestoreDialog.set(false)" />
             <p-button label="Restore" icon="pi pi-check" [loading]="restoring()"
                 [disabled]="!selectedBackupPath() || restoring()" (click)="restoreBackup()" />
+        </div>
+    </ng-template>
+</p-dialog>
+
+<!-- Import Proxy Dialog -->
+<p-dialog id="settings-import-proxy-dialog" header="Import Proxies" [(visible)]="showImportProxyDialog" [modal]="true"
+    [style]="{ width: '560px' }" [closable]="true">
+    <div class="flex flex-col gap-6 py-2">
+
+        <!-- Format Selector -->
+        <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium text-color">Format</label>
+            <p-selectButton [options]="proxyFormatOptions" [ngModel]="importProxyFormat()" optionLabel="label"
+                optionValue="value" (onChange)="importProxyFormat.set($event.value)" />
+        </div>
+
+        <!-- Proxy Text Input -->
+        <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium text-color">Proxy List</label>
+            <textarea pTextarea [ngModel]="importProxyText()" (ngModelChange)="importProxyText.set($event)" [rows]="10"
+                [autoResize]="false" class="w-full font-mono text-sm"
+                placeholder="31.59.20.176:6754:username:password&#10;23.95.150.145:6114:username:password&#10;..."></textarea>
+            <p class="text-xs text-muted-color">One proxy per line.</p>
+        </div>
+
+    </div>
+
+    <ng-template #footer>
+        <div class="flex justify-end gap-2">
+            <p-button label="Cancel" [text]="true" severity="secondary" (click)="showImportProxyDialog.set(false)" />
+            <p-button label="Import" icon="pi pi-upload" [loading]="importingProxy()"
+                [disabled]="!importProxyText().trim()" (click)="importProxies()" />
+        </div>
+    </ng-template>
+</p-dialog>
+
+<!-- Add Single Proxy Dialog -->
+<p-dialog id="settings-add-proxy-dialog" header="Add Proxy" [(visible)]="showAddProxyDialog" [modal]="true"
+    [style]="{ width: '480px' }" [closable]="true">
+    <div class="flex flex-col gap-5 py-2">
+
+        <!-- Type -->
+        <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium text-color">Type</label>
+            <p-selectButton [options]="proxyTypeOptions" [ngModel]="newProxyType()" optionLabel="label"
+                optionValue="value" (onChange)="newProxyType.set($event.value)" />
+        </div>
+
+        <!-- Host + Port -->
+        <div class="flex gap-4">
+            <div class="flex flex-col gap-2 flex-1">
+                <label class="text-sm font-medium text-color">Host</label>
+                <input pInputText [ngModel]="newProxyHost()" (ngModelChange)="newProxyHost.set($event)"
+                    placeholder="31.59.20.176" />
+            </div>
+            <div class="flex flex-col gap-2 w-28">
+                <label class="text-sm font-medium text-color">Port</label>
+                <input pInputText type="number" [ngModel]="newProxyPort()" (ngModelChange)="newProxyPort.set($event)"
+                    placeholder="8080" />
+            </div>
+        </div>
+
+        <!-- Username + Password -->
+        <div class="flex gap-4">
+            <div class="flex flex-col gap-2 flex-1">
+                <label class="text-sm font-medium text-color">Username <span
+                        class="text-muted-color">(optional)</span></label>
+                <input pInputText [ngModel]="newProxyUsername()" (ngModelChange)="newProxyUsername.set($event)"
+                    placeholder="username" />
+            </div>
+            <div class="flex flex-col gap-2 flex-1">
+                <label class="text-sm font-medium text-color">Password <span
+                        class="text-muted-color">(optional)</span></label>
+                <input pInputText [ngModel]="newProxyPassword()" (ngModelChange)="newProxyPassword.set($event)"
+                    placeholder="password" type="password" />
+            </div>
+        </div>
+
+        <!-- Group -->
+        <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium text-color">Group <span class="text-muted-color">(optional)</span></label>
+            <input pInputText [ngModel]="newProxyGroup()" (ngModelChange)="newProxyGroup.set($event)"
+                placeholder="e.g. US Proxies" />
+        </div>
+
+    </div>
+
+    <ng-template #footer>
+        <div class="flex justify-end gap-2">
+            <p-button label="Cancel" [text]="true" severity="secondary" (click)="showAddProxyDialog.set(false)" />
+            <p-button label="Add" icon="pi pi-plus" [disabled]="!newProxyHost().trim() || !newProxyPort()"
+                (click)="addSingleProxy()" />
         </div>
     </ng-template>
 </p-dialog>
