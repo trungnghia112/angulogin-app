@@ -15,12 +15,14 @@ service cloud.firestore {
 
     // Profiles Collection
     match /profiles/{profileId} {
-      allow read, write: if isOwner(resource.data.userId || request.resource.data.userId);
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
     }
 
     // Folders Collection
     match /folders/{folderId} {
-      allow read, write: if isOwner(resource.data.userId || request.resource.data.userId);
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
     }
 
     // Settings Collection

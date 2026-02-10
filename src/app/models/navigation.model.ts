@@ -24,6 +24,7 @@ export const NAV_FEATURES: NavFeature[] = [
         icon: 'pi-bolt',
         route: '/automation',
         hasSidebar: false,
+        hidden: true,
     },
     {
         id: 'teams',
@@ -31,6 +32,7 @@ export const NAV_FEATURES: NavFeature[] = [
         icon: 'pi-users',
         route: '/teams',
         hasSidebar: false,
+        hidden: true,
     },
     {
         id: 'extensions',
