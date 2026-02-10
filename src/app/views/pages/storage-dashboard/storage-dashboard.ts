@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { ChartModule } from 'primeng/chart';
@@ -31,7 +30,7 @@ interface HealthCheckResult {
     styleUrl: './storage-dashboard.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
-    imports: [CommonModule, ChartModule, ButtonModule, CardModule, TooltipModule, TableModule],
+    imports: [ChartModule, ButtonModule, CardModule, TooltipModule, TableModule],
 })
 export class StorageDashboard implements OnInit, OnDestroy {
     private readonly profileService = inject(ProfileService);

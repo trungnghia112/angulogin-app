@@ -1,5 +1,4 @@
 import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { Router } from '@angular/router';
@@ -8,7 +7,7 @@ import { SettingsService } from '../../../core/services/settings.service';
 
 @Component({
     selector: 'app-main-nav',
-    imports: [CommonModule, ButtonModule, TooltipModule],
+    imports: [ButtonModule, TooltipModule],
     templateUrl: './main-nav.html',
     styleUrl: './main-nav.css',
     changeDetection: ChangeDetectionStrategy.OnPush

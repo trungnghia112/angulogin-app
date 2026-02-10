@@ -2,6 +2,37 @@ use serde::Serialize;
 use std::fs;
 use std::process::Command;
 
+/// Validate a profile name to prevent path traversal and injection attacks.
+/// Returns Ok(trimmed_name) if valid, Err(message) if invalid.
+fn sanitize_profile_name(name: &str) -> Result<String, String> {
+    let trimmed = name.trim().to_string();
+    
+    if trimmed.is_empty() {
+        return Err("Profile name cannot be empty".to_string());
+    }
+    
+    if trimmed.len() > 255 {
+        return Err("Profile name is too long (max 255 characters)".to_string());
+    }
+    
+    // Reject path traversal attempts
+    if trimmed.contains("..") || trimmed.contains('/') || trimmed.contains('\\') {
+        return Err("Profile name contains invalid characters (..  / \\)".to_string());
+    }
+    
+    // Reject null bytes
+    if trimmed.contains('\0') {
+        return Err("Profile name contains invalid characters".to_string());
+    }
+    
+    // Reject hidden files (starting with .)
+    if trimmed.starts_with('.') {
+        return Err("Profile name cannot start with a dot".to_string());
+    }
+    
+    Ok(trimmed)
+}
+
 /// Check if a folder is a valid Chrome profile
 /// In strict mode: requires Preferences file or Default/Profile X naming
 /// In relaxed mode: accepts any directory (for managed profiles)
@@ -129,10 +160,11 @@ pub fn ensure_profiles_directory(path: String) -> Result<(), String> {
 
 #[tauri::command]
 pub fn create_profile(base_path: String, name: String) -> Result<String, String> {
-    let profile_path = format!("{}/{}", base_path, name);
+    let safe_name = sanitize_profile_name(&name)?;
+    let profile_path = format!("{}/{}", base_path, safe_name);
     
     if std::path::Path::new(&profile_path).exists() {
-        return Err(format!("Profile '{}' already exists", name));
+        return Err(format!("Profile '{}' already exists", safe_name));
     }
     
     fs::create_dir_all(&profile_path)
@@ -155,6 +187,7 @@ pub fn delete_profile(profile_path: String) -> Result<(), String> {
 
 #[tauri::command]
 pub fn rename_profile(old_path: String, new_name: String) -> Result<String, String> {
+    let safe_name = sanitize_profile_name(&new_name)?;
     let old_path_obj = std::path::Path::new(&old_path);
     
     if !old_path_obj.exists() {
@@ -164,10 +197,10 @@ pub fn rename_profile(old_path: String, new_name: String) -> Result<String, Stri
     let parent = old_path_obj.parent()
         .ok_or("Cannot get parent directory")?;
     
-    let new_path = parent.join(&new_name);
+    let new_path = parent.join(&safe_name);
     
     if new_path.exists() {
-        return Err(format!("Profile '{}' already exists", new_name));
+        return Err(format!("Profile '{}' already exists", safe_name));
     }
     
     fs::rename(&old_path, &new_path)
@@ -178,6 +211,7 @@ pub fn rename_profile(old_path: String, new_name: String) -> Result<String, Stri
 
 #[tauri::command]
 pub fn duplicate_profile(source_path: String, new_name: String) -> Result<String, String> {
+    let safe_name = sanitize_profile_name(&new_name)?;
     let source = std::path::Path::new(&source_path);
     
     if !source.exists() {
@@ -187,10 +221,10 @@ pub fn duplicate_profile(source_path: String, new_name: String) -> Result<String
     let parent = source.parent()
         .ok_or("Cannot get parent directory")?;
     
-    let dest_path = parent.join(&new_name);
+    let dest_path = parent.join(&safe_name);
     
     if dest_path.exists() {
-        return Err(format!("Profile '{}' already exists", new_name));
+        return Err(format!("Profile '{}' already exists", safe_name));
     }
     
     let options = fs_extra::dir::CopyOptions::new();
@@ -399,29 +433,12 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
 
 #[tauri::command]
 pub fn get_profile_size(profile_path: String) -> Result<u64, String> {
-    fn dir_size(path: &std::path::Path) -> u64 {
-        let mut size: u64 = 0;
-        if path.is_dir() {
-            if let Ok(entries) = fs::read_dir(path) {
-                for entry in entries.flatten() {
-                    let path = entry.path();
-                    if path.is_dir() {
-                        size += dir_size(&path);
-                    } else if let Ok(meta) = path.metadata() {
-                        size += meta.len();
-                    }
-                }
-            }
-        }
-        size
-    }
-    
     let path = std::path::Path::new(&profile_path);
     if !path.exists() {
         return Err("Profile does not exist".to_string());
     }
     
-    Ok(dir_size(path))
+    Ok(calculate_dir_size(path))
 }
 
 #[tauri::command]

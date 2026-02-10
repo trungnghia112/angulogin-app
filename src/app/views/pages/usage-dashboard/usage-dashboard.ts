@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { ChartModule } from 'primeng/chart';
@@ -17,7 +16,7 @@ import { Profile } from '../../../models/profile.model';
     styleUrl: './usage-dashboard.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
-    imports: [CommonModule, ChartModule, ButtonModule, TooltipModule, TableModule],
+    imports: [ChartModule, ButtonModule, TooltipModule, TableModule],
 })
 export class UsageDashboard {
     private readonly profileService = inject(ProfileService);
