@@ -503,26 +503,32 @@ export class Home implements OnInit, OnDestroy {
             return;
         }
         try {
+            console.time('[PERF] home.scanProfiles TOTAL');
+            console.time('[PERF] checkPathExists');
             const exists = await this.profileService.checkPathExists(path);
+            console.timeEnd('[PERF] checkPathExists');
             if (!exists) {
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Error',
                     detail: 'Path does not exist',
                 });
+                console.timeEnd('[PERF] home.scanProfiles TOTAL');
                 return;
             }
+            console.time('[PERF] profileService.scanProfiles');
             await this.profileService.scanProfiles(path);
+            console.timeEnd('[PERF] profileService.scanProfiles');
             this.settingsService.setProfilesPath(path);
             this.messageService.add({
                 severity: 'success',
                 summary: 'Success',
                 detail: `Found ${this.profiles().length} profiles`,
             });
-            // PERF FIX: Defer size loading to allow UI to render first
-            setTimeout(() => this.profileService.loadProfileSizes(), 100);
+            console.timeEnd('[PERF] home.scanProfiles TOTAL');
         } catch (e) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+            console.timeEnd('[PERF] home.scanProfiles TOTAL');
         }
     }
 
@@ -1109,8 +1115,7 @@ export class Home implements OnInit, OnDestroy {
                         summary: 'Data Cleared',
                         detail: `Deleted ${result.deletedCount} items, freed ${freedMB} MB`,
                     });
-                    // Refresh profile sizes
-                    this.profileService.loadProfileSizes();
+                    // Size recalculation removed — use Storage Dashboard instead
                 } catch (e) {
                     this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
                 }

@@ -166,6 +166,72 @@ pub fn scan_profiles(path: String) -> Result<Vec<String>, String> {
     Ok(profiles)
 }
 
+/// PERF: All-in-one profile scan — returns names + metadata + running status in a single IPC call.
+/// This eliminates N+2 round trips (scan + N metadata reads + batch running) into 1 call.
+/// For 1000 profiles: ~100ms native Rust I/O vs ~10s through multiple IPC round trips.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileInfo {
+    pub name: String,
+    pub path: String,
+    pub metadata: ProfileMetadata,
+    pub is_running: bool,
+}
+
+#[tauri::command]
+pub fn scan_profiles_with_metadata(path: String) -> Result<Vec<ProfileInfo>, String> {
+    let total_start = std::time::Instant::now();
+
+    // Step 1: Get profile names
+    let step1_start = std::time::Instant::now();
+    let names = scan_profiles(path.clone())?;
+    eprintln!("[PERF] step1 scan_names: {}ms ({} profiles)", step1_start.elapsed().as_millis(), names.len());
+
+    // Step 2: Batch read metadata
+    let step2_start = std::time::Instant::now();
+    let mut profiles: Vec<ProfileInfo> = names.iter().map(|name| {
+        let profile_path = format!("{}/{}", path, name);
+        let meta_file = format!("{}/.profile-meta.json", profile_path);
+        
+        let metadata = if std::path::Path::new(&meta_file).exists() {
+            fs::read_to_string(&meta_file)
+                .ok()
+                .and_then(|content| serde_json::from_str(&content).ok())
+                .unwrap_or_default()
+        } else {
+            ProfileMetadata::default()
+        };
+
+        ProfileInfo {
+            name: name.clone(),
+            path: profile_path,
+            metadata,
+            is_running: false,
+        }
+    }).collect();
+    eprintln!("[PERF] step2 read_metadata: {}ms", step2_start.elapsed().as_millis());
+
+    // Step 3: Batch check running status
+    let step3_start = std::time::Instant::now();
+    let output = Command::new("ps")
+        .args(["aux"])
+        .output();
+
+    if let Ok(out) = output {
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        for profile in &mut profiles {
+            let search = format!("--user-data-dir={}", profile.path);
+            if stdout.contains(&search) {
+                profile.is_running = true;
+            }
+        }
+    }
+    eprintln!("[PERF] step3 batch_running: {}ms", step3_start.elapsed().as_millis());
+    eprintln!("[PERF] scan_profiles_with_metadata TOTAL: {}ms ({} profiles)", total_start.elapsed().as_millis(), profiles.len());
+
+    Ok(profiles)
+}
+
 #[tauri::command]
 pub fn check_path_exists(path: String) -> bool {
     std::path::Path::new(&path).exists()
@@ -301,6 +367,7 @@ pub fn duplicate_profile(source_path: String, new_name: String) -> Result<String
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct ProfileMetadata {
     pub emoji: Option<String>,
     pub notes: Option<String>,
@@ -577,12 +644,18 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
 
 #[tauri::command]
 pub fn get_profile_size(profile_path: String) -> Result<u64, String> {
+    let start = std::time::Instant::now();
     let path = std::path::Path::new(&profile_path);
     if !path.exists() {
         return Err("Profile does not exist".to_string());
     }
     
-    Ok(calculate_dir_size(path))
+    let size = calculate_dir_size(path);
+    eprintln!("[PERF] get_profile_size '{}': {}ms ({}MB)", 
+        path.file_name().unwrap_or_default().to_string_lossy(),
+        start.elapsed().as_millis(), 
+        size / 1024 / 1024);
+    Ok(size)
 }
 
 #[tauri::command]

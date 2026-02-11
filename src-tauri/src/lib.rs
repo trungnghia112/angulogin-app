@@ -20,6 +20,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::scan_profiles,
+            commands::scan_profiles_with_metadata,
             commands::check_path_exists,
             commands::ensure_profiles_directory,
             commands::create_profile,

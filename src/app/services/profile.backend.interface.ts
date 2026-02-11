@@ -1,4 +1,4 @@
-import { ProfileMetadata } from '../models/profile.model';
+import { Profile, ProfileMetadata } from '../models/profile.model';
 
 /** Options for launching a browser with a specific profile */
 export interface LaunchBrowserOptions {
@@ -40,8 +40,17 @@ export interface RestoreBackupResult {
     was_renamed: boolean;
 }
 
+/** Raw profile info from Rust backend (snake_case fields) */
+export interface RawProfileInfo {
+    name: string;
+    path: string;
+    metadata: Record<string, unknown>;
+    is_running: boolean;
+}
+
 export interface ProfileBackend {
     scanProfiles(path: string): Promise<string[]>;
+    scanProfilesWithMetadata(path: string): Promise<Profile[]>;
     checkPathExists(path: string): Promise<boolean>;
     ensureProfilesDirectory(path: string): Promise<void>;
     createProfile(basePath: string, name: string): Promise<string>;

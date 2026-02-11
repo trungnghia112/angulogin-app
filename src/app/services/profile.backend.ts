@@ -6,14 +6,26 @@ import {
     LaunchBrowserOptions,
     ProfileBackend,
     ProfileHealthCheckResult,
+    RawProfileInfo,
     RestoreBackupResult,
 } from './profile.backend.interface';
-import { ProfileMetadata } from '../models/profile.model';
+import { Profile, ProfileMetadata } from '../models/profile.model';
 
 export class MockProfileBackend implements ProfileBackend {
     async scanProfiles(path: string): Promise<string[]> {
         debugLog('Mock scanProfiles:', path);
         return MOCK_PROFILES.map(p => p.name);
+    }
+
+    async scanProfilesWithMetadata(path: string): Promise<Profile[]> {
+        debugLog('Mock scanProfilesWithMetadata:', path);
+        return MOCK_PROFILES.map(p => ({
+            name: p.name,
+            path: `${path}/${p.name}`,
+            metadata: p.metadata,
+            isRunning: p.isRunning || false,
+            size: p.size,
+        }));
     }
 
     async checkPathExists(path: string): Promise<boolean> {
@@ -101,6 +113,17 @@ export class MockProfileBackend implements ProfileBackend {
 export class TauriProfileBackend implements ProfileBackend {
     async scanProfiles(path: string): Promise<string[]> {
         return await invoke<string[]>('scan_profiles', { path });
+    }
+
+    /** PERF: All-in-one scan — 1 IPC call returns names + metadata + running status */
+    async scanProfilesWithMetadata(path: string): Promise<Profile[]> {
+        const rawProfiles = await invoke<RawProfileInfo[]>('scan_profiles_with_metadata', { path });
+        return rawProfiles.map(raw => ({
+            name: raw.name,
+            path: raw.path,
+            metadata: raw.metadata as unknown as ProfileMetadata,
+            isRunning: raw.is_running,
+        }));
     }
 
     async checkPathExists(path: string): Promise<boolean> {

@@ -28,30 +28,15 @@ export class ProfileService {
         this.error.set(null);
 
         try {
-            const names = await this.backend.scanProfiles(path);
-            const allPaths = names.map(name => `${path}/${name}`);
+            console.time('[PERF] scanProfiles IPC');
+            const profiles = await this.backend.scanProfilesWithMetadata(path);
+            console.timeEnd('[PERF] scanProfiles IPC');
+            console.log(`[PERF] scanProfiles: ${profiles.length} profiles loaded`);
 
-            // PERF: Batch check running status — 1 ps call instead of N pgrep calls
-            const runningMap = await this.backend.batchCheckRunning(allPaths);
-
-            // PERF: Load metadata in chunks of 10 to prevent IPC flooding
-            const CHUNK_SIZE = 10;
-            const profiles: Profile[] = [];
-
-            for (let i = 0; i < names.length; i += CHUNK_SIZE) {
-                const chunk = names.slice(i, i + CHUNK_SIZE);
-                const chunkProfiles = await Promise.all(
-                    chunk.map(async (name: string) => {
-                        const profilePath = `${path}/${name}`;
-                        const metadata = await this.getProfileMetadata(profilePath);
-                        const isRunning = runningMap[profilePath] || false;
-                        return { name, path: profilePath, metadata, isRunning };
-                    })
-                );
-                profiles.push(...chunkProfiles);
-            }
-
+            console.time('[PERF] profiles.set (signal update)');
             this.profiles.set(profiles);
+            console.timeEnd('[PERF] profiles.set (signal update)');
+
             return profiles;
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
@@ -218,6 +203,7 @@ export class ProfileService {
         const current = this.profiles();
         if (current.length === 0) return;
 
+        console.time(`[PERF] refreshProfileStatus (${current.length} profiles)`);
         // PERF: 1 batch call instead of N individual pgrep spawns
         const allPaths = current.map(p => p.path);
         const runningMap = await this.backend.batchCheckRunning(allPaths);
@@ -235,6 +221,7 @@ export class ProfileService {
         if (hasChanges) {
             this.profiles.set(updated);
         }
+        console.timeEnd(`[PERF] refreshProfileStatus (${current.length} profiles)`);
     }
 
     async launchBrowser(
@@ -311,6 +298,7 @@ export class ProfileService {
         const current = this.profiles();
         if (current.length === 0) return;
 
+        console.time(`[PERF] loadProfileSizes (${current.length} profiles)`);
         const CHUNK_SIZE = 10;
         const sizeMap = new Map<string, number>();
 
@@ -340,6 +328,7 @@ export class ProfileService {
         if (hasChanges) {
             this.profiles.set(updated);
         }
+        console.timeEnd(`[PERF] loadProfileSizes (${current.length} profiles)`);
     }
 
     async duplicateProfile(sourcePath: string, newName: string, basePath: string): Promise<string> {
