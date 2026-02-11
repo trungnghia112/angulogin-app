@@ -23,8 +23,15 @@ export class MainNav {
     // Dark mode from settings service
     isDarkMode = this.settingsService.isDarkMode;
 
+    // Feature 6.9: Zen Mode
+    zenMode = this.navService.zenMode;
+
     toggleTheme(): void {
         this.settingsService.toggleDarkMode();
+    }
+
+    toggleZenMode(): void {
+        this.navService.toggleZenMode();
     }
 
     isActive(featureId: string): boolean {

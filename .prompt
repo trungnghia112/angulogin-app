@@ -1,12 +1,3 @@
-- Hãy dựa theo guidelines ở `AGENTS.md,.gemini/GEMINI.md,.claude/CLAUDE.md` trong quá trình thực hiện.
-- Khi bạn thấy trong prompt của tôi có câu nào đó với prefix "Hãy ghi nhớ:" thì đó là thông tin bạn cần cập nhật ngay vào memories và `AGENTS.md,.gemini/GEMINI.md,.claude/CLAUDE.md`
-- Đưa ra kế hoạch cụ thể để thực hiện các yêu cầu trên, sau đó thực hiện nó mà không cần hỏi lại.
-- Thực hiện các bước này một cách tuần tự ở mỗi bước để đảm bảo migration thành công.
-- Mỗi sprint cần kết thúc với build thành công.
-- Cần commit code sau mỗi bước. Message commit cần viết bằng tiếng Anh. Commit message tuân thủ semantic commit.
-- Tôi giao tiếp với bạn bằng ngôn ngữ gì thì bạn trả lời lại bằng ngôn ngữ đó.
-- Không nên dừng giữa chừng rồi hỏi lại tôi có muốn tiếp tục hay không, tôi luôn muốn tiếp tục.
-- Không tự viết tests khi tôi không yêu cầu.
-- Không được thêm emoji trong code, kể cả khi viết comments.
-- Không tự tạo các file documentation Markdown mà không có sự yêu cầu từ tôi.
-- Nếu có lỗi ngưng giữa chừng cần có cơ chế tự động chạy lại nhé.
+bây giờ tôi sẽ đi ngủ, hãy xem backlog có thể làm được những tasks nào thì làm đi mà không cần hỏi lại,
+
+Luôn áp dụng /plan /code /audit để thực hiện các feature và thay vì kết thúc task quá sớm thì hãy double check lại lần nữa, dùng /ultrathink để suy nghĩ sâu, luôn hướng đến app thương mại nên trả nghiệm người dùng phải tốt, luôn có sự so sánh với các ứng dụng cùng lĩnh vực, luôn so sánh ít nhất big 4 

@@ -59,6 +59,13 @@
             <i [class]="'pi ' + (isDarkMode() ? 'pi-moon' : 'pi-sun') + ' text-lg'"></i>
         </button>
 
+        <!-- Feature 6.9: Zen Mode Toggle -->
+        <button id="main-nav-zenmode-btn" (click)="toggleZenMode()" aria-label="Toggle Zen Mode"
+            class="w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 text-muted-color hover:text-primary"
+            pTooltip="Zen Mode (⌘+\)" tooltipPosition="right">
+            <i class="pi pi-window-maximize text-lg"></i>
+        </button>
+
         <!-- Storage Dashboard -->
         <button id="main-nav-storage-btn" (click)="selectFeature('storage')" aria-label="Open storage dashboard"
             class="w-11 h-11 rounded-xl flex items-center justify-center text-muted-color hover:text-primary hover:transition-all duration-200"

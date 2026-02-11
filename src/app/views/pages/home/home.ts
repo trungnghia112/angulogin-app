@@ -37,6 +37,7 @@ import { SettingsService } from '../../../core/services/settings.service';
 import { ActivityLogService } from '../../../services/activity-log.service';
 import { FolderService } from '../../../services/folder.service';
 import { ProxyService } from '../../../services/proxy.service';
+import { NavigationService } from '../../../services/navigation.service';
 import { BrowserType, Profile } from '../../../models/profile.model';
 import { validateProfileName } from '../../../core/utils/validation.util';
 
@@ -98,7 +99,11 @@ export class Home implements OnInit, OnDestroy {
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly navService = inject(NavigationService);
     private readonly searchSubject = new Subject<string>();
+
+    // Feature 6.9: Zen Mode
+    protected readonly zenMode = this.navService.zenMode;
     private statusInterval: ReturnType<typeof setInterval> | null = null;
     // PERF FIX: Cache tooltips to avoid string creation on every render
     private readonly tooltipCache = new Map<string, string>();
@@ -1230,6 +1235,90 @@ export class Home implements OnInit, OnDestroy {
         this.selectedProfiles.set([]);
     }
 
+    // ==== Feature 12.1: Mass Tag Assign ====
+    protected readonly showMassTagDialog = signal(false);
+    protected readonly massTagSelection = signal<string[]>([]);
+    protected readonly newMassTag = signal('');
+
+    openMassTagDialog(): void {
+        this.massTagSelection.set([]);
+        this.newMassTag.set('');
+        this.showMassTagDialog.set(true);
+    }
+
+    addNewMassTag(): void {
+        const tag = this.newMassTag().trim();
+        if (!tag) return;
+        const current = this.massTagSelection();
+        if (!current.includes(tag)) {
+            this.massTagSelection.set([...current, tag]);
+        }
+        this.newMassTag.set('');
+    }
+
+    toggleMassTag(tag: string): void {
+        const current = this.massTagSelection();
+        if (current.includes(tag)) {
+            this.massTagSelection.set(current.filter(t => t !== tag));
+        } else {
+            this.massTagSelection.set([...current, tag]);
+        }
+    }
+
+    async bulkAssignTags(): Promise<void> {
+        const profiles = this.selectedProfiles();
+        const tagsToAssign = this.massTagSelection();
+        if (profiles.length === 0 || tagsToAssign.length === 0) return;
+
+        let updated = 0;
+        for (const profile of profiles) {
+            try {
+                const existingTags = profile.metadata?.tags || [];
+                const mergedTags = [...new Set([...existingTags, ...tagsToAssign])];
+                await this.profileService.saveProfileMetadata(
+                    profile.path,
+                    { tags: mergedTags },
+                );
+                updated++;
+            } catch (e) {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: `Failed to tag ${profile.name}`,
+                });
+            }
+        }
+
+        this.showMassTagDialog.set(false);
+        this.messageService.add({
+            severity: 'success',
+            summary: 'Tags Applied',
+            detail: `Added ${tagsToAssign.length} tag(s) to ${updated} profile(s)`,
+        });
+    }
+
+    // ==== Feature 11.4: Last Changed - relative date formatting ====
+    formatRelativeDate(dateStr: string | null | undefined): string {
+        if (!dateStr) return '-';
+        try {
+            const date = new Date(dateStr);
+            const now = Date.now();
+            const diffMs = now - date.getTime();
+            const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHour = Math.floor(diffMin / 60);
+            const diffDay = Math.floor(diffHour / 24);
+
+            if (diffSec < 60) return 'Just now';
+            if (diffMin < 60) return `${diffMin}m ago`;
+            if (diffHour < 24) return `${diffHour}h ago`;
+            if (diffDay < 7) return `${diffDay}d ago`;
+            if (diffDay < 30) return `${Math.floor(diffDay / 7)}w ago`;
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        } catch {
+            return '-';
+        }
+    }
 
 
     // Drag & Drop Reordering

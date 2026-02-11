@@ -1,7 +1,9 @@
-<!-- Sidebar (responsive: drawer on mobile, static on desktop) -->
+<!-- Sidebar (responsive: drawer on mobile, static on desktop) - Hidden in Zen Mode -->
+@if (!zenMode()) {
 <app-home-sidebar [folders]="folders()" [selectedFolderId]="selectedFolderId()" [isOpen]="sidebarOpen()"
     (folderSelected)="onFolderSelected($event)" (addFolderClicked)="onAddFolder()" (settingsClicked)="onSettings()"
     (folderSettingsClicked)="openManageFolders()" (closeSidebar)="sidebarOpen.set(false)" />
+}
 
 <!-- Main Content -->
 <div id="home-container" class="flex-1 flex flex-col min-h-0 text-color overflow-hidden">
@@ -90,6 +92,8 @@
                     <th>Proxy</th>
                     <th>Tags</th>
                     <th>Notes</th>
+                    <th>Last Changed</th>
+                    <th>Running Time</th>
                     <th style="width: 3rem"><i class="pi pi-cog"></i></th>
                 </tr>
             </ng-template>
@@ -191,6 +195,25 @@
                         }
                     </td>
 
+                    <!-- Last Changed (Feature 11.4) -->
+                    <td>
+                        <span class="text-xs text-muted-color whitespace-nowrap">{{
+                            formatRelativeDate(profile.metadata?.lastOpened) }}</span>
+                    </td>
+
+                    <!-- Running Time (Feature 11.5) -->
+                    <td>
+                        @if (profile.metadata?.totalUsageMinutes) {
+                        <span
+                            class="inline-flex items-center gap-1 px-2 py-0.5 bg-surface-100 dark:bg-surface-800 rounded text-xs text-color">
+                            <i class="pi pi-clock text-[10px] text-muted-color"></i>
+                            {{ formatMinutes(profile.metadata.totalUsageMinutes) }}
+                        </span>
+                        } @else {
+                        <span class="text-xs text-muted-color">-</span>
+                        }
+                    </td>
+
                     <!-- Actions -->
                     <td>
                         <div class="flex items-center gap-1">
@@ -231,7 +254,7 @@
             <!-- Empty state -->
             <ng-template pTemplate="emptymessage">
                 <tr>
-                    <td colspan="8">No profiles in this folder</td>
+                    <td colspan="10">No profiles in this folder</td>
                 </tr>
             </ng-template>
         </p-table>
@@ -377,6 +400,12 @@
                     title="Export selected to ZIP">
                     <i class="pi pi-download text-xs"></i>
                     <span class="hidden sm:inline">Export</span>
+                </button>
+                <button id="home-bottom-tags-btn" (click)="openMassTagDialog()"
+                    class="h-7 flex items-center gap-1.5 px-2.5 rounded border border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white transition-colors text-xs font-medium"
+                    title="Assign tags to selected">
+                    <i class="pi pi-tag text-xs"></i>
+                    <span class="hidden sm:inline">Tags</span>
                 </button>
                 <button id="home-bottom-delete-btn" (click)="bulkDelete()"
                     class="h-7 flex items-center gap-1.5 px-2.5 rounded border border-error text-error hover:bg-error hover:text-white transition-colors text-xs font-medium"
@@ -596,6 +625,70 @@
         <ng-template pTemplate="footer">
             <p-button label="Close" (click)="showManageFoldersDialog.set(false)" [text]="true" />
             <p-button icon="pi pi-plus" label="New Folder" (click)="onAddFolder()" [text]="true" severity="info" />
+        </ng-template>
+    </p-dialog>
+
+    <!-- Feature 12.1: Mass Tag Assign Dialog -->
+    <p-dialog id="home-mass-tag-dialog" header="Assign Tags to Selected Profiles" [(visible)]="showMassTagDialog"
+        [modal]="true" [style]="{ width: 'min(480px, 95vw)' }" [draggable]="false" [resizable]="false">
+        <div id="home-mass-tag-content" class="py-2">
+            <p class="text-sm text-muted-color mb-4">
+                Select tags to apply to {{ selectedProfiles().length }} selected profile(s).
+                Tags will be merged with existing tags.
+            </p>
+
+            <!-- Existing Tags -->
+            @if (availableTags().length > 0) {
+            <div class="mb-4">
+                <label class="block text-xs font-medium text-color mb-2">Existing Tags</label>
+                <div class="flex flex-wrap gap-2">
+                    @for (tag of availableTags(); track tag) {
+                    <button [id]="'home-mass-tag-chip-' + tag" (click)="toggleMassTag(tag)"
+                        [class]="massTagSelection().includes(tag) 
+                            ? 'px-3 py-1.5 rounded-lg text-sm font-medium bg-primary text-white border border-primary transition-all duration-200 shadow-sm'
+                            : 'px-3 py-1.5 rounded-lg text-sm font-medium bg-surface-100 dark:bg-surface-800 text-color border border-surface-200 dark:border-surface-700 hover:border-primary/50 transition-all duration-200'">
+                        <i class="pi pi-tag text-xs mr-1.5"></i>{{ tag }}
+                    </button>
+                    }
+                </div>
+            </div>
+            }
+
+            <!-- Selected Tags Preview -->
+            @if (massTagSelection().length > 0) {
+            <div class="mb-4 p-3 bg-primary/10 border border-primary/30 rounded-lg">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-medium text-primary">Will apply:</span>
+                    @for (tag of massTagSelection(); track tag) {
+                    <span
+                        class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/20 text-primary text-xs rounded-full">
+                        {{ tag }}
+                        <button (click)="toggleMassTag(tag)" class="hover:text-red-500 transition-colors">
+                            <i class="pi pi-times text-[10px]"></i>
+                        </button>
+                    </span>
+                    }
+                </div>
+            </div>
+            }
+
+            <!-- Create New Tag -->
+            <div>
+                <label for="home-mass-tag-new-input" class="block text-xs font-medium text-color mb-2">Create New
+                    Tag</label>
+                <div class="flex gap-2">
+                    <input pInputText id="home-mass-tag-new-input" type="text" [ngModel]="newMassTag()"
+                        (ngModelChange)="newMassTag.set($event)" (keydown.enter)="addNewMassTag()"
+                        placeholder="Type and press Enter" class="flex-1" />
+                    <p-button icon="pi pi-plus" (click)="addNewMassTag()" [disabled]="!newMassTag().trim()" />
+                </div>
+            </div>
+        </div>
+        <ng-template #footer>
+            <p-button id="home-mass-tag-cancel-btn" label="Cancel" severity="secondary"
+                (click)="showMassTagDialog.set(false)" />
+            <p-button id="home-mass-tag-apply-btn" label="Apply Tags" icon="pi pi-check" (click)="bulkAssignTags()"
+                [disabled]="massTagSelection().length === 0" />
         </ng-template>
     </p-dialog>
 </div>

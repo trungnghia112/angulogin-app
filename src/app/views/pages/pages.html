@@ -1,9 +1,20 @@
 <div id="pages-container" class="flex h-screen overflow-hidden">
-    <!-- Main Navigation (Icon Rail) -->
-    <app-main-nav />
+    <!-- Main Navigation (Icon Rail) - Hidden in Zen Mode -->
+    @if (!zenMode()) {
+    <app-main-nav class="transition-all duration-300" />
+    }
 
     <!-- Main Content -->
     <main id="pages-main-content" class="flex-1 flex flex-col overflow-hidden">
         <router-outlet />
     </main>
+
+    <!-- Feature 6.9: Zen Mode Exit Button (floating) -->
+    @if (zenMode()) {
+    <button id="pages-zen-exit-btn" (click)="exitZenMode()"
+        class="fixed bottom-4 left-4 z-50 w-10 h-10 rounded-full bg-surface-0 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-lg flex items-center justify-center text-muted-color hover:text-primary hover:scale-110 transition-all duration-200 opacity-30 hover:opacity-100"
+        pTooltip="Exit Zen Mode (⌘+\)" tooltipPosition="right">
+        <i class="pi pi-arrow-right text-sm"></i>
+    </button>
+    }
 </div>
