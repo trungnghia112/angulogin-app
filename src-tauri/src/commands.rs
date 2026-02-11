@@ -433,32 +433,43 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
     
     // Add proxy server - with optional local relay for authenticated proxies
     if let Some(ref proxy) = proxy_server {
+        // Determine if this is a SOCKS proxy (relay only works for HTTP proxies)
+        let is_socks = proxy.starts_with("socks5://") || proxy.starts_with("socks4://");
+
         let use_relay = match (&proxy_username, &proxy_password) {
-            (Some(ref u), Some(ref p)) if !u.is_empty() && !p.is_empty() => true,
+            (Some(ref u), Some(ref p)) if !u.is_empty() && !p.is_empty() && !is_socks => true,
             _ => false,
         };
+
+        if is_socks && proxy_username.as_ref().map_or(false, |u| !u.is_empty()) {
+            eprintln!("[ProxyAuth] WARNING: SOCKS proxy with auth detected. \
+                Relay does not support SOCKS auth - Chrome will prompt for credentials.");
+        }
 
         if use_relay {
             // Parse upstream proxy host:port from proxy URL
             let proxy_trimmed = proxy
                 .trim_start_matches("http://")
-                .trim_start_matches("https://")
-                .trim_start_matches("socks5://")
-                .trim_start_matches("socks4://");
+                .trim_start_matches("https://");
             let parts: Vec<&str> = proxy_trimmed.splitn(2, ':').collect();
             let host = parts.first().unwrap_or(&"");
             let port: u16 = parts.get(1)
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(80);
 
+            eprintln!("[ProxyAuth] Parsed upstream: host={}, port={} (from: {})", host, port, proxy);
+
             let username = proxy_username.as_ref().unwrap();
             let password = proxy_password.as_ref().unwrap();
 
             // Start local proxy relay (127.0.0.1:random_port -> upstream with auth)
             let local_port = crate::proxy_relay::start_proxy_relay(host, port, username, password)?;
-            args.push(format!("--proxy-server=http://127.0.0.1:{}", local_port));
+            let relay_arg = format!("--proxy-server=http://127.0.0.1:{}", local_port);
+            eprintln!("[ProxyAuth] Using relay: {}", relay_arg);
+            args.push(relay_arg);
         } else {
-            // No auth needed, use proxy directly
+            // No auth needed or SOCKS proxy, use proxy directly
+            eprintln!("[ProxyAuth] Using direct proxy: {}", proxy);
             args.push(format!("--proxy-server={}", proxy));
         }
     }

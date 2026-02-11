@@ -593,15 +593,14 @@ export class Home implements OnInit, OnDestroy {
             }
 
             // DEBUG: trace proxy credentials (TEMP - remove after debugging)
-            const debugInfo = JSON.stringify({
+            console.warn('[ProxyAuth DEBUG]', {
                 proxy,
                 proxyId: profile.metadata?.proxyId,
                 proxyUsername,
                 proxyPassword: proxyPassword ? '***' : undefined,
                 metaProxyUsername: profile.metadata?.proxyUsername,
                 metaProxyPassword: profile.metadata?.proxyPassword ? '***' : undefined,
-            }, null, 2);
-            alert('[ProxyAuth DEBUG]\n' + debugInfo);
+            });
 
             await this.profileService.launchBrowser(
                 profile.path,
