@@ -2,12 +2,12 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.0.0",
-        "updated_at": "2026-02-08T14:24:00+07:00"
+        "updated_at": "2026-02-12T05:22:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
         "type": "desktop-app",
-        "status": "active-development",
+        "status": "production-ready",
         "description": "Tauri + Angular desktop app to manage multiple Chrome profiles"
     },
     "tech_stack": {
@@ -64,7 +64,24 @@
         "profile_service": "src/app/services/profile.service.ts",
         "home_component": "src/app/views/pages/home/home.ts",
         "storage_dashboard": "src/app/views/pages/storage-dashboard/storage-dashboard.ts",
-        "activity_log_service": "src/app/services/activity-log.service.ts"
+        "activity_log_service": "src/app/services/activity-log.service.ts",
+        "audit_tracker": "docs/FEATURE_AUDIT_TRACKER.md"
+    },
+    "security_audit": {
+        "grade": "A-",
+        "completed_at": "2026-02-12",
+        "modules_audited": 47,
+        "issues_found": 56,
+        "issues_fixed": 37,
+        "key_fixes": [
+            "validate_path_safety() in Rust backend — prevents path traversal",
+            "sanitizeSettings() — validates imported settings values",
+            "csvSafe() — prevents CSV formula injection in exports",
+            "backupInProgress/restoreInProgress signals — double-click guards",
+            "setScale() bounds check — clamp 12-24px",
+            "ActivityLogService load cap — Array.isArray + slice(0, MAX_ENTRIES)",
+            "History file 16-byte header check instead of full file read"
+        ]
     },
     "features": [
         {
@@ -402,7 +419,11 @@
             "Commit after every significant change with semantic format",
             "All surfaces need dark: variants for dark mode (bg-surface-0 dark:bg-surface-900)",
             "Use PrimeNG Charts for visualization, not raw Chart.js",
-            "New features added to ProfileMetadata must be updated in: TS model, Rust struct, save_profile_metadata, and service method"
+            "New features added to ProfileMetadata must be updated in: TS model, Rust struct, save_profile_metadata, and service method",
+            "All user-provided file imports must be sanitized before use (settings, CSV, JSON)",
+            "All async operations (backup/restore/delete) should have loading guards to prevent double-click",
+            "Rust backend uses validate_path_safety() for all file operations — checks traversal, symlinks, null bytes",
+            "CSV export must use csvSafe() to prevent formula injection (=, +, -, @ prefix escaping)"
         ]
     }
 }
