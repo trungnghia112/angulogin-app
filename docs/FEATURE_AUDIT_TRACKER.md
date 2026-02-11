@@ -13,7 +13,7 @@
 |---|---------|-------|--------|--------|-------|
 | **A1** | Browsers (Home Page) | Page | ⬜ Pending | - | - |
 | **A2** | Extensions Manager | Page | ⬜ Pending | - | - |
-| **A3** | Settings | Page | ⬜ Pending | - | - |
+| **A3** | Settings Page | Page | ✅🔧 Fixed | 2W + 3S | 2/5 |
 | **A4** | Storage Dashboard | Page | ⬜ Pending | - | - |
 | **A5** | Usage Dashboard | Page | ⬜ Pending | - | - |
 | **B1** | Profile CRUD | Feature | ✅🔧 Fixed | 4W + 3S | 4/7 |
@@ -348,5 +348,50 @@ Suggested order (highest risk first):
 #### Impact Summary
 - **Files changed:** 2 (`home.ts`, `profile.service.ts`)
 - **Insertions:** 16
+
+---
+
+### A3 Settings Page & SettingsService — Audit (2026-02-12)
+
+**Scope:** `SettingsService` (459 LOC) + `settings.ts` (615 LOC)  
+**Files:** `settings.service.ts`, `settings.ts`  
+**Audit Type:** Full Audit  
+**Commit:** `fix(settings): audit A3`
+
+#### 🔴 Critical Issues
+- None
+
+#### 🟡 Warnings (2 found, 2 fixed)
+- W1: `importData()` accepted any values without validation (malformed JSON could set scale=9999 or invalid color names) → ✅ Added `sanitizeSettings()` validator
+- W2: `setScale()` had no bounds checking (could set fontSize=0px or 999px) → ✅ Added clamp 12–24px
+
+#### 🟢 Suggestions (3 found, 0 fixed — low risk)
+- S1: `validatePath()` only checks non-empty (backend validates via Rust) → ⬜ Defense in depth exists
+- S2: `exportData()` includes filesystem paths → ⬜ Acceptable for desktop app
+- S3: `importConfig()` has no separate confirm dialog → ⬜ File picker is implicit confirmation
+
+#### New Helper
+- `sanitizeSettings(settings)` — validates imported settings:
+  - Primary color must exist in `PRIMARY_COLORS` list
+  - Surface must exist in `SURFACE_PALETTES` list
+  - Scale clamped to 12–24px
+  - `intervalDays` clamped to 1–365
+  - Boolean fields forced to `boolean` type
+
+#### Verified Safe
+- localStorage persistence with proper merge on load ✅
+- Auto-save via `effect()` is safe and debounced by signal batching ✅
+- Settings page methods use proper try/catch/finally patterns ✅
+- Proxy health check and auto-backup already covered in other audits ✅
+
+#### Actions Taken
+| # | Issue | Fix | Status |
+|---|-------|-----|--------|
+| 1 | W1: importData no validation | Created `sanitizeSettings()` validator | ✅ |
+| 2 | W2: setScale no bounds | Added `Math.max(12, Math.min(24))` clamp | ✅ |
+
+#### Impact Summary
+- **Files changed:** 1 (`settings.service.ts`)
+- **Insertions:** 32, **Deletions:** 2
 
 
