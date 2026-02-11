@@ -143,7 +143,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | 6.6 | Profile Preview | Hover để xem preview/info nhanh | 🟢 Dễ | ✅ |
 | 6.7 | Compact Mode | UI thu gọn cho màn hình nhỏ | 🟢 Dễ | ✅ |
 | 6.8 | Custom Themes | Cho phép user tạo theme riêng | 🟡 TB | 📋 |
-| 6.9 | Zen Mode | Ẩn sidebar để focus — như Vision browser | 🟢 Dễ | 📋 |
+| 6.9 | Zen Mode | Ẩn sidebar để focus — như Vision browser | 🟢 Dễ | ✅ |
 
 ---
 
@@ -204,8 +204,8 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | 11.1 | Customizable Columns ⭐ | Gear icon → sidebar chỉnh: thêm/bớt/reorder cột | 🟡 TB | 📋 |
 | 11.2 | Column Sorting | Click header → sort A-Z / Z-A cho mỗi cột | 🟢 Dễ | 📋 |
 | 11.3 | Column Resize | Kéo resize chiều rộng cột | 🟢 Dễ | 📋 |
-| 11.4 | Last Changed Column | Hiện ngày thay đổi cuối (profile metadata) | 🟢 Dễ | 📋 |
-| 11.5 | Total Running Time Column | Hiện tổng thời gian chạy trong table | 🟢 Dễ | 📋 |
+| 11.4 | Last Changed Column | Hiện ngày thay đổi cuối (profile metadata) | 🟢 Dễ | ✅ |
+| 11.5 | Total Running Time Column | Hiện tổng thời gian chạy trong table | 🟢 Dễ | ✅ |
 
 ---
 
@@ -215,7 +215,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
-| 12.1 | Mass Tag Assign ⭐ | Chọn nhiều profiles → gán tag hàng loạt | 🟢 Dễ | 📋 |
+| 12.1 | Mass Tag Assign ⭐ | Chọn nhiều profiles → gán tag hàng loạt | 🟢 Dễ | ✅ |
 | 12.2 | Mass Proxy Change | Chọn nhiều profiles → đổi proxy hàng loạt | 🟡 TB | 📋 |
 | 12.3 | Mass Profile Transfer | Chuyển nhiều profiles giữa folders/teams | 🟢 Dễ | 📋 |
 | 12.4 | Mass Cookie Export | Export cookies từ nhiều profiles cùng lúc | 🟡 TB | 📋 |
