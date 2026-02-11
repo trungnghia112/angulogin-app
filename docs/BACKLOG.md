@@ -1,8 +1,8 @@
 # 📋 BACKLOG: Chrome Profile Manager
 
 **Ngày tạo:** 2026-01-23
-**Cập nhật lần cuối:** 2026-02-06
-**Tổng số tính năng:** 55+
+**Cập nhật lần cuối:** 2026-02-12
+**Tổng số tính năng:** 69+
 
 ---
 
@@ -12,7 +12,7 @@
 |------------|----------|
 | ✅ Done | 44 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 11 |
+| 📋 Backlog | 25 |
 | ❌ Cancelled | 10 |
 
 ---
@@ -84,6 +84,8 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | 2.3 | Color Coding | Gán màu cho profile/group để nhận diện nhanh | 🟢 Dễ | ✅ |
 | 2.4 | Favorites | Danh sách yêu thích riêng biệt | 🟢 Dễ | ✅ |
 | 2.5 | Folder Management | Group profiles into custom folders | 🟡 TB | 📋 |
+| 2.6 | Nested Folders | Folders lồng nhau (tree structure) thay vì flat groups | 🟡 TB | 📋 |
+| 2.7 | Folder Colors & Icons | Gán màu + icon cho folders để nhận diện nhanh | 🟢 Dễ | 📋 |
 
 ---
 
@@ -98,6 +100,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | 3.5 | Incognito Mode | Launch profile ở chế độ incognito | 🟢 Dễ | ✅ |
 | 3.6 | Custom Chrome Flags | Thêm flags như `--disable-gpu`, `--no-sandbox` | 🟢 Dễ | ✅ |
 | 3.7 | Window Position | Mở Chrome ở vị trí/kích thước cố định | 🟡 TB | ✅ |
+| 3.8 | Batch Profile Create | Tạo nhiều profile cùng lúc (bulk create) | 🟡 TB | 📋 |
 
 ---
 
@@ -140,6 +143,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | 6.6 | Profile Preview | Hover để xem preview/info nhanh | 🟢 Dễ | ✅ |
 | 6.7 | Compact Mode | UI thu gọn cho màn hình nhỏ | 🟢 Dễ | ✅ |
 | 6.8 | Custom Themes | Cho phép user tạo theme riêng | 🟡 TB | 📋 |
+| 6.9 | Zen Mode | Ẩn sidebar để focus — như Vision browser | 🟢 Dễ | 📋 |
 
 ---
 
@@ -191,6 +195,33 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 ---
 
+## 📐 NHÓM 11: Table UX Pro *(Benchmark: Vision)*
+
+> Nguồn: UI/UX Benchmark với browser.vision (2026-02-12)
+
+| # | Tính năng | Mô tả | Độ khó | Status |
+|---|-----------|-------|--------|--------|
+| 11.1 | Customizable Columns ⭐ | Gear icon → sidebar chỉnh: thêm/bớt/reorder cột | 🟡 TB | 📋 |
+| 11.2 | Column Sorting | Click header → sort A-Z / Z-A cho mỗi cột | 🟢 Dễ | 📋 |
+| 11.3 | Column Resize | Kéo resize chiều rộng cột | 🟢 Dễ | 📋 |
+| 11.4 | Last Changed Column | Hiện ngày thay đổi cuối (profile metadata) | 🟢 Dễ | 📋 |
+| 11.5 | Total Running Time Column | Hiện tổng thời gian chạy trong table | 🟢 Dễ | 📋 |
+
+---
+
+## ⚡ NHÓM 12: Mass Actions Pro *(Benchmark: Vision)*
+
+> Nguồn: UI/UX Benchmark với browser.vision (2026-02-12)
+
+| # | Tính năng | Mô tả | Độ khó | Status |
+|---|-----------|-------|--------|--------|
+| 12.1 | Mass Tag Assign ⭐ | Chọn nhiều profiles → gán tag hàng loạt | 🟢 Dễ | 📋 |
+| 12.2 | Mass Proxy Change | Chọn nhiều profiles → đổi proxy hàng loạt | 🟡 TB | 📋 |
+| 12.3 | Mass Profile Transfer | Chuyển nhiều profiles giữa folders/teams | 🟢 Dễ | 📋 |
+| 12.4 | Mass Cookie Export | Export cookies từ nhiều profiles cùng lúc | 🟡 TB | 📋 |
+
+---
+
 ## 🔮 TÍNH NĂNG TƯƠNG LAI (Nice to have)
 
 Những ý tưởng táo bạo hơn cho future versions:
@@ -202,6 +233,11 @@ Những ý tưởng táo bạo hơn cho future versions:
 - **Team Sharing** - Chia sẻ profile config (không data) với team
 - **Extension Sync** - Sync danh sách extensions giữa profiles
 - **Bookmark Sync** - Sync bookmarks giữa profiles chọn lọc
+- **Synchronizer** - Clone thao tác qua nhiều profile cùng lúc (như Vision)
+- **Cookie Robot** - Import/export cookie hàng loạt với multithreaded
+- **Data Caching** - Cache proxy traffic để tiết kiệm bandwidth
+- **2FA Built-in** - Generate, save, và enter 2FA codes trong profile
+- **Multi-language** - Hỗ trợ nhiều ngôn ngữ (EN, VI, CN...)
 
 ---
 
@@ -224,6 +260,7 @@ Những ý tưởng táo bạo hơn cho future versions:
 
 | Ngày | Thay đổi |
 |------|----------|
+| 2026-02-12 | Benchmark Vision: Thêm NHÓM 11 (Table UX Pro: 5 items), NHÓM 12 (Mass Actions Pro: 4 items). Thêm 2.6, 2.7, 3.8, 6.9. Thêm 5 future ideas từ Vision. Tổng +14 items mới |
 | 2026-02-06 | Sync docs: Auto-backup (5.4), Usage Heatmap (9.2), Proxy Health Check (4.3), Profile Health Check (9.3), Cleanup Suggestions (9.4) đã được implement |
 | 2026-02-04 | Hoàn thành: Window Position, Proxy Import/Export, Profile Export, Proxy Groups. Cancelled: Security (8.1, 8.3, 8.5), Automation (7.1-7.6) |
 | 2026-01-27 | Hoàn thành: Bulk Export, Drag & Drop, Smart Folders, Storage Dashboard, Profile Restore, Favorites, Custom Chrome Flags, Compact Mode |
