@@ -24,7 +24,7 @@
 | **B6** | Search & Filter | Feature | ⬜ Pending | - | - |
 | **B7** | Drag & Drop Reorder | Feature | ⬜ Pending | - | - |
 | **B8** | Bulk Operations | Feature | ⬜ Pending | - | - |
-| **B9** | Backup & Restore | Feature | ⬜ Pending | - | - |
+| **B9** | Backup & Restore | Feature | ✅🔧 Fixed | 3W + 3S | 3/6 |
 | **B10** | Import/Export Settings | Feature | ⬜ Pending | - | - |
 | **B11** | Clear Cookies/Cache | Feature | ⬜ Pending | - | - |
 | **B12** | Profile Health Check | Feature | ⬜ Pending | - | - |
@@ -309,5 +309,44 @@ Suggested order (highest risk first):
 #### Impact Summary
 - **Files changed:** 1 (`commands.rs`)
 - **Insertions:** 62, **Deletions:** 8
+
+---
+
+### B9 Backup & Restore — Audit (2026-02-12)
+
+**Scope:** Backup, restore, bulk export, auto backup across 4 files  
+**Files:** `home.ts`, `profile.service.ts`, `settings.ts`, (Rust already covered in E1-E14)  
+**Audit Type:** Full Audit  
+**Commit:** `fix(backup-restore): audit B9`
+
+#### 🔴 Critical Issues
+- None
+
+#### 🟡 Warnings (3 found, 3 fixed)
+- W1: `backupProfile` in home.ts had no loading guard → ✅ Added `backupInProgress` signal + early return
+- W2: `restoreFromBackup` in home.ts had no loading guard → ✅ Added `restoreInProgress` signal + try/finally
+- W3: `backupProfile`/`bulkExportProfiles`/`runManualBackup` bypass backend interface → ✅ Added comments, tracked as backlog
+
+#### 🟢 Suggestions (3 found, 0 fixed — low risk)
+- S1: home.ts restoreFromBackup hardcodes 'rename' conflict action (settings page offers all 3) → ⬜ UX choice
+- S2: backend interface should include backupProfile/bulkExportProfiles methods → ⬜ Architecture backlog
+- S3: Backup has no max file size check → ⬜ Desktop app, user-initiated
+
+#### Verified Safe (no changes needed)
+- Rust `backup_profile`/`restore_from_backup` — already have `validate_path_safety()` from E1-E14 ✅
+- restore_from_backup uses `enclosed_name()` for ZIP traversal protection ✅
+- settings.ts `restoreBackup()` has proper loading state (`restoring` signal) ✅
+- settings.ts `runManualBackup()` has proper loading state (`backingUp` signal) ✅
+
+#### Actions Taken
+| # | Issue | Fix | Status |
+|---|-------|-----|--------|
+| 1 | W1: backupProfile double-click | Added `backupInProgress` signal guard | ✅ |
+| 2 | W2: restoreFromBackup double-click | Added `restoreInProgress` signal guard | ✅ |
+| 3 | W3: backend interface bypass | Added comments documenting the bypass | ✅ |
+
+#### Impact Summary
+- **Files changed:** 2 (`home.ts`, `profile.service.ts`)
+- **Insertions:** 16
 
 
