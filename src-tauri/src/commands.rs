@@ -41,6 +41,38 @@ fn sanitize_profile_name(name: &str) -> Result<String, String> {
     Ok(trimmed)
 }
 
+/// Validate that a filesystem path is safe for destructive operations.
+/// Rejects path traversal, null bytes, symlinks, and too-shallow paths.
+fn validate_path_safety(path: &str, label: &str) -> Result<(), String> {
+    if path.trim().is_empty() {
+        return Err(format!("{} cannot be empty", label));
+    }
+
+    if path.contains('\0') {
+        return Err(format!("{} contains null bytes", label));
+    }
+
+    if path.contains("..") {
+        return Err(format!("{} contains path traversal (..)", label));
+    }
+
+    // Ensure minimum path depth (at least 3 components, e.g. /Users/x/something)
+    let p = std::path::Path::new(path);
+    let component_count = p.components().count();
+    if component_count < 3 {
+        return Err(format!(
+            "{} path is too shallow ({} components, min 3)", label, component_count
+        ));
+    }
+
+    // Reject symlinks for existing paths (prevents symlink attacks)
+    if p.exists() && p.symlink_metadata().map(|m| m.file_type().is_symlink()).unwrap_or(false) {
+        return Err(format!("{} is a symbolic link", label));
+    }
+
+    Ok(())
+}
+
 /// Check if a folder is a valid Chrome profile
 /// In strict mode: requires Preferences file or Default/Profile X naming
 /// In relaxed mode: accepts any directory (for managed profiles)
@@ -142,6 +174,8 @@ pub fn check_path_exists(path: String) -> bool {
 /// Ensure the profiles directory exists, create if not
 #[tauri::command]
 pub fn ensure_profiles_directory(path: String) -> Result<(), String> {
+    validate_path_safety(&path, "Profiles directory")?;
+
     let path_obj = std::path::Path::new(&path);
     
     if path_obj.exists() {
@@ -542,9 +576,14 @@ pub fn list_available_browsers() -> Vec<String> {
 /// Deletes cookies, cache, session storage, and local storage from a Chrome profile
 #[tauri::command]
 pub fn clear_profile_cookies(profile_path: String) -> Result<ClearDataResult, String> {
+    validate_path_safety(&profile_path, "Profile path")?;
+
     let path = std::path::Path::new(&profile_path);
     if !path.exists() {
         return Err("Profile does not exist".to_string());
+    }
+    if !path.is_dir() {
+        return Err("Profile path is not a directory".to_string());
     }
     
     // List of files/folders to delete for a complete cookie/cache clear
@@ -639,6 +678,9 @@ pub struct ClearDataResult {
 pub fn backup_profile(profile_path: String, backup_path: String) -> Result<String, String> {
     use std::io::{Read, Write};
     use zip::write::FileOptions;
+
+    validate_path_safety(&profile_path, "Profile path")?;
+    validate_path_safety(&backup_path, "Backup path")?;
     
     let source = std::path::Path::new(&profile_path);
     if !source.exists() {
@@ -704,6 +746,9 @@ pub fn restore_from_backup(
     conflict_action: String,  // "overwrite" | "rename" | "skip"
 ) -> Result<RestoreResult, String> {
     use std::io::Read;
+
+    validate_path_safety(&backup_path, "Backup path")?;
+    validate_path_safety(&target_base_path, "Target base path")?;
     
     let backup_file = std::path::Path::new(&backup_path);
     if !backup_file.exists() {
@@ -822,6 +867,8 @@ pub fn bulk_export_profiles(
     profile_paths: Vec<String>,
     destination_folder: String,
 ) -> Result<BulkExportResult, String> {
+    validate_path_safety(&destination_folder, "Destination folder")?;
+
     let dest = std::path::Path::new(&destination_folder);
     
     // Ensure destination folder exists
@@ -1116,14 +1163,21 @@ pub fn check_profile_health(profile_path: String) -> ProfileHealthResult {
     let history_file = path.join("History");
     if history_file.exists() {
         checked_files += 1;
-        // Check if file is readable and has valid SQLite header
-        match fs::read(&history_file) {
-            Ok(content) => {
-                // SQLite files start with "SQLite format 3\0"
-                if content.len() >= 16 {
-                    let header = String::from_utf8_lossy(&content[0..15]);
-                    if !header.starts_with("SQLite format 3") {
-                        issues.push("History file is corrupted (invalid SQLite header)".to_string());
+        // Only read first 16 bytes to check SQLite header (History can be 100MB+)
+        match fs::File::open(&history_file) {
+            Ok(mut f) => {
+                use std::io::Read;
+                let mut header_buf = [0u8; 16];
+                match f.read_exact(&mut header_buf) {
+                    Ok(_) => {
+                        // SQLite files start with "SQLite format 3\0"
+                        let header = String::from_utf8_lossy(&header_buf[0..15]);
+                        if !header.starts_with("SQLite format 3") {
+                            issues.push("History file is corrupted (invalid SQLite header)".to_string());
+                        }
+                    }
+                    Err(_) => {
+                        warnings.push("History file is too small or unreadable".to_string());
                     }
                 }
             }
