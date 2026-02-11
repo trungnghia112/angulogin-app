@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.0.0",
-        "updated_at": "2026-02-12T05:22:00+07:00"
+        "updated_at": "2026-02-12T06:47:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
@@ -260,6 +260,21 @@
             "name": "Proxy Rotation (4.2)",
             "status": "implemented",
             "description": "Auto-rotate proxies per_launch, hourly, or daily with proxyGroupId"
+        },
+        {
+            "name": "Zen Mode (6.9)",
+            "status": "implemented",
+            "description": "Hide MainNav + Sidebar for maximum workspace. Toggle via button or ⌘+\\. Persisted in localStorage. Floating exit button."
+        },
+        {
+            "name": "Mass Tag Assign (12.1)",
+            "status": "implemented",
+            "description": "Bulk tag assignment: select profiles → Tags button → choose/create tags → Apply. Merges with existing tags."
+        },
+        {
+            "name": "Table UX Columns (11.4+11.5)",
+            "status": "implemented",
+            "description": "Added Last Changed (relative date) and Running Time (formatted duration) columns to profile table view."
         }
     ],
     "api_endpoints": [
