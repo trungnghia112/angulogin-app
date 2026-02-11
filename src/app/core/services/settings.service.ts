@@ -204,11 +204,13 @@ export class SettingsService {
      * Update UI scale
      */
     setScale(scale: number): void {
-        document.documentElement.style.fontSize = `${scale}px`;
+        // Clamp to safe range to prevent UI DoS
+        const safeScale = Math.max(12, Math.min(24, Math.round(scale)));
+        document.documentElement.style.fontSize = `${safeScale}px`;
 
         this._settings.update(s => ({
             ...s,
-            appearance: { ...s.appearance, scale },
+            appearance: { ...s.appearance, scale: safeScale },
         }));
     }
 
@@ -325,6 +327,9 @@ export class SettingsService {
                 autoBackup: { ...DEFAULT_SETTINGS.autoBackup, ...data.settings.autoBackup }
             };
 
+            // Sanitize imported values to prevent invalid state
+            this.sanitizeSettings(restoredSettings);
+
             this._settings.set(restoredSettings);
             this.applyTheme(restoredSettings.appearance);
             this.applyDarkMode(restoredSettings.appearance.isDarkMode);
@@ -360,6 +365,31 @@ export class SettingsService {
     }
 
     // === Private Methods ===
+
+    /**
+     * Validate and sanitize settings values to prevent invalid state from imports
+     */
+    private sanitizeSettings(settings: AppSettings): void {
+        const validPrimary: string[] = PRIMARY_COLORS.map(c => c.name);
+        const validSurface: string[] = SURFACE_PALETTES.map(s => s.name);
+        const validScales: number[] = UI_SCALES.map(s => s.value);
+
+        // Appearance
+        if (!validPrimary.includes(settings.appearance.primaryColor)) {
+            settings.appearance.primaryColor = DEFAULT_SETTINGS.appearance.primaryColor;
+        }
+        if (!validSurface.includes(settings.appearance.surface)) {
+            settings.appearance.surface = DEFAULT_SETTINGS.appearance.surface;
+        }
+        if (!validScales.includes(settings.appearance.scale)) {
+            settings.appearance.scale = Math.max(12, Math.min(24, Math.round(settings.appearance.scale)));
+        }
+        settings.appearance.isDarkMode = !!settings.appearance.isDarkMode;
+
+        // Auto backup
+        settings.autoBackup.intervalDays = Math.max(1, Math.min(365, Math.round(settings.autoBackup.intervalDays || 7)));
+        settings.autoBackup.enabled = !!settings.autoBackup.enabled;
+    }
 
     private loadSettings(): AppSettings {
         try {
