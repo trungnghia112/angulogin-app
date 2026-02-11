@@ -290,6 +290,10 @@ export class Home implements OnInit, OnDestroy {
     protected readonly showDuplicateDialog = signal(false);
     protected readonly duplicateProfileName = signal('');
 
+    // Backup/Restore loading states
+    protected readonly backupInProgress = signal(false);
+    protected readonly restoreInProgress = signal(false);
+
     // Phase 3: Activity Log dialog
     protected readonly showActivityLog = signal(false);
     protected readonly activityLog = this.activityLogService;
@@ -1059,6 +1063,9 @@ export class Home implements OnInit, OnDestroy {
     // Backup Profile to ZIP
     async backupProfile(profile: Profile, event: Event): Promise<void> {
         event.stopPropagation();
+        if (this.backupInProgress()) return;
+
+        this.backupInProgress.set(true);
         try {
             const backupPath = await this.profileService.backupProfile(profile.path);
             const fileName = backupPath.split('/').pop() || 'backup.zip';
@@ -1079,6 +1086,8 @@ export class Home implements OnInit, OnDestroy {
                     detail: msg,
                 });
             }
+        } finally {
+            this.backupInProgress.set(false);
         }
     }
 
@@ -1294,6 +1303,8 @@ export class Home implements OnInit, OnDestroy {
 
     // ==== Feature 5.2: Restore from Backup ====
     async restoreFromBackup(): Promise<void> {
+        if (this.restoreInProgress()) return;
+
         try {
             // Dynamic import for dialog
             const { open } = await import('@tauri-apps/plugin-dialog');
@@ -1313,6 +1324,7 @@ export class Home implements OnInit, OnDestroy {
                 header: 'Restore Profile',
                 icon: 'pi pi-upload',
                 accept: async () => {
+                    this.restoreInProgress.set(true);
                     try {
                         const result = await this.profileService.restoreFromBackup(
                             filePath as string,
@@ -1345,6 +1357,8 @@ export class Home implements OnInit, OnDestroy {
                             summary: 'Restore Failed',
                             detail: e instanceof Error ? e.message : String(e),
                         });
+                    } finally {
+                        this.restoreInProgress.set(false);
                     }
                 },
             });

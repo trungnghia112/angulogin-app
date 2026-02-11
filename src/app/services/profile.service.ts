@@ -404,6 +404,7 @@ export class ProfileService {
         }
 
         try {
+            // NOTE: Bypasses backend interface (invoke directly). Tracked as backlog item.
             const result = await invoke<string>('backup_profile', {
                 profilePath,
                 backupPath: filePath
@@ -481,6 +482,7 @@ export class ProfileService {
         }
 
         try {
+            // NOTE: Bypasses backend interface (invoke directly). Tracked as backlog item.
             const result = await invoke<{ successful: string[]; failed: string[]; total_size: number }>(
                 'bulk_export_profiles',
                 { profilePaths, destinationFolder }
