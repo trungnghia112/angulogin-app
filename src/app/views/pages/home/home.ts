@@ -592,15 +592,6 @@ export class Home implements OnInit, OnDestroy {
                 }
             }
 
-            // DEBUG: trace proxy credentials (TEMP - remove after debugging)
-            console.warn('[ProxyAuth DEBUG]', {
-                proxy,
-                proxyId: profile.metadata?.proxyId,
-                proxyUsername,
-                proxyPassword: proxyPassword ? '***' : undefined,
-                metaProxyUsername: profile.metadata?.proxyUsername,
-                metaProxyPassword: profile.metadata?.proxyPassword ? '***' : undefined,
-            });
 
             await this.profileService.launchBrowser(
                 profile.path,

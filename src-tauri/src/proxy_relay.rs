@@ -64,9 +64,6 @@ struct RelayConfig {
 fn handle_client(client: TcpStream, config: &RelayConfig) -> Result<(), String> {
     client.set_nodelay(true).ok();
 
-    let peer = client.peer_addr().map(|a| a.to_string()).unwrap_or_default();
-    eprintln!("[ProxyRelay] New connection from {}", peer);
-
     let mut reader = BufReader::new(client.try_clone()
         .map_err(|e| format!("Clone error: {}", e))?);
     let mut writer = client;
@@ -77,11 +74,8 @@ fn handle_client(client: TcpStream, config: &RelayConfig) -> Result<(), String> 
         .map_err(|e| format!("Read error: {}", e))?;
 
     if first_line.is_empty() {
-        eprintln!("[ProxyRelay] Empty request, closing");
         return Ok(());
     }
-
-    eprintln!("[ProxyRelay] Request: {}", first_line.trim());
 
     // Read remaining headers
     let mut headers = Vec::new();
@@ -98,14 +92,14 @@ fn handle_client(client: TcpStream, config: &RelayConfig) -> Result<(), String> 
         }
     }
 
-    eprintln!("[ProxyRelay] Connecting to upstream: {}", config.upstream_addr);
+
 
     // Connect to upstream proxy
     let mut upstream = TcpStream::connect(&config.upstream_addr)
         .map_err(|e| format!("Upstream connect error ({}): {}", config.upstream_addr, e))?;
     upstream.set_nodelay(true).ok();
 
-    eprintln!("[ProxyRelay] Connected to upstream OK");
+
 
     // Send first line
     upstream.write_all(first_line.as_bytes())
@@ -129,7 +123,7 @@ fn handle_client(client: TcpStream, config: &RelayConfig) -> Result<(), String> 
     upstream.flush()
         .map_err(|e| format!("Upstream flush error: {}", e))?;
 
-    eprintln!("[ProxyRelay] Sent request + auth to upstream");
+
 
     // Check if this is a CONNECT request (HTTPS tunneling)
     let is_connect = first_line.to_uppercase().starts_with("CONNECT ");
@@ -143,8 +137,6 @@ fn handle_client(client: TcpStream, config: &RelayConfig) -> Result<(), String> 
         let mut status_line = String::new();
         upstream_reader.read_line(&mut status_line)
             .map_err(|e| format!("Upstream status read error: {}", e))?;
-
-        eprintln!("[ProxyRelay] Upstream CONNECT response: {}", status_line.trim());
 
         // Check if auth failed (407)
         if status_line.contains("407") {
@@ -171,13 +163,12 @@ fn handle_client(client: TcpStream, config: &RelayConfig) -> Result<(), String> 
 
         // Only pipe if tunnel was established (200)
         if status_line.contains("200") {
-            eprintln!("[ProxyRelay] CONNECT tunnel established, starting bidirectional pipe");
             // Bidirectional pipe: client <-> upstream
             let upstream_write = upstream;
             let client_read = reader.into_inner();
             pipe_bidirectional(client_read, writer, upstream_reader.into_inner(), upstream_write);
         } else {
-            eprintln!("[ProxyRelay] CONNECT failed ({}), not piping", status_line.trim());
+            eprintln!("[ProxyRelay] CONNECT failed: {}", status_line.trim());
         }
     } else {
         // For HTTP: there might be a request body (Content-Length based)
@@ -206,10 +197,8 @@ fn handle_client(client: TcpStream, config: &RelayConfig) -> Result<(), String> 
         upstream_reader.read_line(&mut resp_status)
             .map_err(|e| format!("Read response status error: {}", e))?;
 
-        eprintln!("[ProxyRelay] HTTP response: {}", resp_status.trim());
-
         if resp_status.contains("407") {
-            eprintln!("[ProxyRelay] ERROR: Upstream returned 407 for HTTP request!");
+            eprintln!("[ProxyRelay] ERROR: 407 Proxy Auth Required for HTTP request");
         }
 
         // Forward status line to client
@@ -231,7 +220,6 @@ fn handle_client(client: TcpStream, config: &RelayConfig) -> Result<(), String> 
         }
     }
 
-    eprintln!("[ProxyRelay] Connection from {} completed", peer);
     Ok(())
 }
 

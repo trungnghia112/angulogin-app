@@ -372,9 +372,6 @@ pub fn is_chrome_running_for_profile(profile_path: String) -> bool {
 
 #[tauri::command]
 pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>, custom_flags: Option<String>, proxy_username: Option<String>, proxy_password: Option<String>) -> Result<(), String> {
-    // DEBUG: trace proxy auth
-    eprintln!("[ProxyAuth DEBUG] proxy_server={:?} proxy_username={:?} proxy_password={:?}",
-        proxy_server, proxy_username, proxy_password.as_ref().map(|_| "***"));
     let path = std::path::Path::new(&profile_path);
     
     // Detect if this is a native Chrome profile (parent has "Local State" file)
