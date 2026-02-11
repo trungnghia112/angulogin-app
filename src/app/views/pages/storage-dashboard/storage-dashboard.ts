@@ -147,12 +147,28 @@ export class StorageDashboard implements OnInit, OnDestroy {
         };
     });
 
+    // Loading state for sizes
+    readonly sizesLoading = signal(false);
+
     ngOnInit(): void {
         this.isDarkMode.set(document.documentElement.classList.contains('dark'));
         this.observer = new MutationObserver(() => {
             this.isDarkMode.set(document.documentElement.classList.contains('dark'));
         });
         this.observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+        // Load profile sizes (not included in scanProfilesWithMetadata for perf)
+        this.loadSizes();
+    }
+
+    private async loadSizes(): Promise<void> {
+        if (this.profiles().length === 0) return;
+        this.sizesLoading.set(true);
+        try {
+            await this.profileService.loadProfileSizes();
+        } finally {
+            this.sizesLoading.set(false);
+        }
     }
 
     ngOnDestroy(): void {

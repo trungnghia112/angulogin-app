@@ -24,7 +24,11 @@
                 </div>
                 <div>
                     <p class="text-sm text-muted-color">Total Storage</p>
+                    @if (sizesLoading()) {
+                    <p class="text-2xl font-bold text-color"><i class="pi pi-spin pi-spinner"></i></p>
+                    } @else {
                     <p class="text-2xl font-bold text-color">{{ formatSize(totalSize()) }}</p>
+                    }
                 </div>
             </div>
 
