@@ -404,6 +404,35 @@ pub fn is_chrome_running_for_profile(profile_path: String) -> bool {
     }
 }
 
+/// PERF: Batch check running status for multiple profiles in a single `ps aux` call.
+/// Returns a map of profile_path -> is_running. This replaces N individual pgrep calls
+/// with 1 ps call, reducing process spawns from O(n) to O(1).
+#[tauri::command]
+pub fn batch_check_running(profile_paths: Vec<String>) -> std::collections::HashMap<String, bool> {
+    let mut results: std::collections::HashMap<String, bool> = profile_paths
+        .iter()
+        .map(|p| (p.clone(), false))
+        .collect();
+
+    // Single process spawn: get all running processes
+    let output = Command::new("ps")
+        .args(["aux"])
+        .output();
+
+    if let Ok(out) = output {
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        // Check each profile path against the full process list
+        for path in &profile_paths {
+            let search = format!("--user-data-dir={}", path);
+            if stdout.contains(&search) {
+                results.insert(path.clone(), true);
+            }
+        }
+    }
+
+    results
+}
+
 #[tauri::command]
 pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>, custom_flags: Option<String>, proxy_username: Option<String>, proxy_password: Option<String>) -> Result<(), String> {
     let path = std::path::Path::new(&profile_path);

@@ -54,6 +54,15 @@ export class MockProfileBackend implements ProfileBackend {
         return profile?.isRunning || false;
     }
 
+    async batchCheckRunning(profilePaths: string[]): Promise<Record<string, boolean>> {
+        const result: Record<string, boolean> = {};
+        for (const p of profilePaths) {
+            const profile = getMockProfileByPath(p);
+            result[p] = profile?.isRunning || false;
+        }
+        return result;
+    }
+
     async launchBrowser(options: LaunchBrowserOptions): Promise<void> {
         debugLog('Mock launchBrowser:', options);
     }
@@ -131,6 +140,17 @@ export class TauriProfileBackend implements ProfileBackend {
             return await invoke<boolean>('is_chrome_running_for_profile', { profilePath });
         } catch {
             return false;
+        }
+    }
+
+    async batchCheckRunning(profilePaths: string[]): Promise<Record<string, boolean>> {
+        try {
+            return await invoke<Record<string, boolean>>('batch_check_running', { profilePaths });
+        } catch {
+            // Fallback: all not running
+            const result: Record<string, boolean> = {};
+            for (const p of profilePaths) result[p] = false;
+            return result;
         }
     }
 

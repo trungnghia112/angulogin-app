@@ -28,6 +28,7 @@ pub fn run() {
             commands::get_profile_metadata,
             commands::save_profile_metadata,
             commands::is_chrome_running_for_profile,
+            commands::batch_check_running,
             commands::launch_browser,
             commands::get_profile_size,
             commands::list_available_browsers,

@@ -50,6 +50,7 @@ export interface ProfileBackend {
     getProfileMetadata(profilePath: string): Promise<ProfileMetadata>;
     saveProfileMetadata(profilePath: string, metadata: Partial<ProfileMetadata>): Promise<void>;
     isProfileRunning(profilePath: string): Promise<boolean>;
+    batchCheckRunning(profilePaths: string[]): Promise<Record<string, boolean>>;
     launchBrowser(options: LaunchBrowserOptions): Promise<void>;
     getProfileSize(profilePath: string): Promise<number>;
     listAvailableBrowsers(): Promise<string[]>;

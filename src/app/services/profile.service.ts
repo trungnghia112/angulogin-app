@@ -29,18 +29,27 @@ export class ProfileService {
 
         try {
             const names = await this.backend.scanProfiles(path);
+            const allPaths = names.map(name => `${path}/${name}`);
 
-            // Build profiles with metadata and running status
-            const profiles: Profile[] = await Promise.all(
-                names.map(async (name: string) => {
-                    const profilePath = `${path}/${name}`;
-                    const [metadata, isRunning] = await Promise.all([
-                        this.getProfileMetadata(profilePath),
-                        this.isProfileRunning(profilePath),
-                    ]);
-                    return { name, path: profilePath, metadata, isRunning };
-                })
-            );
+            // PERF: Batch check running status — 1 ps call instead of N pgrep calls
+            const runningMap = await this.backend.batchCheckRunning(allPaths);
+
+            // PERF: Load metadata in chunks of 10 to prevent IPC flooding
+            const CHUNK_SIZE = 10;
+            const profiles: Profile[] = [];
+
+            for (let i = 0; i < names.length; i += CHUNK_SIZE) {
+                const chunk = names.slice(i, i + CHUNK_SIZE);
+                const chunkProfiles = await Promise.all(
+                    chunk.map(async (name: string) => {
+                        const profilePath = `${path}/${name}`;
+                        const metadata = await this.getProfileMetadata(profilePath);
+                        const isRunning = runningMap[profilePath] || false;
+                        return { name, path: profilePath, metadata, isRunning };
+                    })
+                );
+                profiles.push(...chunkProfiles);
+            }
 
             this.profiles.set(profiles);
             return profiles;
@@ -80,20 +89,17 @@ export class ProfileService {
         try {
             const newPath = await this.backend.createProfile(basePath, name);
 
-            // Mock mode adjustment to simulate scan update if backend doesn't trigger it
-            if (!isTauriAvailable()) {
-                const newProfile: Profile = {
-                    id: crypto.randomUUID(), // FIX: Secure ID
-                    name,
-                    path: newPath,
-                    metadata: { emoji: null, notes: null, group: null, shortcut: null, browser: null },
-                    isRunning: false,
-                    size: 0,
-                };
-                this.profiles.update(profiles => [...profiles, newProfile]);
-            } else {
-                await this.scanProfiles(basePath);
-            }
+            // PERF: Incremental add — don't rescan all profiles
+            const metadata = await this.getProfileMetadata(newPath);
+            const newProfile: Profile = {
+                name,
+                path: newPath,
+                metadata,
+                isRunning: false,
+                size: 0,
+            };
+            this.profiles.update(profiles => [...profiles, newProfile]);
+
             return newPath;
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
@@ -105,11 +111,8 @@ export class ProfileService {
     async deleteProfile(profilePath: string, basePath: string): Promise<void> {
         try {
             await this.backend.deleteProfile(profilePath);
-            if (!isTauriAvailable()) {
-                this.profiles.update(profiles => profiles.filter(p => p.path !== profilePath));
-            } else {
-                await this.scanProfiles(basePath);
-            }
+            // PERF: Incremental remove — don't rescan all profiles
+            this.profiles.update(profiles => profiles.filter(p => p.path !== profilePath));
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
             this.error.set(errorMsg);
@@ -126,13 +129,15 @@ export class ProfileService {
         try {
             const newPath = await this.backend.renameProfile(oldPath, newName);
 
-            if (!isTauriAvailable()) {
-                this.profiles.update(profiles =>
-                    profiles.map(p => p.path === oldPath ? { ...p, name: newName, path: newPath } : p)
-                );
-            } else {
-                await this.scanProfiles(basePath);
-            }
+            // PERF: Incremental update — don't rescan all profiles
+            const metadata = await this.getProfileMetadata(newPath);
+            this.profiles.update(profiles =>
+                profiles.map(p => p.path === oldPath
+                    ? { ...p, name: newName, path: newPath, metadata }
+                    : p
+                )
+            );
+
             return newPath;
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
@@ -213,28 +218,14 @@ export class ProfileService {
         const current = this.profiles();
         if (current.length === 0) return;
 
-        // PERF FIX: Process in chunks of 10
-        const CHUNK_SIZE = 10;
+        // PERF: 1 batch call instead of N individual pgrep spawns
+        const allPaths = current.map(p => p.path);
+        const runningMap = await this.backend.batchCheckRunning(allPaths);
+
         let hasChanges = false;
-        const updatedMap = new Map<string, boolean>();
-
-        for (let i = 0; i < current.length; i += CHUNK_SIZE) {
-            const chunk = current.slice(i, i + CHUNK_SIZE);
-            const results = await Promise.all(
-                chunk.map(async (p) => {
-                    const isRunning = await this.isProfileRunning(p.path);
-                    return { path: p.path, isRunning };
-                })
-            );
-
-            for (const r of results) {
-                updatedMap.set(r.path, r.isRunning);
-            }
-        }
-
         const updated = current.map((p) => {
-            const newRunning = updatedMap.get(p.path);
-            if (newRunning !== undefined && p.isRunning !== newRunning) {
+            const newRunning = runningMap[p.path] || false;
+            if (p.isRunning !== newRunning) {
                 hasChanges = true;
                 return { ...p, isRunning: newRunning };
             }
@@ -360,22 +351,18 @@ export class ProfileService {
         try {
             const newPath = await this.backend.duplicateProfile(sourcePath, newName);
 
-            if (!isTauriAvailable()) {
-                const sourceProfile = this.profiles().find(p => p.path === sourcePath);
-                if (sourceProfile) {
-                    const newProfile: Profile = {
-                        id: crypto.randomUUID(),
-                        name: newName,
-                        path: newPath,
-                        metadata: sourceProfile.metadata ? { ...sourceProfile.metadata } : undefined,
-                        isRunning: false,
-                        size: sourceProfile.size,
-                    };
-                    this.profiles.update(profiles => [...profiles, newProfile]);
-                }
-            } else {
-                await this.scanProfiles(basePath);
-            }
+            // PERF: Incremental add — don't rescan all profiles
+            const sourceProfile = this.profiles().find(p => p.path === sourcePath);
+            const metadata = await this.getProfileMetadata(newPath);
+            const newProfile: Profile = {
+                name: newName,
+                path: newPath,
+                metadata,
+                isRunning: false,
+                size: sourceProfile?.size,
+            };
+            this.profiles.update(profiles => [...profiles, newProfile]);
+
             return newPath;
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
