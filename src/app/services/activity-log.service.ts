@@ -39,7 +39,10 @@ export class ActivityLogService {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 const entries = JSON.parse(stored) as ActivityEntry[];
-                this._entries.set(entries);
+                // Cap to MAX_ENTRIES on load to prevent unbounded growth
+                this._entries.set(
+                    Array.isArray(entries) ? entries.slice(0, MAX_ENTRIES) : []
+                );
             }
         } catch (e) {
             console.error('Failed to load activity log:', e);

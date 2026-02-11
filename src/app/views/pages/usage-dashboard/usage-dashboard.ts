@@ -292,16 +292,26 @@ export class UsageDashboard {
         const profiles = this.profiles();
         const activity = this.activityLog();
 
+        // CSV-safe: escape formula injection chars and quote fields
+        const csvSafe = (val: string): string => {
+            let s = val.replace(/"/g, '""');
+            // Prevent formula injection (=, +, -, @, \t, \r)
+            if (/^[=+\-@\t\r]/.test(s)) {
+                s = "'" + s;
+            }
+            return `"${s}"`;
+        };
+
         // Create CSV content
         let csv = 'Profile Usage Statistics\n';
         csv += 'Profile Name,Launch Count,Total Usage (minutes),Last Opened\n';
 
         for (const p of profiles) {
-            const name = p.name.replace(/,/g, ' ');
+            const name = csvSafe(p.name);
             const launches = p.metadata?.launchCount || 0;
             const usage = p.metadata?.totalUsageMinutes || 0;
             const lastOpened = p.metadata?.lastOpened || 'Never';
-            csv += `${name},${launches},${usage},${lastOpened}\n`;
+            csv += `${name},${launches},${usage},${csvSafe(lastOpened)}\n`;
         }
 
         csv += '\nActivity Log\n';
@@ -310,10 +320,10 @@ export class UsageDashboard {
         for (const a of activity) {
             const timestamp = new Date(a.timestamp).toISOString();
             const type = a.type;
-            const name = a.profileName.replace(/,/g, ' ');
+            const name = csvSafe(a.profileName);
             const browser = a.browser || '';
-            const details = (a.details || '').replace(/,/g, ' ');
-            csv += `${timestamp},${type},${name},${browser},${details}\n`;
+            const details = csvSafe(a.details || '');
+            csv += `${csvSafe(timestamp)},${csvSafe(type)},${name},${csvSafe(browser)},${details}\n`;
         }
 
         // Download
