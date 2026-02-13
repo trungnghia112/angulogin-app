@@ -67,7 +67,7 @@ export class Extensions {
                 try {
                     const browser = profile.metadata?.browser || 'chrome';
                     // Launch with the extension URL
-                    await this.profileService.launchBrowser(profile.path, browser, url);
+                    await this.profileService.launchBrowser({ profilePath: profile.path, browser, url });
                     successCount++;
 
                     // Small delay between launches (300ms)

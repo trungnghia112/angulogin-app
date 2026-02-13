@@ -1,12 +1,11 @@
 import { Injectable, signal } from '@angular/core';
-import { invoke } from '@tauri-apps/api/core';
 import { save } from '@tauri-apps/plugin-dialog';
 import { Profile, ProfileMetadata } from '../models/profile.model';
 import { isTauriAvailable } from '../core/utils/platform.util';
 import { debugLog } from '../core/utils/logger.util';
 import { validateProfileName } from '../core/utils/validation.util';
 import { MockProfileBackend, TauriProfileBackend } from './profile.backend';
-import { ProfileBackend } from './profile.backend.interface';
+import { LaunchBrowserOptions, ProfileBackend } from './profile.backend.interface';
 
 @Injectable({
     providedIn: 'root',
@@ -224,44 +223,28 @@ export class ProfileService {
         console.timeEnd(`[PERF] refreshProfileStatus (${current.length} profiles)`);
     }
 
-    async launchBrowser(
-        profilePath: string,
-        browser: string,
-        url?: string,
-        incognito?: boolean,
-        proxyServer?: string,
-        customFlags?: string,
-        windowPosition?: { x?: number | null; y?: number | null; width?: number | null; height?: number | null; maximized?: boolean } | null,
-        disableExtensions?: boolean,
-        proxyUsername?: string,
-        proxyPassword?: string
-    ): Promise<void> {
+    async launchBrowser(options: LaunchBrowserOptions & { disableExtensions?: boolean }): Promise<void> {
         try {
             // Feature 3.4: Build flags with --disable-extensions if requested
-            let finalFlags = customFlags || '';
-            if (disableExtensions) {
+            let finalFlags = options.customFlags || '';
+            if (options.disableExtensions) {
                 finalFlags = finalFlags ? `${finalFlags} --disable-extensions` : '--disable-extensions';
             }
 
             await this.backend.launchBrowser({
-                profilePath,
-                browser,
-                url: url || null,
-                incognito: incognito || null,
-                proxyServer: proxyServer || null,
-                proxyUsername: proxyUsername || null,
-                proxyPassword: proxyPassword || null,
+                profilePath: options.profilePath,
+                browser: options.browser,
+                url: options.url || null,
+                incognito: options.incognito || null,
+                proxyServer: options.proxyServer || null,
+                proxyUsername: options.proxyUsername || null,
+                proxyPassword: options.proxyPassword || null,
                 customFlags: finalFlags || null,
-                windowX: windowPosition?.x ?? null,
-                windowY: windowPosition?.y ?? null,
-                windowWidth: windowPosition?.width ?? null,
-                windowHeight: windowPosition?.height ?? null,
-                windowMaximized: windowPosition?.maximized ?? null,
             });
 
             if (!isTauriAvailable()) {
                 this.profiles.update(profiles =>
-                    profiles.map(p => p.path === profilePath ? { ...p, isRunning: true } : p)
+                    profiles.map(p => p.path === options.profilePath ? { ...p, isRunning: true } : p)
                 );
             }
         } catch (e) {
@@ -380,12 +363,7 @@ export class ProfileService {
         }
 
         try {
-            // NOTE: Bypasses backend interface (invoke directly). Tracked as backlog item.
-            const result = await invoke<string>('backup_profile', {
-                profilePath,
-                backupPath: filePath
-            });
-            return result;
+            return await this.backend.backupProfile(profilePath, filePath);
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
             this.error.set(errorMsg);
@@ -458,16 +436,7 @@ export class ProfileService {
         }
 
         try {
-            // NOTE: Bypasses backend interface (invoke directly). Tracked as backlog item.
-            const result = await invoke<{ successful: string[]; failed: string[]; total_size: number }>(
-                'bulk_export_profiles',
-                { profilePaths, destinationFolder }
-            );
-            return {
-                successful: result.successful,
-                failed: result.failed,
-                totalSize: result.total_size,
-            };
+            return await this.backend.bulkExportProfiles(profilePaths, destinationFolder as string);
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
             this.error.set(errorMsg);

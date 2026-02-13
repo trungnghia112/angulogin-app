@@ -118,7 +118,7 @@ export class CommandPalette {
         this.close();
         const browser = profile.metadata?.browser || 'chrome';
         const url = profile.metadata?.launchUrl || undefined;
-        await this.profileService.launchBrowser(profile.path, browser, url);
+        await this.profileService.launchBrowser({ profilePath: profile.path, browser, url });
     }
 
     getProfileDisplay(profile: Profile): string {

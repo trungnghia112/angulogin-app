@@ -80,20 +80,24 @@
         @if (viewMode() === 'table') {
         <!-- Profiles Table with Virtual Scrolling -->
         <p-table id="home-profiles-table" [value]="paginatedProfiles()" [(selection)]="selectedProfiles"
-            (selectionChange)="onSelectionChange($event)" dataKey="path" [scrollable]="true" scrollHeight="flex">
+            (selectionChange)="onSelectionChange($event)" dataKey="path" [scrollable]="true" scrollHeight="flex"
+            [resizableColumns]="true" columnResizeMode="expand" [sortField]="sortBy()"
+            [sortOrder]="sortOrder() === 'asc' ? 1 : -1" (onSort)="onTableSort($event)">
 
             <!-- Header -->
             <ng-template pTemplate="header">
                 <tr id="home-profiles-table-header">
                     <th style="width: 3rem"><p-tableHeaderCheckbox /></th>
                     <th style="width: 3rem"><i class="pi pi-star"></i></th>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th>Proxy</th>
-                    <th>Tags</th>
-                    <th>Notes</th>
-                    <th>Last Changed</th>
-                    <th>Running Time</th>
+                    <th pResizableColumn pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+                    <th pResizableColumn>Status</th>
+                    <th pResizableColumn pSortableColumn="metadata.proxy">Proxy <p-sortIcon field="metadata.proxy" />
+                    </th>
+                    <th pResizableColumn>Tags</th>
+                    <th pResizableColumn>Notes</th>
+                    <th pResizableColumn pSortableColumn="metadata.lastOpened">Last Changed <p-sortIcon
+                            field="metadata.lastOpened" /></th>
+                    <th pResizableColumn>Running Time</th>
                     <th style="width: 3rem"><i class="pi pi-cog"></i></th>
                 </tr>
             </ng-template>
@@ -571,6 +575,43 @@
                 <input pInputText id="folderName" [(ngModel)]="newFolderName" (keydown.enter)="createFolder()"
                     autofocus />
             </div>
+            <!-- Icon Selector -->
+            <div class="flex flex-col gap-2">
+                <label class="font-medium">Icon</label>
+                <div class="flex flex-wrap gap-2">
+                    @for (icon of folderIcons; track icon) {
+                    <button type="button"
+                        class="w-8 h-8 rounded-md border flex items-center justify-center transition-all cursor-pointer"
+                        [class]="newFolderIcon() === icon
+                            ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/30'
+                            : 'border-surface-200 dark:border-surface-700 text-muted-color hover:border-primary/50'"
+                        (click)="newFolderIcon.set(icon)" [pTooltip]="icon">
+                        <i [class]="'pi ' + icon + ' text-sm'"></i>
+                    </button>
+                    }
+                </div>
+            </div>
+            <!-- Color Selector -->
+            <div class="flex flex-col gap-2">
+                <label class="font-medium">Color</label>
+                <div class="flex flex-wrap gap-2">
+                    @for (color of folderColors; track color) {
+                    <button type="button" class="w-7 h-7 rounded-full border-2 transition-all cursor-pointer" [class]="newFolderColor() === color
+                            ? 'ring-2 ring-offset-2 ring-offset-surface-0 dark:ring-offset-surface-900 scale-110'
+                            : 'hover:scale-110'" [style.background-color]="color"
+                        [style.border-color]="newFolderColor() === color ? color : 'transparent'"
+                        (click)="newFolderColor.set(color)">
+                    </button>
+                    }
+                    <!-- No color option -->
+                    <button type="button"
+                        class="w-7 h-7 rounded-full border-2 border-surface-300 dark:border-surface-600 transition-all cursor-pointer flex items-center justify-center"
+                        [class]="!newFolderColor() ? 'ring-2 ring-offset-2 ring-primary' : 'hover:scale-110'"
+                        (click)="newFolderColor.set('')" pTooltip="No color">
+                        <i class="pi pi-ban text-xs text-muted-color"></i>
+                    </button>
+                </div>
+            </div>
         </div>
         <ng-template pTemplate="footer">
             <p-button label="Cancel" (click)="showCreateFolderDialog.set(false)" [text]="true" severity="secondary" />
@@ -597,6 +638,35 @@
                     <div class="flex items-center gap-2 flex-1 mr-2">
                         <input pInputText [(ngModel)]="editFolderName" class="w-full p-inputtext-sm"
                             (keydown.enter)="saveEditFolder()" />
+                    </div>
+                    <!-- Inline icon/color editor -->
+                    <div class="flex items-center gap-2 flex-1 mr-2 mt-2">
+                        <div class="flex flex-wrap gap-1">
+                            @for (icon of folderIcons; track icon) {
+                            <button type="button"
+                                class="w-6 h-6 rounded flex items-center justify-center transition-all cursor-pointer text-xs"
+                                [class]="editFolderIcon() === icon
+                                    ? 'bg-primary/10 text-primary ring-1 ring-primary/50'
+                                    : 'text-muted-color hover:text-color'" (click)="editFolderIcon.set(icon)">
+                                <i [class]="'pi ' + icon"></i>
+                            </button>
+                            }
+                        </div>
+                        <div class="border-l border-surface-200 dark:border-surface-700 h-5 mx-1"></div>
+                        <div class="flex flex-wrap gap-1">
+                            @for (color of folderColors; track color) {
+                            <button type="button" class="w-5 h-5 rounded-full transition-all cursor-pointer"
+                                [class]="editFolderColor() === color ? 'ring-2 ring-offset-1 scale-110' : 'hover:scale-110'"
+                                [style.background-color]="color" (click)="editFolderColor.set(color)">
+                            </button>
+                            }
+                            <button type="button"
+                                class="w-5 h-5 rounded-full border border-surface-300 dark:border-surface-600 flex items-center justify-center cursor-pointer"
+                                [class]="!editFolderColor() ? 'ring-2 ring-offset-1 ring-primary' : ''"
+                                (click)="editFolderColor.set('')">
+                                <i class="pi pi-ban text-[8px] text-muted-color"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="flex items-center gap-1">
                         <p-button icon="pi pi-check" [text]="true" [rounded]="true" severity="success"

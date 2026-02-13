@@ -1,6 +1,7 @@
 import { Profile, ProfileMetadata } from '../models/profile.model';
 
 /** Options for launching a browser with a specific profile */
+/** Options for launching a browser with a specific profile */
 export interface LaunchBrowserOptions {
     profilePath: string;
     browser: string;
@@ -10,11 +11,6 @@ export interface LaunchBrowserOptions {
     proxyUsername?: string | null;
     proxyPassword?: string | null;
     customFlags?: string | null;
-    windowX?: number | null;
-    windowY?: number | null;
-    windowWidth?: number | null;
-    windowHeight?: number | null;
-    windowMaximized?: boolean | null;
 }
 
 /** Result from clearing profile cookies and cache */
@@ -48,6 +44,13 @@ export interface RawProfileInfo {
     is_running: boolean;
 }
 
+/** Result from a bulk export operation */
+export interface BulkExportResult {
+    successful: string[];
+    failed: string[];
+    totalSize: number;
+}
+
 export interface ProfileBackend {
     scanProfiles(path: string): Promise<string[]>;
     scanProfilesWithMetadata(path: string): Promise<Profile[]>;
@@ -67,4 +70,6 @@ export interface ProfileBackend {
     duplicateProfile(sourcePath: string, newName: string): Promise<string>;
     checkProfileHealth(profilePath: string): Promise<ProfileHealthCheckResult>;
     restoreFromBackup(backupPath: string, targetBasePath: string, conflictAction: string): Promise<RestoreBackupResult>;
+    backupProfile(profilePath: string, backupPath: string): Promise<string>;
+    bulkExportProfiles(profilePaths: string[], destinationFolder: string): Promise<BulkExportResult>;
 }

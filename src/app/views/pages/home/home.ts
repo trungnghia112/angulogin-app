@@ -565,7 +565,6 @@ export class Home implements OnInit, OnDestroy {
             let proxyUsername: string | undefined;
             let proxyPassword: string | undefined;
             const customFlags = profile.metadata?.customFlags || undefined;
-            const windowPosition = profile.metadata?.windowPosition || undefined;
             const disableExtensions = profile.metadata?.disableExtensions || false;
 
             // Look up proxy credentials from saved proxy or metadata
@@ -608,18 +607,17 @@ export class Home implements OnInit, OnDestroy {
             }
 
 
-            await this.profileService.launchBrowser(
-                profile.path,
+            await this.profileService.launchBrowser({
+                profilePath: profile.path,
                 browser,
                 url,
-                false,
-                proxy,
+                incognito: false,
+                proxyServer: proxy,
                 customFlags,
-                windowPosition,
                 disableExtensions,
                 proxyUsername,
-                proxyPassword
-            );
+                proxyPassword,
+            });
 
             // Phase 3: Log activity
             this.activityLogService.logLaunch(profile.name, profile.path, browser);
@@ -680,6 +678,16 @@ export class Home implements OnInit, OnDestroy {
             if (value !== 'custom') {
                 this.sortOrder.set('asc');
             }
+        }
+    }
+
+    // Handle PrimeNG table sort events
+    onTableSort(event: { field: string; order: number }): void {
+        const field = event.field;
+        if (field === 'name' || field === 'metadata.lastOpened') {
+            const mapped = field === 'name' ? 'name' : 'lastOpened';
+            this.sortBy.set(mapped as 'name' | 'size' | 'lastOpened' | 'custom');
+            this.sortOrder.set(event.order === 1 ? 'asc' : 'desc');
         }
     }
 
@@ -830,12 +838,33 @@ export class Home implements OnInit, OnDestroy {
         this.first.set(0); // Reset pagination
     }
 
+    // Folder icon/color options
+    protected readonly folderIcons = [
+        'pi-folder', 'pi-folder-open', 'pi-briefcase', 'pi-heart',
+        'pi-star', 'pi-bolt', 'pi-bookmark', 'pi-box',
+        'pi-building', 'pi-car', 'pi-chart-bar', 'pi-code',
+        'pi-cog', 'pi-crown', 'pi-database', 'pi-desktop',
+        'pi-envelope', 'pi-flag', 'pi-globe', 'pi-home',
+        'pi-lock', 'pi-map-marker', 'pi-money-bill', 'pi-palette',
+        'pi-phone', 'pi-shield', 'pi-shopping-cart', 'pi-tag',
+        'pi-truck', 'pi-user', 'pi-users', 'pi-wallet',
+    ];
+    protected readonly folderColors = [
+        '#ef4444', '#f97316', '#eab308', '#22c55e',
+        '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899',
+        '#6366f1', '#14b8a6', '#f59e0b', '#84cc16',
+    ];
+
     // Create Folder Dialog
     protected readonly showCreateFolderDialog = signal(false);
     protected readonly newFolderName = signal('');
+    protected readonly newFolderIcon = signal('pi-folder');
+    protected readonly newFolderColor = signal('');
 
     onAddFolder(): void {
         this.newFolderName.set('');
+        this.newFolderIcon.set('pi-folder');
+        this.newFolderColor.set('');
         this.showCreateFolderDialog.set(true);
     }
 
@@ -844,7 +873,7 @@ export class Home implements OnInit, OnDestroy {
         if (!name) return;
 
         try {
-            this.folderService.add(name);
+            this.folderService.add(name, this.newFolderIcon(), this.newFolderColor() || null);
             this.showCreateFolderDialog.set(false);
             this.messageService.add({ severity: 'success', summary: 'Folder Created', detail: name });
         } catch (e) {
@@ -904,17 +933,25 @@ export class Home implements OnInit, OnDestroy {
     // Edit Folder
     protected readonly editingFolderId = signal<string | null>(null);
     protected readonly editFolderName = signal('');
+    protected readonly editFolderIcon = signal('pi-folder');
+    protected readonly editFolderColor = signal('');
 
-    startEditFolder(folder: { id: string, name: string }): void {
+    startEditFolder(folder: { id: string; name: string; icon?: string | null; color?: string | null }): void {
         this.editingFolderId.set(folder.id);
         this.editFolderName.set(folder.name);
+        this.editFolderIcon.set(folder.icon || 'pi-folder');
+        this.editFolderColor.set(folder.color || '');
     }
 
     saveEditFolder(): void {
         const id = this.editingFolderId();
         const name = this.editFolderName().trim();
         if (id && name) {
-            this.folderService.update(id, { name });
+            this.folderService.update(id, {
+                name,
+                icon: this.editFolderIcon(),
+                color: this.editFolderColor() || null,
+            });
             this.editingFolderId.set(null);
         }
     }
@@ -981,7 +1018,12 @@ export class Home implements OnInit, OnDestroy {
         const browser = profile.metadata?.browser || 'chrome';
         const url = profile.metadata?.launchUrl || undefined;
         try {
-            await this.profileService.launchBrowser(profile.path, browser, url, true);
+            await this.profileService.launchBrowser({
+                profilePath: profile.path,
+                browser,
+                url,
+                incognito: true,
+            });
             this.activityLogService.logLaunch(profile.name, profile.path, browser);
             this.messageService.add({
                 severity: 'success',
@@ -1175,7 +1217,7 @@ export class Home implements OnInit, OnDestroy {
             const browser = profile.metadata?.browser || 'chrome';
             const url = profile.metadata?.launchUrl || undefined;
             try {
-                await this.profileService.launchBrowser(profile.path, browser, url);
+                await this.profileService.launchBrowser({ profilePath: profile.path, browser, url });
                 launched++;
                 // Throttle: 500ms delay between launches to prevent system overload
                 if (launched < profiles.length) {

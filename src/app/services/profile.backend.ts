@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { debugLog } from '../core/utils/logger.util';
 import { MOCK_PROFILES, MOCK_AVAILABLE_BROWSERS, getMockProfileByPath } from '../mocks/profile.mock';
 import {
+    BulkExportResult,
     ClearCookiesResult,
     LaunchBrowserOptions,
     ProfileBackend,
@@ -108,6 +109,16 @@ export class MockProfileBackend implements ProfileBackend {
         debugLog('Mock restoreFromBackup:', backupPath, targetBasePath, conflictAction);
         return { success: true, restored_path: targetBasePath + '/RestoredProfile', profile_name: 'RestoredProfile', was_renamed: false };
     }
+
+    async backupProfile(profilePath: string, backupPath: string): Promise<string> {
+        debugLog('Mock backupProfile:', profilePath, backupPath);
+        return backupPath;
+    }
+
+    async bulkExportProfiles(profilePaths: string[], destinationFolder: string): Promise<BulkExportResult> {
+        debugLog('Mock bulkExportProfiles:', profilePaths, destinationFolder);
+        return { successful: profilePaths, failed: [], totalSize: 0 };
+    }
 }
 
 export class TauriProfileBackend implements ProfileBackend {
@@ -203,5 +214,28 @@ export class TauriProfileBackend implements ProfileBackend {
 
     async restoreFromBackup(backupPath: string, targetBasePath: string, conflictAction: string): Promise<RestoreBackupResult> {
         return await invoke<RestoreBackupResult>('restore_from_backup', { backupPath, targetBasePath, conflictAction });
+    }
+
+    async backupProfile(profilePath: string, backupPath: string): Promise<string> {
+        return await invoke<string>('backup_profile', { profilePath, backupPath });
+    }
+
+    async bulkExportProfiles(profilePaths: string[], destinationFolder: string): Promise<BulkExportResult> {
+        // Bulk export via sequential backup calls
+        const successful: string[] = [];
+        const failed: string[] = [];
+        let totalSize = 0;
+        for (const path of profilePaths) {
+            try {
+                const profileName = path.split('/').pop() || 'profile';
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                const backupPath = `${destinationFolder}/${profileName}_backup_${timestamp}.zip`;
+                await this.backupProfile(path, backupPath);
+                successful.push(path);
+            } catch {
+                failed.push(path);
+            }
+        }
+        return { successful, failed, totalSize };
     }
 }
