@@ -1,8 +1,8 @@
 {
     "meta": {
         "schema_version": "1.1.0",
-        "awf_version": "4.0.0",
-        "updated_at": "2026-02-12T06:47:00+07:00"
+        "awf_version": "4.1.2",
+        "updated_at": "2026-02-16T02:50:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
@@ -12,7 +12,7 @@
     },
     "tech_stack": {
         "frontend": {
-            "framework": "Angular 20+",
+            "framework": "Angular 21",
             "ui_library": "PrimeNG",
             "styling": "Tailwind CSS + tailwindcss-primeui",
             "state": "Angular Signals",
@@ -439,6 +439,34 @@
             "All async operations (backup/restore/delete) should have loading guards to prevent double-click",
             "Rust backend uses validate_path_safety() for all file operations — checks traversal, symlinks, null bytes",
             "CSV export must use csvSafe() to prevent formula injection (=, +, -, @ prefix escaping)"
-        ]
+        ],
+        "competitor_analysis": {
+            "completed_at": "2026-02-16",
+            "competitors": [
+                "GoLogin",
+                "Multilogin",
+                "AdsPower",
+                "Incogniton",
+                "Kameleo",
+                "Octo Browser",
+                "BitBrowser",
+                "Dolphin Anty"
+            ],
+            "usp": [
+                "Free & unlimited profiles",
+                "Offline-first",
+                "Data on external drive",
+                "Lightweight (~10MB)",
+                "Uses real Chrome"
+            ],
+            "gaps": [
+                "Fingerprint spoofing",
+                "Automation API",
+                "Bulk create",
+                "Cookie import/export",
+                "Team collaboration"
+            ],
+            "report_path": "competitor_analysis.md (in Antigravity brain artifacts)"
+        }
     }
 }
