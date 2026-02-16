@@ -208,6 +208,15 @@ pub async fn download_and_install(window: Option<&Window>) -> Result<PathBuf, St
     // Clean up temp file
     let _ = std::fs::remove_file(&temp_path);
 
+    // macOS: Remove quarantine attribute (prevents posix_spawnp Error:0)
+    #[cfg(target_os = "macos")]
+    {
+        eprintln!("[Camoufox] Removing macOS quarantine attribute...");
+        let _ = std::process::Command::new("xattr")
+            .args(["-r", "-d", "com.apple.quarantine", &install_dir.to_string_lossy()])
+            .status();
+    }
+
     // Set executable permissions on Unix
     #[cfg(unix)]
     {
