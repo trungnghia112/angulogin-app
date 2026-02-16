@@ -317,6 +317,77 @@
             }
         </div>
 
+        <!-- Camoufox Engine Selector -->
+        <div id="home-edit-dialog-engine-section"
+            class="space-y-3 p-3 rounded-lg border border-surface-200 dark:border-surface-700">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="pi pi-cog text-primary"></i>
+                <div>
+                    <label class="block text-xs font-medium text-color">Browser Engine</label>
+                    <p class="text-xs text-muted-color">Choose Chrome or Camoufox (antidetect Firefox)</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                @for (engine of engineOptions; track engine.value) {
+                <button id="home-edit-dialog-engine-{{ engine.value }}" type="button"
+                    class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all cursor-pointer"
+                    [class]="editBrowserEngine() === engine.value
+                        ? 'border-primary bg-primary/10 text-primary dark:bg-primary/20'
+                        : 'border-surface-200 dark:border-surface-700 text-muted-color hover:border-primary/50'"
+                    (click)="editBrowserEngine.set(engine.value)">
+                    <i [class]="engine.icon"></i>
+                    {{ engine.label }}
+                </button>
+                }
+            </div>
+
+            @if (editBrowserEngine() === 'camoufox') {
+            <div class="space-y-2 pt-2 border-t border-surface-100 dark:border-surface-800">
+                @if (!camoufoxService.isInstalled()) {
+                <div
+                    class="flex items-center gap-2 p-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 text-xs">
+                    <i class="pi pi-exclamation-triangle"></i>
+                    <span>Camoufox not installed.</span>
+                    <button type="button"
+                        class="ml-auto px-2 py-1 rounded bg-primary text-white text-xs font-medium cursor-pointer"
+                        [disabled]="camoufoxService.isDownloading()" (click)="camoufoxService.download()">
+                        @if (camoufoxService.isDownloading()) {
+                        <i class="pi pi-spinner pi-spin mr-1"></i> {{ camoufoxService.downloadProgress() }}%
+                        } @else {
+                        <i class="pi pi-download mr-1"></i> Install
+                        }
+                    </button>
+                </div>
+                } @else {
+                <!-- Fingerprint OS selector -->
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-medium text-color whitespace-nowrap">Target OS:</label>
+                    <div class="flex gap-1.5">
+                        @for (osOpt of [
+                        {label: 'Windows', value: 'windows', icon: 'pi pi-microsoft'},
+                        {label: 'macOS', value: 'macos', icon: 'pi pi-apple'},
+                        {label: 'Linux', value: 'linux', icon: 'pi pi-server'}
+                        ]; track osOpt.value) {
+                        <button id="home-edit-dialog-fp-os-{{ osOpt.value }}" type="button"
+                            class="px-2 py-1 rounded text-xs transition-all cursor-pointer"
+                            [class]="editFingerprintOs() === osOpt.value
+                                ? 'bg-primary/10 text-primary border border-primary dark:bg-primary/20'
+                                : 'border border-surface-200 dark:border-surface-700 text-muted-color hover:border-primary/50'"
+                            (click)="editFingerprintOs.set(editFingerprintOs() === osOpt.value ? null : osOpt.value)">
+                            <i [class]="osOpt.icon + ' mr-1'"></i>{{ osOpt.label }}
+                        </button>
+                        }
+                    </div>
+                </div>
+                <p class="text-xs text-muted-color">
+                    <i class="pi pi-info-circle mr-1"></i>
+                    Fingerprint is auto-generated on each launch. Select OS to control spoofed platform.
+                </p>
+                }
+            </div>
+            }
+        </div>
+
         <!-- Feature 4.2: Proxy Rotation -->
         <div id="home-edit-dialog-proxy-rotation-section"
             class="space-y-3 p-3 rounded-lg border border-surface-200 dark:border-surface-700">

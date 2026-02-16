@@ -31,3 +31,12 @@ zip = "0.6"
 tauri-plugin-os = "2.3.2"
 chrono = "0.4"
 base64 = "0.22"
+
+# Camoufox integration
+reqwest = { version = "0.12", features = ["stream", "json"] }
+sha2 = "0.10"
+directories = "5"
+sysinfo = "0.32"
+lazy_static = "1.4"
+tokio = { version = "1", features = ["full"] }
+futures-util = "0.3"

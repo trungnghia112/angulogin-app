@@ -1376,3 +1376,70 @@ pub fn stop_proxy_relay(profile_path: String) -> Result<(), String> {
     crate::proxy_relay::stop_relay(&profile_path);
     Ok(())
 }
+
+// ===== Camoufox Commands =====
+
+/// Download and install Camoufox binary (emits progress events)
+#[tauri::command]
+pub async fn download_camoufox(window: tauri::Window) -> Result<String, String> {
+    let exe_path = crate::camoufox_downloader::download_and_install(Some(&window)).await?;
+    Ok(exe_path.to_string_lossy().to_string())
+}
+
+/// Check if Camoufox is installed
+#[tauri::command]
+pub fn check_camoufox_installed() -> Result<bool, String> {
+    crate::camoufox_downloader::is_installed()
+}
+
+/// Get Camoufox version and installation info
+#[tauri::command]
+pub fn get_camoufox_version() -> Result<crate::camoufox_downloader::CamoufoxVersionInfo, String> {
+    crate::camoufox_downloader::get_version_info()
+}
+
+/// Generate a random realistic fingerprint for the specified OS
+/// Returns JSON string of the fingerprint config
+#[tauri::command]
+pub fn generate_fingerprint(os: Option<String>) -> Result<String, String> {
+    let fingerprint = crate::fingerprint::generator::generate(os.as_deref());
+    crate::fingerprint::generator::to_camoufox_config(&fingerprint)
+}
+
+/// Generate a fingerprint and return the full object (for preview in UI)
+#[tauri::command]
+pub fn generate_fingerprint_preview(os: Option<String>) -> Result<crate::fingerprint::types::Fingerprint, String> {
+    Ok(crate::fingerprint::generator::generate(os.as_deref()))
+}
+
+/// Launch Camoufox browser with the given config
+#[tauri::command]
+pub async fn launch_camoufox(
+    profile_path: String,
+    config: String,
+    url: Option<String>,
+) -> Result<crate::camoufox_manager::CamoufoxLaunchResult, String> {
+    let config: crate::camoufox_manager::CamoufoxConfig =
+        serde_json::from_str(&config).map_err(|e| format!("Invalid config: {e}"))?;
+
+    let manager = crate::camoufox_manager::CamoufoxManager::instance();
+
+    // Check if there's already a running instance for this profile
+    if let Some(existing) = manager.find_by_profile(&profile_path).await {
+        let _ = manager.stop(&existing.id).await;
+    }
+
+    // Clean up dead instances
+    let _ = manager.cleanup_dead().await;
+
+    manager
+        .launch(&profile_path, &config, url.as_deref())
+        .await
+}
+
+/// Stop a running Camoufox instance by ID
+#[tauri::command]
+pub async fn stop_camoufox(id: String) -> Result<bool, String> {
+    let manager = crate::camoufox_manager::CamoufoxManager::instance();
+    manager.stop(&id).await
+}

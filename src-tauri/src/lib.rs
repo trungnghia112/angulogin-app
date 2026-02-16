@@ -1,4 +1,8 @@
 mod commands;
+mod camoufox_downloader;
+mod camoufox_env;
+mod camoufox_manager;
+mod fingerprint;
 mod proxy_relay;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -41,7 +45,15 @@ pub fn run() {
             commands::check_proxy_health,
             commands::auto_backup_all_profiles,
             commands::check_profile_health,
-            commands::stop_proxy_relay
+            commands::stop_proxy_relay,
+            // Camoufox
+            commands::download_camoufox,
+            commands::check_camoufox_installed,
+            commands::get_camoufox_version,
+            commands::generate_fingerprint,
+            commands::generate_fingerprint_preview,
+            commands::launch_camoufox,
+            commands::stop_camoufox
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

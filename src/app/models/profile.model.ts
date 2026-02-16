@@ -46,6 +46,10 @@ export interface ProfileMetadata {
     proxyRotation?: ProxyRotationConfig | null;
     // Antidetect: Privacy hardened mode
     antidetectEnabled?: boolean;
+    // Camoufox Integration
+    browserEngine?: 'chrome' | 'camoufox';
+    fingerprintConfig?: string | null;
+    fingerprintOs?: string | null;
 }
 
 // Proxy Rotation Configuration (Feature 4.2)

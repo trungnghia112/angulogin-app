@@ -11,14 +11,15 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { TextareaModule } from 'primeng/textarea';
 import { SelectModule } from 'primeng/select';
+import { TextareaModule } from 'primeng/textarea';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { UpperCasePipe } from '@angular/common';
-import { Profile, BrowserType, ProxyRotationConfig } from '../../../../models/profile.model';
+import { BrowserType, Profile, ProxyRotationConfig } from '../../../../models/profile.model';
 import { Folder, ProfileProxy } from '../../../../models/folder.model';
 import { MessageService } from 'primeng/api';
+import { UpperCasePipe } from '@angular/common';
 import { ProxyService } from '../../../../services/proxy.service';
+import { CamoufoxService, Fingerprint } from '../../../../services/camoufox.service';
 
 // Options
 const EMOJI_OPTIONS = ['🌐', '💼', '🎮', '📧', '🛒', '📚', '🎬', '🔒', '🧪', '👤'];
@@ -71,6 +72,9 @@ export interface ProfileEditData {
     proxyRotation: ProxyRotationConfig | null;
     // Antidetect: Privacy hardened mode
     antidetectEnabled: boolean;
+    // Camoufox Integration
+    browserEngine: 'chrome' | 'camoufox';
+    fingerprintOs: string | null;
 }
 
 @Component({
@@ -92,6 +96,7 @@ export interface ProfileEditData {
 export class ProfileEditDialog {
     private readonly messageService = inject(MessageService);
     private readonly proxyService = inject(ProxyService);
+    protected readonly camoufoxService = inject(CamoufoxService);
 
     // Inputs
     readonly visible = input<boolean>(false);
@@ -134,6 +139,14 @@ export class ProfileEditDialog {
     protected readonly editDisableExtensions = signal(false);
     // Antidetect: Privacy Mode
     protected readonly editAntidetectEnabled = signal(false);
+    // Camoufox Integration
+    protected readonly editBrowserEngine = signal<'chrome' | 'camoufox'>('chrome');
+    protected readonly editFingerprintOs = signal<string | null>(null);
+    protected readonly fingerprintPreview = signal<Fingerprint | null>(null);
+    protected readonly engineOptions: { label: string; value: 'chrome' | 'camoufox'; icon: string }[] = [
+        { label: 'Chrome (Chromium)', value: 'chrome', icon: 'pi pi-chrome' },
+        { label: 'Camoufox (Firefox)', value: 'camoufox', icon: 'pi pi-shield' },
+    ];
     // Feature 4.2: Proxy Rotation
     protected readonly editProxyRotationEnabled = signal(false);
     protected readonly editProxyRotationMode = signal<'per_launch' | 'hourly' | 'daily'>('per_launch');
@@ -188,6 +201,9 @@ export class ProfileEditDialog {
         this.editDisableExtensions.set(profile.metadata?.disableExtensions || false);
         // Antidetect
         this.editAntidetectEnabled.set(profile.metadata?.antidetectEnabled || false);
+        // Camoufox
+        this.editBrowserEngine.set(profile.metadata?.browserEngine || 'chrome');
+        this.editFingerprintOs.set(profile.metadata?.fingerprintOs || null);
         // Feature 4.2
         const rotation = profile.metadata?.proxyRotation;
         this.editProxyRotationEnabled.set(rotation?.enabled || false);
@@ -320,6 +336,8 @@ export class ProfileEditDialog {
             disableExtensions: this.editDisableExtensions(),
             proxyRotation,
             antidetectEnabled: this.editAntidetectEnabled(),
+            browserEngine: this.editBrowserEngine(),
+            fingerprintOs: this.editFingerprintOs(),
         });
     }
 

@@ -814,6 +814,8 @@ export class Home implements OnInit, OnDestroy {
                     disableExtensions: data.disableExtensions || undefined,
                     antidetectEnabled: data.antidetectEnabled || undefined,
                     proxyRotation: data.proxyRotation ?? undefined,
+                    browserEngine: data.browserEngine ?? undefined,
+                    fingerprintOs: data.fingerprintOs ?? undefined,
                 },
             );
             this.showEditDialog.set(false);
