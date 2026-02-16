@@ -1,87 +1,113 @@
-# 💡 BRIEF: Chrome Profile Manager
+# 💡 BRIEF: AnguLogin Antidetect Browser
 
-**Ngày tạo:** 2026-01-20
-**Platform:** macOS Desktop (Tauri v2)
-
----
-
-## 1. VẤN ĐỀ CẦN GIẢI QUYẾT
-
-Người dùng có nhiều tài khoản Chrome (MMO/Dev) nhưng:
-- Không muốn lưu cache, cookies, history vào ổ cứng trong của Mac
-- Cần quản lý và khởi chạy nhiều profile một cách có tổ chức
-- Cần đảm bảo Chrome gốc không bị ảnh hưởng khi rút ổ ngoài
-
-## 2. GIẢI PHÁP ĐỀ XUẤT
-
-Desktop app (Tauri v2) quản lý và khởi chạy Chrome profiles được lưu trữ hoàn toàn trên ổ cứng ngoài (External HDD/SSD) thông qua flag `--user-data-dir`.
-
-## 3. ĐỐI TƯỢNG SỬ DỤNG
-
-- **Primary:** Bản thân (power user, làm MMO/Dev)
-- **Secondary:** Những ai cần quản lý nhiều Chrome profiles
-
-## 4. TECH STACK
-
-| Layer | Technology |
-|-------|------------|
-| Frontend | Angular 21 (Standalone, Signals) + TailwindCSS |
-| Backend | Tauri v2 (Rust Commands) |
-| OS | macOS (lệnh `open -n -a`) |
-
-## 5. TÍNH NĂNG
-
-### 🚀 MVP (Bắt buộc có):
-- [ ] Chọn đường dẫn thư mục chứa profiles (ví dụ: `/Volumes/SSD_Samsung/Profiles`)
-- [ ] Quét và hiển thị danh sách các folder con (mỗi folder = 1 profile)
-- [ ] Click vào profile → Khởi chạy Chrome với `--user-data-dir`
-- [ ] Lưu đường dẫn đã chọn (localStorage hoặc Tauri store)
-
-### 🎁 Phase 2 (Làm sau):
-- [ ] Tạo profile mới (tạo folder mới)
-- [ ] Đổi tên profile
-- [ ] Xóa profile (với confirm dialog)
-- [ ] Custom icon/avatar cho mỗi profile
-- [ ] Hiển thị trạng thái profile đang chạy
-
-### 💭 Backlog (Cân nhắc):
-- [ ] Backup/Restore profiles
-- [ ] Sync profiles giữa các ổ
-- [ ] Gắn tag/nhóm cho profiles
-
-## 6. KIẾN TRÚC KỸ THUẬT
-
-### Flow:
-```
-Angular UI → Tauri Command (Rust) → Shell Execute
-     ↑              ↓
-     └── Response ──┘
-```
-
-### Tauri Capabilities cần cấu hình:
-- `fs:read-dir` - Scope: `/Volumes/*`
-- `shell:execute` - Cho lệnh `open`
-
-### Rust Commands:
-- `scan_profiles(path: String) -> Vec<String>` - Quét folder
-- `launch_profile(profile_path: String)` - Chạy Chrome
-
-## 7. RỦI RO & LƯU Ý
-
-| Rủi ro | Giải pháp |
-|--------|-----------|
-| Ổ ngoài chưa mount | Kiểm tra path tồn tại trước khi scan |
-| Chrome chưa cài | Kiểm tra app tồn tại, hiện thông báo |
-| Permission denied | Hướng dẫn user cấp quyền |
-
-## 8. ƯỚC TÍNH
-
-- **Độ phức tạp:** Đơn giản - Trung bình
-- **MVP:** 1-2 sessions
-- **Full app:** 3-4 sessions
+**Ngày tạo:** 2026-02-17
+**Quyết định:** Tích hợp Camoufox engine để thương mại hoá
 
 ---
 
-## 🎯 BƯỚC TIẾP THEO
+## 1. VẤN ĐỀ
 
-→ Chạy `/plan` để lên thiết kế chi tiết (UI, Rust commands, Angular services)
+Marketer, seller, agency quản lý nhiều tài khoản (Facebook, Google, TikTok, Amazon) cần browser isolated cho mỗi account. Giải pháp hiện tại đắt và cloud lock-in.
+
+## 2. GIẢI PHÁP
+
+Tích hợp **Camoufox** (patched Firefox, C++ level fingerprint spoofing) vào AnguLogin desktop app. Local-first, giá cạnh tranh.
+
+## 3. QUYẾT ĐỊNH KIẾN TRÚC
+
+### Engine: Camoufox (Firefox-based)
+- **Antidetect level:** ~95% (C++ level spoofing, undetectable by JS)
+- **Binary size:** ~80-100MB (auto-download on first use)
+- **Reference:** DonutBrowser's `camoufox_manager.rs`, `fingerprint-network-definition.zip`, `webgl_data.db`
+- **License:** Viết lại clean-room (DonutBrowser là AGPL-3.0)
+
+### Tại sao Camoufox thay vì Chromium:
+| | Camoufox | Chromium CDP | Custom Chromium |
+|---|---|---|---|
+| Antidetect | ~95% | ~85% | ~95% |
+| Effort | 6 tuần | 4 tuần | 3 tháng |
+| Binary size | 80MB | 0MB | 200MB+ |
+| Detection risk | Rất thấp | Trung bình | Thấp |
+| Maintenance | Camoufox team update | Tự maintain | Tự maintain |
+
+### Kiến trúc tổng thể:
+```
+┌─────────────────────────────────┐
+│      AnguLogin Desktop (Tauri)  │
+├─────────────────────────────────┤
+│ Profile Manager (Angular UI)    │
+│  ├── Chrome profiles (legacy)   │
+│  └── Camoufox profiles (new)    │
+├─────────────────────────────────┤
+│ Rust Backend                    │
+│  ├── camoufox_manager.rs (NEW)  │
+│  │   ├── Download & install     │
+│  │   ├── Fingerprint generation │
+│  │   ├── Launch with config     │
+│  │   └── Profile data dir       │
+│  ├── fingerprint_engine.rs (NEW)│
+│  │   ├── OS spoofing            │
+│  │   ├── Screen/Resolution      │
+│  │   ├── WebGL/Canvas noise     │
+│  │   ├── Font enumeration       │
+│  │   └── Timezone/Locale        │
+│  └── commands.rs (existing)     │
+│      └── launch_browser()       │
+│          ├── Chrome (existing)   │
+│          └── Camoufox (new path) │
+└─────────────────────────────────┘
+```
+
+---
+
+## 4. NGHIÊN CỨU THỊ TRƯỜNG
+
+| App | Giá/tháng | Engine | Antidetect |
+|-----|-----------|--------|-----------|
+| Multilogin | €99-299 | Mimic (Chromium) + Stealthfox (Firefox) | ~95% |
+| GoLogin | $24-99 | Orbita (Chromium) | ~80% |
+| AdsPower | $9-59 | SunBrowser (Chromium) + FlowerBrowser (Firefox) | ~90% |
+| **AnguLogin** | **$0-29** | **Camoufox (Firefox)** | **~95%** |
+
+**Điểm khác biệt:**
+1. Desktop-first, local-first (data không lên cloud)
+2. Tauri = ~15MB installer (vs 200MB+ Electron)
+3. Proxy rotation built-in (đối thủ charge riêng)
+4. Free tier 5 profiles
+
+---
+
+## 5. TÍNH NĂNG — PHASE 2 (Camoufox Integration)
+
+### 🚀 MVP (6 tuần):
+- [ ] Auto-download Camoufox binary on first use
+- [ ] Fingerprint generation engine (OS, Screen, WebGL, Canvas, Fonts, TZ)
+- [ ] Per-profile fingerprint storage in metadata
+- [ ] Launch Camoufox with fingerprint config
+- [ ] UI: Engine selector (Chrome / Camoufox) trong profile edit
+- [ ] UI: Fingerprint preview card
+- [ ] UI: "Randomize fingerprint" button
+- [ ] Fingerprint checker page (built-in test)
+
+### 🎁 Phase 3 (sau MVP):
+- [ ] Fingerprint templates (preset: Win10/Mac/Linux)
+- [ ] Bulk profile creation with random fingerprints
+- [ ] Team collaboration
+- [ ] API automation (Selenium/Playwright)
+- [ ] Subscription/licensing system
+
+---
+
+## 6. PRICING
+
+| Tier | Giá/tháng | Profiles | Antidetect |
+|------|-----------|----------|------------|
+| Free | $0 | 5 | CLI flags only |
+| Starter | $15 | 50 | Camoufox engine |
+| Pro | $29 | 200 | + Fingerprint templates + Team |
+
+---
+
+## 7. BƯỚC TIẾP THEO
+
+→ `/plan` Phase 2: Camoufox Integration
