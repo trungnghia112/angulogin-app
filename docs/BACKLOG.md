@@ -1,8 +1,8 @@
 # 📋 BACKLOG: Chrome Profile Manager
 
 **Ngày tạo:** 2026-01-23
-**Cập nhật lần cuối:** 2026-02-12
-**Tổng số tính năng:** 69+
+**Cập nhật lần cuối:** 2026-02-16
+**Tổng số tính năng:** 74+
 
 ---
 
@@ -12,7 +12,7 @@
 |------------|----------|
 | ✅ Done | 44 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 25 |
+| 📋 Backlog | 30 |
 | ❌ Cancelled | 10 |
 
 ---
@@ -222,6 +222,20 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 ---
 
+## 🔌 NHÓM 13: Proxy Engine Pro *(Benchmark: Donut Browser)*
+
+> Nguồn: Phân tích kiến trúc proxy của [Donut Browser](https://github.com/zhom/donutbrowser) (2026-02-16)
+
+| # | Tính năng | Mô tả | Độ khó | Status |
+|---|-----------|-------|--------|--------|
+| 13.1 | Local Proxy Server ⭐ | Spawn Rust proxy server (localhost) per profile để giải quyết Chrome không hỗ trợ proxy auth qua `--proxy-server`. Browser connect `127.0.0.1:PORT`, proxy xử lý auth upstream. HTTPS tunneling (CONNECT method). | 🔴 Khó | 📋 |
+| 13.2 | GeoIP Display | Sau proxy health check, lookup IP → hiển thị cờ quốc gia + city bên cạnh proxy (dùng ip-api.com) | 🟢 Dễ | 📋 |
+| 13.3 | Traffic Stats | Đếm bytes sent/received per profile qua proxy. Dashboard hiển thị bandwidth usage per profile/proxy | 🟡 TB | 📋 |
+| 13.4 | SOCKS4 Support | Thêm proxy type SOCKS4 (hiện chỉ có HTTP + SOCKS5) | 🟢 Dễ | 📋 |
+| 13.5 | Cloud Proxy Integration | Hỗ trợ cloud-managed proxy với geo-targeted routing (thêm geo-tag vào username để chọn location) | 🔴 Khó | 📋 |
+
+---
+
 ## 🔮 TÍNH NĂNG TƯƠNG LAI (Nice to have)
 
 Những ý tưởng táo bạo hơn cho future versions:
@@ -260,6 +274,7 @@ Những ý tưởng táo bạo hơn cho future versions:
 
 | Ngày | Thay đổi |
 |------|----------|
+| 2026-02-16 | Benchmark Donut Browser: Thêm NHÓM 13 (Proxy Engine Pro: 5 items). Phân tích kiến trúc proxy Rust của donutbrowser, xác định Local Proxy Server là tính năng ưu tiên cao nhất để giải quyết Chrome proxy auth |
 | 2026-02-12 | Benchmark Vision: Thêm NHÓM 11 (Table UX Pro: 5 items), NHÓM 12 (Mass Actions Pro: 4 items). Thêm 2.6, 2.7, 3.8, 6.9. Thêm 5 future ideas từ Vision. Tổng +14 items mới |
 | 2026-02-06 | Sync docs: Auto-backup (5.4), Usage Heatmap (9.2), Proxy Health Check (4.3), Profile Health Check (9.3), Cleanup Suggestions (9.4) đã được implement |
 | 2026-02-04 | Hoàn thành: Window Position, Proxy Import/Export, Profile Export, Proxy Groups. Cancelled: Security (8.1, 8.3, 8.5), Automation (7.1-7.6) |
