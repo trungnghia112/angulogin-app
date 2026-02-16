@@ -560,42 +560,44 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
     
     // Add proxy server - with optional local relay for authenticated proxies
     if let Some(ref proxy) = proxy_server {
-        // Determine if this is a SOCKS proxy (relay only works for HTTP proxies)
-        let is_socks = proxy.starts_with("socks5://") || proxy.starts_with("socks4://");
+        let is_socks5 = proxy.starts_with("socks5://");
 
-        let use_relay = match (&proxy_username, &proxy_password) {
-            (Some(ref u), Some(ref p)) if !u.is_empty() && !p.is_empty() && !is_socks => true,
+        let has_auth = match (&proxy_username, &proxy_password) {
+            (Some(ref u), Some(ref p)) if !u.is_empty() && !p.is_empty() => true,
             _ => false,
         };
 
-        if is_socks && proxy_username.as_ref().map_or(false, |u| !u.is_empty()) {
-            eprintln!("[ProxyAuth] WARNING: SOCKS proxy with auth detected. \
-                Relay does not support SOCKS auth - Chrome will prompt for credentials.");
-        }
-
-        if use_relay {
+        if has_auth {
             // Parse upstream proxy host:port from proxy URL
             let proxy_trimmed = proxy
                 .trim_start_matches("http://")
-                .trim_start_matches("https://");
+                .trim_start_matches("https://")
+                .trim_start_matches("socks5://")
+                .trim_start_matches("socks4://");
             let parts: Vec<&str> = proxy_trimmed.splitn(2, ':').collect();
             let host = parts.first().unwrap_or(&"");
             let port: u16 = parts.get(1)
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(80);
+                .unwrap_or(if is_socks5 { 1080 } else { 80 });
 
-            eprintln!("[ProxyAuth] Parsed upstream: host={}, port={} (from: {})", host, port, proxy);
+            eprintln!("[ProxyAuth] Parsed upstream: host={}, port={}, type={} (from: {})",
+                host, port, if is_socks5 { "SOCKS5" } else { "HTTP" }, proxy);
 
             let username = proxy_username.as_ref().unwrap();
             let password = proxy_password.as_ref().unwrap();
 
-            // Start local proxy relay (127.0.0.1:random_port -> upstream with auth)
-            let local_port = crate::proxy_relay::start_proxy_relay(host, port, username, password)?;
+            // Start appropriate local relay based on proxy type
+            let local_port = if is_socks5 {
+                crate::proxy_relay::start_socks5_relay(host, port, username, password, &profile_path)?
+            } else {
+                crate::proxy_relay::start_proxy_relay(host, port, username, password, &profile_path)?
+            };
+
             let relay_arg = format!("--proxy-server=http://127.0.0.1:{}", local_port);
-            eprintln!("[ProxyAuth] Using relay: {}", relay_arg);
+            eprintln!("[ProxyAuth] Using {} relay: {}", if is_socks5 { "SOCKS5" } else { "HTTP" }, relay_arg);
             args.push(relay_arg);
         } else {
-            // No auth needed or SOCKS proxy, use proxy directly
+            // No auth needed, use proxy directly
             eprintln!("[ProxyAuth] Using direct proxy: {}", proxy);
             args.push(format!("--proxy-server={}", proxy));
         }
@@ -1333,4 +1335,12 @@ pub fn check_profile_health(profile_path: String) -> ProfileHealthResult {
         warnings,
         checked_files,
     }
+}
+
+/// Stop the proxy relay associated with a specific profile path.
+/// Called when a browser profile is closed to free resources.
+#[tauri::command]
+pub fn stop_proxy_relay(profile_path: String) -> Result<(), String> {
+    crate::proxy_relay::stop_relay(&profile_path);
+    Ok(())
 }

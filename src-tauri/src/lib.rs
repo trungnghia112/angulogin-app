@@ -40,7 +40,8 @@ pub fn run() {
             commands::bulk_export_profiles,
             commands::check_proxy_health,
             commands::auto_backup_all_profiles,
-            commands::check_profile_health
+            commands::check_profile_health,
+            commands::stop_proxy_relay
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
