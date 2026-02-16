@@ -38,6 +38,7 @@ import { ActivityLogService } from '../../../services/activity-log.service';
 import { FolderService } from '../../../services/folder.service';
 import { ProxyService } from '../../../services/proxy.service';
 import { NavigationService } from '../../../services/navigation.service';
+import { CamoufoxService } from '../../../services/camoufox.service';
 import { BrowserType, Profile } from '../../../models/profile.model';
 import { validateProfileName } from '../../../core/utils/validation.util';
 
@@ -100,6 +101,7 @@ export class Home implements OnInit, OnDestroy {
     private readonly confirmationService = inject(ConfirmationService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly navService = inject(NavigationService);
+    private readonly camoufoxService = inject(CamoufoxService);
     private readonly searchSubject = new Subject<string>();
 
     // Feature 6.9: Zen Mode
@@ -599,19 +601,34 @@ export class Home implements OnInit, OnDestroy {
                 }
             }
 
-
-            await this.profileService.launchBrowser({
-                profilePath: profile.path,
-                browser,
-                url,
-                incognito: false,
-                proxyServer: proxy,
-                customFlags,
-                disableExtensions,
-                antidetectEnabled,
-                proxyUsername,
-                proxyPassword,
-            });
+            // Route to correct engine
+            const browserEngine = profile.metadata?.browserEngine || 'chrome';
+            if (browserEngine === 'camoufox') {
+                // Launch via Camoufox engine
+                const camoufoxConfig = {
+                    proxy: proxy ? `${proxy}` : null,
+                    block_webrtc: antidetectEnabled,
+                    block_webgl: false,
+                    fingerprint: null,
+                    randomize_on_launch: true,
+                    os: profile.metadata?.fingerprintOs || null,
+                };
+                const profileDir = profile.path + '/.camoufox';
+                await this.camoufoxService.launch(profileDir, camoufoxConfig, url);
+            } else {
+                await this.profileService.launchBrowser({
+                    profilePath: profile.path,
+                    browser,
+                    url,
+                    incognito: false,
+                    proxyServer: proxy,
+                    customFlags,
+                    disableExtensions,
+                    antidetectEnabled,
+                    proxyUsername,
+                    proxyPassword,
+                });
+            }
 
             // Phase 3: Log activity
             this.activityLogService.logLaunch(profile.name, profile.path, browser);

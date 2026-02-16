@@ -144,8 +144,8 @@ export class ProfileEditDialog {
     protected readonly editFingerprintOs = signal<string | null>(null);
     protected readonly fingerprintPreview = signal<Fingerprint | null>(null);
     protected readonly engineOptions: { label: string; value: 'chrome' | 'camoufox'; icon: string }[] = [
-        { label: 'Chrome (Chromium)', value: 'chrome', icon: 'pi pi-chrome' },
-        { label: 'Camoufox (Firefox)', value: 'camoufox', icon: 'pi pi-shield' },
+        { label: 'Chrome', value: 'chrome', icon: 'pi pi-chrome' },
+        { label: 'Firefox', value: 'camoufox', icon: 'pi pi-shield' },
     ];
     // Feature 4.2: Proxy Rotation
     protected readonly editProxyRotationEnabled = signal(false);
