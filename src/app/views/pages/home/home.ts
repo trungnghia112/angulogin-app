@@ -508,32 +508,24 @@ export class Home implements OnInit, OnDestroy {
             return;
         }
         try {
-            console.time('[PERF] home.scanProfiles TOTAL');
-            console.time('[PERF] checkPathExists');
             const exists = await this.profileService.checkPathExists(path);
-            console.timeEnd('[PERF] checkPathExists');
             if (!exists) {
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Error',
                     detail: 'Path does not exist',
                 });
-                console.timeEnd('[PERF] home.scanProfiles TOTAL');
                 return;
             }
-            console.time('[PERF] profileService.scanProfiles');
             await this.profileService.scanProfiles(path);
-            console.timeEnd('[PERF] profileService.scanProfiles');
             this.settingsService.setProfilesPath(path);
             this.messageService.add({
                 severity: 'success',
                 summary: 'Success',
                 detail: `Found ${this.profiles().length} profiles`,
             });
-            console.timeEnd('[PERF] home.scanProfiles TOTAL');
         } catch (e) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
-            console.timeEnd('[PERF] home.scanProfiles TOTAL');
         }
     }
 
