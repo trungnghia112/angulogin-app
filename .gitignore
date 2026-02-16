@@ -49,3 +49,6 @@ Thumbs.db
 .runtimeconfig.json
 .brain/session.json
 .env
+
+# Research repos (reference only)
+ungoogled-chromium/
