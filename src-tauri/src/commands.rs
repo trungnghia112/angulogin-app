@@ -395,6 +395,8 @@ pub struct ProfileMetadata {
     pub proxy_id: Option<String>,
     pub proxy_username: Option<String>,
     pub proxy_password: Option<String>,
+    // Antidetect: Privacy hardened mode
+    pub antidetect_enabled: Option<bool>,
 }
 
 #[tauri::command]
@@ -435,13 +437,14 @@ pub fn save_profile_metadata(
     proxy_id: Option<String>,
     proxy_username: Option<String>,
     proxy_password: Option<String>,
+    antidetect_enabled: Option<bool>,
 ) -> Result<(), String> {
     let meta_file = format!("{}/.profile-meta.json", profile_path);
     
     let metadata = ProfileMetadata { 
         emoji, notes, group, shortcut, browser, tags, launch_url, is_pinned, last_opened, 
         color, is_hidden, launch_count, total_usage_minutes, last_session_duration, is_favorite, custom_flags, proxy,
-        proxy_id, proxy_username, proxy_password
+        proxy_id, proxy_username, proxy_password, antidetect_enabled
     };
     
     let content = serde_json::to_string_pretty(&metadata)
@@ -501,7 +504,7 @@ pub fn batch_check_running(profile_paths: Vec<String>) -> std::collections::Hash
 }
 
 #[tauri::command]
-pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>, custom_flags: Option<String>, proxy_username: Option<String>, proxy_password: Option<String>) -> Result<(), String> {
+pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>, custom_flags: Option<String>, proxy_username: Option<String>, proxy_password: Option<String>, antidetect_enabled: Option<bool>) -> Result<(), String> {
     let path = std::path::Path::new(&profile_path);
     
     // Detect if this is a native Chrome profile (parent has "Local State" file)
@@ -603,6 +606,25 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
         }
     }
     
+    // Antidetect: Inject privacy-hardening flags when enabled
+    if antidetect_enabled.unwrap_or(false) {
+        let privacy_flags = [
+            "--disable-background-networking",
+            "--disable-client-side-phishing-detection",
+            "--disable-domain-reliability",
+            "--disable-breakpad",
+            "--no-pings",
+            "--disable-webrtc-event-logging",
+            "--force-webrtc-ip-handling-policy=disable_non_proxied_udp",
+            "--metrics-recording-only",
+            "--disable-component-update",
+            "--disable-sync",
+        ];
+        for flag in privacy_flags {
+            args.push(flag.to_string());
+        }
+    }
+
     // Security: Sanitize custom flags to block dangerous Chrome flags
     if let Some(flags) = custom_flags {
         let dangerous_prefixes = [

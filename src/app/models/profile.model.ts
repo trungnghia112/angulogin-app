@@ -44,6 +44,8 @@ export interface ProfileMetadata {
     disableExtensions?: boolean;
     // Feature 4.2: Proxy Rotation
     proxyRotation?: ProxyRotationConfig | null;
+    // Antidetect: Privacy hardened mode
+    antidetectEnabled?: boolean;
 }
 
 // Proxy Rotation Configuration (Feature 4.2)

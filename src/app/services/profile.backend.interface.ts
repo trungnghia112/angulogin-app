@@ -11,6 +11,7 @@ export interface LaunchBrowserOptions {
     proxyUsername?: string | null;
     proxyPassword?: string | null;
     customFlags?: string | null;
+    antidetectEnabled?: boolean | null;
 }
 
 /** Result from clearing profile cookies and cache */

@@ -223,7 +223,7 @@ export class ProfileService {
         console.timeEnd(`[PERF] refreshProfileStatus (${current.length} profiles)`);
     }
 
-    async launchBrowser(options: LaunchBrowserOptions & { disableExtensions?: boolean }): Promise<void> {
+    async launchBrowser(options: LaunchBrowserOptions & { disableExtensions?: boolean; antidetectEnabled?: boolean }): Promise<void> {
         try {
             // Feature 3.4: Build flags with --disable-extensions if requested
             let finalFlags = options.customFlags || '';
@@ -240,6 +240,7 @@ export class ProfileService {
                 proxyUsername: options.proxyUsername || null,
                 proxyPassword: options.proxyPassword || null,
                 customFlags: finalFlags || null,
+                antidetectEnabled: options.antidetectEnabled || null,
             });
 
             if (!isTauriAvailable()) {

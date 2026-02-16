@@ -558,6 +558,7 @@ export class Home implements OnInit, OnDestroy {
             let proxyPassword: string | undefined;
             const customFlags = profile.metadata?.customFlags || undefined;
             const disableExtensions = profile.metadata?.disableExtensions || false;
+            const antidetectEnabled = profile.metadata?.antidetectEnabled || false;
 
             // Look up proxy credentials from saved proxy or metadata
             const proxyId = profile.metadata?.proxyId;
@@ -607,6 +608,7 @@ export class Home implements OnInit, OnDestroy {
                 proxyServer: proxy,
                 customFlags,
                 disableExtensions,
+                antidetectEnabled,
                 proxyUsername,
                 proxyPassword,
             });
@@ -810,6 +812,7 @@ export class Home implements OnInit, OnDestroy {
                     proxyPassword: data.proxyPassword ?? undefined,
                     folderId: data.folderId ?? undefined,
                     disableExtensions: data.disableExtensions || undefined,
+                    antidetectEnabled: data.antidetectEnabled || undefined,
                     proxyRotation: data.proxyRotation ?? undefined,
                 },
             );

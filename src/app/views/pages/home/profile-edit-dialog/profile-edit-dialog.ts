@@ -69,6 +69,8 @@ export interface ProfileEditData {
     disableExtensions: boolean;
     // Feature 4.2: Proxy Rotation
     proxyRotation: ProxyRotationConfig | null;
+    // Antidetect: Privacy hardened mode
+    antidetectEnabled: boolean;
 }
 
 @Component({
@@ -130,6 +132,8 @@ export class ProfileEditDialog {
     protected readonly editFolderId = signal<string | null>(null);
     // Feature 3.4: Disable Extensions
     protected readonly editDisableExtensions = signal(false);
+    // Antidetect: Privacy Mode
+    protected readonly editAntidetectEnabled = signal(false);
     // Feature 4.2: Proxy Rotation
     protected readonly editProxyRotationEnabled = signal(false);
     protected readonly editProxyRotationMode = signal<'per_launch' | 'hourly' | 'daily'>('per_launch');
@@ -182,6 +186,8 @@ export class ProfileEditDialog {
         this.editFolderId.set(profile.metadata?.folderId || null);
         // Feature 3.4
         this.editDisableExtensions.set(profile.metadata?.disableExtensions || false);
+        // Antidetect
+        this.editAntidetectEnabled.set(profile.metadata?.antidetectEnabled || false);
         // Feature 4.2
         const rotation = profile.metadata?.proxyRotation;
         this.editProxyRotationEnabled.set(rotation?.enabled || false);
@@ -313,6 +319,7 @@ export class ProfileEditDialog {
             folderId: this.editFolderId(),
             disableExtensions: this.editDisableExtensions(),
             proxyRotation,
+            antidetectEnabled: this.editAntidetectEnabled(),
         });
     }
 
