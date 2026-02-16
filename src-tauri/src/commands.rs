@@ -620,6 +620,7 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
             "--disable-component-update",
             "--disable-sync",
         ];
+        eprintln!("[Antidetect] Privacy Mode active - injecting {} flags", privacy_flags.len());
         for flag in privacy_flags {
             args.push(flag.to_string());
         }
@@ -647,6 +648,15 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
         }
     }
     
+    // Deduplicate flags (preserve order, skip first occurrence of user-data-dir etc.)
+    {
+        let mut seen = std::collections::HashSet::new();
+        args.retain(|arg| {
+            let key = arg.split('=').next().unwrap_or(arg).to_lowercase();
+            seen.insert(key)
+        });
+    }
+
     // Add URL if provided (validate scheme)
     if let Some(u) = url {
         let lower = u.to_lowercase();

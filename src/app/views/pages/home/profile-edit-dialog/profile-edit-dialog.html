@@ -290,7 +290,8 @@
                 <div class="flex items-center gap-2">
                     <i class="pi pi-shield text-primary"></i>
                     <div>
-                        <label class="block text-xs font-medium text-color">Privacy Mode</label>
+                        <label for="home-edit-dialog-privacy-toggle"
+                            class="block text-xs font-medium text-color">Privacy Mode</label>
                         <p class="text-xs text-muted-color">Disable telemetry, sync, WebRTC leak &amp; tracking</p>
                     </div>
                 </div>
@@ -299,19 +300,22 @@
             </div>
             @if (editAntidetectEnabled()) {
             <div class="text-xs text-muted-color pt-1 border-t border-surface-100 dark:border-surface-800 space-y-1">
-                <p class="font-medium text-color">Active flags:</p>
+                <p class="font-medium text-color">Active flags (10):</p>
                 <ul class="list-disc list-inside space-y-0.5">
                     <li>Disable background networking</li>
                     <li>Disable phishing detection</li>
                     <li>Disable domain reliability</li>
                     <li>Disable crash reporting</li>
                     <li>Disable ping tracking</li>
+                    <li>Disable WebRTC event logging</li>
                     <li>Block WebRTC IP leak</li>
-                    <li>Disable metrics &amp; sync</li>
+                    <li>Disable metrics recording</li>
                     <li>Disable component updates</li>
+                    <li>Disable sync</li>
                 </ul>
             </div>
-            }</div>
+            }
+        </div>
 
         <!-- Feature 4.2: Proxy Rotation -->
         <div id="home-edit-dialog-proxy-rotation-section"
