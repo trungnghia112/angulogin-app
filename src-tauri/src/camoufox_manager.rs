@@ -114,8 +114,28 @@ impl CamoufoxManager {
             self.generate_fingerprint_config(config)?
         };
 
-        // Convert fingerprint to env vars
+        // Inject debug flag into the config
+        let fingerprint_json = {
+            let mut config_map: serde_json::Map<String, serde_json::Value> =
+                serde_json::from_str(&fingerprint_json)
+                    .map_err(|e| format!("Failed to parse fingerprint JSON: {e}"))?;
+            config_map.insert("debug".to_string(), serde_json::Value::Bool(true));
+            serde_json::to_string(&config_map)
+                .map_err(|e| format!("Failed to serialize config with debug flag: {e}"))?
+        };
+
+        // Convert fingerprint to env vars (single CAMOU_CONFIG)
         let env_vars = crate::camoufox_env::json_config_to_env_vars(&fingerprint_json)?;
+
+        // Log the config for debugging
+        if let Some(camou_config) = env_vars.get("CAMOU_CONFIG") {
+            let truncated = if camou_config.len() > 500 {
+                format!("{}... ({} bytes total)", &camou_config[..500], camou_config.len())
+            } else {
+                camou_config.clone()
+            };
+            log::info!("CAMOU_CONFIG: {}", truncated);
+        }
 
         // Ensure profile directory exists
         let profile_dir = std::path::Path::new(profile_path);
@@ -150,13 +170,13 @@ impl CamoufoxManager {
             args
         );
 
-        // Spawn the process
+        // Spawn the process (capture stderr for diagnostics)
         let mut command = TokioCommand::new(&executable_path);
         command
             .args(&args)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
-            .stderr(Stdio::null());
+            .stderr(Stdio::piped());
 
         // Add fingerprint env vars
         for (key, value) in &env_vars {
@@ -174,7 +194,7 @@ impl CamoufoxManager {
             }
         }
 
-        let child = command
+        let mut child = command
             .spawn()
             .map_err(|e| format!("Failed to spawn Camoufox: {e}"))?;
 
@@ -182,6 +202,23 @@ impl CamoufoxManager {
         let instance_id = format!("camoufox_{}", process_id.unwrap_or(0));
 
         log::info!("Camoufox launched with PID: {:?}", process_id);
+
+        // Read stderr in background for diagnostics
+        if let Some(stderr) = child.stderr.take() {
+            let pid = process_id.unwrap_or(0);
+            tokio::spawn(async move {
+                use tokio::io::AsyncReadExt;
+                let mut buf = vec![0u8; 2048];
+                let mut reader = stderr;
+                match reader.read(&mut buf).await {
+                    Ok(n) if n > 0 => {
+                        let output = String::from_utf8_lossy(&buf[..n]);
+                        log::warn!("Camoufox stderr (PID {}): {}", pid, output);
+                    }
+                    _ => {}
+                }
+            });
+        }
 
         // Store instance for tracking
         let instance = CamoufoxInstance {

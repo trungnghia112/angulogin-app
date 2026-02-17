@@ -1,16 +1,12 @@
 //! Camoufox environment variable converter.
 //!
 //! Converts fingerprint config to Camoufox-compatible environment variables.
-//! Camoufox reads its config via CAMOU_CONFIG_N chunked environment variables.
+//! Camoufox reads its config via the CAMOU_CONFIG environment variable.
 
 use std::collections::HashMap;
 
-/// Maximum size per env var chunk (Camoufox limitation)
-const MAX_ENV_VAR_SIZE: usize = 30000;
-
 /// Convert a fingerprint config (HashMap) to Camoufox environment variables.
-/// The config is serialized to JSON, then split into chunks under CAMOU_CONFIG_0,
-/// CAMOU_CONFIG_1, etc. since single env vars have size limits.
+/// Sets a single CAMOU_CONFIG env var with the entire JSON config.
 pub fn config_to_env_vars(
     config: &HashMap<String, serde_json::Value>,
 ) -> Result<HashMap<String, String>, String> {
@@ -18,18 +14,7 @@ pub fn config_to_env_vars(
         .map_err(|e| format!("Failed to serialize config: {e}"))?;
 
     let mut env_vars = HashMap::new();
-
-    // Split config into chunks
-    let chunks: Vec<&str> = config_json
-        .as_bytes()
-        .chunks(MAX_ENV_VAR_SIZE)
-        .map(|chunk| std::str::from_utf8(chunk).unwrap_or(""))
-        .collect();
-
-    for (i, chunk) in chunks.iter().enumerate() {
-        env_vars.insert(format!("CAMOU_CONFIG_{}", i), chunk.to_string());
-    }
-
+    env_vars.insert("CAMOU_CONFIG".to_string(), config_json);
     Ok(env_vars)
 }
 
@@ -37,10 +22,14 @@ pub fn config_to_env_vars(
 pub fn json_config_to_env_vars(
     config_json: &str,
 ) -> Result<HashMap<String, String>, String> {
-    let config: HashMap<String, serde_json::Value> =
+    // Validate the JSON is parseable
+    let _: HashMap<String, serde_json::Value> =
         serde_json::from_str(config_json)
             .map_err(|e| format!("Failed to parse fingerprint config JSON: {e}"))?;
-    config_to_env_vars(&config)
+
+    let mut env_vars = HashMap::new();
+    env_vars.insert("CAMOU_CONFIG".to_string(), config_json.to_string());
+    Ok(env_vars)
 }
 
 /// Get fontconfig env var for Linux font spoofing
@@ -82,17 +71,20 @@ mod tests {
         );
 
         let env_vars = config_to_env_vars(&config).unwrap();
-        assert!(env_vars.contains_key("CAMOU_CONFIG_0"));
+        assert!(env_vars.contains_key("CAMOU_CONFIG"));
+        assert_eq!(env_vars.len(), 1);
 
-        let chunk = &env_vars["CAMOU_CONFIG_0"];
-        assert!(chunk.contains("screen.width"));
-        assert!(chunk.contains("1920"));
+        let config_val = &env_vars["CAMOU_CONFIG"];
+        assert!(config_val.contains("screen.width"));
+        assert!(config_val.contains("1920"));
     }
 
     #[test]
     fn test_json_config_to_env_vars() {
         let json = r#"{"screen.width": 1920, "navigator.userAgent": "Test"}"#;
         let env_vars = json_config_to_env_vars(json).unwrap();
-        assert!(!env_vars.is_empty());
+        assert_eq!(env_vars.len(), 1);
+        assert!(env_vars.contains_key("CAMOU_CONFIG"));
+        assert_eq!(env_vars["CAMOU_CONFIG"], json);
     }
 }
