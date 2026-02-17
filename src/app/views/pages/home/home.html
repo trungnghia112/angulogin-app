@@ -121,10 +121,12 @@
                             field="metadata.launchCount" /></th>
                     }
                     @if (columnConfig.isVisible('browser')) {
-                    <th pResizableColumn>Browser</th>
+                    <th pResizableColumn pSortableColumn="metadata.browser">Browser <p-sortIcon
+                            field="metadata.browser" /></th>
                     }
                     @if (columnConfig.isVisible('group')) {
-                    <th pResizableColumn>Group</th>
+                    <th pResizableColumn pSortableColumn="metadata.group">Group <p-sortIcon field="metadata.group" />
+                    </th>
                     }
                     <th style="width: 3rem">
                         <button id="home-column-settings-btn"

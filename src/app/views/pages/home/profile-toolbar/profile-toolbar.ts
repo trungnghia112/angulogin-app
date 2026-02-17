@@ -10,7 +10,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MenuModule } from 'primeng/menu';
 import { TooltipModule } from 'primeng/tooltip';
 
-export type SortByType = 'name' | 'size' | 'lastOpened' | 'custom';
+export type SortByType = 'name' | 'size' | 'lastOpened' | 'custom' | 'proxy' | 'launchCount' | 'browser' | 'group';
 export type ViewModeType = 'table' | 'grid';
 
 @Component({

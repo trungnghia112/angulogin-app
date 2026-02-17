@@ -53,6 +53,8 @@ const BROWSER_INFO: Record<string, { name: string; icon: string }> = {
     arc: { name: 'Arc', icon: 'pi-circle' },
 };
 
+type SortField = 'name' | 'size' | 'lastOpened' | 'custom' | 'proxy' | 'launchCount' | 'browser' | 'group';
+
 type TabKey = 'profiles' | 'proxies' | 'tags' | 'statuses' | 'extras';
 
 interface Tab {
@@ -161,7 +163,7 @@ export class Home implements OnInit, OnDestroy {
     protected readonly filterFavoritesOnly = signal(false);
 
     // Sorting
-    protected readonly sortBy = signal<'name' | 'size' | 'lastOpened' | 'custom'>('name');
+    protected readonly sortBy = signal<SortField>('name');
     protected readonly sortOrder = signal<'asc' | 'desc'>('asc');
     protected readonly compactMode = signal<boolean>(
         typeof localStorage !== 'undefined' && localStorage.getItem('home-compact-mode') === 'true'
@@ -240,15 +242,33 @@ export class Home implements OnInit, OnDestroy {
             switch (sortByValue) {
                 case 'size':
                     return ((a.size || 0) - (b.size || 0)) * multiplier;
-                case 'lastOpened':
+                case 'lastOpened': {
                     const aDate = a.metadata?.lastOpened ? new Date(a.metadata.lastOpened).getTime() : 0;
                     const bDate = b.metadata?.lastOpened ? new Date(b.metadata.lastOpened).getTime() : 0;
-                    return (bDate - aDate) * multiplier; // Most recent first by default
-                case 'custom':
-                    // Sort by custom sortOrder, fallback to 0
+                    return (bDate - aDate) * multiplier;
+                }
+                case 'custom': {
                     const aOrder = a.metadata?.sortOrder ?? 999999;
                     const bOrder = b.metadata?.sortOrder ?? 999999;
                     return aOrder - bOrder;
+                }
+                case 'proxy': {
+                    const aProxy = a.metadata?.proxy || '';
+                    const bProxy = b.metadata?.proxy || '';
+                    return aProxy.localeCompare(bProxy) * multiplier;
+                }
+                case 'launchCount':
+                    return ((a.metadata?.launchCount || 0) - (b.metadata?.launchCount || 0)) * multiplier;
+                case 'browser': {
+                    const aBrowser = a.metadata?.browser || 'chrome';
+                    const bBrowser = b.metadata?.browser || 'chrome';
+                    return aBrowser.localeCompare(bBrowser) * multiplier;
+                }
+                case 'group': {
+                    const aGroup = a.metadata?.group || '';
+                    const bGroup = b.metadata?.group || '';
+                    return aGroup.localeCompare(bGroup) * multiplier;
+                }
                 case 'name':
                 default:
                     return a.name.localeCompare(b.name) * multiplier;
@@ -684,9 +704,8 @@ export class Home implements OnInit, OnDestroy {
         this.filterGroup.set(null);
     }
 
-    setSortBy(value: 'name' | 'size' | 'lastOpened' | 'custom'): void {
+    setSortBy(value: SortField): void {
         if (this.sortBy() === value) {
-            // Toggle order if same field (except custom)
             if (value !== 'custom') {
                 this.sortOrder.set(this.sortOrder() === 'asc' ? 'desc' : 'asc');
             }
@@ -700,10 +719,18 @@ export class Home implements OnInit, OnDestroy {
 
     // Handle PrimeNG table sort events
     onTableSort(event: { field: string; order: number }): void {
-        const field = event.field;
-        if (field === 'name' || field === 'metadata.lastOpened') {
-            const mapped = field === 'name' ? 'name' : 'lastOpened';
-            this.sortBy.set(mapped as 'name' | 'size' | 'lastOpened' | 'custom');
+        const fieldMap: Record<string, SortField> = {
+            'name': 'name',
+            'size': 'size',
+            'metadata.proxy': 'proxy',
+            'metadata.lastOpened': 'lastOpened',
+            'metadata.launchCount': 'launchCount',
+            'metadata.browser': 'browser',
+            'metadata.group': 'group',
+        };
+        const mapped = fieldMap[event.field];
+        if (mapped) {
+            this.sortBy.set(mapped);
             this.sortOrder.set(event.order === 1 ? 'asc' : 'desc');
         }
     }
