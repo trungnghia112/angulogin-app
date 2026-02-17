@@ -140,8 +140,8 @@ fn find_cookies_db(profile_path: &str) -> Result<String, String> {
 }
 
 /// Export cookies from a Chrome profile's Cookies SQLite database
+/// NOTE: Path validation is done at the commands layer (entry point)
 pub fn export_cookies(profile_path: String, browser: Option<String>) -> Result<CookieExportResult, String> {
-    crate::commands::validate_path_safety(&profile_path, "Profile path")?;
 
     let db_path = find_cookies_db(&profile_path)?;
 
@@ -243,9 +243,19 @@ pub fn export_cookies(profile_path: String, browser: Option<String>) -> Result<C
     })
 }
 
+/// Max allowed size for cookie JSON input (10MB)
+const MAX_COOKIE_JSON_SIZE: usize = 10 * 1024 * 1024;
+
 /// Import cookies into a Chrome profile's Cookies SQLite database
+/// NOTE: Path validation is done at the commands layer (entry point)
 pub fn import_cookies(profile_path: String, cookies_json: String) -> Result<CookieImportResult, String> {
-    crate::commands::validate_path_safety(&profile_path, "Profile path")?;
+    // Guard against excessively large input
+    if cookies_json.len() > MAX_COOKIE_JSON_SIZE {
+        return Err(format!(
+            "Cookie JSON too large: {} bytes (max {} bytes / 10MB)",
+            cookies_json.len(), MAX_COOKIE_JSON_SIZE
+        ));
+    }
 
     let cookies: Vec<CookieJson> = serde_json::from_str(&cookies_json)
         .map_err(|e| format!("Failed to parse cookies JSON: {}", e))?;
@@ -322,6 +332,7 @@ pub fn import_cookies(profile_path: String, cookies_json: String) -> Result<Cook
         let samesite = match cookie.same_site.as_deref() {
             Some("strict") => 2,
             Some("lax") => 1,
+            Some("unspecified") => 0,
             Some("no_restriction") | Some("none") => -1,
             _ => -1,
         };
@@ -366,7 +377,7 @@ pub fn import_cookies(profile_path: String, cookies_json: String) -> Result<Cook
         }
     }
 
-    eprintln!("[CookieImport] Imported {} cookies, skipped {} for profile: {}", imported, skipped, profile_path);
+
 
     Ok(CookieImportResult {
         imported,

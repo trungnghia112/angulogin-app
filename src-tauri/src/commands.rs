@@ -1476,12 +1476,14 @@ pub async fn stop_camoufox(id: String) -> Result<bool, String> {
 
 /// Cookie Import/Export: Export cookies from a Chrome profile
 #[tauri::command]
-pub fn export_profile_cookies(profile_path: String, browser: Option<String>) -> Result<crate::cookies::CookieExportResult, String> {
+pub async fn export_profile_cookies(profile_path: String, browser: Option<String>) -> Result<crate::cookies::CookieExportResult, String> {
+    validate_path_safety(&profile_path, "Profile path")?;
     crate::cookies::export_cookies(profile_path, browser)
 }
 
 /// Cookie Import/Export: Import cookies into a Chrome profile
 #[tauri::command]
-pub fn import_profile_cookies(profile_path: String, cookies_json: String) -> Result<crate::cookies::CookieImportResult, String> {
+pub async fn import_profile_cookies(profile_path: String, cookies_json: String) -> Result<crate::cookies::CookieImportResult, String> {
+    validate_path_safety(&profile_path, "Profile path")?;
     crate::cookies::import_cookies(profile_path, cookies_json)
 }

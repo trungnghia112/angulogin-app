@@ -339,7 +339,7 @@
                             <p-button [id]="'home-profile-' + i + '-export-cookies-btn'"
                                 (click)="exportCookies(profile, $event)" icon="pi pi-upload" [rounded]="true"
                                 [text]="true" severity="secondary" size="small" pTooltip="Export cookies (JSON)"
-                                [loading]="cookieExportLoading()" />
+                                [loading]="cookieExportingPath() === profile.path" />
                             <p-button [id]="'home-profile-' + i + '-import-cookies-btn'"
                                 (click)="openCookieImportDialog(profile, $event)" icon="pi pi-file-import"
                                 [rounded]="true" [text]="true" severity="secondary" size="small"

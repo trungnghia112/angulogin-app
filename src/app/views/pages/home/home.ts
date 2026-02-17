@@ -329,7 +329,7 @@ export class Home implements OnInit, OnDestroy {
     protected readonly showCookieImportDialog = signal(false);
     protected readonly cookieImportJson = signal('');
     protected readonly cookieImportTarget = signal<Profile | null>(null);
-    protected readonly cookieExportLoading = signal(false);
+    protected readonly cookieExportingPath = signal<string | null>(null);
     protected readonly cookieImportLoading = signal(false);
 
     // Phase 3: Activity Log dialog
@@ -1227,7 +1227,7 @@ export class Home implements OnInit, OnDestroy {
     // Cookie Import/Export
     async exportCookies(profile: Profile, event: Event): Promise<void> {
         event.stopPropagation();
-        this.cookieExportLoading.set(true);
+        this.cookieExportingPath.set(profile.path);
         try {
             const browser = profile.metadata?.browser || undefined;
             const result = await this.profileService.exportCookies(profile.path, browser);
@@ -1247,7 +1247,7 @@ export class Home implements OnInit, OnDestroy {
         } catch (e) {
             this.messageService.add({ severity: 'error', summary: 'Export Failed', detail: String(e) });
         } finally {
-            this.cookieExportLoading.set(false);
+            this.cookieExportingPath.set(null);
         }
     }
 
@@ -1316,7 +1316,19 @@ export class Home implements OnInit, OnDestroy {
 
             if (!filePath) return;
 
-            const { readTextFile } = await import('@tauri-apps/plugin-fs');
+            // Check file size before reading (max 10MB)
+            const { readTextFile, stat } = await import('@tauri-apps/plugin-fs');
+            const fileInfo = await stat(filePath as string);
+            const maxSize = 10 * 1024 * 1024;
+            if (fileInfo.size > maxSize) {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'File Too Large',
+                    detail: `File is ${(fileInfo.size / 1024 / 1024).toFixed(1)}MB (max 10MB)`,
+                });
+                return;
+            }
+
             const content = await readTextFile(filePath as string);
             this.cookieImportTarget.set(profile);
             this.cookieImportJson.set(content);
