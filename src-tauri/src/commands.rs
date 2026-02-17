@@ -732,10 +732,11 @@ pub fn clear_profile_cookies(profile_path: String) -> Result<ClearDataResult, St
         "Code Cache",
         "GPUCache",
         "Service Worker/CacheStorage",
+        "Service Worker",
         // Session data
         "Session Storage",
         "Sessions",
-        // Local Storage (optional, includes site data)
+        // Local Storage (includes site data)
         "Local Storage",
         // IndexedDB
         "IndexedDB",
@@ -745,39 +746,68 @@ pub fn clear_profile_cookies(profile_path: String) -> Result<ClearDataResult, St
         // Network state
         "Network Action Predictor",
         "Network Persistent State",
+        // Shared storage
+        "Shared Storage",
+        // Top-level cache directories
+        "GrShaderCache",
+        "GraphiteDawnCache",
+        "ShaderCache",
     ];
     
-    let mut deleted_count = 0;
+    let mut deleted_count: u32 = 0;
     let mut failed_items: Vec<String> = Vec::new();
     let mut freed_bytes: u64 = 0;
     
-    for item in items_to_delete {
-        let item_path = path.join(item);
-        if item_path.exists() {
-            // Calculate size before deleting
-            let item_size = if item_path.is_dir() {
-                calculate_dir_size(&item_path)
-            } else {
-                item_path.metadata().map(|m| m.len()).unwrap_or(0)
-            };
-            
-            let result = if item_path.is_dir() {
-                fs::remove_dir_all(&item_path)
-            } else {
-                fs::remove_file(&item_path)
-            };
-            
-            match result {
-                Ok(_) => {
-                    deleted_count += 1;
-                    freed_bytes += item_size;
-                }
-                Err(e) => {
-                    failed_items.push(format!("{}: {}", item, e));
+    // Chrome stores profile data inside a "Default" subdirectory under user-data-dir.
+    // We need to scan BOTH the root profile path AND "Default/" subdirectory.
+    let mut search_dirs: Vec<std::path::PathBuf> = vec![path.to_path_buf()];
+    let default_dir = path.join("Default");
+    if default_dir.is_dir() {
+        search_dirs.push(default_dir);
+    }
+    // Also check other Chrome profile subdirectories (Profile 1, Profile 2, etc.)
+    if let Ok(entries) = fs::read_dir(path) {
+        for entry in entries.flatten() {
+            let entry_name = entry.file_name().to_string_lossy().to_string();
+            if entry_name.starts_with("Profile ") && entry.path().is_dir() {
+                search_dirs.push(entry.path());
+            }
+        }
+    }
+
+    for search_dir in &search_dirs {
+        for item in &items_to_delete {
+            let item_path = search_dir.join(item);
+            if item_path.exists() {
+                // Calculate size before deleting
+                let item_size = if item_path.is_dir() {
+                    calculate_dir_size(&item_path)
+                } else {
+                    item_path.metadata().map(|m| m.len()).unwrap_or(0)
+                };
+                
+                let result = if item_path.is_dir() {
+                    fs::remove_dir_all(&item_path)
+                } else {
+                    fs::remove_file(&item_path)
+                };
+                
+                let display_path = format!("{}/{}", search_dir.file_name().unwrap_or_default().to_string_lossy(), item);
+                match result {
+                    Ok(_) => {
+                        deleted_count += 1;
+                        freed_bytes += item_size;
+                        eprintln!("[ClearData] Deleted: {} ({:.1} MB)", display_path, item_size as f64 / 1_048_576.0);
+                    }
+                    Err(e) => {
+                        failed_items.push(format!("{}: {}", display_path, e));
+                    }
                 }
             }
         }
     }
+
+    eprintln!("[ClearData] Total: {} items deleted, {:.1} MB freed", deleted_count, freed_bytes as f64 / 1_048_576.0);
     
     Ok(ClearDataResult {
         deleted_count,
