@@ -39,8 +39,10 @@ import { FolderService } from '../../../services/folder.service';
 import { ProxyService } from '../../../services/proxy.service';
 import { NavigationService } from '../../../services/navigation.service';
 import { CamoufoxService } from '../../../services/camoufox.service';
+import { ColumnConfigService } from '../../../core/services/column-config.service';
 import { BrowserType, Profile } from '../../../models/profile.model';
 import { validateProfileName } from '../../../core/utils/validation.util';
+import { ColumnSettingsPanel } from '../../components/column-settings-panel/column-settings-panel';
 
 
 
@@ -88,6 +90,7 @@ interface Tab {
         ProfileToolbar,
         ProfileEditDialog,
         Select,
+        ColumnSettingsPanel,
     ],
 })
 export class Home implements OnInit, OnDestroy {
@@ -102,6 +105,7 @@ export class Home implements OnInit, OnDestroy {
     private readonly destroyRef = inject(DestroyRef);
     private readonly navService = inject(NavigationService);
     private readonly camoufoxService = inject(CamoufoxService);
+    protected readonly columnConfig = inject(ColumnConfigService);
     private readonly searchSubject = new Subject<string>();
 
     // Feature 6.9: Zen Mode
@@ -303,6 +307,8 @@ export class Home implements OnInit, OnDestroy {
 
     // Phase 3: Activity Log dialog
     protected readonly showActivityLog = signal(false);
+    // Feature 11.1: Column settings panel
+    protected readonly showColumnSettings = signal(false);
     protected readonly activityLog = this.activityLogService;
 
     // Available tags from all profiles

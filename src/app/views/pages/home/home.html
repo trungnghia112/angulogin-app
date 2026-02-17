@@ -89,17 +89,51 @@
             <ng-template pTemplate="header">
                 <tr id="home-profiles-table-header">
                     <th style="width: 3rem"><p-tableHeaderCheckbox /></th>
+                    @if (columnConfig.isVisible('pin')) {
                     <th style="width: 3rem"><i class="pi pi-star"></i></th>
+                    }
                     <th pResizableColumn pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+                    @if (columnConfig.isVisible('status')) {
                     <th pResizableColumn>Status</th>
+                    }
+                    @if (columnConfig.isVisible('proxy')) {
                     <th pResizableColumn pSortableColumn="metadata.proxy">Proxy <p-sortIcon field="metadata.proxy" />
                     </th>
+                    }
+                    @if (columnConfig.isVisible('tags')) {
                     <th pResizableColumn>Tags</th>
+                    }
+                    @if (columnConfig.isVisible('notes')) {
                     <th pResizableColumn>Notes</th>
+                    }
+                    @if (columnConfig.isVisible('lastChanged')) {
                     <th pResizableColumn pSortableColumn="metadata.lastOpened">Last Changed <p-sortIcon
                             field="metadata.lastOpened" /></th>
+                    }
+                    @if (columnConfig.isVisible('runningTime')) {
                     <th pResizableColumn>Running Time</th>
-                    <th style="width: 3rem"><i class="pi pi-cog"></i></th>
+                    }
+                    @if (columnConfig.isVisible('size')) {
+                    <th pResizableColumn pSortableColumn="size">Size <p-sortIcon field="size" /></th>
+                    }
+                    @if (columnConfig.isVisible('launchCount')) {
+                    <th pResizableColumn pSortableColumn="metadata.launchCount">Launches <p-sortIcon
+                            field="metadata.launchCount" /></th>
+                    }
+                    @if (columnConfig.isVisible('browser')) {
+                    <th pResizableColumn>Browser</th>
+                    }
+                    @if (columnConfig.isVisible('group')) {
+                    <th pResizableColumn>Group</th>
+                    }
+                    <th style="width: 3rem">
+                        <button id="home-column-settings-btn"
+                            (click)="showColumnSettings.set(true); $event.stopPropagation()"
+                            class="w-7 h-7 rounded-md flex items-center justify-center text-muted-color hover:text-primary transition-colors"
+                            pTooltip="Customize columns">
+                            <i class="pi pi-cog"></i>
+                        </button>
+                    </th>
                 </tr>
             </ng-template>
 
@@ -112,6 +146,7 @@
                     </td>
 
                     <!-- Pin -->
+                    @if (columnConfig.isVisible('pin')) {
                     <td>
                         <button [id]="'home-profile-' + i + '-pin-btn'" (click)="togglePin(profile, $event)"
                             class="w-7 h-7 rounded-md transition-colors flex items-center justify-center" [class]="profile.metadata?.isPinned 
@@ -120,11 +155,11 @@
                             <i [class]="profile.metadata?.isPinned ? 'pi pi-star-fill' : 'pi pi-star'"></i>
                         </button>
                     </td>
+                    }
 
                     <!-- Name with Start button -->
                     <td>
                         <div class="flex items-center gap-3">
-                            <!-- Phase 1: Color dot -->
                             @if (profile.metadata?.color) {
                             <span class="w-3 h-3 rounded-full flex-shrink-0"
                                 [style.background-color]="profile.metadata.color"></span>
@@ -134,7 +169,6 @@
                             <span [class]="profile.metadata?.isHidden ? 'opacity-50' : ''"
                                 [pTooltip]="getProfileTooltip(profile)" tooltipPosition="right" [escape]="false">{{
                                 profile.name }}</span>
-                            <!-- Phase 2: Hidden indicator -->
                             @if (profile.metadata?.isHidden) {
                             <i class="pi pi-eye-slash text-xs text-muted-color" pTooltip="Hidden profile"></i>
                             }
@@ -142,13 +176,16 @@
                     </td>
 
                     <!-- Status -->
+                    @if (columnConfig.isVisible('status')) {
                     <td>
                         <span class="px-2.5 py-1 border border-surface rounded text-xs text-muted-color">
                             No status
                         </span>
                     </td>
+                    }
 
                     <!-- Proxy -->
+                    @if (columnConfig.isVisible('proxy')) {
                     <td>
                         @if (profile.metadata?.proxy) {
                         <span
@@ -163,8 +200,10 @@
                             pTooltip="Add Proxy" />
                         }
                     </td>
+                    }
 
                     <!-- Tags -->
+                    @if (columnConfig.isVisible('tags')) {
                     <td>
                         @if (profile.metadata?.tags && profile.metadata.tags.length > 0) {
                         <div class="flex flex-wrap gap-1">
@@ -185,8 +224,10 @@
                             [text]="true" severity="secondary" size="small" />
                         }
                     </td>
+                    }
 
                     <!-- Notes -->
+                    @if (columnConfig.isVisible('notes')) {
                     <td>
                         @if (profile.metadata?.notes) {
                         <span
@@ -199,14 +240,18 @@
                             [text]="true" severity="secondary" size="small" />
                         }
                     </td>
+                    }
 
                     <!-- Last Changed (Feature 11.4) -->
+                    @if (columnConfig.isVisible('lastChanged')) {
                     <td>
                         <span class="text-xs text-muted-color whitespace-nowrap">{{
                             formatRelativeDate(profile.metadata?.lastOpened) }}</span>
                     </td>
+                    }
 
                     <!-- Running Time (Feature 11.5) -->
+                    @if (columnConfig.isVisible('runningTime')) {
                     <td>
                         @if (profile.metadata?.totalUsageMinutes) {
                         <span
@@ -218,6 +263,50 @@
                         <span class="text-xs text-muted-color">-</span>
                         }
                     </td>
+                    }
+
+                    <!-- Size (Feature 11.1 - new column) -->
+                    @if (columnConfig.isVisible('size')) {
+                    <td>
+                        <span class="text-xs text-muted-color whitespace-nowrap">{{ formatSize(profile.size) || '-'
+                            }}</span>
+                    </td>
+                    }
+
+                    <!-- Launch Count (Feature 11.1 - new column) -->
+                    @if (columnConfig.isVisible('launchCount')) {
+                    <td>
+                        @if (profile.metadata?.launchCount) {
+                        <span
+                            class="inline-flex items-center gap-1 px-2 py-0.5 bg-surface-100 dark:bg-surface-800 rounded text-xs text-color">
+                            <i class="pi pi-play text-[10px] text-muted-color"></i>
+                            {{ profile.metadata.launchCount }}
+                        </span>
+                        } @else {
+                        <span class="text-xs text-muted-color">-</span>
+                        }
+                    </td>
+                    }
+
+                    <!-- Browser (Feature 11.1 - new column) -->
+                    @if (columnConfig.isVisible('browser')) {
+                    <td>
+                        <span class="text-xs text-color">{{ getBrowserName(profile.metadata?.browser) }}</span>
+                    </td>
+                    }
+
+                    <!-- Group (Feature 11.1 - new column) -->
+                    @if (columnConfig.isVisible('group')) {
+                    <td>
+                        @if (profile.metadata?.group) {
+                        <span class="px-2 py-0.5 bg-surface-100 dark:bg-surface-800 rounded text-xs text-color">
+                            {{ profile.metadata.group }}
+                        </span>
+                        } @else {
+                        <span class="text-xs text-muted-color">-</span>
+                        }
+                    </td>
+                    }
 
                     <!-- Actions -->
                     <td>
@@ -232,19 +321,16 @@
                             <p-button [id]="'home-profile-' + i + '-backup-btn'"
                                 (click)="backupProfile(profile, $event)" icon="pi pi-download" [rounded]="true"
                                 [text]="true" severity="secondary" size="small" pTooltip="Backup to ZIP" />
-                            <!-- Phase 2: Hide toggle -->
                             <p-button [id]="'home-profile-' + i + '-hide-btn'" (click)="toggleHide(profile, $event)"
                                 [icon]="profile.metadata?.isHidden ? 'pi pi-eye' : 'pi pi-eye-slash'" [rounded]="true"
                                 [text]="true" severity="secondary" size="small"
                                 [pTooltip]="profile.metadata?.isHidden ? 'Show profile' : 'Hide profile'" />
-                            <!-- Feature 2.4: Favorites toggle -->
                             <p-button [id]="'home-profile-' + i + '-favorite-btn'"
                                 (click)="toggleFavorite(profile, $event)"
                                 [icon]="profile.metadata?.isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'"
                                 [rounded]="true" [text]="true"
                                 [severity]="profile.metadata?.isFavorite ? 'danger' : 'secondary'" size="small"
                                 [pTooltip]="profile.metadata?.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'" />
-                            <!-- Feature 4.2: Clear Cookies -->
                             <p-button [id]="'home-profile-' + i + '-clear-cookies-btn'"
                                 (click)="clearCookies(profile, $event)" icon="pi pi-eraser" [rounded]="true"
                                 [text]="true" severity="secondary" size="small" pTooltip="Clear cookies & cache" />
@@ -259,7 +345,7 @@
             <!-- Empty state -->
             <ng-template pTemplate="emptymessage">
                 <tr>
-                    <td colspan="10">No profiles in this folder</td>
+                    <td [attr.colspan]="columnConfig.visibleColumnCount()">No profiles in this folder</td>
                 </tr>
             </ng-template>
         </p-table>
@@ -762,4 +848,7 @@
                 [disabled]="massTagSelection().length === 0" />
         </ng-template>
     </p-dialog>
+
+    <!-- Column Settings Panel -->
+    <app-column-settings-panel [visible]="showColumnSettings()" (visibleChange)="showColumnSettings.set($event)" />
 </div>
