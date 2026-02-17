@@ -366,6 +366,41 @@ pub fn duplicate_profile(source_path: String, new_name: String) -> Result<String
     Ok(dest_path.to_string_lossy().to_string())
 }
 
+/// Copy a profile to a specific destination directory (used for templates)
+#[tauri::command]
+pub async fn copy_profile_to(source_path: String, dest_base_path: String, new_name: String) -> Result<String, String> {
+    validate_path_safety(&source_path, "Source path")?;
+    validate_path_safety(&dest_base_path, "Destination path")?;
+    let safe_name = sanitize_profile_name(&new_name)?;
+
+    let source = std::path::Path::new(&source_path);
+    if !source.exists() {
+        return Err("Source profile does not exist".to_string());
+    }
+
+    let dest_base = std::path::Path::new(&dest_base_path);
+    fs::create_dir_all(dest_base)
+        .map_err(|e| format!("Failed to create destination directory: {}", e))?;
+
+    let dest_path = dest_base.join(&safe_name);
+    if dest_path.exists() {
+        return Err(format!("'{}' already exists in destination", safe_name));
+    }
+
+    fs::create_dir_all(&dest_path)
+        .map_err(|e| format!("Failed to create destination: {}", e))?;
+
+    let mut options = fs_extra::dir::CopyOptions::new();
+    options.content_only = true;
+
+    if let Err(e) = fs_extra::dir::copy(&source_path, &dest_path, &options) {
+        let _ = fs::remove_dir_all(&dest_path);
+        return Err(format!("Failed to copy profile: {}", e));
+    }
+
+    Ok(dest_path.to_string_lossy().to_string())
+}
+
 #[derive(serde::Serialize, serde::Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileMetadata {

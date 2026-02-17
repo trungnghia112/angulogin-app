@@ -57,7 +57,9 @@ pub fn run() {
             commands::stop_camoufox,
             // Cookie Import/Export
             commands::export_profile_cookies,
-            commands::import_profile_cookies
+            commands::import_profile_cookies,
+            // Profile Templates
+            commands::copy_profile_to
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

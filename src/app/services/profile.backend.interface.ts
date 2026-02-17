@@ -102,4 +102,5 @@ export interface ProfileBackend {
     bulkExportProfiles(profilePaths: string[], destinationFolder: string): Promise<BulkExportResult>;
     exportCookies(profilePath: string, browser?: string): Promise<CookieExportResult>;
     importCookies(profilePath: string, cookiesJson: string): Promise<CookieImportResult>;
+    copyProfileTo(sourcePath: string, destBasePath: string, newName: string): Promise<string>;
 }

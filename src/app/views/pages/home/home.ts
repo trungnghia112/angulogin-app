@@ -351,6 +351,17 @@ export class Home implements OnInit, OnDestroy {
     protected readonly cookieExportingPath = signal<string | null>(null);
     protected readonly cookieImportLoading = signal(false);
 
+    // Profile Templates
+    protected readonly showSaveTemplateDialog = signal(false);
+    protected readonly templateName = signal('');
+    protected readonly templateSaving = signal(false);
+    protected readonly templateSourceProfile = signal<Profile | null>(null);
+    protected readonly showCreateFromTemplateDialog = signal(false);
+    protected readonly availableTemplates = signal<{ name: string; path: string }[]>([]);
+    protected readonly selectedTemplatePath = signal<string | null>(null);
+    protected readonly newFromTemplateName = signal('');
+    protected readonly templateCreating = signal(false);
+
     // Phase 3: Activity Log dialog
     protected readonly showActivityLog = signal(false);
     // Feature 11.1: Column settings panel
@@ -851,6 +862,80 @@ export class Home implements OnInit, OnDestroy {
             this.messageService.add({ severity: 'error', summary: 'Bulk Create Failed', detail: String(e) });
         } finally {
             this.bulkCreating.set(false);
+        }
+    }
+
+    // Profile Templates
+    openSaveTemplateDialog(profile: Profile, event: Event): void {
+        event.stopPropagation();
+        this.templateSourceProfile.set(profile);
+        this.templateName.set(profile.name);
+        this.showSaveTemplateDialog.set(true);
+    }
+
+    async saveAsTemplate(): Promise<void> {
+        const profile = this.templateSourceProfile();
+        const name = this.templateName().trim();
+        if (!profile || !name) return;
+
+        this.templateSaving.set(true);
+        try {
+            await this.profileService.saveAsTemplate(profile.path, name, this.profilesPath());
+            this.showSaveTemplateDialog.set(false);
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Template Saved',
+                detail: `"${name}" saved as template`,
+            });
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+        } finally {
+            this.templateSaving.set(false);
+        }
+    }
+
+    async openCreateFromTemplateDialog(): Promise<void> {
+        const templates = await this.profileService.listTemplates(this.profilesPath());
+        this.availableTemplates.set(templates);
+        this.selectedTemplatePath.set(templates.length > 0 ? templates[0].path : null);
+        this.newFromTemplateName.set('');
+        this.showCreateFromTemplateDialog.set(true);
+    }
+
+    async createFromTemplate(): Promise<void> {
+        const templatePath = this.selectedTemplatePath();
+        const name = this.newFromTemplateName().trim();
+        if (!templatePath || !name) return;
+
+        const exists = this.profiles().some(p => p.name.toLowerCase() === name.toLowerCase());
+        if (exists) {
+            this.messageService.add({ severity: 'error', summary: 'Duplicate Name', detail: `Profile "${name}" already exists.` });
+            return;
+        }
+
+        this.templateCreating.set(true);
+        try {
+            await this.profileService.createFromTemplate(templatePath, name, this.profilesPath());
+            this.showCreateFromTemplateDialog.set(false);
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Created',
+                detail: `Profile "${name}" created from template`,
+            });
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+        } finally {
+            this.templateCreating.set(false);
+        }
+    }
+
+    async deleteTemplate(template: { name: string; path: string }): Promise<void> {
+        try {
+            await this.profileService.deleteTemplate(template.path);
+            this.availableTemplates.update(t => t.filter(x => x.path !== template.path));
+            this.messageService.add({ severity: 'info', summary: 'Deleted', detail: `Template "${template.name}" deleted` });
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
         }
     }
 

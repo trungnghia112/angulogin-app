@@ -138,6 +138,53 @@ export class ProfileService {
         return { created, skipped, errors };
     }
 
+    // Profile Templates
+    getTemplatesPath(basePath: string): string {
+        return `${basePath}/_templates`;
+    }
+
+    async listTemplates(basePath: string): Promise<{ name: string; path: string }[]> {
+        const templatesDir = this.getTemplatesPath(basePath);
+        try {
+            const { readDir, exists } = await import('@tauri-apps/plugin-fs');
+            const dirExists = await exists(templatesDir);
+            if (!dirExists) return [];
+            const entries = await readDir(templatesDir);
+            return entries
+                .filter(e => e.isDirectory)
+                .map(e => ({ name: e.name, path: `${templatesDir}/${e.name}` }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+        } catch {
+            return [];
+        }
+    }
+
+    async saveAsTemplate(profilePath: string, templateName: string, basePath: string): Promise<string> {
+        const templatesDir = this.getTemplatesPath(basePath);
+        return await this.backend.copyProfileTo(profilePath, templatesDir, templateName);
+    }
+
+    async createFromTemplate(templatePath: string, newName: string, basePath: string): Promise<string> {
+        const newPath = await this.backend.copyProfileTo(templatePath, basePath, newName);
+
+        // Add to profiles signal
+        const metadata = await this.getProfileMetadata(newPath);
+        const newProfile: Profile = {
+            name: newName,
+            path: newPath,
+            metadata,
+            isRunning: false,
+            size: 0,
+        };
+        this.profiles.update(profiles => [...profiles, newProfile]);
+
+        return newPath;
+    }
+
+    async deleteTemplate(templatePath: string): Promise<void> {
+        await this.backend.deleteProfile(templatePath);
+    }
+
     async deleteProfile(profilePath: string, basePath: string): Promise<void> {
         try {
             await this.backend.deleteProfile(profilePath);

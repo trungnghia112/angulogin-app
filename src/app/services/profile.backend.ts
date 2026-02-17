@@ -131,6 +131,11 @@ export class MockProfileBackend implements ProfileBackend {
         debugLog('Mock importCookies:', profilePath, cookiesJson.substring(0, 50));
         return { imported: 0, skipped: 0, errors: [] };
     }
+
+    async copyProfileTo(sourcePath: string, destBasePath: string, newName: string): Promise<string> {
+        debugLog('Mock copyProfileTo:', sourcePath, destBasePath, newName);
+        return `${destBasePath}/${newName}`;
+    }
 }
 
 export class TauriProfileBackend implements ProfileBackend {
@@ -257,5 +262,9 @@ export class TauriProfileBackend implements ProfileBackend {
 
     async importCookies(profilePath: string, cookiesJson: string): Promise<CookieImportResult> {
         return await invoke<CookieImportResult>('import_profile_cookies', { profilePath, cookiesJson });
+    }
+
+    async copyProfileTo(sourcePath: string, destBasePath: string, newName: string): Promise<string> {
+        return await invoke<string>('copy_profile_to', { sourcePath, destBasePath, newName });
     }
 }

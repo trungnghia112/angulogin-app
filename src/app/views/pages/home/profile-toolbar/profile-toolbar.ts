@@ -60,6 +60,7 @@ export class ProfileToolbar {
     readonly scan = output<void>();
     readonly create = output<void>();
     readonly bulkCreate = output<void>();
+    readonly createFromTemplate = output<void>();
     readonly openSidebar = output<void>();
     readonly showActivityLog = output<void>();
     readonly restoreFromBackup = output<void>();
@@ -164,6 +165,11 @@ export class ProfileToolbar {
                     label: 'Bulk Create',
                     icon: 'pi pi-clone',
                     command: () => this.bulkCreate.emit(),
+                },
+                {
+                    label: 'Create from Template',
+                    icon: 'pi pi-bookmark',
+                    command: () => this.createFromTemplate.emit(),
                 },
                 {
                     label: 'Restore from Backup',

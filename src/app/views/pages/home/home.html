@@ -18,9 +18,10 @@
         (sortOrderChange)="sortOrder.set($event)" (filterGroupChange)="setFilterGroup($event)"
         (showHiddenChange)="showHidden.set($event)" (filterFavoritesOnlyChange)="filterFavoritesOnly.set($event)"
         (compactModeChange)="toggleCompactMode()" (scan)="scanProfiles()" (create)="openCreateDialog()"
-        (bulkCreate)="openBulkCreateDialog()" (openSidebar)="sidebarOpen.set(true)"
-        (showActivityLog)="showActivityLog.set(true)" (restoreFromBackup)="restoreFromBackup()"
-        (clearFilters)="clearFilters()" (exportProfiles)="exportProfiles()" (importProfiles)="importProfiles()" />
+        (bulkCreate)="openBulkCreateDialog()" (createFromTemplate)="openCreateFromTemplateDialog()"
+        (openSidebar)="sidebarOpen.set(true)" (showActivityLog)="showActivityLog.set(true)"
+        (restoreFromBackup)="restoreFromBackup()" (clearFilters)="clearFilters()" (exportProfiles)="exportProfiles()"
+        (importProfiles)="importProfiles()" />
 
     <!-- Tabs (scrollable on mobile) -->
     <div id="home-tabs"
@@ -347,6 +348,9 @@
                             <p-button [id]="'home-profile-' + i + '-delete-btn'"
                                 (click)="deleteProfile(profile, $event)" icon="pi pi-trash" [rounded]="true"
                                 [text]="true" severity="danger" size="small" pTooltip="Delete profile" />
+                            <p-button [id]="'home-profile-' + i + '-save-template-btn'"
+                                (click)="openSaveTemplateDialog(profile, $event)" icon="pi pi-bookmark" [rounded]="true"
+                                [text]="true" severity="secondary" size="small" pTooltip="Save as template" />
                         </div>
                     </td>
                 </tr>
@@ -892,6 +896,75 @@
                 (click)="showBulkCreateDialog.set(false)" />
             <p-button id="home-bulk-create-btn" label="Create" icon="pi pi-plus" (click)="bulkCreateProfiles()"
                 [loading]="bulkCreating()" [disabled]="!bulkPrefix() || bulkCount() < 1" />
+        </ng-template>
+    </p-dialog>
+
+    <!-- Save as Template Dialog -->
+    <p-dialog id="home-save-template-dialog" header="Save as Template" [(visible)]="showSaveTemplateDialog"
+        [modal]="true" [style]="{ width: '400px' }" [closable]="true">
+        <div class="flex flex-col gap-3 pt-2">
+            <div class="text-sm text-surface-500 dark:text-surface-400">
+                Save "{{ templateSourceProfile()?.name }}" as a reusable template
+            </div>
+            <div>
+                <label for="home-template-name" class="block text-xs font-medium text-color mb-2">Template Name</label>
+                <input pInputText id="home-template-name" type="text" [ngModel]="templateName()"
+                    (ngModelChange)="templateName.set($event)" class="w-full" (keydown.enter)="saveAsTemplate()" />
+            </div>
+        </div>
+        <ng-template #footer>
+            <p-button id="home-template-cancel-btn" label="Cancel" severity="secondary"
+                (click)="showSaveTemplateDialog.set(false)" />
+            <p-button id="home-template-save-btn" label="Save Template" icon="pi pi-bookmark" (click)="saveAsTemplate()"
+                [loading]="templateSaving()" [disabled]="!templateName()" />
+        </ng-template>
+    </p-dialog>
+
+    <!-- Create from Template Dialog -->
+    <p-dialog id="home-create-from-template-dialog" header="Create from Template"
+        [(visible)]="showCreateFromTemplateDialog" [modal]="true" [style]="{ width: '480px' }" [closable]="true">
+        <div class="flex flex-col gap-4 pt-2">
+            @if (availableTemplates().length === 0) {
+            <div class="text-center py-6 text-surface-500 dark:text-surface-400">
+                <i class="pi pi-bookmark text-3xl mb-2"></i>
+                <p class="text-sm">No templates yet. Save a profile as template first.</p>
+            </div>
+            } @else {
+            <div>
+                <label class="block text-xs font-medium text-color mb-2">Select Template</label>
+                <div class="flex flex-col gap-1 max-h-48 overflow-y-auto">
+                    @for (tpl of availableTemplates(); track tpl.path) {
+                    <div class="flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors"
+                        [class]="selectedTemplatePath() === tpl.path
+                                    ? 'bg-primary/10 border border-primary'
+                                    : 'bg-surface-50 dark:bg-surface-800 border border-transparent hover:bg-surface-100 dark:hover:bg-surface-700'"
+                        (click)="selectedTemplatePath.set(tpl.path)">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-bookmark text-sm"></i>
+                            <span class="text-sm">{{ tpl.name }}</span>
+                        </div>
+                        <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+                            (click)="deleteTemplate(tpl); $event.stopPropagation()" />
+                    </div>
+                    }
+                </div>
+            </div>
+            <div>
+                <label for="home-from-template-name" class="block text-xs font-medium text-color mb-2">New Profile
+                    Name</label>
+                <input pInputText id="home-from-template-name" type="text" [ngModel]="newFromTemplateName()"
+                    (ngModelChange)="newFromTemplateName.set($event)" class="w-full" placeholder="Enter profile name"
+                    (keydown.enter)="createFromTemplate()" />
+            </div>
+            }
+        </div>
+        <ng-template #footer>
+            <p-button id="home-from-template-cancel-btn" label="Cancel" severity="secondary"
+                (click)="showCreateFromTemplateDialog.set(false)" />
+            @if (availableTemplates().length > 0) {
+            <p-button id="home-from-template-create-btn" label="Create" icon="pi pi-plus" (click)="createFromTemplate()"
+                [loading]="templateCreating()" [disabled]="!selectedTemplatePath() || !newFromTemplateName()" />
+            }
         </ng-template>
     </p-dialog>
 
