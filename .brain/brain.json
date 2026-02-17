@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.1.2",
-        "updated_at": "2026-02-16T02:50:00+07:00"
+        "updated_at": "2026-02-17T18:39:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
@@ -426,6 +426,10 @@
             {
                 "issue": "async ngOnInit blocks initial render",
                 "solution": "Use fire-and-forget pattern: .then() instead of await in ngOnInit"
+            },
+            {
+                "issue": "DMG build fails with 'Resource busy' when previous DMG still mounted",
+                "solution": "Run 'hdiutil detach /Volumes/Angulogin' before npm run tauri build"
             }
         ],
         "conventions": [
@@ -438,7 +442,9 @@
             "All user-provided file imports must be sanitized before use (settings, CSV, JSON)",
             "All async operations (backup/restore/delete) should have loading guards to prevent double-click",
             "Rust backend uses validate_path_safety() for all file operations — checks traversal, symlinks, null bytes",
-            "CSV export must use csvSafe() to prevent formula injection (=, +, -, @ prefix escaping)"
+            "CSV export must use csvSafe() to prevent formula injection (=, +, -, @ prefix escaping)",
+            "Structural borders (nav, sidebar, dividers) use lighter shades: border-surface-100 dark:border-surface-800",
+            "Main-nav, sidebar, and home-container have border-top for visual separation below title bar"
         ],
         "competitor_analysis": {
             "completed_at": "2026-02-16",
