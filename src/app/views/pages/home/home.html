@@ -18,9 +18,9 @@
         (sortOrderChange)="sortOrder.set($event)" (filterGroupChange)="setFilterGroup($event)"
         (showHiddenChange)="showHidden.set($event)" (filterFavoritesOnlyChange)="filterFavoritesOnly.set($event)"
         (compactModeChange)="toggleCompactMode()" (scan)="scanProfiles()" (create)="openCreateDialog()"
-        (openSidebar)="sidebarOpen.set(true)" (showActivityLog)="showActivityLog.set(true)"
-        (restoreFromBackup)="restoreFromBackup()" (clearFilters)="clearFilters()" (exportProfiles)="exportProfiles()"
-        (importProfiles)="importProfiles()" />
+        (bulkCreate)="openBulkCreateDialog()" (openSidebar)="sidebarOpen.set(true)"
+        (showActivityLog)="showActivityLog.set(true)" (restoreFromBackup)="restoreFromBackup()"
+        (clearFilters)="clearFilters()" (exportProfiles)="exportProfiles()" (importProfiles)="importProfiles()" />
 
     <!-- Tabs (scrollable on mobile) -->
     <div id="home-tabs"
@@ -856,6 +856,42 @@
                 (click)="showMassTagDialog.set(false)" />
             <p-button id="home-mass-tag-apply-btn" label="Apply Tags" icon="pi pi-check" (click)="bulkAssignTags()"
                 [disabled]="massTagSelection().length === 0" />
+        </ng-template>
+    </p-dialog>
+
+    <!-- Bulk Create Dialog -->
+    <p-dialog id="home-bulk-create-dialog" header="Bulk Create Profiles" [(visible)]="showBulkCreateDialog"
+        [modal]="true" [style]="{ width: '440px' }" [closable]="true">
+        <div class="flex flex-col gap-4 pt-2">
+            <div>
+                <label for="home-bulk-prefix" class="block text-xs font-medium text-color mb-2">Name Prefix</label>
+                <input pInputText id="home-bulk-prefix" type="text" [ngModel]="bulkPrefix()"
+                    (ngModelChange)="bulkPrefix.set($event)" placeholder="Profile" class="w-full" />
+            </div>
+            <div class="flex gap-4">
+                <div class="flex-1">
+                    <label for="home-bulk-count" class="block text-xs font-medium text-color mb-2">Count</label>
+                    <input pInputText id="home-bulk-count" type="number" [ngModel]="bulkCount()"
+                        (ngModelChange)="bulkCount.set($event)" min="1" max="500" class="w-full" />
+                </div>
+                <div class="flex-1">
+                    <label for="home-bulk-start" class="block text-xs font-medium text-color mb-2">Start Number</label>
+                    <input pInputText id="home-bulk-start" type="number" [ngModel]="bulkStartNum()"
+                        (ngModelChange)="bulkStartNum.set($event)" min="1" class="w-full" />
+                </div>
+            </div>
+            @if (bulkPreview(); as preview) {
+            <div
+                class="text-xs text-surface-500 dark:text-surface-400 bg-surface-50 dark:bg-surface-800 rounded-lg p-3">
+                <span class="font-medium">Preview:</span> {{ preview }}
+            </div>
+            }
+        </div>
+        <ng-template #footer>
+            <p-button id="home-bulk-cancel-btn" label="Cancel" severity="secondary"
+                (click)="showBulkCreateDialog.set(false)" />
+            <p-button id="home-bulk-create-btn" label="Create" icon="pi pi-plus" (click)="bulkCreateProfiles()"
+                [loading]="bulkCreating()" [disabled]="!bulkPrefix() || bulkCount() < 1" />
         </ng-template>
     </p-dialog>
 

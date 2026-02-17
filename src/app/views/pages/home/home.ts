@@ -321,6 +321,25 @@ export class Home implements OnInit, OnDestroy {
     protected readonly showDuplicateDialog = signal(false);
     protected readonly duplicateProfileName = signal('');
 
+    // Bulk Create dialog
+    protected readonly showBulkCreateDialog = signal(false);
+    protected readonly bulkPrefix = signal('Profile');
+    protected readonly bulkCount = signal(10);
+    protected readonly bulkStartNum = signal(1);
+    protected readonly bulkCreating = signal(false);
+    protected readonly bulkPreview = computed(() => {
+        const prefix = this.bulkPrefix();
+        const count = this.bulkCount();
+        const start = this.bulkStartNum();
+        if (!prefix || count < 1) return '';
+        const padLen = String(start + count - 1).length > 2 ? String(start + count - 1).length : 3;
+        const first = `${prefix}_${String(start).padStart(padLen, '0')}`;
+        const last = `${prefix}_${String(start + count - 1).padStart(padLen, '0')}`;
+        if (count === 1) return first;
+        if (count === 2) return `${first}, ${last}`;
+        return `${first}, ..., ${last}`;
+    });
+
     // Backup/Restore loading states
     protected readonly backupInProgress = signal(false);
     protected readonly restoreInProgress = signal(false);
@@ -786,6 +805,52 @@ export class Home implements OnInit, OnDestroy {
             });
         } catch (e) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+        }
+    }
+
+    // Bulk Create
+    openBulkCreateDialog(): void {
+        this.bulkPrefix.set('Profile');
+        this.bulkCount.set(10);
+        this.bulkStartNum.set(1);
+        this.showBulkCreateDialog.set(true);
+    }
+
+    async bulkCreateProfiles(): Promise<void> {
+        const prefix = this.bulkPrefix().trim();
+        const count = this.bulkCount();
+        const startNum = this.bulkStartNum();
+
+        if (!prefix) {
+            this.messageService.add({ severity: 'warn', summary: 'Missing Prefix', detail: 'Enter a name prefix' });
+            return;
+        }
+        if (count < 1 || count > 500) {
+            this.messageService.add({ severity: 'warn', summary: 'Invalid Count', detail: 'Count must be 1-500' });
+            return;
+        }
+
+        this.bulkCreating.set(true);
+        try {
+            const result = await this.profileService.bulkCreateProfiles(
+                this.profilesPath(), prefix, count, startNum,
+            );
+            this.showBulkCreateDialog.set(false);
+
+            const parts: string[] = [];
+            if (result.created.length > 0) parts.push(`${result.created.length} created`);
+            if (result.skipped.length > 0) parts.push(`${result.skipped.length} skipped`);
+            if (result.errors.length > 0) parts.push(`${result.errors.length} failed`);
+
+            this.messageService.add({
+                severity: result.errors.length > 0 ? 'warn' : 'success',
+                summary: 'Bulk Create',
+                detail: parts.join(', '),
+            });
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Bulk Create Failed', detail: String(e) });
+        } finally {
+            this.bulkCreating.set(false);
         }
     }
 

@@ -59,6 +59,7 @@ export class ProfileToolbar {
     readonly compactModeChange = output<boolean>();
     readonly scan = output<void>();
     readonly create = output<void>();
+    readonly bulkCreate = output<void>();
     readonly openSidebar = output<void>();
     readonly showActivityLog = output<void>();
     readonly restoreFromBackup = output<void>();
@@ -159,6 +160,11 @@ export class ProfileToolbar {
         {
             label: 'Actions',
             items: [
+                {
+                    label: 'Bulk Create',
+                    icon: 'pi pi-clone',
+                    command: () => this.bulkCreate.emit(),
+                },
                 {
                     label: 'Restore from Backup',
                     icon: 'pi pi-upload',

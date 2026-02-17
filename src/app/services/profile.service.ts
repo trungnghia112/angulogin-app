@@ -92,6 +92,52 @@ export class ProfileService {
         }
     }
 
+    /** Bulk create profiles with a naming pattern (e.g., Shop_001, Shop_002...) */
+    async bulkCreateProfiles(
+        basePath: string,
+        prefix: string,
+        count: number,
+        startNum: number,
+    ): Promise<{ created: string[]; skipped: string[]; errors: string[] }> {
+        const created: string[] = [];
+        const skipped: string[] = [];
+        const errors: string[] = [];
+        const padLength = String(startNum + count - 1).length.toString().length > 2 ? String(startNum + count - 1).length : 3;
+        const newProfiles: Profile[] = [];
+
+        for (let i = 0; i < count; i++) {
+            const num = startNum + i;
+            const name = `${prefix}_${String(num).padStart(padLength, '0')}`;
+
+            // Skip if already exists
+            const exists = this.profiles().some(p => p.name.toLowerCase() === name.toLowerCase());
+            if (exists) {
+                skipped.push(name);
+                continue;
+            }
+
+            try {
+                const newPath = await this.backend.createProfile(basePath, name);
+                created.push(name);
+                newProfiles.push({
+                    name,
+                    path: newPath,
+                    isRunning: false,
+                    size: 0,
+                });
+            } catch (e) {
+                errors.push(`${name}: ${e instanceof Error ? e.message : String(e)}`);
+            }
+        }
+
+        // PERF: Batch-update profiles signal once
+        if (newProfiles.length > 0) {
+            this.profiles.update(profiles => [...profiles, ...newProfiles]);
+        }
+
+        return { created, skipped, errors };
+    }
+
     async deleteProfile(profilePath: string, basePath: string): Promise<void> {
         try {
             await this.backend.deleteProfile(profilePath);
