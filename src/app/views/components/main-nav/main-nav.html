@@ -1,8 +1,8 @@
 <nav id="main-nav-container"
-    class="flex flex-col h-screen w-16 border-r border-t border-r-surface-200 dark:border-r-surface-700 border-t-surface-100 dark:border-t-surface-800">
+    class="flex flex-col h-screen w-16 border-r border-t border-surface-100 dark:border-surface-800">
     <!-- Logo - matches header height -->
     <div id="main-nav-logo" data-tauri-drag-region
-        class="flex items-center justify-center h-[var(--spacing-header)] shrink-0 border-b border-surface-200 dark:border-surface-700">
+        class="flex items-center justify-center h-[var(--spacing-header)] shrink-0 border-b border-surface-100 dark:border-surface-800">
         <svg class="w-9 h-9 logo-animated" viewBox="280 70 480 340">
             <defs>
                 <linearGradient id="navLogoGradient" x1="280" y1="410" x2="760" y2="70" gradientUnits="userSpaceOnUse">
@@ -51,7 +51,7 @@
 
     <!-- Bottom Actions -->
     <div id="main-nav-bottom"
-        class="flex flex-col items-center py-3 gap-1 border-t border-surface-200 dark:border-surface-700">
+        class="flex flex-col items-center py-3 gap-1 border-t border-surface-100 dark:border-surface-800">
         <!-- Dark Mode Toggle -->
         <button id="main-nav-darkmode-btn" (click)="toggleTheme()" aria-label="Toggle dark mode"
             class="w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200" [class]="isDarkMode() 
