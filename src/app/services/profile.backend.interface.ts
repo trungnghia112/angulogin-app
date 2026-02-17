@@ -52,6 +52,33 @@ export interface BulkExportResult {
     totalSize: number;
 }
 
+/** Cookie in EditThisCookie/Cookie-Editor JSON format */
+export interface CookieJson {
+    name: string;
+    value: string;
+    domain: string;
+    path: string;
+    expires: number;
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite?: string;
+}
+
+/** Result from exporting cookies */
+export interface CookieExportResult {
+    cookies: CookieJson[];
+    count: number;
+    decryptedCount: number;
+    format: string;
+}
+
+/** Result from importing cookies */
+export interface CookieImportResult {
+    imported: number;
+    skipped: number;
+    errors: string[];
+}
+
 export interface ProfileBackend {
     scanProfiles(path: string): Promise<string[]>;
     scanProfilesWithMetadata(path: string): Promise<Profile[]>;
@@ -73,4 +100,6 @@ export interface ProfileBackend {
     restoreFromBackup(backupPath: string, targetBasePath: string, conflictAction: string): Promise<RestoreBackupResult>;
     backupProfile(profilePath: string, backupPath: string): Promise<string>;
     bulkExportProfiles(profilePaths: string[], destinationFolder: string): Promise<BulkExportResult>;
+    exportCookies(profilePath: string, browser?: string): Promise<CookieExportResult>;
+    importCookies(profilePath: string, cookiesJson: string): Promise<CookieImportResult>;
 }

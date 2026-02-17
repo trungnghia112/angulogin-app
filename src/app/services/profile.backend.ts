@@ -4,6 +4,8 @@ import { MOCK_PROFILES, MOCK_AVAILABLE_BROWSERS, getMockProfileByPath } from '..
 import {
     BulkExportResult,
     ClearCookiesResult,
+    CookieExportResult,
+    CookieImportResult,
     LaunchBrowserOptions,
     ProfileBackend,
     ProfileHealthCheckResult,
@@ -118,6 +120,16 @@ export class MockProfileBackend implements ProfileBackend {
     async bulkExportProfiles(profilePaths: string[], destinationFolder: string): Promise<BulkExportResult> {
         debugLog('Mock bulkExportProfiles:', profilePaths, destinationFolder);
         return { successful: profilePaths, failed: [], totalSize: 0 };
+    }
+
+    async exportCookies(profilePath: string, _browser?: string): Promise<CookieExportResult> {
+        debugLog('Mock exportCookies:', profilePath);
+        return { cookies: [], count: 0, decryptedCount: 0, format: 'json' };
+    }
+
+    async importCookies(profilePath: string, cookiesJson: string): Promise<CookieImportResult> {
+        debugLog('Mock importCookies:', profilePath, cookiesJson.substring(0, 50));
+        return { imported: 0, skipped: 0, errors: [] };
     }
 }
 
@@ -237,5 +249,13 @@ export class TauriProfileBackend implements ProfileBackend {
             }
         }
         return { successful, failed, totalSize };
+    }
+
+    async exportCookies(profilePath: string, browser?: string): Promise<CookieExportResult> {
+        return await invoke<CookieExportResult>('export_profile_cookies', { profilePath, browser: browser ?? null });
+    }
+
+    async importCookies(profilePath: string, cookiesJson: string): Promise<CookieImportResult> {
+        return await invoke<CookieImportResult>('import_profile_cookies', { profilePath, cookiesJson });
     }
 }

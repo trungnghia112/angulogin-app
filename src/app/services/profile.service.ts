@@ -5,7 +5,7 @@ import { isTauriAvailable } from '../core/utils/platform.util';
 import { debugLog } from '../core/utils/logger.util';
 import { validateProfileName } from '../core/utils/validation.util';
 import { MockProfileBackend, TauriProfileBackend } from './profile.backend';
-import { LaunchBrowserOptions, ProfileBackend } from './profile.backend.interface';
+import { CookieExportResult, CookieImportResult, LaunchBrowserOptions, ProfileBackend } from './profile.backend.interface';
 
 @Injectable({
     providedIn: 'root',
@@ -438,6 +438,45 @@ export class ProfileService {
 
         try {
             return await this.backend.bulkExportProfiles(profilePaths, destinationFolder as string);
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
+
+    // Cookie Import/Export
+    async exportCookies(profilePath: string, browser?: string): Promise<CookieExportResult> {
+        try {
+            const result = await this.backend.exportCookies(profilePath, browser);
+
+            if (result.cookies.length > 0 && isTauriAvailable()) {
+                const profileName = profilePath.split('/').pop() || 'profile';
+                const defaultFileName = `${profileName}_cookies.json`;
+
+                const filePath = await save({
+                    title: 'Export Cookies',
+                    defaultPath: defaultFileName,
+                    filters: [{ name: 'JSON', extensions: ['json'] }],
+                });
+
+                if (filePath) {
+                    const { writeTextFile } = await import('@tauri-apps/plugin-fs');
+                    await writeTextFile(filePath, JSON.stringify(result.cookies, null, 2));
+                }
+            }
+
+            return result;
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        }
+    }
+
+    async importCookies(profilePath: string, cookiesJson: string): Promise<CookieImportResult> {
+        try {
+            return await this.backend.importCookies(profilePath, cookiesJson);
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
             this.error.set(errorMsg);

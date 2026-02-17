@@ -43,7 +43,7 @@ fn sanitize_profile_name(name: &str) -> Result<String, String> {
 
 /// Validate that a filesystem path is safe for destructive operations.
 /// Rejects path traversal, null bytes, symlinks, and too-shallow paths.
-fn validate_path_safety(path: &str, label: &str) -> Result<(), String> {
+pub(crate) fn validate_path_safety(path: &str, label: &str) -> Result<(), String> {
     if path.trim().is_empty() {
         return Err(format!("{} cannot be empty", label));
     }
@@ -1472,4 +1472,16 @@ pub async fn launch_camoufox(
 pub async fn stop_camoufox(id: String) -> Result<bool, String> {
     let manager = crate::camoufox_manager::CamoufoxManager::instance();
     manager.stop(&id).await
+}
+
+/// Cookie Import/Export: Export cookies from a Chrome profile
+#[tauri::command]
+pub fn export_profile_cookies(profile_path: String, browser: Option<String>) -> Result<crate::cookies::CookieExportResult, String> {
+    crate::cookies::export_cookies(profile_path, browser)
+}
+
+/// Cookie Import/Export: Import cookies into a Chrome profile
+#[tauri::command]
+pub fn import_profile_cookies(profile_path: String, cookies_json: String) -> Result<crate::cookies::CookieImportResult, String> {
+    crate::cookies::import_cookies(profile_path, cookies_json)
 }

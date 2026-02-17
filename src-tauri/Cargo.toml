@@ -40,3 +40,11 @@ sysinfo = "0.32"
 lazy_static = "1.4"
 tokio = { version = "1", features = ["full"] }
 futures-util = "0.3"
+
+# Cookie import/export
+rusqlite = { version = "0.31", features = ["bundled"] }
+aes = "0.8"
+cbc = "0.1"
+pbkdf2 = { version = "0.12", features = ["std"] }
+hmac = "0.12"
+sha1 = "0.10"

@@ -325,6 +325,13 @@ export class Home implements OnInit, OnDestroy {
     protected readonly backupInProgress = signal(false);
     protected readonly restoreInProgress = signal(false);
 
+    // Cookie Import/Export dialog
+    protected readonly showCookieImportDialog = signal(false);
+    protected readonly cookieImportJson = signal('');
+    protected readonly cookieImportTarget = signal<Profile | null>(null);
+    protected readonly cookieExportLoading = signal(false);
+    protected readonly cookieImportLoading = signal(false);
+
     // Phase 3: Activity Log dialog
     protected readonly showActivityLog = signal(false);
     // Feature 11.1: Column settings panel
@@ -1215,6 +1222,108 @@ export class Home implements OnInit, OnDestroy {
                 }
             },
         });
+    }
+
+    // Cookie Import/Export
+    async exportCookies(profile: Profile, event: Event): Promise<void> {
+        event.stopPropagation();
+        this.cookieExportLoading.set(true);
+        try {
+            const browser = profile.metadata?.browser || undefined;
+            const result = await this.profileService.exportCookies(profile.path, browser);
+            if (result.count === 0) {
+                this.messageService.add({
+                    severity: 'warn',
+                    summary: 'No Cookies',
+                    detail: `No cookies found in "${profile.name}"`,
+                });
+            } else {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Cookies Exported',
+                    detail: `Exported ${result.count} cookies (${result.decryptedCount} decrypted)`,
+                });
+            }
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Export Failed', detail: String(e) });
+        } finally {
+            this.cookieExportLoading.set(false);
+        }
+    }
+
+    openCookieImportDialog(profile: Profile, event: Event): void {
+        event.stopPropagation();
+        this.cookieImportTarget.set(profile);
+        this.cookieImportJson.set('');
+        this.showCookieImportDialog.set(true);
+    }
+
+    async importCookiesConfirm(): Promise<void> {
+        const profile = this.cookieImportTarget();
+        const json = this.cookieImportJson().trim();
+
+        if (!profile || !json) {
+            this.messageService.add({ severity: 'warn', summary: 'Missing Data', detail: 'Paste cookie JSON first' });
+            return;
+        }
+
+        // Validate JSON format
+        try {
+            const parsed = JSON.parse(json);
+            if (!Array.isArray(parsed)) {
+                this.messageService.add({ severity: 'error', summary: 'Invalid Format', detail: 'Expected a JSON array of cookies' });
+                return;
+            }
+        } catch {
+            this.messageService.add({ severity: 'error', summary: 'Invalid JSON', detail: 'Could not parse cookie JSON' });
+            return;
+        }
+
+        this.cookieImportLoading.set(true);
+        try {
+            const result = await this.profileService.importCookies(profile.path, json);
+            this.showCookieImportDialog.set(false);
+
+            if (result.imported > 0) {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Cookies Imported',
+                    detail: `Imported ${result.imported} cookies into "${profile.name}"${result.skipped > 0 ? `, ${result.skipped} skipped` : ''}`,
+                });
+            } else {
+                this.messageService.add({
+                    severity: 'warn',
+                    summary: 'No Cookies Imported',
+                    detail: result.errors.length > 0 ? result.errors[0] : 'No valid cookies in JSON',
+                });
+            }
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Import Failed', detail: String(e) });
+        } finally {
+            this.cookieImportLoading.set(false);
+        }
+    }
+
+    async importCookiesFromFile(profile: Profile, event: Event): Promise<void> {
+        event.stopPropagation();
+        try {
+            const { open } = await import('@tauri-apps/plugin-dialog');
+            const filePath = await open({
+                title: 'Select Cookie JSON File',
+                filters: [{ name: 'JSON', extensions: ['json', 'txt'] }],
+                multiple: false,
+            });
+
+            if (!filePath) return;
+
+            const { readTextFile } = await import('@tauri-apps/plugin-fs');
+            const content = await readTextFile(filePath as string);
+            this.cookieImportTarget.set(profile);
+            this.cookieImportJson.set(content);
+            this.showCookieImportDialog.set(true);
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+        }
     }
 
     // Selection

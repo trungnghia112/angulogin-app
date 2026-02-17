@@ -1,4 +1,5 @@
 mod commands;
+mod cookies;
 mod camoufox_downloader;
 mod camoufox_env;
 mod camoufox_manager;
@@ -53,7 +54,10 @@ pub fn run() {
             commands::generate_fingerprint,
             commands::generate_fingerprint_preview,
             commands::launch_camoufox,
-            commands::stop_camoufox
+            commands::stop_camoufox,
+            // Cookie Import/Export
+            commands::export_profile_cookies,
+            commands::import_profile_cookies
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
