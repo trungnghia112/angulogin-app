@@ -6,15 +6,9 @@
 <!-- Sidebar: Fixed drawer on mobile, static on desktop -->
 <aside id="home-sidebar"
     class="flex flex-col h-full w-60 border-r border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shrink-0 transition-transform duration-300 ease-in-out"
-    [class.fixed]="true"
-    [class.inset-y-0]="true"
-    [class.left-0]="true"
-    [class.z-50]="true"
-    [class.-translate-x-full]="!isOpen()"
-    [class.translate-x-0]="isOpen()"
-    [class.lg:translate-x-0]="true"
-    [class.lg:static]="true"
-    [class.lg:z-auto]="true">
+    [class.fixed]="true" [class.inset-y-0]="true" [class.left-0]="true" [class.z-50]="true"
+    [class.-translate-x-full]="!isOpen()" [class.translate-x-0]="isOpen()" [class.lg:translate-x-0]="true"
+    [class.lg:static]="true" [class.lg:z-auto]="true">
     <!-- Feature Header - matches header height -->
     <div id="home-sidebar-header"
         class="flex items-center justify-between px-4 h-[var(--spacing-header)] shrink-0 border-b border-surface-200 dark:border-surface-700">
@@ -52,7 +46,8 @@
     </nav>
 
     <!-- Bottom Actions -->
-    <div id="home-sidebar-bottom" class="border-t border-surface-200 dark:border-surface-700 px-3 flex items-center h-[49px]">
+    <div id="home-sidebar-bottom"
+        class="border-t border-surface-200 dark:border-surface-700 px-3 flex items-center h-[56px]">
         <button pButton icon="pi pi-cog" text="true" severity="secondary" class="!w-full !justify-start !text-sm !px-3"
             label="Settings" (click)="onSettings()">
         </button>
