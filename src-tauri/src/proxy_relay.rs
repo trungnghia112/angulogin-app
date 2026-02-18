@@ -107,6 +107,8 @@ pub fn stop_relay(profile_id: &str) {
         // Connect to the listener to unblock the accept() call
         let _ = TcpStream::connect(format!("127.0.0.1:{}", handle.port));
     }
+    // Clean up traffic stats for this profile
+    traffic_stats().lock().unwrap().remove(profile_id);
 }
 
 /// Stop all active relays (called on app exit).

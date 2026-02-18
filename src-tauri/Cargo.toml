@@ -52,3 +52,4 @@ sha1 = "0.10"
 # Backup encryption (Feature 5.7)
 aes-gcm = "0.10"
 rand = "0.8"
+zeroize = "1"

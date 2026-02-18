@@ -967,6 +967,7 @@ fn encrypt_backup_data(data: &[u8], password: &str) -> Result<Vec<u8>, String> {
     use pbkdf2::pbkdf2_hmac;
     use sha2::Sha256;
     use rand::RngCore;
+    use zeroize::Zeroize;
 
     // Generate random salt (32 bytes) and nonce (12 bytes)
     let mut salt = [0u8; 32];
@@ -980,10 +981,13 @@ fn encrypt_backup_data(data: &[u8], password: &str) -> Result<Vec<u8>, String> {
 
     // Encrypt
     let cipher = Aes256Gcm::new_from_slice(&key)
-        .map_err(|e| format!("Cipher init failed: {}", e))?;
+        .map_err(|e| { key.zeroize(); format!("Cipher init failed: {}", e) })?;
     let nonce = Nonce::from_slice(&nonce_bytes);
     let ciphertext = cipher.encrypt(nonce, data)
-        .map_err(|e| format!("Encryption failed: {}", e))?;
+        .map_err(|e| { key.zeroize(); format!("Encryption failed: {}", e) })?;
+
+    // Zeroize key immediately after use
+    key.zeroize();
 
     // Format: MAGIC(8) + SALT(32) + NONCE(12) + CIPHERTEXT(N)
     let mut output = Vec::with_capacity(8 + 32 + 12 + ciphertext.len());
@@ -1001,6 +1005,7 @@ fn decrypt_backup_data(data: &[u8], password: &str) -> Result<Vec<u8>, String> {
     use aes_gcm::Nonce;
     use pbkdf2::pbkdf2_hmac;
     use sha2::Sha256;
+    use zeroize::Zeroize;
 
     if data.len() < 52 {
         return Err("Encrypted data too short".to_string());
@@ -1014,20 +1019,28 @@ fn decrypt_backup_data(data: &[u8], password: &str) -> Result<Vec<u8>, String> {
     pbkdf2_hmac::<Sha256>(password.as_bytes(), salt, 100_000, &mut key);
 
     let cipher = Aes256Gcm::new_from_slice(&key)
-        .map_err(|e| format!("Cipher init failed: {}", e))?;
+        .map_err(|e| { key.zeroize(); format!("Cipher init failed: {}", e) })?;
     let nonce = Nonce::from_slice(nonce_bytes);
     let plaintext = cipher.decrypt(nonce, ciphertext)
-        .map_err(|_| "Decryption failed - wrong password or corrupted backup".to_string())?;
+        .map_err(|_| { key.zeroize(); "Decryption failed - wrong password or corrupted backup".to_string() })?;
+
+    // Zeroize key immediately after use
+    key.zeroize();
 
     Ok(plaintext)
 }
 
 #[tauri::command]
 pub fn check_backup_encrypted(backup_path: String) -> Result<bool, String> {
+    use std::io::Read;
     validate_path_safety(&backup_path, "Backup path")?;
-    let data = fs::read(&backup_path)
-        .map_err(|e| format!("Failed to read file: {}", e))?;
-    Ok(data.len() >= 8 && &data[..8] == ENCRYPTED_MAGIC)
+    let mut file = fs::File::open(&backup_path)
+        .map_err(|e| format!("Failed to open file: {}", e))?;
+    let mut header = [0u8; 8];
+    match file.read_exact(&mut header) {
+        Ok(_) => Ok(&header == ENCRYPTED_MAGIC),
+        Err(_) => Ok(false), // File too small to be encrypted
+    }
 }
 
 // Feature 13.3: Traffic Stats
@@ -1608,6 +1621,17 @@ pub fn start_local_proxy(
     username: Option<String>,
     password: Option<String>,
 ) -> Result<u16, String> {
+    // Validate proxy host to prevent SSRF and injection
+    if proxy_host.trim().is_empty() {
+        return Err("Proxy host cannot be empty".to_string());
+    }
+    if proxy_host.contains(char::is_whitespace) || proxy_host.contains('\0') {
+        return Err("Proxy host contains invalid characters".to_string());
+    }
+    if proxy_host.len() > 253 {
+        return Err("Proxy host too long".to_string());
+    }
+
     let user = username.as_deref().unwrap_or("");
     let pass = password.as_deref().unwrap_or("");
 

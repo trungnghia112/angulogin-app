@@ -283,6 +283,7 @@ export class SettingsService {
             ...s,
             browser: { ...s.browser, additionalPaths: [...current, path] },
         }));
+        this.saveSettings(this._settings());
     }
 
     removeAdditionalPath(path: string): void {
@@ -291,6 +292,7 @@ export class SettingsService {
             ...s,
             browser: { ...s.browser, additionalPaths: current.filter(p => p !== path) },
         }));
+        this.saveSettings(this._settings());
     }
 
     /**
