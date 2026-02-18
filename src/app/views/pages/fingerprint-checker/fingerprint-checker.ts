@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
+import { MessageService } from 'primeng/api';
 import { CamoufoxService, Fingerprint } from '../../../services/camoufox.service';
 import { invoke } from '@tauri-apps/api/core';
 import { appDataDir } from '@tauri-apps/api/path';
@@ -55,6 +56,7 @@ const CHECKER_LINKS: CheckerLink[] = [
 })
 export class FingerprintChecker {
     protected readonly camoufoxService = inject(CamoufoxService);
+    private readonly messageService = inject(MessageService);
 
     protected readonly checkerLinks = CHECKER_LINKS;
     protected readonly fingerprintPreview = signal<Fingerprint | null>(null);
@@ -66,8 +68,13 @@ export class FingerprintChecker {
         try {
             const preview = await this.camoufoxService.generateFingerprintPreview();
             this.fingerprintPreview.set(preview);
-        } catch {
+        } catch (e) {
             this.fingerprintPreview.set(null);
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Generation Failed',
+                detail: e instanceof Error ? e.message : 'Failed to generate fingerprint preview',
+            });
         } finally {
             this.isLoadingPreview.set(false);
         }
@@ -85,8 +92,12 @@ export class FingerprintChecker {
                 fingerprint: null,
                 os: null,
             }, url);
-        } catch {
-            // Silently fail
+        } catch (e) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Launch Failed',
+                detail: e instanceof Error ? e.message : 'Failed to launch Camoufox browser',
+            });
         } finally {
             this.isLaunching.set(false);
         }

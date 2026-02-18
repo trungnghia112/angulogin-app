@@ -542,8 +542,8 @@ pub fn batch_check_running(profile_paths: Vec<String>) -> std::collections::Hash
 }
 
 /// Prepare the stealth extension for a specific profile.
-/// Copies the bundled extension to a per-profile cache directory and writes
-/// a config file with the generated fingerprint for deterministic spoofing.
+/// Copies the bundled extension to a per-profile cache directory and inlines
+/// the fingerprint config directly into content.js (no window globals exposed).
 fn prepare_stealth_extension(profile_path: &str) -> Result<String, String> {
     use sha2::{Sha256, Digest};
 
@@ -556,13 +556,11 @@ fn prepare_stealth_extension(profile_path: &str) -> Result<String, String> {
     // In dev mode: src-tauri/extensions/stealth/
     // In production: <app_bundle>/Contents/Resources/extensions/stealth/
     let bundled_ext = if cfg!(debug_assertions) {
-        // Dev mode: relative to project root
         let project_root = exe_dir.ancestors()
             .find(|p| p.join("extensions").join("stealth").join("manifest.json").exists())
             .ok_or("Cannot find stealth extension in dev mode")?;
         project_root.join("extensions").join("stealth")
     } else {
-        // Production: inside app bundle Resources
         exe_dir.join("extensions").join("stealth")
     };
 
@@ -573,11 +571,14 @@ fn prepare_stealth_extension(profile_path: &str) -> Result<String, String> {
         ));
     }
 
-    // 2. Create per-profile hash for cache directory
+    // 2. Create deterministic seed from profile path hash
     let mut hasher = Sha256::new();
     hasher.update(profile_path.as_bytes());
     let hash = format!("{:x}", hasher.finalize());
     let short_hash = &hash[..12];
+
+    // Seed for deterministic fingerprint generation (u64 from first 16 hex chars)
+    let seed = u64::from_str_radix(&hash[..16], 16).unwrap_or(42);
 
     // 3. Cache directory in app data
     let cache_dir = directories::BaseDirs::new()
@@ -587,7 +588,7 @@ fn prepare_stealth_extension(profile_path: &str) -> Result<String, String> {
         .join("stealth-cache")
         .join(short_hash);
 
-    // 4. Copy extension to cache (overwrite if exists to pick up updates)
+    // 4. Copy extension to cache (overwrite to pick up code updates)
     if cache_dir.exists() {
         let _ = fs::remove_dir_all(&cache_dir);
     }
@@ -599,15 +600,14 @@ fn prepare_stealth_extension(profile_path: &str) -> Result<String, String> {
     fs_extra::dir::copy(&bundled_ext, &cache_dir, &copy_opts)
         .map_err(|e| format!("Failed to copy stealth extension: {}", e))?;
 
-    // 5. Generate fingerprint using existing generator
-    let fp = crate::fingerprint::generator::generate(None);
+    // 5. Generate DETERMINISTIC fingerprint from profile seed
+    //    Same profile always gets the same fingerprint
+    let fp = crate::fingerprint::generator::generate_seeded(seed, None);
 
-    // 6. Create seed from profile path hash (first 8 hex chars → u32)
-    let seed = u32::from_str_radix(&hash[..8], 16).unwrap_or(42);
-
-    // 7. Build config JSON
+    // 6. Build config JSON (same seed used by JS PRNG for canvas noise)
+    let js_seed = (seed & 0xFFFFFFFF) as u32;
     let config = serde_json::json!({
-        "seed": seed,
+        "seed": js_seed,
         "navigator": {
             "userAgent": fp.navigator.user_agent,
             "platform": fp.navigator.platform,
@@ -633,45 +633,31 @@ fn prepare_stealth_extension(profile_path: &str) -> Result<String, String> {
         "blockWebRTC": true,
     });
 
-    // 8. Write config injection script that runs before content.js
-    //    This sets window.__stealth_config__ in the page context
-    let config_js = format!(
-        "window.__stealth_config__ = {};",
-        serde_json::to_string(&config).map_err(|e| format!("JSON serialize error: {}", e))?
+    let config_json = serde_json::to_string(&config)
+        .map_err(|e| format!("JSON serialize error: {}", e))?;
+
+    // 7. Inline config directly into content.js by replacing placeholder
+    //    This eliminates window.__stealth_config__ exposure entirely
+    let content_js_path = cache_dir.join("content.js");
+    let content_js = fs::read_to_string(&content_js_path)
+        .map_err(|e| format!("Failed to read content.js: {}", e))?;
+
+    let patched_js = content_js.replace(
+        "const CFG = null; /* @@STEALTH_CONFIG@@ */",
+        &format!("const CFG = {};", config_json),
     );
 
-    // Write as config_inject.js
-    let config_path = cache_dir.join("config_inject.js");
-    fs::write(&config_path, &config_js)
-        .map_err(|e| format!("Failed to write stealth config: {}", e))?;
+    fs::write(&content_js_path, patched_js)
+        .map_err(|e| format!("Failed to write patched content.js: {}", e))?;
 
-    // 9. Update manifest.json to include config_inject.js BEFORE content.js
-    let manifest_path = cache_dir.join("manifest.json");
-    let manifest_content = fs::read_to_string(&manifest_path)
-        .map_err(|e| format!("Failed to read manifest: {}", e))?;
-    let mut manifest: serde_json::Value = serde_json::from_str(&manifest_content)
-        .map_err(|e| format!("Failed to parse manifest: {}", e))?;
-
-    if let Some(scripts) = manifest.get_mut("content_scripts") {
-        if let Some(arr) = scripts.as_array_mut() {
-            if let Some(first) = arr.first_mut() {
-                first["js"] = serde_json::json!(["config_inject.js", "content.js"]);
-            }
-        }
-    }
-
-    let updated_manifest = serde_json::to_string_pretty(&manifest)
-        .map_err(|e| format!("Failed to serialize manifest: {}", e))?;
-    fs::write(&manifest_path, updated_manifest)
-        .map_err(|e| format!("Failed to write updated manifest: {}", e))?;
-
-    eprintln!(
+    log::info!(
         "[Stealth] Extension prepared for profile (seed={}, hash={}): {}",
-        seed, short_hash, cache_dir.display()
+        js_seed, short_hash, cache_dir.display()
     );
 
     Ok(cache_dir.to_string_lossy().to_string())
 }
+
 
 #[tauri::command]
 pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>, custom_flags: Option<String>, proxy_username: Option<String>, proxy_password: Option<String>, antidetect_enabled: Option<bool>, disable_extensions: Option<bool>) -> Result<(), String> {
@@ -790,7 +776,7 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
             "--disable-component-update",
             "--disable-sync",
         ];
-        eprintln!("[Antidetect] Privacy Mode active - injecting {} flags", privacy_flags.len());
+        log::info!("[Antidetect] Privacy Mode active - injecting {} flags", privacy_flags.len());
         for flag in privacy_flags {
             args.push(flag.to_string());
         }
@@ -806,12 +792,12 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
         if is_chrome_based {
             match prepare_stealth_extension(&profile_path) {
                 Ok(ext_path) => {
-                    eprintln!("[Antidetect] Loading stealth extension from: {}", ext_path);
+                    log::info!("[Antidetect] Loading stealth extension from: {}", ext_path);
                     args.push(format!("--load-extension={}", ext_path));
                     args.push(format!("--disable-extensions-except={}", ext_path));
                 }
                 Err(e) => {
-                    eprintln!("[Antidetect] Warning: Failed to prepare stealth extension: {}", e);
+                    log::warn!("[Antidetect] Failed to prepare stealth extension: {}", e);
                     // Continue without extension — privacy flags still apply
                 }
             }

@@ -10,20 +10,20 @@
  *   3. Navigator (hardwareConcurrency, deviceMemory, platform, languages)
  *   4. Screen (width, height, availWidth, availHeight, colorDepth, pixelRatio)
  *   5. WebRTC (RTCPeerConnection leak prevention)
- *   6. Permissions API (notifications → denied)
+ *   6. Automation detection prevention
+ *
+ * Config is injected INLINE by Tauri (no window globals).
+ * The placeholder below is replaced at build time per-profile:
  */
 (function () {
     'use strict';
 
-    // --- Config ---
-    // Injected by Tauri at launch: window.__stealth_config__
-    // Fallback to empty config if not injected (extension loaded manually)
-    const CFG = (typeof window.__stealth_config__ !== 'undefined')
-        ? window.__stealth_config__
-        : null;
+    // --- Config (injected inline by Tauri — never exposed to page) ---
+    // @@STEALTH_CONFIG_PLACEHOLDER@@ is replaced by prepare_stealth_extension()
+    const CFG = null; /* @@STEALTH_CONFIG@@ */
 
     if (!CFG) {
-        // No config injected — skip spoofing
+        // No config injected — skip spoofing (extension loaded manually)
         return;
     }
 
@@ -47,6 +47,19 @@
         try {
             Object.defineProperty(obj, prop, {
                 get: function () { return value; },
+                configurable: false,
+                enumerable: true,
+            });
+        } catch (e) {
+            // Property may already be non-configurable
+        }
+    }
+
+    // --- Helper: Define getter property (called each access) ---
+    function defineGetter(obj, prop, getter) {
+        try {
+            Object.defineProperty(obj, prop, {
+                get: getter,
                 configurable: false,
                 enumerable: true,
             });
@@ -81,11 +94,10 @@
     }
 
     // =========================================================================
-    // 1. CANVAS SPOOFING
+    // 1. CANVAS SPOOFING (non-destructive — never modifies original canvas)
     // =========================================================================
     (function spoofCanvas() {
         const canvasSeed = SEED ^ 0xCAFE;
-        const canvasRng = mulberry32(canvasSeed);
 
         function addNoiseToImageData(imageData) {
             const data = imageData.data;
@@ -100,18 +112,28 @@
             return imageData;
         }
 
+        // Clone canvas with noise applied (DO NOT modify original)
+        function createNoisyClone(sourceCanvas) {
+            var clone = document.createElement('canvas');
+            clone.width = sourceCanvas.width;
+            clone.height = sourceCanvas.height;
+            var ctx = clone.getContext('2d');
+            if (!ctx) return null;
+            ctx.drawImage(sourceCanvas, 0, 0);
+            var imageData = ctx.getImageData(0, 0, clone.width, clone.height);
+            addNoiseToImageData(imageData);
+            ctx.putImageData(imageData, 0, 0);
+            return clone;
+        }
+
         // Override HTMLCanvasElement.toDataURL
         wrapMethod(HTMLCanvasElement.prototype, 'toDataURL', function (original) {
             return function () {
-                const ctx = this.getContext('2d');
-                if (ctx) {
-                    try {
-                        const imageData = ctx.getImageData(0, 0, this.width, this.height);
-                        addNoiseToImageData(imageData);
-                        ctx.putImageData(imageData, 0, 0);
-                    } catch (e) {
-                        // Cross-origin canvas or other error
-                    }
+                try {
+                    var clone = createNoisyClone(this);
+                    if (clone) return original.apply(clone, arguments);
+                } catch (e) {
+                    // Cross-origin canvas or other error — fall through
                 }
                 return original.apply(this, arguments);
             };
@@ -120,15 +142,11 @@
         // Override HTMLCanvasElement.toBlob
         wrapMethod(HTMLCanvasElement.prototype, 'toBlob', function (original) {
             return function () {
-                const ctx = this.getContext('2d');
-                if (ctx) {
-                    try {
-                        const imageData = ctx.getImageData(0, 0, this.width, this.height);
-                        addNoiseToImageData(imageData);
-                        ctx.putImageData(imageData, 0, 0);
-                    } catch (e) {
-                        // Cross-origin canvas
-                    }
+                try {
+                    var clone = createNoisyClone(this);
+                    if (clone) return original.apply(clone, arguments);
+                } catch (e) {
+                    // Cross-origin canvas — fall through
                 }
                 return original.apply(this, arguments);
             };
@@ -137,7 +155,7 @@
         // Override CanvasRenderingContext2D.getImageData
         wrapMethod(CanvasRenderingContext2D.prototype, 'getImageData', function (original) {
             return function () {
-                const imageData = original.apply(this, arguments);
+                var imageData = original.apply(this, arguments);
                 addNoiseToImageData(imageData);
                 return imageData;
             };
@@ -150,10 +168,10 @@
     (function spoofWebGL() {
         if (!CFG.webgl) return;
 
-        const vendor = CFG.webgl.vendor;
-        const renderer = CFG.webgl.renderer;
-        const UNMASKED_VENDOR = 0x9245;  // UNMASKED_VENDOR_WEBGL
-        const UNMASKED_RENDERER = 0x9246; // UNMASKED_RENDERER_WEBGL
+        var vendor = CFG.webgl.vendor;
+        var renderer = CFG.webgl.renderer;
+        var UNMASKED_VENDOR = 0x9245;  // UNMASKED_VENDOR_WEBGL
+        var UNMASKED_RENDERER = 0x9246; // UNMASKED_RENDERER_WEBGL
 
         function patchGetParameter(proto) {
             wrapMethod(proto, 'getParameter', function (original) {
@@ -179,7 +197,7 @@
     (function spoofNavigator() {
         if (!CFG.navigator) return;
 
-        const nav = CFG.navigator;
+        var nav = CFG.navigator;
 
         if (nav.hardwareConcurrency != null) {
             defineProperty(navigator, 'hardwareConcurrency', nav.hardwareConcurrency);
@@ -194,7 +212,11 @@
             defineProperty(navigator, 'language', nav.language);
         }
         if (nav.languages != null) {
-            defineProperty(navigator, 'languages', Object.freeze(nav.languages));
+            // Return a NEW frozen copy each call (matches real Chrome behavior)
+            var langArr = nav.languages;
+            defineGetter(navigator, 'languages', function () {
+                return Object.freeze(langArr.slice());
+            });
         }
         if (nav.maxTouchPoints != null) {
             defineProperty(navigator, 'maxTouchPoints', nav.maxTouchPoints);
@@ -216,7 +238,7 @@
     (function spoofScreen() {
         if (!CFG.screen) return;
 
-        const scr = CFG.screen;
+        var scr = CFG.screen;
 
         if (scr.width != null) {
             defineProperty(screen, 'width', scr.width);
@@ -238,7 +260,7 @@
             defineProperty(window, 'devicePixelRatio', scr.pixelRatio);
         }
 
-        // Also override outerWidth/outerHeight/innerWidth/innerHeight
+        // Also override outerWidth/outerHeight
         if (scr.width != null) {
             defineProperty(window, 'outerWidth', scr.width);
         }
@@ -254,23 +276,30 @@
         if (CFG.blockWebRTC === false) return;
 
         // Wrap RTCPeerConnection to prevent local IP leaking
-        const OriginalRTC = window.RTCPeerConnection || window.webkitRTCPeerConnection;
+        var OriginalRTC = window.RTCPeerConnection || window.webkitRTCPeerConnection;
         if (!OriginalRTC) return;
 
-        const WrappedRTC = function (config, constraints) {
+        function WrappedRTC(config, constraints) {
             // Force relay-only ICE transport to prevent local IP exposure
-            if (config && config.iceServers) {
-                config.iceTransportPolicy = 'relay';
-            } else if (!config) {
+            if (!config) {
                 config = { iceTransportPolicy: 'relay' };
             } else {
                 config.iceTransportPolicy = 'relay';
             }
-            return new OriginalRTC(config, constraints);
-        };
+            // Use Reflect.construct for proper prototype chain
+            return Reflect.construct(OriginalRTC, [config, constraints], WrappedRTC);
+        }
 
-        WrappedRTC.prototype = OriginalRTC.prototype;
-        WrappedRTC.generateCertificate = OriginalRTC.generateCertificate;
+        // Set up proper prototype chain
+        WrappedRTC.prototype = Object.create(OriginalRTC.prototype, {
+            constructor: { value: WrappedRTC, writable: true, configurable: true }
+        });
+        Object.setPrototypeOf(WrappedRTC, OriginalRTC);
+
+        // Copy static methods
+        if (OriginalRTC.generateCertificate) {
+            WrappedRTC.generateCertificate = OriginalRTC.generateCertificate;
+        }
 
         // Preserve toString
         WrappedRTC.toString = function () {
@@ -301,24 +330,7 @@
     })();
 
     // =========================================================================
-    // 6. PERMISSIONS API SPOOFING
-    // =========================================================================
-    (function spoofPermissions() {
-        if (!navigator.permissions) return;
-
-        wrapMethod(navigator.permissions, 'query', function (original) {
-            return function (descriptor) {
-                // Return 'denied' for notifications to avoid fingerprinting via permission status
-                if (descriptor && descriptor.name === 'notifications') {
-                    return Promise.resolve({ state: 'denied', onchange: null });
-                }
-                return original.call(this, descriptor);
-            };
-        });
-    })();
-
-    // =========================================================================
-    // 7. AUTOMATION DETECTION PREVENTION
+    // 6. AUTOMATION DETECTION PREVENTION
     // =========================================================================
     (function hideAutomation() {
         // Remove webdriver flag that Chrome sets when using --enable-automation
@@ -329,23 +341,10 @@
             });
         } catch (e) { /* already defined */ }
 
-        // Remove Chrome automation-related properties
-        if (window.chrome) {
-            // Ensure chrome.runtime exists (extensions have it, automation might remove it)
-            if (!window.chrome.runtime) {
-                window.chrome.runtime = {};
-            }
-        }
-
         // Remove Puppeteer/Playwright indicators
-        delete window.__playwright;
-        delete window.__pw_manual;
-        delete window.__PW_inspect;
+        try { delete window.__playwright; } catch (e) { /* */ }
+        try { delete window.__pw_manual; } catch (e) { /* */ }
+        try { delete window.__PW_inspect; } catch (e) { /* */ }
     })();
-
-    // --- Cleanup: remove config from window ---
-    try {
-        delete window.__stealth_config__;
-    } catch (e) { /* non-configurable */ }
 
 })();
