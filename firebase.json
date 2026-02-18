@@ -23,7 +23,7 @@
     }
   ],
   "hosting": {
-    "public": "dist/chrome-profile-manager/browser",
+    "public": "dist/angulogin/browser",
     "headers": [
       {
         "source": "**",

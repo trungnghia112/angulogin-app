@@ -1,7 +1,7 @@
 {
-  "name": "chrome-profile-manager",
+  "name": "angulogin",
   "version": "1.0.0",
-  "description": "Manage and organize Chrome browser profiles with advanced features",
+  "description": "Multi-browser profile manager with antidetect and automation features",
   "author": "AnguLogin",
   "license": "UNLICENSED",
   "scripts": {

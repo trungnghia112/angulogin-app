@@ -958,7 +958,7 @@ pub fn backup_profile(profile_path: String, backup_path: String, password: Optio
 }
 
 /// Feature 5.7: Magic header for encrypted backups
-const ENCRYPTED_MAGIC: &[u8; 8] = b"CPME0001"; // Chrome Profile Manager Encrypted v1
+const ENCRYPTED_MAGIC: &[u8; 8] = b"CPME0001"; // AnguLogin Encrypted v1 (legacy: Chrome Profile Manager)
 
 /// Encrypt data with AES-256-GCM using PBKDF2-derived key
 fn encrypt_backup_data(data: &[u8], password: &str) -> Result<Vec<u8>, String> {

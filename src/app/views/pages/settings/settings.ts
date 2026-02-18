@@ -265,7 +265,7 @@ export class Settings {
         try {
             const filePath = await save({
                 title: 'Export Configuration',
-                defaultPath: `chrome-profile-manager-backup-${new Date().toISOString().slice(0, 10)}.json`,
+                defaultPath: `angulogin-backup-${new Date().toISOString().slice(0, 10)}.json`,
                 filters: [{ name: 'JSON', extensions: ['json'] }]
             });
 

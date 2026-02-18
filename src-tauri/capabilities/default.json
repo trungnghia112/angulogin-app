@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capability for the main window - Chrome Profile Manager",
+  "description": "Capability for the main window - AnguLogin",
   "windows": [
     "main"
   ],

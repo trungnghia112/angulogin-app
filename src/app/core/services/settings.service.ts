@@ -101,10 +101,10 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 const STORAGE_KEY = 'app-settings';
 
-// Chrome Profile Manager Storage Paths (Dedicated directory, not Chrome's)
-const MACOS_CHROME_PATH = 'Library/Application Support/ChromeProfileManager/Profiles';
-const WINDOWS_CHROME_PATH = 'AppData\\\\Roaming\\\\ChromeProfileManager\\\\Profiles';
-const LINUX_CHROME_PATH = '.config/ChromeProfileManager/Profiles';
+// AnguLogin Storage Paths (Dedicated directory for managed profiles)
+const MACOS_CHROME_PATH = 'Library/Application Support/AnguLogin/Profiles';
+const WINDOWS_CHROME_PATH = 'AppData\\\\Roaming\\\\AnguLogin\\\\Profiles';
+const LINUX_CHROME_PATH = '.config/AnguLogin/Profiles';
 
 @Injectable({ providedIn: 'root' })
 export class SettingsService {

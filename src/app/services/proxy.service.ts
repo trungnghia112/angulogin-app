@@ -2,7 +2,7 @@ import { Injectable, signal, computed } from '@angular/core';
 import { ProfileProxy } from '../models/folder.model';
 import { isWebDevMode } from '../core/utils/platform.util';
 
-const STORAGE_KEY = 'chrome-profile-manager-proxies';
+const STORAGE_KEY = 'angulogin-proxies';
 
 @Injectable({
     providedIn: 'root',

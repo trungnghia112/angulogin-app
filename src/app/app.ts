@@ -16,7 +16,7 @@ import { SettingsService } from './core/services/settings.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
-  protected readonly title = signal('chrome-profile-manager');
+  protected readonly title = signal('angulogin');
   protected readonly commandPalette = viewChild<CommandPalette>('commandPalette');
   // Inject to ensure service is initialized on app start
   private settingsService = inject(SettingsService);
