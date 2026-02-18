@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.1.2",
-        "updated_at": "2026-02-18T21:41:00+07:00"
+        "updated_at": "2026-02-19T03:42:00+07:00"
     },
     "project": {
         "name": "AnguLogin",
@@ -65,7 +65,10 @@
         "home_component": "src/app/views/pages/home/home.ts",
         "storage_dashboard": "src/app/views/pages/storage-dashboard/storage-dashboard.ts",
         "activity_log_service": "src/app/services/activity-log.service.ts",
-        "audit_tracker": "docs/FEATURE_AUDIT_TRACKER.md"
+        "audit_tracker": "docs/FEATURE_AUDIT_TRACKER.md",
+        "stealth_extension": "src-tauri/extensions/stealth/content.js",
+        "fingerprint_generator": "src-tauri/src/fingerprint/generator.rs",
+        "browser_manager": "src/app/services/browser-manager.service.ts"
     },
     "security_audit": {
         "grade": "A-",
@@ -314,14 +317,18 @@
             ]
         },
         {
-            "name": "Antidetect / Privacy Mode",
+            "name": "Antidetect / Protection Levels",
             "status": "implemented",
-            "description": "Browser fingerprint protection using Camoufox (Firefox) and privacy flags for Chrome",
+            "description": "Unified Protection Level UX (Off/Standard/Maximum) with fingerprint spoofing",
             "includes": [
-                "Fingerprint preview card in profile edit dialog",
-                "Randomize fingerprint button",
-                "Privacy hardening Chrome flags injection",
-                "Camoufox integration for maximum protection"
+                "Protection Level selector (Off/Standard/Maximum) replacing Privacy Mode + Engine",
+                "Standard: Chrome + Stealth Extension (canvas, WebGL, navigator, screen, WebRTC spoofing)",
+                "Maximum: Camoufox (antidetect Firefox) integration",
+                "Seeded PRNG (Mulberry32) for deterministic fingerprints per profile",
+                "Inline config injection (no window.__stealth_config__ exposure)",
+                "Auto-migration from legacy antidetectEnabled + browserEngine fields",
+                "Fingerprint preview card, Randomize button, OS selector",
+                "Ungoogled Chromium auto-download dialog"
             ]
         },
         {
@@ -437,6 +444,21 @@
                 "name": "Responsive Button Visibility",
                 "code": "class=\"hidden sm:inline-flex\" for desktop-only, class=\"sm:hidden\" for mobile-only",
                 "note": "Pattern for showing different buttons on mobile vs desktop"
+            },
+            {
+                "name": "Seeded PRNG for Fingerprints",
+                "code": "SeededRng::new(seed) + Mulberry32 algorithm",
+                "note": "Seed from SHA256(profile_path)[..16] → u64. Same profile always gets same fingerprint."
+            },
+            {
+                "name": "Inline Stealth Config Injection",
+                "code": "content_js.replace('const CFG = null; /* @@STEALTH_CONFIG@@ */', format!('const CFG = {};', config_json))",
+                "note": "Never expose config via window globals. Replace placeholder in content.js before loading extension."
+            },
+            {
+                "name": "Protection Levels Data Model",
+                "code": "protectionLevel?: 'off' | 'standard' | 'maximum'",
+                "note": "Maps to: off→stock chrome, standard→chrome+stealth+flags, maximum→camoufox. Legacy fields (antidetectEnabled, browserEngine) kept for backward compat."
             }
         ],
         "gotchas": [
@@ -544,7 +566,6 @@
                 "Uses real Chrome"
             ],
             "gaps": [
-                "Fingerprint spoofing",
                 "Automation API",
                 "Team collaboration"
             ],

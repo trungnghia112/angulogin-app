@@ -7,7 +7,9 @@ use std::path::{Path, PathBuf};
 
 /// GitHub repos per platform (each platform has its own repo)
 const GITHUB_REPO_MACOS: &str = "ungoogled-software/ungoogled-chromium-macos";
+#[allow(dead_code)]
 const GITHUB_REPO_WINDOWS: &str = "ungoogled-software/ungoogled-chromium-windows";
+#[allow(dead_code)]
 const GITHUB_REPO_LINUX: &str = "ungoogled-software/ungoogled-chromium-portablelinux";
 
 /// GitHub API base
@@ -26,6 +28,7 @@ pub struct PlatformInfo {
 }
 
 /// Supported archive formats
+#[allow(dead_code)]
 pub enum ArchiveFormat {
     Dmg,
     Zip,

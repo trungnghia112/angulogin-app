@@ -338,6 +338,7 @@ impl CamoufoxManager {
     }
 
     /// Get the Camoufox profile directory for a given profile name
+    #[allow(dead_code)]
     pub fn get_profile_dir(profile_name: &str) -> Result<PathBuf, String> {
         let profiles_dir = crate::camoufox_downloader::get_profiles_dir()?;
         Ok(profiles_dir.join(profile_name))

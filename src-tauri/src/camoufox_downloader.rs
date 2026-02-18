@@ -93,6 +93,7 @@ pub fn get_install_dir() -> Result<PathBuf, String> {
 }
 
 /// Get the Camoufox profiles directory: ~/.angulogin/camoufox-profiles/
+#[allow(dead_code)]
 pub fn get_profiles_dir() -> Result<PathBuf, String> {
     let base_dirs = BaseDirs::new().ok_or("Failed to get base directories")?;
     let mut path = base_dirs.data_local_dir().to_path_buf();
@@ -428,6 +429,7 @@ fn emit_status(window: Option<&Window>, status: &str, message: &str) {
 }
 
 /// Remove Camoufox installation
+#[allow(dead_code)]
 pub fn uninstall() -> Result<(), String> {
     let install_dir = get_install_dir()?;
     if install_dir.exists() {

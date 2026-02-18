@@ -7,6 +7,7 @@ use std::collections::HashMap;
 
 /// Convert a fingerprint config (HashMap) to Camoufox environment variables.
 /// Sets a single CAMOU_CONFIG env var with the entire JSON config.
+#[allow(dead_code)]
 pub fn config_to_env_vars(
     config: &HashMap<String, serde_json::Value>,
 ) -> Result<HashMap<String, String>, String> {
@@ -52,6 +53,7 @@ pub fn get_fontconfig_env(target_os: &str, executable_path: &std::path::Path) ->
 }
 
 #[cfg(not(target_os = "linux"))]
+#[allow(dead_code)]
 pub fn get_fontconfig_env(_target_os: &str, _executable_path: &std::path::Path) -> Option<String> {
     None
 }

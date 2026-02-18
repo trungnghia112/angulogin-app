@@ -534,6 +534,7 @@ fn emit_status(window: Option<&Window>, status: &str, message: &str) {
 }
 
 /// Remove ungoogled-chromium installation
+#[allow(dead_code)]
 pub fn uninstall() -> Result<(), String> {
     let install_dir = browser_manager::get_install_dir()?;
     if install_dir.exists() {
