@@ -64,7 +64,10 @@ pub fn run() {
             commands::check_backup_encrypted,
             // Traffic stats
             commands::get_traffic_stats,
-            commands::reset_traffic_stats
+            commands::reset_traffic_stats,
+            // Local proxy server (13.1)
+            commands::start_local_proxy,
+            commands::list_active_relays
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

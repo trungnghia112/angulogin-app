@@ -1595,6 +1595,52 @@ pub fn stop_proxy_relay(profile_path: String) -> Result<(), String> {
     Ok(())
 }
 
+// Feature 13.1: Local Proxy Server Management
+
+/// Start a standalone local proxy server for a profile.
+/// Returns the local port number.
+#[tauri::command]
+pub fn start_local_proxy(
+    profile_id: String,
+    proxy_host: String,
+    proxy_port: u16,
+    proxy_type: String,
+    username: Option<String>,
+    password: Option<String>,
+) -> Result<u16, String> {
+    let user = username.as_deref().unwrap_or("");
+    let pass = password.as_deref().unwrap_or("");
+
+    let local_port = match proxy_type.as_str() {
+        "socks5" => crate::proxy_relay::start_socks5_relay(
+            &proxy_host, proxy_port, user, pass, &profile_id,
+        )?,
+        _ => crate::proxy_relay::start_proxy_relay(
+            &proxy_host, proxy_port, user, pass, &profile_id,
+        )?,
+    };
+
+    Ok(local_port)
+}
+
+/// List all active local proxy relays.
+#[derive(Serialize)]
+pub struct ActiveRelay {
+    pub profile_id: String,
+    pub local_port: u16,
+}
+
+#[tauri::command]
+pub fn list_active_relays() -> Vec<ActiveRelay> {
+    crate::proxy_relay::get_active_relay_ports()
+        .into_iter()
+        .map(|(profile_id, port)| ActiveRelay {
+            profile_id,
+            local_port: port,
+        })
+        .collect()
+}
+
 // ===== Camoufox Commands =====
 
 /// Download and install Camoufox binary (emits progress events)

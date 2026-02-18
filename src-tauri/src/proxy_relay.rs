@@ -131,6 +131,15 @@ fn register_relay(profile_id: &str, port: u16, shutdown: Arc<AtomicBool>) {
     relays.insert(profile_id.to_string(), RelayHandle { port, shutdown });
 }
 
+/// List all active relay ports keyed by profile ID.
+pub fn get_active_relay_ports() -> HashMap<String, u16> {
+    let relays = active_relays().lock().unwrap();
+    relays.iter()
+        .filter(|(_, h)| !h.shutdown.load(Ordering::SeqCst))
+        .map(|(k, v)| (k.clone(), v.port))
+        .collect()
+}
+
 // ---------------------------------------------------------------------------
 // HTTP Proxy Relay (existing, with lifecycle management added)
 // ---------------------------------------------------------------------------
