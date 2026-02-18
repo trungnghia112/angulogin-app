@@ -541,6 +541,138 @@ pub fn batch_check_running(profile_paths: Vec<String>) -> std::collections::Hash
     results
 }
 
+/// Prepare the stealth extension for a specific profile.
+/// Copies the bundled extension to a per-profile cache directory and writes
+/// a config file with the generated fingerprint for deterministic spoofing.
+fn prepare_stealth_extension(profile_path: &str) -> Result<String, String> {
+    use sha2::{Sha256, Digest};
+
+    // 1. Locate bundled extension relative to executable
+    let exe_path = std::env::current_exe()
+        .map_err(|e| format!("Failed to get executable path: {}", e))?;
+    let exe_dir = exe_path.parent()
+        .ok_or("Failed to get executable directory")?;
+
+    // In dev mode: src-tauri/extensions/stealth/
+    // In production: <app_bundle>/Contents/Resources/extensions/stealth/
+    let bundled_ext = if cfg!(debug_assertions) {
+        // Dev mode: relative to project root
+        let project_root = exe_dir.ancestors()
+            .find(|p| p.join("extensions").join("stealth").join("manifest.json").exists())
+            .ok_or("Cannot find stealth extension in dev mode")?;
+        project_root.join("extensions").join("stealth")
+    } else {
+        // Production: inside app bundle Resources
+        exe_dir.join("extensions").join("stealth")
+    };
+
+    if !bundled_ext.join("manifest.json").exists() {
+        return Err(format!(
+            "Stealth extension not found at: {}",
+            bundled_ext.display()
+        ));
+    }
+
+    // 2. Create per-profile hash for cache directory
+    let mut hasher = Sha256::new();
+    hasher.update(profile_path.as_bytes());
+    let hash = format!("{:x}", hasher.finalize());
+    let short_hash = &hash[..12];
+
+    // 3. Cache directory in app data
+    let cache_dir = directories::BaseDirs::new()
+        .ok_or("Failed to get base directories")?
+        .data_dir()
+        .join("AnguLogin")
+        .join("stealth-cache")
+        .join(short_hash);
+
+    // 4. Copy extension to cache (overwrite if exists to pick up updates)
+    if cache_dir.exists() {
+        let _ = fs::remove_dir_all(&cache_dir);
+    }
+    fs::create_dir_all(&cache_dir)
+        .map_err(|e| format!("Failed to create stealth cache dir: {}", e))?;
+
+    let mut copy_opts = fs_extra::dir::CopyOptions::new();
+    copy_opts.content_only = true;
+    fs_extra::dir::copy(&bundled_ext, &cache_dir, &copy_opts)
+        .map_err(|e| format!("Failed to copy stealth extension: {}", e))?;
+
+    // 5. Generate fingerprint using existing generator
+    let fp = crate::fingerprint::generator::generate(None);
+
+    // 6. Create seed from profile path hash (first 8 hex chars → u32)
+    let seed = u32::from_str_radix(&hash[..8], 16).unwrap_or(42);
+
+    // 7. Build config JSON
+    let config = serde_json::json!({
+        "seed": seed,
+        "navigator": {
+            "userAgent": fp.navigator.user_agent,
+            "platform": fp.navigator.platform,
+            "language": fp.navigator.language,
+            "languages": fp.navigator.languages,
+            "hardwareConcurrency": fp.navigator.hardware_concurrency,
+            "deviceMemory": fp.navigator.device_memory,
+            "maxTouchPoints": fp.navigator.max_touch_points,
+            "doNotTrack": fp.navigator.do_not_track,
+        },
+        "screen": {
+            "width": fp.screen.width,
+            "height": fp.screen.height,
+            "availWidth": fp.screen.avail_width,
+            "availHeight": fp.screen.avail_height,
+            "colorDepth": fp.screen.color_depth,
+            "pixelRatio": fp.screen.pixel_ratio,
+        },
+        "webgl": {
+            "vendor": fp.video_card.vendor,
+            "renderer": fp.video_card.renderer,
+        },
+        "blockWebRTC": true,
+    });
+
+    // 8. Write config injection script that runs before content.js
+    //    This sets window.__stealth_config__ in the page context
+    let config_js = format!(
+        "window.__stealth_config__ = {};",
+        serde_json::to_string(&config).map_err(|e| format!("JSON serialize error: {}", e))?
+    );
+
+    // Write as config_inject.js
+    let config_path = cache_dir.join("config_inject.js");
+    fs::write(&config_path, &config_js)
+        .map_err(|e| format!("Failed to write stealth config: {}", e))?;
+
+    // 9. Update manifest.json to include config_inject.js BEFORE content.js
+    let manifest_path = cache_dir.join("manifest.json");
+    let manifest_content = fs::read_to_string(&manifest_path)
+        .map_err(|e| format!("Failed to read manifest: {}", e))?;
+    let mut manifest: serde_json::Value = serde_json::from_str(&manifest_content)
+        .map_err(|e| format!("Failed to parse manifest: {}", e))?;
+
+    if let Some(scripts) = manifest.get_mut("content_scripts") {
+        if let Some(arr) = scripts.as_array_mut() {
+            if let Some(first) = arr.first_mut() {
+                first["js"] = serde_json::json!(["config_inject.js", "content.js"]);
+            }
+        }
+    }
+
+    let updated_manifest = serde_json::to_string_pretty(&manifest)
+        .map_err(|e| format!("Failed to serialize manifest: {}", e))?;
+    fs::write(&manifest_path, updated_manifest)
+        .map_err(|e| format!("Failed to write updated manifest: {}", e))?;
+
+    eprintln!(
+        "[Stealth] Extension prepared for profile (seed={}, hash={}): {}",
+        seed, short_hash, cache_dir.display()
+    );
+
+    Ok(cache_dir.to_string_lossy().to_string())
+}
+
 #[tauri::command]
 pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>, custom_flags: Option<String>, proxy_username: Option<String>, proxy_password: Option<String>, antidetect_enabled: Option<bool>, disable_extensions: Option<bool>) -> Result<(), String> {
     let path = std::path::Path::new(&profile_path);
@@ -661,6 +793,28 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
         eprintln!("[Antidetect] Privacy Mode active - injecting {} flags", privacy_flags.len());
         for flag in privacy_flags {
             args.push(flag.to_string());
+        }
+
+        // Stealth Extension: Prepare and load for Chrome-based browsers
+        let browser_lower = browser.to_lowercase();
+        let is_chrome_based = browser_lower.contains("chrome")
+            || browser_lower.contains("brave")
+            || browser_lower.contains("edge")
+            || browser_lower.contains("chromium")
+            || browser_lower.contains("ungoogled");
+
+        if is_chrome_based {
+            match prepare_stealth_extension(&profile_path) {
+                Ok(ext_path) => {
+                    eprintln!("[Antidetect] Loading stealth extension from: {}", ext_path);
+                    args.push(format!("--load-extension={}", ext_path));
+                    args.push(format!("--disable-extensions-except={}", ext_path));
+                }
+                Err(e) => {
+                    eprintln!("[Antidetect] Warning: Failed to prepare stealth extension: {}", e);
+                    // Continue without extension — privacy flags still apply
+                }
+            }
         }
     }
 

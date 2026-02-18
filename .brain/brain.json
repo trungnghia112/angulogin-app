@@ -2,13 +2,13 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.1.2",
-        "updated_at": "2026-02-18T11:07:00+07:00"
+        "updated_at": "2026-02-18T21:41:00+07:00"
     },
     "project": {
-        "name": "Chrome Profile Manager",
+        "name": "AnguLogin",
         "type": "desktop-app",
         "status": "production-ready",
-        "description": "Tauri + Angular desktop app to manage multiple Chrome profiles"
+        "description": "Multi-browser profile manager with antidetect and automation features (Tauri + Angular)"
     },
     "tech_stack": {
         "frontend": {
@@ -37,9 +37,9 @@
     "architecture": {
         "profile_storage": {
             "managed_profiles_path": {
-                "macOS": "~/Library/Application Support/ChromeProfileManager/Profiles",
-                "windows": "%APPDATA%/ChromeProfileManager/Profiles",
-                "linux": "~/.config/ChromeProfileManager/Profiles"
+                "macOS": "~/Library/Application Support/AnguLogin/Profiles",
+                "windows": "%APPDATA%/AnguLogin/Profiles",
+                "linux": "~/.config/AnguLogin/Profiles"
             },
             "native_chrome_path": {
                 "macOS": "~/Library/Application Support/Google/Chrome",
@@ -312,6 +312,22 @@
                 "Create from Template dialog with template list",
                 "Delete templates from list"
             ]
+        },
+        {
+            "name": "Antidetect / Privacy Mode",
+            "status": "implemented",
+            "description": "Browser fingerprint protection using Camoufox (Firefox) and privacy flags for Chrome",
+            "includes": [
+                "Fingerprint preview card in profile edit dialog",
+                "Randomize fingerprint button",
+                "Privacy hardening Chrome flags injection",
+                "Camoufox integration for maximum protection"
+            ]
+        },
+        {
+            "name": "Fingerprint Checker Page",
+            "status": "implemented",
+            "description": "Page at /fingerprint-checker with external checker links, embedded preview, and Launch & Check button"
         }
     ],
     "api_endpoints": [
@@ -478,7 +494,7 @@
             },
             {
                 "issue": "DMG build fails with 'Resource busy' when previous DMG still mounted",
-                "solution": "Run 'hdiutil detach /Volumes/Angulogin' before npm run tauri build"
+                "solution": "Run 'hdiutil detach /Volumes/AnguLogin' before npm run tauri build"
             },
             {
                 "issue": "Chrome cookie encryption uses domain-specific key from Keychain",
@@ -505,7 +521,8 @@
             "Rust backend uses validate_path_safety() for all file operations — checks traversal, symlinks, null bytes",
             "CSV export must use csvSafe() to prevent formula injection (=, +, -, @ prefix escaping)",
             "Structural borders (nav, sidebar, dividers) use lighter shades: border-surface-100 dark:border-surface-800",
-            "Main-nav, sidebar, and home-container have border-top for visual separation below title bar"
+            "Main-nav, sidebar, and home-container have border-top for visual separation below title bar",
+            "App rebranded from 'Chrome Profile Manager' to 'AnguLogin' — all source files, paths, and configs updated"
         ],
         "competitor_analysis": {
             "completed_at": "2026-02-16",
