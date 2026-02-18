@@ -191,9 +191,14 @@
                     @if (columnConfig.isVisible('proxy')) {
                     <td>
                         @if (profile.metadata?.proxy) {
+                        @let geo = getProxyGeoInfo(profile.metadata?.proxy);
                         <span
                             class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-100 dark:bg-surface-800 border border-surface rounded text-xs text-color font-mono"
                             [pTooltip]="profile.metadata?.proxy" tooltipPosition="top">
+                            @if (geo) {
+                            <span [pTooltip]="geo.label" tooltipPosition="top" class="cursor-default">{{ geo.flag
+                                }}</span>
+                            }
                             <i class="pi pi-globe text-[10px] text-primary"></i>
                             <span class="max-w-[120px] truncate">{{ profile.metadata?.proxy }}</span>
                         </span>
@@ -389,11 +394,16 @@
                 }
                 <!-- Phase 0: Proxy Indicator (Grid) -->
                 @if (profile.metadata?.proxy) {
+                @let gridGeo = getProxyGeoInfo(profile.metadata?.proxy);
                 <div class="absolute top-2 right-2 z-10"
                     [class.right-8]="profile.metadata?.isPinned && sortBy() !== 'custom'">
                     <span
-                        class="w-6 h-6 rounded-full bg-surface-0/80 dark:bg-surface-900/80 backdrop-blur-sm shadow-sm flex items-center justify-center border border-surface"
-                        [pTooltip]="'Proxy: ' + profile.metadata?.proxy" tooltipPosition="left">
+                        class="h-6 rounded-full bg-surface-0/80 dark:bg-surface-900/80 backdrop-blur-sm shadow-sm flex items-center justify-center border border-surface px-1.5 gap-1"
+                        [pTooltip]="gridGeo ? gridGeo.label + ' - ' + profile.metadata?.proxy : 'Proxy: ' + profile.metadata?.proxy"
+                        tooltipPosition="left">
+                        @if (gridGeo) {
+                        <span class="text-xs">{{ gridGeo.flag }}</span>
+                        }
                         <i class="pi pi-globe text-primary text-xs"></i>
                     </span>
                 </div>
@@ -511,6 +521,12 @@
                     title="Assign tags to selected">
                     <i class="pi pi-tag text-xs"></i>
                     <span class="hidden sm:inline">Tags</span>
+                </button>
+                <button id="home-bottom-proxy-btn" (click)="openMassProxyDialog()"
+                    class="h-7 flex items-center gap-1.5 px-2.5 rounded border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white transition-colors text-xs font-medium"
+                    title="Change proxy for selected">
+                    <i class="pi pi-globe text-xs"></i>
+                    <span class="hidden sm:inline">Proxy</span>
                 </button>
                 <button id="home-bottom-delete-btn" (click)="bulkDelete()"
                     class="h-7 flex items-center gap-1.5 px-2.5 rounded border border-error text-error hover:bg-error hover:text-white transition-colors text-xs font-medium"
@@ -860,6 +876,83 @@
                 (click)="showMassTagDialog.set(false)" />
             <p-button id="home-mass-tag-apply-btn" label="Apply Tags" icon="pi pi-check" (click)="bulkAssignTags()"
                 [disabled]="massTagSelection().length === 0" />
+        </ng-template>
+    </p-dialog>
+
+    <!-- Feature 12.2: Mass Proxy Change Dialog -->
+    <p-dialog id="home-mass-proxy-dialog" header="Change Proxy for Selected Profiles" [(visible)]="showMassProxyDialog"
+        [modal]="true" [style]="{ width: 'min(480px, 95vw)' }" [draggable]="false" [resizable]="false">
+        <div id="home-mass-proxy-content" class="py-2">
+            <p class="text-sm text-muted-color mb-4">
+                Apply proxy to {{ selectedProfiles().length }} selected profile(s).
+            </p>
+
+            <!-- Mode selector -->
+            <div class="flex gap-2 mb-4">
+                <button id="home-mass-proxy-mode-saved" (click)="massProxyMode.set('saved')"
+                    [class]="massProxyMode() === 'saved'
+                        ? 'flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-primary text-white border border-primary transition-all'
+                        : 'flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-surface-100 dark:bg-surface-800 text-color border border-surface-200 dark:border-surface-700 hover:border-primary/50 transition-all'">
+                    <i class="pi pi-list text-xs mr-1.5"></i>Use Saved Proxy
+                </button>
+                <button id="home-mass-proxy-mode-none" (click)="massProxyMode.set('none')"
+                    [class]="massProxyMode() === 'none'
+                        ? 'flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-red-500 text-white border border-red-500 transition-all'
+                        : 'flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-surface-100 dark:bg-surface-800 text-color border border-surface-200 dark:border-surface-700 hover:border-red-500/50 transition-all'">
+                    <i class="pi pi-ban text-xs mr-1.5"></i>Clear Proxy
+                </button>
+            </div>
+
+            <!-- Saved proxy selector -->
+            @if (massProxyMode() === 'saved') {
+            <div class="mb-4">
+                <label for="home-mass-proxy-select" class="block text-xs font-medium text-color mb-2">Select
+                    Proxy</label>
+                <p-select id="home-mass-proxy-select" [options]="proxyService.proxies()"
+                    [ngModel]="massProxySelectedId()" (ngModelChange)="massProxySelectedId.set($event)"
+                    optionLabel="name" optionValue="id" placeholder="Choose a saved proxy..." class="w-full">
+                    <ng-template pTemplate="selectedItem" let-item>
+                        @if (item) {
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-globe text-primary text-xs"></i>
+                            <span class="font-mono text-sm">{{ item.host }}:{{ item.port }}</span>
+                            <span class="text-xs text-muted-color uppercase">{{ item.type }}</span>
+                        </div>
+                        }
+                    </ng-template>
+                    <ng-template pTemplate="item" let-item>
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-globe text-primary text-xs"></i>
+                            <span class="font-mono text-sm">{{ item.host }}:{{ item.port }}</span>
+                            <span class="text-xs text-muted-color uppercase">{{ item.type }}</span>
+                            @if (item.group) {
+                            <span class="text-xs px-1.5 py-0.5 bg-surface-100 dark:bg-surface-700 rounded">{{ item.group
+                                }}</span>
+                            }
+                        </div>
+                    </ng-template>
+                </p-select>
+            </div>
+            }
+
+            <!-- Clear proxy warning -->
+            @if (massProxyMode() === 'none') {
+            <div class="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                <div class="flex items-center gap-2">
+                    <i class="pi pi-exclamation-triangle text-red-500"></i>
+                    <span class="text-sm text-color">This will remove the proxy from all selected profiles.</span>
+                </div>
+            </div>
+            }
+        </div>
+        <ng-template #footer>
+            <p-button id="home-mass-proxy-cancel-btn" label="Cancel" severity="secondary"
+                (click)="showMassProxyDialog.set(false)" />
+            <p-button id="home-mass-proxy-apply-btn"
+                [label]="massProxyMode() === 'none' ? 'Clear Proxy' : 'Apply Proxy'"
+                [icon]="massProxyMode() === 'none' ? 'pi pi-ban' : 'pi pi-check'"
+                [severity]="massProxyMode() === 'none' ? 'danger' : 'primary'" (click)="bulkAssignProxy()"
+                [disabled]="massProxyMode() === 'saved' && !massProxySelectedId()" />
         </ng-template>
     </p-dialog>
 

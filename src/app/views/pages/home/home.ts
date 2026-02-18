@@ -40,6 +40,7 @@ import { ProxyService } from '../../../services/proxy.service';
 import { NavigationService } from '../../../services/navigation.service';
 import { CamoufoxService } from '../../../services/camoufox.service';
 import { ColumnConfigService } from '../../../core/services/column-config.service';
+import { GeoIpService } from '../../../services/geoip.service';
 import { BrowserType, Profile } from '../../../models/profile.model';
 import { validateProfileName } from '../../../core/utils/validation.util';
 import { ColumnSettingsPanel } from '../../components/column-settings-panel/column-settings-panel';
@@ -108,6 +109,7 @@ export class Home implements OnInit, OnDestroy {
     private readonly navService = inject(NavigationService);
     private readonly camoufoxService = inject(CamoufoxService);
     protected readonly columnConfig = inject(ColumnConfigService);
+    protected readonly geoIpService = inject(GeoIpService);
     private readonly searchSubject = new Subject<string>();
 
     // Feature 6.9: Zen Mode
@@ -414,6 +416,35 @@ export class Home implements OnInit, OnDestroy {
             .subscribe((value) => {
                 this.searchText.set(value);
             });
+
+        // GeoIP batch lookup when profiles change
+        effect(() => {
+            const profiles = this.profiles();
+            const hosts = profiles
+                .map(p => p.metadata?.proxy)
+                .filter((p): p is string => !!p)
+                .map(p => this.geoIpService.extractHost(p));
+            if (hosts.length > 0) {
+                this.geoIpService.batchLookup(hosts);
+            }
+        });
+    }
+
+    /**
+     * Get GeoIP info for a profile's proxy.
+     * Returns null if no proxy or lookup is still pending.
+     */
+    protected getProxyGeoInfo(proxyStr: string | null | undefined): { flag: string; label: string } | null {
+        if (!proxyStr) return null;
+        const host = this.geoIpService.extractHost(proxyStr);
+        if (!host) return null;
+        // Read the reactive signal to trigger change detection
+        const results = this.geoIpService.lookupResults();
+        const info = results.get(host);
+        if (!info) return null;
+        const flag = this.geoIpService.getFlagEmoji(info.country);
+        const label = info.city ? `${info.city}, ${info.countryName}` : info.countryName;
+        return { flag, label };
     }
 
     private handleVisibilityChange = (): void => {
@@ -1654,6 +1685,66 @@ export class Home implements OnInit, OnDestroy {
             severity: 'success',
             summary: 'Tags Applied',
             detail: `Added ${tagsToAssign.length} tag(s) to ${updated} profile(s)`,
+        });
+    }
+
+    // ==== Feature 12.2: Mass Proxy Change ====
+    protected readonly showMassProxyDialog = signal(false);
+    protected readonly massProxyMode = signal<'saved' | 'none'>('saved');
+    protected readonly massProxySelectedId = signal<string | null>(null);
+
+    openMassProxyDialog(): void {
+        this.massProxyMode.set('saved');
+        this.massProxySelectedId.set(null);
+        this.showMassProxyDialog.set(true);
+    }
+
+    async bulkAssignProxy(): Promise<void> {
+        const profiles = this.selectedProfiles();
+        if (profiles.length === 0) return;
+
+        const mode = this.massProxyMode();
+        let proxyValue: string | null = null;
+        let proxyIdValue: string | null = null;
+
+        if (mode === 'saved') {
+            const id = this.massProxySelectedId();
+            if (!id) return;
+            const proxy = this.proxyService.getById(id);
+            if (!proxy) return;
+            proxyValue = this.proxyService.formatProxyUrl(proxy);
+            proxyIdValue = id;
+        }
+        // mode === 'none' => clear proxy (proxyValue = null, proxyIdValue = null)
+
+        let updated = 0;
+        for (const profile of profiles) {
+            try {
+                await this.profileService.saveProfileMetadata(
+                    profile.path,
+                    {
+                        proxy: proxyValue,
+                        proxyId: proxyIdValue,
+                        proxyUsername: null,
+                        proxyPassword: null,
+                    },
+                );
+                updated++;
+            } catch (e) {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: `Failed to update proxy for ${profile.name}`,
+                });
+            }
+        }
+
+        this.showMassProxyDialog.set(false);
+        const action = mode === 'none' ? 'Cleared proxy from' : 'Applied proxy to';
+        this.messageService.add({
+            severity: 'success',
+            summary: 'Proxy Updated',
+            detail: `${action} ${updated} profile(s)`,
         });
     }
 

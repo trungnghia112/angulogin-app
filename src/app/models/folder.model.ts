@@ -13,7 +13,7 @@ export interface ProfileProxy {
     name: string;
     host: string;
     port: number;
-    type: 'http' | 'socks5';
+    type: 'http' | 'socks4' | 'socks5';
     username?: string | null;
     password?: string | null;
     group?: string | null;

@@ -131,14 +131,15 @@ export class Settings {
     protected readonly showAddProxyDialog = signal(false);
     protected readonly newProxyHost = signal('');
     protected readonly newProxyPort = signal<number | null>(null);
-    protected readonly newProxyType = signal<'http' | 'socks5'>('http');
+    protected readonly newProxyType = signal<'http' | 'socks4' | 'socks5'>('http');
     protected readonly newProxyUsername = signal('');
     protected readonly newProxyPassword = signal('');
     protected readonly newProxyGroup = signal('');
 
     protected readonly proxyTypeOptions = [
         { label: 'HTTP', value: 'http' },
-        { label: 'SOCKS5', value: 'socks5' }
+        { label: 'SOCKS4', value: 'socks4' },
+        { label: 'SOCKS5', value: 'socks5' },
     ];
 
     // Navigate to category

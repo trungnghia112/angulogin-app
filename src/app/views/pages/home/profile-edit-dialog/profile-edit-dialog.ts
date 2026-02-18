@@ -160,7 +160,7 @@ export class ProfileEditDialog {
     protected readonly selectedProxyId = signal<string | null>(null);
     protected readonly manualProxyHost = signal('');
     protected readonly manualProxyPort = signal<number | null>(null);
-    protected readonly manualProxyType = signal<'http' | 'socks5'>('http');
+    protected readonly manualProxyType = signal<'http' | 'socks4' | 'socks5'>('http');
     protected readonly manualProxyUsername = signal('');
     protected readonly manualProxyPassword = signal('');
     // Inline health check
@@ -174,6 +174,7 @@ export class ProfileEditDialog {
     ];
     protected readonly proxyTypeOptions = [
         { label: 'HTTP', value: 'http' },
+        { label: 'SOCKS4', value: 'socks4' },
         { label: 'SOCKS5', value: 'socks5' },
     ];
 
@@ -350,9 +351,10 @@ export class ProfileEditDialog {
     private parseProxyUrl(url: string): void {
         try {
             // Format: scheme://host:port
-            const match = url.match(/^(https?|socks5):\/\/([^:]+):(\d+)$/);
+            const match = url.match(/^(https?|socks[45]):\/\/([^:]+):(\d+)$/);
             if (match) {
-                this.manualProxyType.set(match[1] as 'http' | 'socks5');
+                const scheme = match[1].startsWith('http') ? 'http' : match[1] as 'socks4' | 'socks5';
+                this.manualProxyType.set(scheme);
                 this.manualProxyHost.set(match[2]);
                 this.manualProxyPort.set(parseInt(match[3], 10));
             } else {
