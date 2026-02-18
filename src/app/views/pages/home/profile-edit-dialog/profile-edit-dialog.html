@@ -374,10 +374,10 @@
                     </button>
                 </div>
                 } @else {
-                <!-- Fingerprint OS selector -->
+                <!-- Fingerprint OS selector + Randomize -->
                 <div class="flex items-center gap-2">
                     <label class="text-xs font-medium text-color whitespace-nowrap">Target OS:</label>
-                    <div class="flex gap-1.5">
+                    <div class="flex gap-1.5 flex-1">
                         @for (osOpt of [
                         {label: 'Windows', value: 'windows', icon: 'pi pi-microsoft'},
                         {label: 'macOS', value: 'macos', icon: 'pi pi-apple'},
@@ -388,12 +388,82 @@
                             [class]="editFingerprintOs() === osOpt.value
                                 ? 'bg-primary/10 text-primary border border-primary dark:bg-primary/20'
                                 : 'border border-surface-100 dark:border-surface-800 text-muted-color hover:border-primary/50'"
-                            (click)="editFingerprintOs.set(editFingerprintOs() === osOpt.value ? null : osOpt.value)">
+                            (click)="editFingerprintOs.set(editFingerprintOs() === osOpt.value ? null : osOpt.value); loadFingerprintPreview(editFingerprintOs())">
                             <i [class]="osOpt.icon + ' mr-1'"></i>{{ osOpt.label }}
                         </button>
                         }
                     </div>
+                    <button id="home-edit-dialog-fp-randomize" type="button"
+                        class="px-2 py-1 rounded text-xs font-medium transition-all cursor-pointer bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:hover:bg-primary/30 border border-primary/30"
+                        [disabled]="isLoadingPreview()" (click)="randomizeFingerprint()">
+                        @if (isLoadingPreview()) {
+                        <i class="pi pi-spinner pi-spin mr-1"></i>
+                        } @else {
+                        <i class="pi pi-sync mr-1"></i>
+                        }
+                        Randomize
+                    </button>
                 </div>
+
+                <!-- Fingerprint Preview Card -->
+                @if (fingerprintPreview(); as fp) {
+                <div id="home-edit-dialog-fp-preview"
+                    class="rounded-lg border border-surface-100 dark:border-surface-800 bg-surface-50 dark:bg-surface-900 p-2.5 space-y-1.5">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-medium text-color flex items-center gap-1">
+                            <i class="pi pi-id-card text-primary"></i> Fingerprint Preview
+                        </span>
+                        <span class="text-[10px] text-muted-color">Generated on save/launch</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                        <div class="flex items-center gap-1">
+                            <i class="pi pi-desktop text-muted-color"></i>
+                            <span class="text-muted-color">Screen:</span>
+                            <span class="text-color font-medium">{{ fp.screen.width }}×{{ fp.screen.height }}
+                                @if (fp.screen.pixel_ratio > 1) { <span class="text-primary">{{'@'}}{{
+                                    fp.screen.pixel_ratio }}x</span> }
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <i class="pi pi-globe text-muted-color"></i>
+                            <span class="text-muted-color">TZ:</span>
+                            <span class="text-color font-medium truncate">{{ fp.timezone }}</span>
+                        </div>
+                        <div class="flex items-center gap-1 col-span-2">
+                            <i class="pi pi-window-maximize text-muted-color"></i>
+                            <span class="text-muted-color">UA:</span>
+                            <span class="text-color font-medium truncate" [pTooltip]="fp.navigator.user_agent"
+                                tooltipPosition="top">{{ fp.navigator.user_agent }}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <i class="pi pi-palette text-muted-color"></i>
+                            <span class="text-muted-color">WebGL:</span>
+                            <span class="text-color font-medium truncate" [pTooltip]="fp.video_card.renderer"
+                                tooltipPosition="top">{{ fp.video_card.vendor }}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <i class="pi pi-language text-muted-color"></i>
+                            <span class="text-muted-color">Locale:</span>
+                            <span class="text-color font-medium">{{ fp.locale }}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <i class="pi pi-server text-muted-color"></i>
+                            <span class="text-muted-color">OS:</span>
+                            <span class="text-color font-medium capitalize">{{ fp.os }}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <i class="pi pi-list text-muted-color"></i>
+                            <span class="text-muted-color">Fonts:</span>
+                            <span class="text-color font-medium">{{ fp.fonts.length }} installed</span>
+                        </div>
+                    </div>
+                </div>
+                } @else if (isLoadingPreview()) {
+                <div class="flex items-center justify-center gap-2 py-3 text-xs text-muted-color">
+                    <i class="pi pi-spinner pi-spin"></i> Generating fingerprint preview...
+                </div>
+                }
+
                 <p class="text-xs text-muted-color">
                     <i class="pi pi-info-circle mr-1"></i>
                     Fingerprint is auto-generated on each launch. Select OS to control spoofed platform.

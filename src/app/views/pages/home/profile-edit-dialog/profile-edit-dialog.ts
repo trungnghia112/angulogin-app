@@ -14,6 +14,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TooltipModule } from 'primeng/tooltip';
 import { BrowserType, Profile, ProxyRotationConfig } from '../../../../models/profile.model';
 import { Folder, ProfileProxy } from '../../../../models/folder.model';
 import { MessageService } from 'primeng/api';
@@ -91,6 +92,7 @@ export interface ProfileEditData {
         TextareaModule,
         SelectModule,
         ToggleSwitchModule,
+        TooltipModule,
         UpperCasePipe,
     ],
 })
@@ -145,6 +147,7 @@ export class ProfileEditDialog {
     protected readonly editBrowserEngine = signal<'chrome' | 'camoufox'>('chrome');
     protected readonly editFingerprintOs = signal<string | null>(null);
     protected readonly fingerprintPreview = signal<Fingerprint | null>(null);
+    protected readonly isLoadingPreview = signal(false);
     protected readonly engineOptions: { label: string; value: 'chrome' | 'camoufox'; icon: string }[] = [
         { label: 'Chrome', value: 'chrome', icon: 'pi pi-chrome' },
         { label: 'Firefox', value: 'camoufox', icon: 'pi pi-shield' },
@@ -208,6 +211,10 @@ export class ProfileEditDialog {
         // Camoufox
         this.editBrowserEngine.set(profile.metadata?.browserEngine || 'chrome');
         this.editFingerprintOs.set(profile.metadata?.fingerprintOs || null);
+        this.fingerprintPreview.set(null);
+        if ((profile.metadata?.browserEngine || 'chrome') === 'camoufox' && this.camoufoxService.isInstalled()) {
+            this.loadFingerprintPreview(profile.metadata?.fingerprintOs || null);
+        }
         // Feature 4.2
         const rotation = profile.metadata?.proxyRotation;
         this.editProxyRotationEnabled.set(rotation?.enabled || false);
@@ -239,6 +246,22 @@ export class ProfileEditDialog {
             this.manualProxyUsername.set('');
             this.manualProxyPassword.set('');
         }
+    }
+
+    protected async loadFingerprintPreview(os: string | null): Promise<void> {
+        this.isLoadingPreview.set(true);
+        try {
+            const preview = await this.camoufoxService.generateFingerprintPreview(os || undefined);
+            this.fingerprintPreview.set(preview);
+        } catch {
+            this.fingerprintPreview.set(null);
+        } finally {
+            this.isLoadingPreview.set(false);
+        }
+    }
+
+    protected async randomizeFingerprint(): Promise<void> {
+        await this.loadFingerprintPreview(this.editFingerprintOs());
     }
 
     protected selectEmoji(emoji: string): void {

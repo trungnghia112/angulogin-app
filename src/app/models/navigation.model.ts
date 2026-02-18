@@ -43,6 +43,13 @@ export const NAV_FEATURES: NavFeature[] = [
         sidebarType: 'extensions',
     },
     {
+        id: 'fingerprint-checker',
+        name: 'Fingerprint Checker',
+        icon: 'pi-shield',
+        route: '/fingerprint-checker',
+        hasSidebar: false,
+    },
+    {
         id: 'settings',
         name: 'Settings',
         icon: 'pi-cog',

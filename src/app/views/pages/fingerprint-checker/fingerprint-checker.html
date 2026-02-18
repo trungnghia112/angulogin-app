@@ -1,0 +1,199 @@
+<div id="fp-checker-container" class="flex-1 flex flex-col overflow-auto p-6">
+    <!-- Header -->
+    <div id="fp-checker-header" class="mb-6">
+        <h1 class="text-xl font-bold text-color flex items-center gap-2">
+            <i class="pi pi-verified text-primary"></i>
+            Fingerprint Checker
+        </h1>
+        <p class="text-sm text-muted-color mt-1">
+            Verify your Camoufox fingerprint against popular detection services
+        </p>
+    </div>
+
+    <!-- Status Banner -->
+    @if (!camoufoxService.isInstalled()) {
+    <div id="fp-checker-install-banner"
+        class="flex items-center gap-3 p-4 rounded-xl border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 mb-6">
+        <i class="pi pi-exclamation-triangle text-yellow-600 dark:text-yellow-400 text-xl"></i>
+        <div class="flex-1">
+            <p class="text-sm font-medium text-yellow-800 dark:text-yellow-300">Camoufox Not Installed</p>
+            <p class="text-xs text-yellow-600 dark:text-yellow-400">Install Camoufox to generate fingerprints and run
+                checks.</p>
+        </div>
+        <button id="fp-checker-install-btn" type="button"
+            class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium cursor-pointer hover:bg-primary/90 transition-all"
+            [disabled]="camoufoxService.isDownloading()" (click)="camoufoxService.download()">
+            @if (camoufoxService.isDownloading()) {
+            <i class="pi pi-spinner pi-spin mr-1"></i> {{ camoufoxService.downloadProgress() }}%
+            } @else {
+            <i class="pi pi-download mr-1"></i> Install
+            }
+        </button>
+    </div>
+    }
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left: Fingerprint Preview -->
+        <div id="fp-checker-preview-panel" class="lg:col-span-1">
+            <div
+                class="rounded-xl border border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900 p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-semibold text-color flex items-center gap-1.5">
+                        <i class="pi pi-id-card text-primary"></i> Current Fingerprint
+                    </h2>
+                    <button id="fp-checker-generate-btn" type="button"
+                        class="px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:hover:bg-primary/30 transition-all"
+                        [disabled]="isLoadingPreview() || !camoufoxService.isInstalled()" (click)="generatePreview()">
+                        @if (isLoadingPreview()) {
+                        <i class="pi pi-spinner pi-spin mr-1"></i>
+                        } @else {
+                        <i class="pi pi-sync mr-1"></i>
+                        }
+                        Generate
+                    </button>
+                </div>
+
+                @if (fingerprintPreview(); as fp) {
+                <div class="space-y-2.5 text-xs">
+                    <div id="fp-checker-preview-screen"
+                        class="flex items-center gap-2 p-2 rounded-lg bg-surface-50 dark:bg-surface-800">
+                        <i class="pi pi-desktop text-primary"></i>
+                        <div class="flex-1">
+                            <span class="text-muted-color">Screen</span>
+                            <p class="text-color font-medium">{{ fp.screen.width }}×{{ fp.screen.height }}
+                                @if (fp.screen.pixel_ratio > 1) {
+                                <span class="text-primary ml-1">{{'@'}}{{ fp.screen.pixel_ratio }}x</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+                    <div id="fp-checker-preview-os"
+                        class="flex items-center gap-2 p-2 rounded-lg bg-surface-50 dark:bg-surface-800">
+                        <i class="pi pi-server text-primary"></i>
+                        <div class="flex-1">
+                            <span class="text-muted-color">Platform</span>
+                            <p class="text-color font-medium capitalize">{{ fp.os }} — {{ fp.navigator.platform }}</p>
+                        </div>
+                    </div>
+                    <div id="fp-checker-preview-ua"
+                        class="flex items-center gap-2 p-2 rounded-lg bg-surface-50 dark:bg-surface-800">
+                        <i class="pi pi-window-maximize text-primary"></i>
+                        <div class="flex-1 min-w-0">
+                            <span class="text-muted-color">User Agent</span>
+                            <p class="text-color font-medium truncate" [pTooltip]="fp.navigator.user_agent"
+                                tooltipPosition="top">{{ fp.navigator.user_agent }}</p>
+                        </div>
+                    </div>
+                    <div id="fp-checker-preview-webgl"
+                        class="flex items-center gap-2 p-2 rounded-lg bg-surface-50 dark:bg-surface-800">
+                        <i class="pi pi-palette text-primary"></i>
+                        <div class="flex-1 min-w-0">
+                            <span class="text-muted-color">WebGL</span>
+                            <p class="text-color font-medium truncate" [pTooltip]="fp.video_card.renderer"
+                                tooltipPosition="top">{{ fp.video_card.vendor }}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div id="fp-checker-preview-tz" class="p-2 rounded-lg bg-surface-50 dark:bg-surface-800">
+                            <span class="text-muted-color flex items-center gap-1"><i class="pi pi-globe"></i>
+                                Timezone</span>
+                            <p class="text-color font-medium truncate">{{ fp.timezone }}</p>
+                        </div>
+                        <div id="fp-checker-preview-locale" class="p-2 rounded-lg bg-surface-50 dark:bg-surface-800">
+                            <span class="text-muted-color flex items-center gap-1"><i class="pi pi-language"></i>
+                                Locale</span>
+                            <p class="text-color font-medium">{{ fp.locale }}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div id="fp-checker-preview-fonts" class="p-2 rounded-lg bg-surface-50 dark:bg-surface-800">
+                            <span class="text-muted-color flex items-center gap-1"><i class="pi pi-list"></i>
+                                Fonts</span>
+                            <p class="text-color font-medium">{{ fp.fonts.length }} installed</p>
+                        </div>
+                        <div id="fp-checker-preview-hw" class="p-2 rounded-lg bg-surface-50 dark:bg-surface-800">
+                            <span class="text-muted-color flex items-center gap-1"><i class="pi pi-microchip"></i>
+                                CPU</span>
+                            <p class="text-color font-medium">{{ fp.navigator.hardware_concurrency }} cores</p>
+                        </div>
+                    </div>
+                </div>
+                } @else {
+                <div class="flex flex-col items-center justify-center py-8 text-muted-color">
+                    @if (isLoadingPreview()) {
+                    <i class="pi pi-spinner pi-spin text-2xl mb-2"></i>
+                    <p class="text-xs">Generating fingerprint...</p>
+                    } @else {
+                    <i class="pi pi-id-card text-3xl mb-2 opacity-30"></i>
+                    <p class="text-xs">Click "Generate" to preview a fingerprint</p>
+                    }
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Right: Checker Links -->
+        <div id="fp-checker-links-panel" class="lg:col-span-2">
+            <div
+                class="rounded-xl border border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900 p-4">
+                <h2 class="text-sm font-semibold text-color flex items-center gap-1.5 mb-3">
+                    <i class="pi pi-external-link text-primary"></i> Detection Services
+                </h2>
+                <p class="text-xs text-muted-color mb-4">
+                    Open these URLs in a Camoufox profile to verify your fingerprint is properly spoofed.
+                </p>
+
+                <div class="space-y-2">
+                    @for (link of checkerLinks; track link.url; let i = $index) {
+                    <div [id]="'fp-checker-link-' + i"
+                        class="flex items-center gap-3 p-3 rounded-lg border border-surface-100 dark:border-surface-800 hover:border-primary/30 transition-all group">
+                        <div
+                            class="w-10 h-10 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0">
+                            <i [class]="link.icon + ' text-primary'"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-color">{{ link.name }}</p>
+                            <p class="text-xs text-muted-color">{{ link.description }}</p>
+                        </div>
+                        <div class="flex gap-1.5 shrink-0">
+                            @if (camoufoxService.isInstalled()) {
+                            <button type="button"
+                                class="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer bg-primary text-white hover:bg-primary/90 transition-all"
+                                [disabled]="isLaunching()" (click)="launchAndCheck(link.url)"
+                                [pTooltip]="'Launch in Camoufox'" tooltipPosition="top">
+                                @if (isLaunching()) {
+                                <i class="pi pi-spinner pi-spin mr-1"></i>
+                                } @else {
+                                <i class="pi pi-play mr-1"></i>
+                                }
+                                Launch
+                            </button>
+                            }
+                            <button type="button"
+                                class="px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer border border-surface-200 dark:border-surface-700 text-muted-color hover:text-primary hover:border-primary/50 transition-all"
+                                (click)="openExternal(link.url)" pTooltip="Open in default browser"
+                                tooltipPosition="top">
+                                <i class="pi pi-external-link"></i>
+                            </button>
+                        </div>
+                    </div>
+                    }
+                </div>
+
+                <!-- Tips -->
+                <div id="fp-checker-tips"
+                    class="mt-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                    <p class="text-xs font-medium text-blue-800 dark:text-blue-300 flex items-center gap-1 mb-1">
+                        <i class="pi pi-info-circle"></i> Testing Tips
+                    </p>
+                    <ul class="text-xs text-blue-700 dark:text-blue-400 space-y-0.5 list-disc list-inside">
+                        <li>Use "Launch" to open the URL directly in a Camoufox instance</li>
+                        <li>Compare results with a regular Chrome window to verify spoofing works</li>
+                        <li>PixelScan is the most commonly used test by antidetect browser users</li>
+                        <li>CreepJS is the hardest test — even top browsers may not pass 100%</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

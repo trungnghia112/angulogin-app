@@ -45,6 +45,13 @@ export const routes: Routes = [
                     import('./views/pages/usage-dashboard/usage-dashboard').then((m) => m.UsageDashboard),
             },
             {
+                path: 'fingerprint-checker',
+                loadComponent: () =>
+                    import('./views/pages/fingerprint-checker/fingerprint-checker').then(
+                        (m) => m.FingerprintChecker,
+                    ),
+            },
+            {
                 path: '**',
                 redirectTo: 'browsers',
             },
