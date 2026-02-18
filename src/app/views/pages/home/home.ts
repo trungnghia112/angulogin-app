@@ -735,13 +735,9 @@ export class Home implements OnInit, OnDestroy {
                         ? `${customFlags} ${antidetectFlags.join(' ')}`
                         : antidetectFlags.join(' ');
 
-                    // Get UC binary path
-                    const versionInfo = this.browserManager.versionInfo();
-                    const ucBrowser = versionInfo?.executable_path ? 'ungoogled-chromium' : browser;
-
                     await this.profileService.launchBrowser({
                         profilePath: profile.path,
-                        browser: ucBrowser,
+                        browser: 'ungoogled-chromium',
                         url,
                         incognito: false,
                         proxyServer: proxy,

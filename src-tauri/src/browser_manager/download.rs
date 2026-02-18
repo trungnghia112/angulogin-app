@@ -430,7 +430,7 @@ fn copy_dir_recursive(src: &Path, dest: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// Set executable permissions on Unix
+/// Set executable permissions on Unix (only on the Chromium binary)
 #[cfg(unix)]
 fn set_executable_permissions(path: &Path) -> Result<(), String> {
     use std::os::unix::fs::PermissionsExt;
@@ -441,25 +441,6 @@ fn set_executable_permissions(path: &Path) -> Result<(), String> {
     permissions.set_mode(0o755);
     std::fs::set_permissions(path, permissions)
         .map_err(|e| format!("Failed to set executable permission: {e}"))?;
-
-    // Also set permissions for sibling executables
-    if let Some(parent) = path.parent() {
-        if let Ok(entries) = std::fs::read_dir(parent) {
-            for entry in entries.flatten() {
-                let p = entry.path();
-                if p.is_file() {
-                    if let Ok(meta) = std::fs::metadata(&p) {
-                        let mut perms = meta.permissions();
-                        let current_mode = perms.mode();
-                        if current_mode & 0o111 != 0 || p.extension().is_none() {
-                            perms.set_mode(current_mode | 0o755);
-                            let _ = std::fs::set_permissions(&p, perms);
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     Ok(())
 }

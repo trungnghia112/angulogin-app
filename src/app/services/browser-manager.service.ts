@@ -1,6 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { listen, UnlistenFn } from '@tauri-apps/api/event';
 import { isTauriAvailable } from '../core/utils/platform.util';
 
 export interface BrowserVersionInfo {
@@ -13,6 +13,9 @@ export interface BrowserVersionInfo {
 
 @Injectable({ providedIn: 'root' })
 export class BrowserManagerService {
+    private readonly destroyRef = inject(DestroyRef);
+    private unlistenFns: UnlistenFn[] = [];
+
     readonly isInstalled = signal<boolean>(false);
     readonly downloadProgress = signal<number>(0);
     readonly downloadStatus = signal<string>('');
@@ -22,19 +25,24 @@ export class BrowserManagerService {
     constructor() {
         this.checkInstalled();
         this.setupEventListeners();
+        this.destroyRef.onDestroy(() => {
+            this.unlistenFns.forEach(fn => fn());
+            this.unlistenFns = [];
+        });
     }
 
     private async setupEventListeners(): Promise<void> {
         if (!isTauriAvailable()) return;
 
-        await listen<{ percent: number; downloaded: number; total: number }>(
+        const unlistenProgress = await listen<{ percent: number; downloaded: number; total: number }>(
             'uc-download-progress',
             (event) => {
                 this.downloadProgress.set(event.payload.percent);
             },
         );
+        this.unlistenFns.push(unlistenProgress);
 
-        await listen<{ status: string; message: string }>(
+        const unlistenStatus = await listen<{ status: string; message: string }>(
             'uc-download-status',
             (event) => {
                 this.downloadStatus.set(event.payload.message);
@@ -44,6 +52,7 @@ export class BrowserManagerService {
                 }
             },
         );
+        this.unlistenFns.push(unlistenStatus);
     }
 
     async checkInstalled(): Promise<boolean> {
