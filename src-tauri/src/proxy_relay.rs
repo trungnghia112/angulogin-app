@@ -100,14 +100,15 @@ fn active_relays() -> &'static Mutex<HashMap<String, RelayHandle>> {
 
 /// Stop the relay associated with a specific profile path.
 pub fn stop_relay(profile_id: &str) {
-    let mut relays = active_relays().lock().unwrap();
-    if let Some(handle) = relays.remove(profile_id) {
-        eprintln!("[ProxyRelay] Shutting down relay on port {} for profile: {}", handle.port, profile_id);
-        handle.shutdown.store(true, Ordering::SeqCst);
-        // Connect to the listener to unblock the accept() call
-        let _ = TcpStream::connect(format!("127.0.0.1:{}", handle.port));
-    }
-    // Clean up traffic stats for this profile
+    {
+        let mut relays = active_relays().lock().unwrap();
+        if let Some(handle) = relays.remove(profile_id) {
+            eprintln!("[ProxyRelay] Shutting down relay on port {} for profile: {}", handle.port, profile_id);
+            handle.shutdown.store(true, Ordering::SeqCst);
+            // Connect to the listener to unblock the accept() call
+            let _ = TcpStream::connect(format!("127.0.0.1:{}", handle.port));
+        }
+    } // Release active_relays lock before acquiring traffic_stats lock
     traffic_stats().lock().unwrap().remove(profile_id);
 }
 
