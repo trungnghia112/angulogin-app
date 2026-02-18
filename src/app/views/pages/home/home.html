@@ -1,8 +1,9 @@
 <!-- Sidebar (responsive: drawer on mobile, static on desktop) - Hidden in Zen Mode -->
 @if (!zenMode()) {
-<app-home-sidebar [folders]="folders()" [selectedFolderId]="selectedFolderId()" [isOpen]="sidebarOpen()"
-    (folderSelected)="onFolderSelected($event)" (addFolderClicked)="onAddFolder()" (settingsClicked)="onSettings()"
-    (folderSettingsClicked)="openManageFolders()" (closeSidebar)="sidebarOpen.set(false)" />
+<app-home-sidebar [folders]="folderService.folderTree()" [selectedFolderId]="selectedFolderId()"
+    [isOpen]="sidebarOpen()" (folderSelected)="onFolderSelected($event)" (addFolderClicked)="onAddFolder()"
+    (settingsClicked)="onSettings()" (folderSettingsClicked)="openManageFolders()"
+    (closeSidebar)="sidebarOpen.set(false)" />
 }
 
 <!-- Main Content -->

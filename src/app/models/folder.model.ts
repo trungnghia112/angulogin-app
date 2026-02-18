@@ -3,6 +3,7 @@ export interface Folder {
     name: string;
     icon: string | null; // PrimeIcon class or custom icon URL
     color: string | null; // Hex color for folder
+    parentId?: string | null; // For nested folders
     profileCount?: number;
 }
 

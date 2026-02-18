@@ -69,6 +69,39 @@ export class FolderService {
         return [...systemFolders, ...customWithCounts];
     });
 
+    /** Flat list with depth for tree rendering */
+    readonly folderTree = computed<(Folder & { depth: number })[]>(() => {
+        const all = this.folders();
+        const system = all.filter(f => this.isSystemFolder(f.id));
+        const custom = all.filter(f => !this.isSystemFolder(f.id));
+
+        // Build children map
+        const childrenMap = new Map<string | null, Folder[]>();
+        for (const f of custom) {
+            const pid = f.parentId ?? null;
+            const list = childrenMap.get(pid) || [];
+            list.push(f);
+            childrenMap.set(pid, list);
+        }
+
+        // DFS flatten
+        const result: (Folder & { depth: number })[] = [];
+        // System folders always at depth 0
+        for (const f of system) {
+            result.push({ ...f, depth: 0 });
+        }
+        // Custom folders in tree order
+        const visit = (parentId: string | null, depth: number) => {
+            const children = childrenMap.get(parentId) || [];
+            for (const child of children) {
+                result.push({ ...child, depth });
+                visit(child.id, depth + 1);
+            }
+        };
+        visit(null, 0);
+        return result;
+    });
+
     constructor() {
         this.loadFromStorage();
     }
@@ -93,12 +126,13 @@ export class FolderService {
         return `folder_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     }
 
-    add(name: string, icon: string | null = 'pi-folder', color: string | null = null): Folder {
+    add(name: string, icon: string | null = 'pi-folder', color: string | null = null, parentId: string | null = null): Folder {
         const folder: Folder = {
             id: this.generateId(),
             name,
             icon,
             color,
+            parentId,
         };
         this._customFolders.update(list => [...list, folder]);
         this.saveToStorage();

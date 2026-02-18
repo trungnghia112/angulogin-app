@@ -13,7 +13,7 @@ import { Folder } from '../../../../models/folder.model';
 })
 export class HomeSidebar {
     // Inputs
-    readonly folders = input<Folder[]>([]);
+    readonly folders = input<(Folder & { depth: number })[]>([]);
     readonly selectedFolderId = input<string | null>(null);
     /** Controls visibility on mobile (drawer mode) */
     readonly isOpen = input<boolean>(false);
