@@ -667,7 +667,6 @@ export class Home implements OnInit, OnDestroy {
             let proxyPassword: string | undefined;
             const customFlags = profile.metadata?.customFlags || undefined;
             const disableExtensions = profile.metadata?.disableExtensions || false;
-            const antidetectEnabled = profile.metadata?.antidetectEnabled || false;
 
             // Look up proxy credentials from saved proxy or metadata
             const proxyId = profile.metadata?.proxyId;
@@ -708,64 +707,73 @@ export class Home implements OnInit, OnDestroy {
                 }
             }
 
-            // Route to correct engine
-            const browserEngine = profile.metadata?.browserEngine || 'chrome';
-            if (browserEngine === 'camoufox') {
-                // Launch via Camoufox engine
-                const camoufoxConfig = {
-                    proxy: proxy ? `${proxy}` : null,
-                    block_webrtc: antidetectEnabled,
-                    block_webgl: false,
-                    fingerprint: null,
-                    randomize_on_launch: true,
-                    os: profile.metadata?.fingerprintOs || null,
-                };
-                const profileDir = profile.path + '/.camoufox';
-                await this.camoufoxService.launch(profileDir, camoufoxConfig, url);
-            } else if (antidetectEnabled) {
-                // Antidetect enabled: prefer ungoogled-chromium with native flags
-                const isUCInstalled = await this.browserManager.checkInstalled();
-                if (isUCInstalled) {
-                    // Get native antidetect flags
-                    const antidetectFlags = await this.browserManager.getAntidetectFlags(
-                        profile.metadata?.fingerprintWebglRenderer ?? undefined,
-                        profile.metadata?.fingerprintWebglVendor ?? undefined,
-                    );
-                    const allFlags = customFlags
-                        ? `${customFlags} ${antidetectFlags.join(' ')}`
-                        : antidetectFlags.join(' ');
+            // Route based on protection level
+            const protectionLevel = profile.metadata?.protectionLevel || 'off';
 
+            switch (protectionLevel) {
+                case 'maximum': {
+                    // Launch via Camoufox engine
+                    const camoufoxConfig = {
+                        proxy: proxy ? `${proxy}` : null,
+                        block_webrtc: true,
+                        block_webgl: false,
+                        fingerprint: null,
+                        randomize_on_launch: true,
+                        os: profile.metadata?.fingerprintOs || null,
+                    };
+                    const profileDir = profile.path + '/.camoufox';
+                    await this.camoufoxService.launch(profileDir, camoufoxConfig, url);
+                    break;
+                }
+                case 'standard': {
+                    // Chrome with antidetect flags + stealth extension
+                    const isUCInstalled = await this.browserManager.checkInstalled();
+                    if (isUCInstalled) {
+                        // Get native antidetect flags
+                        const antidetectFlags = await this.browserManager.getAntidetectFlags(
+                            profile.metadata?.fingerprintWebglRenderer ?? undefined,
+                            profile.metadata?.fingerprintWebglVendor ?? undefined,
+                        );
+                        const allFlags = customFlags
+                            ? `${customFlags} ${antidetectFlags.join(' ')}`
+                            : antidetectFlags.join(' ');
+
+                        await this.profileService.launchBrowser({
+                            profilePath: profile.path,
+                            browser: 'ungoogled-chromium',
+                            url,
+                            incognito: false,
+                            proxyServer: proxy,
+                            customFlags: allFlags,
+                            disableExtensions: true,
+                            antidetectEnabled: false,
+                            proxyUsername,
+                            proxyPassword,
+                        });
+                    } else {
+                        // UC not installed: show download dialog
+                        this.showDownloadDialog.set(true);
+                        this.pendingLaunchProfile = profile;
+                        return;
+                    }
+                    break;
+                }
+                default: {
+                    // Off: stock browser
                     await this.profileService.launchBrowser({
                         profilePath: profile.path,
-                        browser: 'ungoogled-chromium',
+                        browser,
                         url,
                         incognito: false,
                         proxyServer: proxy,
-                        customFlags: allFlags,
-                        disableExtensions: true, // No extension needed with native flags
-                        antidetectEnabled: false, // Native flags handle it
+                        customFlags,
+                        disableExtensions,
+                        antidetectEnabled: false,
                         proxyUsername,
                         proxyPassword,
                     });
-                } else {
-                    // UC not installed: show download dialog (handled by template signal)
-                    this.showDownloadDialog.set(true);
-                    this.pendingLaunchProfile = profile;
-                    return; // Exit early, dialog callbacks handle the rest
+                    break;
                 }
-            } else {
-                await this.profileService.launchBrowser({
-                    profilePath: profile.path,
-                    browser,
-                    url,
-                    incognito: false,
-                    proxyServer: proxy,
-                    customFlags,
-                    disableExtensions,
-                    antidetectEnabled,
-                    proxyUsername,
-                    proxyPassword,
-                });
             }
 
             // Phase 3: Log activity
@@ -1094,9 +1102,11 @@ export class Home implements OnInit, OnDestroy {
                     proxyPassword: data.proxyPassword ?? undefined,
                     folderId: data.folderId ?? undefined,
                     disableExtensions: data.disableExtensions || undefined,
-                    antidetectEnabled: data.antidetectEnabled || undefined,
                     proxyRotation: data.proxyRotation ?? undefined,
-                    browserEngine: data.browserEngine ?? undefined,
+                    protectionLevel: data.protectionLevel ?? undefined,
+                    // Map protectionLevel to legacy fields for backward compat
+                    antidetectEnabled: data.protectionLevel === 'standard' || undefined,
+                    browserEngine: data.protectionLevel === 'maximum' ? 'camoufox' : 'chrome',
                     fingerprintOs: data.fingerprintOs ?? undefined,
                 },
             );

@@ -72,10 +72,8 @@ export interface ProfileEditData {
     disableExtensions: boolean;
     // Feature 4.2: Proxy Rotation
     proxyRotation: ProxyRotationConfig | null;
-    // Antidetect: Privacy hardened mode
-    antidetectEnabled: boolean;
-    // Camoufox Integration
-    browserEngine: 'chrome' | 'camoufox' | 'ungoogled-chromium';
+    // Protection Level (replaces antidetectEnabled + browserEngine)
+    protectionLevel: 'off' | 'standard' | 'maximum';
     fingerprintOs: string | null;
 }
 
@@ -141,17 +139,15 @@ export class ProfileEditDialog {
     protected readonly editFolderId = signal<string | null>(null);
     // Feature 3.4: Disable Extensions
     protected readonly editDisableExtensions = signal(false);
-    // Antidetect: Privacy Mode
-    protected readonly editAntidetectEnabled = signal(false);
-    // Camoufox Integration
-    protected readonly editBrowserEngine = signal<'chrome' | 'camoufox' | 'ungoogled-chromium'>('chrome');
+    // Protection Level
+    protected readonly editProtectionLevel = signal<'off' | 'standard' | 'maximum'>('off');
     protected readonly editFingerprintOs = signal<string | null>(null);
     protected readonly fingerprintPreview = signal<Fingerprint | null>(null);
     protected readonly isLoadingPreview = signal(false);
-    protected readonly engineOptions: { label: string; value: 'chrome' | 'camoufox' | 'ungoogled-chromium'; icon: string }[] = [
-        { label: 'Chrome', value: 'chrome', icon: 'pi pi-chrome' },
-        { label: 'Firefox', value: 'camoufox', icon: 'pi pi-shield' },
-        { label: 'Ungoogled', value: 'ungoogled-chromium', icon: 'pi pi-lock' },
+    protected readonly protectionLevelOptions: { label: string; value: 'off' | 'standard' | 'maximum'; icon: string; description: string }[] = [
+        { label: 'Off', value: 'off', icon: 'pi pi-lock-open', description: 'Normal browsing' },
+        { label: 'Standard', value: 'standard', icon: 'pi pi-shield', description: 'Anti-tracking + fingerprint spoofing' },
+        { label: 'Maximum', value: 'maximum', icon: 'pi pi-verified', description: 'Full antidetect engine (Camoufox)' },
     ];
     // Feature 4.2: Proxy Rotation
     protected readonly editProxyRotationEnabled = signal(false);
@@ -207,14 +203,26 @@ export class ProfileEditDialog {
         this.editFolderId.set(profile.metadata?.folderId || null);
         // Feature 3.4
         this.editDisableExtensions.set(profile.metadata?.disableExtensions || false);
-        // Antidetect
-        this.editAntidetectEnabled.set(profile.metadata?.antidetectEnabled || false);
-        // Camoufox
-        this.editBrowserEngine.set(profile.metadata?.browserEngine || 'chrome');
+        // Protection Level: migrate from legacy fields if needed
+        let level = profile.metadata?.protectionLevel;
+        if (!level) {
+            if (profile.metadata?.browserEngine === 'camoufox') {
+                level = 'maximum';
+            } else if (profile.metadata?.antidetectEnabled) {
+                level = 'standard';
+            } else {
+                level = 'off';
+            }
+        }
+        this.editProtectionLevel.set(level);
         this.editFingerprintOs.set(profile.metadata?.fingerprintOs || null);
         this.fingerprintPreview.set(null);
-        if ((profile.metadata?.browserEngine || 'chrome') === 'camoufox' && this.camoufoxService.isInstalled()) {
-            this.loadFingerprintPreview(profile.metadata?.fingerprintOs || null);
+        if (level !== 'off') {
+            if (level === 'maximum' && this.camoufoxService.isInstalled()) {
+                this.loadFingerprintPreview(profile.metadata?.fingerprintOs || null);
+            } else if (level === 'standard') {
+                this.loadFingerprintPreview(profile.metadata?.fingerprintOs || null);
+            }
         }
         // Feature 4.2
         const rotation = profile.metadata?.proxyRotation;
@@ -364,8 +372,7 @@ export class ProfileEditDialog {
             folderId: this.editFolderId(),
             disableExtensions: this.editDisableExtensions(),
             proxyRotation,
-            antidetectEnabled: this.editAntidetectEnabled(),
-            browserEngine: this.editBrowserEngine(),
+            protectionLevel: this.editProtectionLevel(),
             fingerprintOs: this.editFingerprintOs(),
         });
     }

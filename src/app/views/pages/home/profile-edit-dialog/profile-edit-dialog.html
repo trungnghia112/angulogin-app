@@ -298,67 +298,58 @@
                 (ngModelChange)="editDisableExtensions.set($event)" />
         </div>
 
-        <!-- Antidetect: Privacy Mode -->
-        <div id="home-edit-dialog-privacy-section"
-            class="space-y-2 p-3 rounded-lg border border-surface-100 dark:border-surface-800">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <i class="pi pi-shield text-primary"></i>
-                    <div>
-                        <label for="home-edit-dialog-privacy-toggle"
-                            class="block text-xs font-medium text-color">Privacy Mode</label>
-                        <p class="text-xs text-muted-color">Disable telemetry, sync, WebRTC leak &amp; tracking</p>
-                    </div>
-                </div>
-                <p-toggleSwitch id="home-edit-dialog-privacy-toggle" [ngModel]="editAntidetectEnabled()"
-                    (ngModelChange)="editAntidetectEnabled.set($event)" />
-            </div>
-            @if (editAntidetectEnabled()) {
-            <div class="text-xs text-muted-color pt-1 border-t border-surface-100 dark:border-surface-800 space-y-1">
-                <p class="font-medium text-color">Active flags (10):</p>
-                <ul class="list-disc list-inside space-y-0.5">
-                    <li>Disable background networking</li>
-                    <li>Disable phishing detection</li>
-                    <li>Disable domain reliability</li>
-                    <li>Disable crash reporting</li>
-                    <li>Disable ping tracking</li>
-                    <li>Disable WebRTC event logging</li>
-                    <li>Block WebRTC IP leak</li>
-                    <li>Disable metrics recording</li>
-                    <li>Disable component updates</li>
-                    <li>Disable sync</li>
-                </ul>
-            </div>
-            }
-        </div>
-
-        <!-- Camoufox Engine Selector -->
-        <div id="home-edit-dialog-engine-section"
+        <!-- Protection Level -->
+        <div id="home-edit-dialog-protection-section"
             class="space-y-3 p-3 rounded-lg border border-surface-100 dark:border-surface-800">
-            <div class="flex items-center gap-2 mb-2">
-                <i class="pi pi-cog text-primary"></i>
+            <div class="flex items-center gap-2">
+                <i class="pi pi-shield text-primary"></i>
                 <div>
-                    <label class="block text-xs font-medium text-color">Browser Engine</label>
-                    <p class="text-xs text-muted-color">Choose Chrome or Camoufox (antidetect Firefox)</p>
+                    <label class="block text-xs font-medium text-color">Protection Level</label>
+                    <p class="text-xs text-muted-color">Choose how much browser fingerprint protection to apply</p>
                 </div>
             </div>
+
+            <!-- Level Selector -->
             <div class="flex gap-2">
-                @for (engine of engineOptions; track engine.value) {
-                <button id="home-edit-dialog-engine-{{ engine.value }}" type="button"
-                    class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all cursor-pointer"
-                    [class]="editBrowserEngine() === engine.value
+                @for (opt of protectionLevelOptions; track opt.value) {
+                <button [id]="'home-edit-dialog-protection-' + opt.value" type="button"
+                    class="flex-1 flex flex-col items-center gap-1 px-3 py-2.5 rounded-lg border text-xs font-medium transition-all cursor-pointer"
+                    [class]="editProtectionLevel() === opt.value
                         ? 'border-primary bg-primary/10 text-primary dark:bg-primary/20'
                         : 'border-surface-100 dark:border-surface-800 text-muted-color hover:border-primary/50'"
-                    (click)="editBrowserEngine.set(engine.value)">
-                    <i [class]="engine.icon"></i>
-                    {{ engine.label }}
+                    (click)="editProtectionLevel.set(opt.value)">
+                    <i [class]="opt.icon"></i>
+                    {{ opt.label }}
                 </button>
                 }
             </div>
 
-            @if (editBrowserEngine() === 'camoufox') {
+            <!-- Level Description -->
+            @if (editProtectionLevel() === 'standard') {
+            <div class="text-xs text-muted-color pt-2 border-t border-surface-100 dark:border-surface-800 space-y-1">
+                <p class="font-medium text-color">Chrome + Stealth Extension:</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                    <li>10 anti-tracking flags (disable telemetry, sync, WebRTC leak)</li>
+                    <li>Fingerprint spoofing (Canvas, WebGL, Navigator, Screen)</li>
+                    <li>WebRTC IP leak prevention</li>
+                    <li>Automation detection removal</li>
+                </ul>
+            </div>
+            } @else if (editProtectionLevel() === 'maximum') {
+            <div class="text-xs text-muted-color pt-2 border-t border-surface-100 dark:border-surface-800 space-y-1">
+                <p class="font-medium text-color">Camoufox (Antidetect Firefox):</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                    <li>Full browser-level fingerprint engine</li>
+                    <li>Resistant to advanced detection (CreepJS, PixelScan)</li>
+                    <li>Separate Firefox profile isolation</li>
+                </ul>
+            </div>
+            }
+
+            <!-- Fingerprint Controls (Standard or Maximum) -->
+            @if (editProtectionLevel() !== 'off') {
             <div class="space-y-2 pt-2 border-t border-surface-100 dark:border-surface-800">
-                @if (!camoufoxService.isInstalled()) {
+                @if (editProtectionLevel() === 'maximum' && !camoufoxService.isInstalled()) {
                 <div
                     class="flex items-center gap-2 p-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 text-xs">
                     <i class="pi pi-exclamation-triangle"></i>
@@ -374,7 +365,7 @@
                     </button>
                 </div>
                 } @else {
-                <!-- Fingerprint OS selector + Randomize -->
+                <!-- Target OS + Randomize -->
                 <div class="flex items-center gap-2">
                     <label class="text-xs font-medium text-color whitespace-nowrap">Target OS:</label>
                     <div class="flex gap-1.5 flex-1">
@@ -383,7 +374,7 @@
                         {label: 'macOS', value: 'macos', icon: 'pi pi-apple'},
                         {label: 'Linux', value: 'linux', icon: 'pi pi-server'}
                         ]; track osOpt.value) {
-                        <button id="home-edit-dialog-fp-os-{{ osOpt.value }}" type="button"
+                        <button [id]="'home-edit-dialog-fp-os-' + osOpt.value" type="button"
                             class="px-2 py-1 rounded text-xs transition-all cursor-pointer"
                             [class]="editFingerprintOs() === osOpt.value
                                 ? 'bg-primary/10 text-primary border border-primary dark:bg-primary/20'

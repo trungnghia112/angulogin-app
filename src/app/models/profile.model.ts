@@ -44,9 +44,10 @@ export interface ProfileMetadata {
     disableExtensions?: boolean;
     // Feature 4.2: Proxy Rotation
     proxyRotation?: ProxyRotationConfig | null;
-    // Antidetect: Privacy hardened mode
+    // Protection Level (replaces antidetectEnabled + browserEngine)
+    protectionLevel?: 'off' | 'standard' | 'maximum';
+    // Legacy fields — kept for backward compat, auto-migrated to protectionLevel
     antidetectEnabled?: boolean;
-    // Camoufox Integration
     browserEngine?: 'chrome' | 'camoufox' | 'ungoogled-chromium';
     fingerprintConfig?: string | null;
     fingerprintOs?: string | null;
