@@ -10,9 +10,9 @@
 
 | Trạng thái | Số lượng |
 |------------|----------|
-| ✅ Done | 44 |
+| ✅ Done | 50 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 30 |
+| 📋 Backlog | 24 |
 | ❌ Cancelled | 10 |
 
 ---
@@ -85,7 +85,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | 2.4 | Favorites | Danh sách yêu thích riêng biệt | 🟢 Dễ | ✅ |
 | 2.5 | Folder Management | Group profiles into custom folders | 🟡 TB | 📋 |
 | 2.6 | Nested Folders | Folders lồng nhau (tree structure) thay vì flat groups | 🟡 TB | 📋 |
-| 2.7 | Folder Colors & Icons | Gán màu + icon cho folders để nhận diện nhanh | 🟢 Dễ | 📋 |
+| 2.7 | Folder Colors & Icons | Gán màu + icon cho folders để nhận diện nhanh | 🟢 Dễ | ✅ |
 
 ---
 
@@ -202,8 +202,8 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
 | 11.1 | Customizable Columns ⭐ | Gear icon → sidebar chỉnh: thêm/bớt/reorder cột | 🟡 TB | 📋 |
-| 11.2 | Column Sorting | Click header → sort A-Z / Z-A cho mỗi cột | 🟢 Dễ | 📋 |
-| 11.3 | Column Resize | Kéo resize chiều rộng cột | 🟢 Dễ | 📋 |
+| 11.2 | Column Sorting | Click header → sort A-Z / Z-A cho mỗi cột | 🟢 Dễ | ✅ |
+| 11.3 | Column Resize | Kéo resize chiều rộng cột | 🟢 Dễ | ✅ |
 | 11.4 | Last Changed Column | Hiện ngày thay đổi cuối (profile metadata) | 🟢 Dễ | ✅ |
 | 11.5 | Total Running Time Column | Hiện tổng thời gian chạy trong table | 🟢 Dễ | ✅ |
 
@@ -216,7 +216,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
 | 12.1 | Mass Tag Assign ⭐ | Chọn nhiều profiles → gán tag hàng loạt | 🟢 Dễ | ✅ |
-| 12.2 | Mass Proxy Change | Chọn nhiều profiles → đổi proxy hàng loạt | 🟡 TB | 📋 |
+| 12.2 | Mass Proxy Change | Chọn nhiều profiles → đổi proxy hàng loạt | 🟡 TB | ✅ |
 | 12.3 | Mass Profile Transfer | Chuyển nhiều profiles giữa folders/teams | 🟢 Dễ | 📋 |
 | 12.4 | Mass Cookie Export | Export cookies từ nhiều profiles cùng lúc | 🟡 TB | 📋 |
 
@@ -229,9 +229,9 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
 | 13.1 | Local Proxy Server ⭐ | Spawn Rust proxy server (localhost) per profile để giải quyết Chrome không hỗ trợ proxy auth qua `--proxy-server`. Browser connect `127.0.0.1:PORT`, proxy xử lý auth upstream. HTTPS tunneling (CONNECT method). | 🔴 Khó | 📋 |
-| 13.2 | GeoIP Display | Sau proxy health check, lookup IP → hiển thị cờ quốc gia + city bên cạnh proxy (dùng ip-api.com) | 🟢 Dễ | 📋 |
+| 13.2 | GeoIP Display | Sau proxy health check, lookup IP → hiển thị cờ quốc gia + city bên cạnh proxy (dùng ip-api.com) | 🟢 Dễ | ✅ |
 | 13.3 | Traffic Stats | Đếm bytes sent/received per profile qua proxy. Dashboard hiển thị bandwidth usage per profile/proxy | 🟡 TB | 📋 |
-| 13.4 | SOCKS4 Support | Thêm proxy type SOCKS4 (hiện chỉ có HTTP + SOCKS5) | 🟢 Dễ | 📋 |
+| 13.4 | SOCKS4 Support | Thêm proxy type SOCKS4 (hiện chỉ có HTTP + SOCKS5) | 🟢 Dễ | ✅ |
 | 13.5 | Cloud Proxy Integration | Hỗ trợ cloud-managed proxy với geo-targeted routing (thêm geo-tag vào username để chọn location) | 🔴 Khó | 📋 |
 
 ---
