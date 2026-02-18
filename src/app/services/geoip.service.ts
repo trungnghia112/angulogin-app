@@ -32,20 +32,6 @@ export class GeoIpService {
     }
 
     /**
-     * Look up GeoIP info for a proxy host.
-     * Returns cached info immediately if available, otherwise triggers async lookup.
-     */
-    lookup(host: string): GeoIpInfo | null {
-        if (!host) return null;
-        const cached = this.cache.get(host);
-        if (cached !== undefined) return cached;
-
-        // Trigger async lookup (don't await)
-        this.lookupAsync(host);
-        return null;
-    }
-
-    /**
      * Async lookup with deduplication and caching.
      */
     async lookupAsync(host: string): Promise<GeoIpInfo | null> {
@@ -82,36 +68,41 @@ export class GeoIpService {
 
     /**
      * Batch lookup multiple hosts at once.
+     * Includes inter-batch delay to respect ip-api.com rate limit (45 req/min).
      */
     async batchLookup(hosts: string[]): Promise<void> {
         const unique = [...new Set(hosts)].filter(h => h && !this.cache.has(h));
         if (unique.length === 0) return;
 
-        // Process in parallel, max 5 concurrent
+        // Process in parallel, max 5 concurrent, with rate-limit delay
         const batchSize = 5;
         for (let i = 0; i < unique.length; i += batchSize) {
             const batch = unique.slice(i, i + batchSize);
             await Promise.allSettled(batch.map(h => this.lookupAsync(h)));
+            // Throttle: wait 1.5s between batches (45 req/min = ~1.3s/req)
+            if (i + batchSize < unique.length) {
+                await new Promise(r => setTimeout(r, 1500));
+            }
         }
     }
 
     private async fetchGeoIp(host: string): Promise<GeoIpInfo | null> {
         try {
-            // ip-api.com free tier: 45 req/min, no key needed, HTTP only
+            // ipwhois.app: free tier with HTTPS, no key needed, 10k req/month
             const response = await fetch(
-                `http://ip-api.com/json/${encodeURIComponent(host)}?fields=status,country,countryCode,city`
+                `https://ipwhois.app/json/${encodeURIComponent(host)}?objects=country_code,country,city,success,message`
             );
             if (!response.ok) return null;
 
             const data = await response.json();
-            if (data.status === 'success') {
+            if (data.success !== false) {
                 return {
-                    country: data.countryCode,
+                    country: data.country_code,
                     countryName: data.country,
                     city: data.city || undefined,
                 };
             }
-            debugLog(`GeoIP lookup failed for ${host}:`, data);
+            debugLog(`GeoIP lookup failed for ${host}:`, data.message);
             return null;
         } catch (e) {
             debugLog(`GeoIP fetch error for ${host}:`, e);
@@ -121,11 +112,12 @@ export class GeoIpService {
 
     /**
      * Extract host from a proxy string like "socks5://1.2.3.4:1080"
+     * Also handles auth-embedded URLs like "socks5://user:pass@1.2.3.4:1080"
      */
     extractHost(proxyStr: string): string {
         if (!proxyStr) return '';
         try {
-            const match = proxyStr.match(/^(?:https?|socks[45]):\/\/([^:]+):\d+$/);
+            const match = proxyStr.match(/^(?:https?|socks[45]):\/\/(?:[^@]+@)?([^:]+):(\d+)$/);
             return match ? match[1] : proxyStr;
         } catch {
             return proxyStr;

@@ -196,7 +196,8 @@
                             class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-100 dark:bg-surface-800 border border-surface rounded text-xs text-color font-mono"
                             [pTooltip]="profile.metadata?.proxy" tooltipPosition="top">
                             @if (geo) {
-                            <span [pTooltip]="geo.label" tooltipPosition="top" class="cursor-default">{{ geo.flag
+                            <span [pTooltip]="geo.label" tooltipPosition="top" class="cursor-default" role="img"
+                                [attr.aria-label]="geo.label">{{ geo.flag
                                 }}</span>
                             }
                             <i class="pi pi-globe text-[10px] text-primary"></i>
@@ -402,7 +403,7 @@
                         [pTooltip]="gridGeo ? gridGeo.label + ' - ' + profile.metadata?.proxy : 'Proxy: ' + profile.metadata?.proxy"
                         tooltipPosition="left">
                         @if (gridGeo) {
-                        <span class="text-xs">{{ gridGeo.flag }}</span>
+                        <span class="text-xs" role="img" [attr.aria-label]="gridGeo.label">{{ gridGeo.flag }}</span>
                         }
                         <i class="pi pi-globe text-primary text-xs"></i>
                     </span>
@@ -952,7 +953,7 @@
                 [label]="massProxyMode() === 'none' ? 'Clear Proxy' : 'Apply Proxy'"
                 [icon]="massProxyMode() === 'none' ? 'pi pi-ban' : 'pi pi-check'"
                 [severity]="massProxyMode() === 'none' ? 'danger' : 'primary'" (click)="bulkAssignProxy()"
-                [disabled]="massProxyMode() === 'saved' && !massProxySelectedId()" />
+                [loading]="bulkProxyLoading()" [disabled]="massProxyMode() === 'saved' && !massProxySelectedId()" />
         </ng-template>
     </p-dialog>
 

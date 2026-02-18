@@ -1692,6 +1692,7 @@ export class Home implements OnInit, OnDestroy {
     protected readonly showMassProxyDialog = signal(false);
     protected readonly massProxyMode = signal<'saved' | 'none'>('saved');
     protected readonly massProxySelectedId = signal<string | null>(null);
+    protected readonly bulkProxyLoading = signal(false);
 
     openMassProxyDialog(): void {
         this.massProxyMode.set('saved');
@@ -1700,52 +1701,58 @@ export class Home implements OnInit, OnDestroy {
     }
 
     async bulkAssignProxy(): Promise<void> {
+        if (this.bulkProxyLoading()) return;
         const profiles = this.selectedProfiles();
         if (profiles.length === 0) return;
 
-        const mode = this.massProxyMode();
-        let proxyValue: string | null = null;
-        let proxyIdValue: string | null = null;
+        this.bulkProxyLoading.set(true);
+        try {
+            const mode = this.massProxyMode();
+            let proxyValue: string | null = null;
+            let proxyIdValue: string | null = null;
 
-        if (mode === 'saved') {
-            const id = this.massProxySelectedId();
-            if (!id) return;
-            const proxy = this.proxyService.getById(id);
-            if (!proxy) return;
-            proxyValue = this.proxyService.formatProxyUrl(proxy);
-            proxyIdValue = id;
-        }
-        // mode === 'none' => clear proxy (proxyValue = null, proxyIdValue = null)
-
-        let updated = 0;
-        for (const profile of profiles) {
-            try {
-                await this.profileService.saveProfileMetadata(
-                    profile.path,
-                    {
-                        proxy: proxyValue,
-                        proxyId: proxyIdValue,
-                        proxyUsername: null,
-                        proxyPassword: null,
-                    },
-                );
-                updated++;
-            } catch (e) {
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'Error',
-                    detail: `Failed to update proxy for ${profile.name}`,
-                });
+            if (mode === 'saved') {
+                const id = this.massProxySelectedId();
+                if (!id) return;
+                const proxy = this.proxyService.getById(id);
+                if (!proxy) return;
+                proxyValue = this.proxyService.formatProxyUrl(proxy);
+                proxyIdValue = id;
             }
-        }
+            // mode === 'none' => clear proxy (proxyValue = null, proxyIdValue = null)
 
-        this.showMassProxyDialog.set(false);
-        const action = mode === 'none' ? 'Cleared proxy from' : 'Applied proxy to';
-        this.messageService.add({
-            severity: 'success',
-            summary: 'Proxy Updated',
-            detail: `${action} ${updated} profile(s)`,
-        });
+            let updated = 0;
+            for (const profile of profiles) {
+                try {
+                    await this.profileService.saveProfileMetadata(
+                        profile.path,
+                        {
+                            proxy: proxyValue,
+                            proxyId: proxyIdValue,
+                            proxyUsername: null,
+                            proxyPassword: null,
+                        },
+                    );
+                    updated++;
+                } catch (e) {
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: `Failed to update proxy for ${profile.name}`,
+                    });
+                }
+            }
+
+            this.showMassProxyDialog.set(false);
+            const action = mode === 'none' ? 'Cleared proxy from' : 'Applied proxy to';
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Proxy Updated',
+                detail: `${action} ${updated} profile(s)`,
+            });
+        } finally {
+            this.bulkProxyLoading.set(false);
+        }
     }
 
     // ==== Feature 11.4: Last Changed - relative date formatting ====

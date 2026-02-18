@@ -571,21 +571,28 @@
             </div>
         </div>
 
-        <!-- Username + Password -->
-        <div class="flex gap-4">
+        <!-- Username + Password (not supported for SOCKS4) -->
+        <div class="flex gap-4" [class.opacity-40]="newProxyType() === 'socks4'"
+            [class.pointer-events-none]="newProxyType() === 'socks4'">
             <div class="flex flex-col gap-2 flex-1">
                 <label class="text-sm font-medium text-color">Username <span
                         class="text-muted-color">(optional)</span></label>
                 <input pInputText [ngModel]="newProxyUsername()" (ngModelChange)="newProxyUsername.set($event)"
-                    placeholder="username" />
+                    placeholder="username" [disabled]="newProxyType() === 'socks4'" />
             </div>
             <div class="flex flex-col gap-2 flex-1">
                 <label class="text-sm font-medium text-color">Password <span
                         class="text-muted-color">(optional)</span></label>
                 <input pInputText [ngModel]="newProxyPassword()" (ngModelChange)="newProxyPassword.set($event)"
-                    placeholder="password" type="password" />
+                    placeholder="password" type="password" [disabled]="newProxyType() === 'socks4'" />
             </div>
         </div>
+        @if (newProxyType() === 'socks4') {
+        <p class="text-xs text-yellow-600 dark:text-yellow-400 flex items-center gap-1">
+            <i class="pi pi-info-circle"></i>
+            SOCKS4 does not support authentication
+        </p>
+        }
 
         <!-- Group -->
         <div class="flex flex-col gap-2">

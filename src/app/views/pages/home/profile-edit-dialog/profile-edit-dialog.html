@@ -222,19 +222,26 @@
                     </div>
                 </div>
 
-                <!-- Username + Password (optional) -->
-                <div class="flex gap-3">
+                <!-- Username + Password (optional, not supported for SOCKS4) -->
+                <div class="flex gap-3" [class.opacity-40]="manualProxyType() === 'socks4'"
+                    [class.pointer-events-none]="manualProxyType() === 'socks4'">
                     <div class="flex-1">
                         <input pInputText [ngModel]="manualProxyUsername()"
                             (ngModelChange)="manualProxyUsername.set($event)" placeholder="Username (optional)"
-                            class="w-full" />
+                            class="w-full" [disabled]="manualProxyType() === 'socks4'" />
                     </div>
                     <div class="flex-1">
                         <input pInputText type="password" [ngModel]="manualProxyPassword()"
                             (ngModelChange)="manualProxyPassword.set($event)" placeholder="Password (optional)"
-                            class="w-full" />
+                            class="w-full" [disabled]="manualProxyType() === 'socks4'" />
                     </div>
                 </div>
+                @if (manualProxyType() === 'socks4') {
+                <p class="text-xs text-yellow-600 dark:text-yellow-400 flex items-center gap-1">
+                    <i class="pi pi-info-circle"></i>
+                    SOCKS4 does not support authentication
+                </p>
+                }
 
                 <!-- Check button -->
                 @if (manualProxyHost() && manualProxyPort()) {
