@@ -98,10 +98,11 @@ export interface ProfileBackend {
     clearProfileCookies(profilePath: string): Promise<ClearCookiesResult>;
     duplicateProfile(sourcePath: string, newName: string): Promise<string>;
     checkProfileHealth(profilePath: string): Promise<ProfileHealthCheckResult>;
-    restoreFromBackup(backupPath: string, targetBasePath: string, conflictAction: string): Promise<RestoreBackupResult>;
-    backupProfile(profilePath: string, backupPath: string): Promise<string>;
+    restoreFromBackup(backupPath: string, targetBasePath: string, conflictAction: string, password?: string | null): Promise<RestoreBackupResult>;
+    backupProfile(profilePath: string, backupPath: string, password?: string | null): Promise<string>;
     bulkExportProfiles(profilePaths: string[], destinationFolder: string): Promise<BulkExportResult>;
     exportCookies(profilePath: string, browser?: string): Promise<CookieExportResult>;
     importCookies(profilePath: string, cookiesJson: string): Promise<CookieImportResult>;
     copyProfileTo(sourcePath: string, destBasePath: string, newName: string): Promise<string>;
+    checkBackupEncrypted(backupPath: string): Promise<boolean>;
 }

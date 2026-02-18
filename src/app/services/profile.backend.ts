@@ -107,12 +107,12 @@ export class MockProfileBackend implements ProfileBackend {
         return { is_healthy: true, issues: [], warnings: [], checked_files: 4 };
     }
 
-    async restoreFromBackup(backupPath: string, targetBasePath: string, conflictAction: string): Promise<RestoreBackupResult> {
+    async restoreFromBackup(backupPath: string, targetBasePath: string, conflictAction: string, _password?: string | null): Promise<RestoreBackupResult> {
         debugLog('Mock restoreFromBackup:', backupPath, targetBasePath, conflictAction);
         return { success: true, restored_path: targetBasePath + '/RestoredProfile', profile_name: 'RestoredProfile', was_renamed: false };
     }
 
-    async backupProfile(profilePath: string, backupPath: string): Promise<string> {
+    async backupProfile(profilePath: string, backupPath: string, _password?: string | null): Promise<string> {
         debugLog('Mock backupProfile:', profilePath, backupPath);
         return backupPath;
     }
@@ -135,6 +135,10 @@ export class MockProfileBackend implements ProfileBackend {
     async copyProfileTo(sourcePath: string, destBasePath: string, newName: string): Promise<string> {
         debugLog('Mock copyProfileTo:', sourcePath, destBasePath, newName);
         return `${destBasePath}/${newName}`;
+    }
+
+    async checkBackupEncrypted(_backupPath: string): Promise<boolean> {
+        return false;
     }
 }
 
@@ -229,12 +233,12 @@ export class TauriProfileBackend implements ProfileBackend {
         return await invoke<ProfileHealthCheckResult>('check_profile_health', { profilePath });
     }
 
-    async restoreFromBackup(backupPath: string, targetBasePath: string, conflictAction: string): Promise<RestoreBackupResult> {
-        return await invoke<RestoreBackupResult>('restore_from_backup', { backupPath, targetBasePath, conflictAction });
+    async restoreFromBackup(backupPath: string, targetBasePath: string, conflictAction: string, password?: string | null): Promise<RestoreBackupResult> {
+        return await invoke<RestoreBackupResult>('restore_from_backup', { backupPath, targetBasePath, conflictAction, password: password ?? null });
     }
 
-    async backupProfile(profilePath: string, backupPath: string): Promise<string> {
-        return await invoke<string>('backup_profile', { profilePath, backupPath });
+    async backupProfile(profilePath: string, backupPath: string, password?: string | null): Promise<string> {
+        return await invoke<string>('backup_profile', { profilePath, backupPath, password: password ?? null });
     }
 
     async bulkExportProfiles(profilePaths: string[], destinationFolder: string): Promise<BulkExportResult> {
@@ -266,5 +270,9 @@ export class TauriProfileBackend implements ProfileBackend {
 
     async copyProfileTo(sourcePath: string, destBasePath: string, newName: string): Promise<string> {
         return await invoke<string>('copy_profile_to', { sourcePath, destBasePath, newName });
+    }
+
+    async checkBackupEncrypted(backupPath: string): Promise<boolean> {
+        return await invoke<boolean>('check_backup_encrypted', { backupPath });
     }
 }

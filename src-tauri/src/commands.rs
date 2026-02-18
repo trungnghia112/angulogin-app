@@ -884,8 +884,8 @@ pub struct ClearDataResult {
 }
 
 #[tauri::command]
-pub fn backup_profile(profile_path: String, backup_path: String) -> Result<String, String> {
-    use std::io::{Read, Write};
+pub fn backup_profile(profile_path: String, backup_path: String, password: Option<String>) -> Result<String, String> {
+    use std::io::{Read, Write, Cursor};
     use zip::write::FileOptions;
 
     validate_path_safety(&profile_path, "Profile path")?;
@@ -896,48 +896,138 @@ pub fn backup_profile(profile_path: String, backup_path: String) -> Result<Strin
         return Err("Profile does not exist".to_string());
     }
     
-    let file = fs::File::create(&backup_path)
-        .map_err(|e| format!("Failed to create backup file: {}", e))?;
-    
-    let mut zip = zip::ZipWriter::new(file);
-    let options = FileOptions::default()
-        .compression_method(zip::CompressionMethod::Deflated);
-    
-    fn add_dir_to_zip<W: Write + std::io::Seek>(
-        zip: &mut zip::ZipWriter<W>,
-        path: &std::path::Path,
-        base_path: &std::path::Path,
-        options: FileOptions,
-    ) -> Result<(), String> {
-        if path.is_dir() {
-            if let Ok(entries) = fs::read_dir(path) {
-                for entry in entries.flatten() {
-                    let entry_path = entry.path();
-                    add_dir_to_zip(zip, &entry_path, base_path, options)?;
+    // Create ZIP in memory first (needed for encryption)
+    let mut zip_buffer = Cursor::new(Vec::new());
+    {
+        let mut zip = zip::ZipWriter::new(&mut zip_buffer);
+        let options = FileOptions::default()
+            .compression_method(zip::CompressionMethod::Deflated);
+        
+        fn add_dir_to_zip<W: Write + std::io::Seek>(
+            zip: &mut zip::ZipWriter<W>,
+            path: &std::path::Path,
+            base_path: &std::path::Path,
+            options: FileOptions,
+        ) -> Result<(), String> {
+            if path.is_dir() {
+                if let Ok(entries) = fs::read_dir(path) {
+                    for entry in entries.flatten() {
+                        let entry_path = entry.path();
+                        add_dir_to_zip(zip, &entry_path, base_path, options)?;
+                    }
                 }
+            } else {
+                let relative_path = path.strip_prefix(base_path)
+                    .map_err(|_| "Failed to get relative path")?;
+                
+                zip.start_file(relative_path.to_string_lossy(), options)
+                    .map_err(|e| format!("Failed to start file in zip: {}", e))?;
+                
+                let mut file = fs::File::open(path)
+                    .map_err(|e| format!("Failed to open file: {}", e))?;
+                let mut buffer = Vec::new();
+                file.read_to_end(&mut buffer)
+                    .map_err(|e| format!("Failed to read file: {}", e))?;
+                zip.write_all(&buffer)
+                    .map_err(|e| format!("Failed to write to zip: {}", e))?;
             }
-        } else {
-            let relative_path = path.strip_prefix(base_path)
-                .map_err(|_| "Failed to get relative path")?;
-            
-            zip.start_file(relative_path.to_string_lossy(), options)
-                .map_err(|e| format!("Failed to start file in zip: {}", e))?;
-            
-            let mut file = fs::File::open(path)
-                .map_err(|e| format!("Failed to open file: {}", e))?;
-            let mut buffer = Vec::new();
-            file.read_to_end(&mut buffer)
-                .map_err(|e| format!("Failed to read file: {}", e))?;
-            zip.write_all(&buffer)
-                .map_err(|e| format!("Failed to write to zip: {}", e))?;
+            Ok(())
         }
-        Ok(())
+        
+        add_dir_to_zip(&mut zip, source, source, options)?;
+        zip.finish().map_err(|e| format!("Failed to finish zip: {}", e))?;
     }
-    
-    add_dir_to_zip(&mut zip, source, source, options)?;
-    zip.finish().map_err(|e| format!("Failed to finish zip: {}", e))?;
+
+    let zip_data = zip_buffer.into_inner();
+
+    // Feature 5.7: Encrypt if password provided
+    let final_data = if let Some(ref pwd) = password {
+        if !pwd.is_empty() {
+            encrypt_backup_data(&zip_data, pwd)?
+        } else {
+            zip_data
+        }
+    } else {
+        zip_data
+    };
+
+    fs::write(&backup_path, &final_data)
+        .map_err(|e| format!("Failed to write backup file: {}", e))?;
     
     Ok(backup_path)
+}
+
+/// Feature 5.7: Magic header for encrypted backups
+const ENCRYPTED_MAGIC: &[u8; 8] = b"CPME0001"; // Chrome Profile Manager Encrypted v1
+
+/// Encrypt data with AES-256-GCM using PBKDF2-derived key
+fn encrypt_backup_data(data: &[u8], password: &str) -> Result<Vec<u8>, String> {
+    use aes_gcm::{Aes256Gcm, KeyInit, aead::Aead};
+    use aes_gcm::Nonce;
+    use pbkdf2::pbkdf2_hmac;
+    use sha2::Sha256;
+    use rand::RngCore;
+
+    // Generate random salt (32 bytes) and nonce (12 bytes)
+    let mut salt = [0u8; 32];
+    let mut nonce_bytes = [0u8; 12];
+    rand::thread_rng().fill_bytes(&mut salt);
+    rand::thread_rng().fill_bytes(&mut nonce_bytes);
+
+    // Derive key with PBKDF2
+    let mut key = [0u8; 32];
+    pbkdf2_hmac::<Sha256>(password.as_bytes(), &salt, 100_000, &mut key);
+
+    // Encrypt
+    let cipher = Aes256Gcm::new_from_slice(&key)
+        .map_err(|e| format!("Cipher init failed: {}", e))?;
+    let nonce = Nonce::from_slice(&nonce_bytes);
+    let ciphertext = cipher.encrypt(nonce, data)
+        .map_err(|e| format!("Encryption failed: {}", e))?;
+
+    // Format: MAGIC(8) + SALT(32) + NONCE(12) + CIPHERTEXT(N)
+    let mut output = Vec::with_capacity(8 + 32 + 12 + ciphertext.len());
+    output.extend_from_slice(ENCRYPTED_MAGIC);
+    output.extend_from_slice(&salt);
+    output.extend_from_slice(&nonce_bytes);
+    output.extend_from_slice(&ciphertext);
+
+    Ok(output)
+}
+
+/// Decrypt backup data given password
+fn decrypt_backup_data(data: &[u8], password: &str) -> Result<Vec<u8>, String> {
+    use aes_gcm::{Aes256Gcm, KeyInit, aead::Aead};
+    use aes_gcm::Nonce;
+    use pbkdf2::pbkdf2_hmac;
+    use sha2::Sha256;
+
+    if data.len() < 52 {
+        return Err("Encrypted data too short".to_string());
+    }
+
+    let salt = &data[8..40];
+    let nonce_bytes = &data[40..52];
+    let ciphertext = &data[52..];
+
+    let mut key = [0u8; 32];
+    pbkdf2_hmac::<Sha256>(password.as_bytes(), salt, 100_000, &mut key);
+
+    let cipher = Aes256Gcm::new_from_slice(&key)
+        .map_err(|e| format!("Cipher init failed: {}", e))?;
+    let nonce = Nonce::from_slice(nonce_bytes);
+    let plaintext = cipher.decrypt(nonce, ciphertext)
+        .map_err(|_| "Decryption failed - wrong password or corrupted backup".to_string())?;
+
+    Ok(plaintext)
+}
+
+#[tauri::command]
+pub fn check_backup_encrypted(backup_path: String) -> Result<bool, String> {
+    validate_path_safety(&backup_path, "Backup path")?;
+    let data = fs::read(&backup_path)
+        .map_err(|e| format!("Failed to read file: {}", e))?;
+    Ok(data.len() >= 8 && &data[..8] == ENCRYPTED_MAGIC)
 }
 
 #[derive(Serialize)]
@@ -953,8 +1043,9 @@ pub fn restore_from_backup(
     backup_path: String,
     target_base_path: String,
     conflict_action: String,  // "overwrite" | "rename" | "skip"
+    password: Option<String>,
 ) -> Result<RestoreResult, String> {
-    use std::io::Read;
+    use std::io::{Read, Cursor};
 
     validate_path_safety(&backup_path, "Backup path")?;
     validate_path_safety(&target_base_path, "Target base path")?;
@@ -964,10 +1055,24 @@ pub fn restore_from_backup(
         return Err("Backup file does not exist".to_string());
     }
     
-    // Open zip file
-    let file = fs::File::open(&backup_path)
-        .map_err(|e| format!("Failed to open backup file: {}", e))?;
-    let mut archive = zip::ZipArchive::new(file)
+    // Read raw file data
+    let raw_data = fs::read(&backup_path)
+        .map_err(|e| format!("Failed to read backup file: {}", e))?;
+
+    // Feature 5.7: Check if encrypted and decrypt
+    let zip_data = if raw_data.len() >= 8 && &raw_data[..8] == ENCRYPTED_MAGIC {
+        let pwd = password.as_deref().unwrap_or("");
+        if pwd.is_empty() {
+            return Err("This backup is encrypted. Please provide a password.".to_string());
+        }
+        decrypt_backup_data(&raw_data, pwd)?
+    } else {
+        raw_data
+    };
+
+    // Open zip from data
+    let cursor = Cursor::new(&zip_data);
+    let mut archive = zip::ZipArchive::new(cursor)
         .map_err(|e| format!("Failed to read zip archive: {}", e))?;
     
     // Get profile name from backup filename (e.g., "ProfileName_backup_2024.zip" -> "ProfileName")
@@ -1106,7 +1211,7 @@ pub fn bulk_export_profiles(
         let backup_filename = format!("{}_backup_{}.zip", profile_name, timestamp);
         let backup_path = dest.join(&backup_filename);
         
-        match backup_profile(profile_path.clone(), backup_path.to_string_lossy().to_string()) {
+        match backup_profile(profile_path.clone(), backup_path.to_string_lossy().to_string(), None) {
             Ok(path) => {
                 // Get the size of the created backup
                 if let Ok(metadata) = fs::metadata(&path) {

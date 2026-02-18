@@ -457,7 +457,7 @@ export class ProfileService {
         }
     }
 
-    async backupProfile(profilePath: string): Promise<string> {
+    async backupProfile(profilePath: string, password?: string | null): Promise<string> {
         if (!isTauriAvailable()) {
             throw new Error('Backup is only available in desktop app');
         }
@@ -477,7 +477,7 @@ export class ProfileService {
         }
 
         try {
-            return await this.backend.backupProfile(profilePath, filePath);
+            return await this.backend.backupProfile(profilePath, filePath, password);
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : String(e);
             this.error.set(errorMsg);
@@ -488,10 +488,11 @@ export class ProfileService {
     async restoreFromBackup(
         backupPath: string,
         targetBasePath: string,
-        conflictAction: 'overwrite' | 'rename' | 'skip'
+        conflictAction: 'overwrite' | 'rename' | 'skip',
+        password?: string | null
     ): Promise<{ success: boolean; restoredPath: string; profileName: string; wasRenamed: boolean }> {
         try {
-            const result = await this.backend.restoreFromBackup(backupPath, targetBasePath, conflictAction);
+            const result = await this.backend.restoreFromBackup(backupPath, targetBasePath, conflictAction, password);
             if (isTauriAvailable()) {
                 await this.scanProfiles(targetBasePath);
             }

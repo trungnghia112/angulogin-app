@@ -48,3 +48,7 @@ cbc = "0.1"
 pbkdf2 = { version = "0.12", features = ["std"] }
 hmac = "0.12"
 sha1 = "0.10"
+
+# Backup encryption (Feature 5.7)
+aes-gcm = "0.10"
+rand = "0.8"
