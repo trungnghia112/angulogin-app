@@ -9,11 +9,17 @@ use futures_util::StreamExt;
 use sha2::{Digest, Sha256};
 use std::io::Write;
 use std::path::Path;
+use std::time::Duration;
 use tauri::{Emitter, Window};
 
 /// Event names for frontend communication
 const DOWNLOAD_PROGRESS_EVENT: &str = "uc-download-progress";
 const DOWNLOAD_STATUS_EVENT: &str = "uc-download-status";
+
+/// Download timeout: 10 minutes for large binary (~150MB)
+const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(600);
+/// API request timeout: 30 seconds
+const API_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Download progress payload
 #[derive(serde::Serialize, Clone)]
@@ -39,17 +45,24 @@ struct ReleaseAsset {
     version: String,
 }
 
+/// Create a reqwest client with timeout and user-agent
+fn create_http_client(timeout: Duration) -> Result<reqwest::Client, String> {
+    reqwest::Client::builder()
+        .user_agent("AnguLogin/1.0")
+        .timeout(timeout)
+        .connect_timeout(Duration::from_secs(15))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {e}"))
+}
+
 /// Fetch the latest release info from GitHub API
 async fn fetch_latest_release() -> Result<ReleaseAsset, String> {
     let api_url = platform::get_latest_release_api_url()?;
     let platform_info = PlatformInfo::current()?;
 
-    eprintln!("[UC] Fetching release from: {}", api_url);
+    log::info!("[UC] Fetching release from: {}", api_url);
 
-    let client = reqwest::Client::builder()
-        .user_agent("AnguLogin/1.0")
-        .build()
-        .map_err(|e| format!("Failed to create HTTP client: {e}"))?;
+    let client = create_http_client(API_TIMEOUT)?;
 
     let response = client
         .get(&api_url)
@@ -80,24 +93,48 @@ async fn fetch_latest_release() -> Result<ReleaseAsset, String> {
         .as_array()
         .ok_or("No assets found in release")?;
 
+    // Also look for a .sha256 checksum file
+    let mut sha256_from_file = String::new();
     for asset in assets {
         let name = asset["name"].as_str().unwrap_or("");
-        if name.contains(platform_info.asset_match) {
+        if name.contains(platform_info.asset_match) && name.ends_with(".sha256") {
+            // Found a .sha256 checksum companion file
+            if let Some(url) = asset["browser_download_url"].as_str() {
+                sha256_from_file = fetch_sha256_file(url).await.unwrap_or_default();
+            }
+        }
+    }
+
+    for asset in assets {
+        let name = asset["name"].as_str().unwrap_or("");
+        if name.contains(platform_info.asset_match) && !name.ends_with(".sha256") {
             let download_url = asset["browser_download_url"]
                 .as_str()
                 .ok_or("Missing download URL")?
                 .to_string();
 
-            // SHA256 is in the digest field
-            let sha256 = asset["digest"]
-                .as_str()
-                .unwrap_or("")
-                .replace("sha256:", "")
-                .to_string();
+            // SHA256: try digest field first, then .sha256 file, then empty
+            let sha256 = {
+                let digest = asset["digest"]
+                    .as_str()
+                    .unwrap_or("")
+                    .replace("sha256:", "")
+                    .trim()
+                    .to_string();
+                if !digest.is_empty() {
+                    digest
+                } else if !sha256_from_file.is_empty() {
+                    log::info!("[UC] Using SHA256 from companion checksum file");
+                    sha256_from_file.clone()
+                } else {
+                    log::warn!("[UC] No SHA256 checksum available — download will not be verified");
+                    String::new()
+                }
+            };
 
             let size = asset["size"].as_u64().unwrap_or(0);
 
-            eprintln!("[UC] Found asset: {} ({}MB)", name, size / 1024 / 1024);
+            log::info!("[UC] Found asset: {} ({}MB)", name, size / 1024 / 1024);
 
             return Ok(ReleaseAsset {
                 download_url,
@@ -114,6 +151,33 @@ async fn fetch_latest_release() -> Result<ReleaseAsset, String> {
     ))
 }
 
+/// Fetch SHA256 hash from a companion .sha256 checksum file
+async fn fetch_sha256_file(url: &str) -> Result<String, String> {
+    let client = create_http_client(API_TIMEOUT)?;
+    let response = client
+        .get(url)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to fetch SHA256 file: {e}"))?;
+
+    if !response.status().is_success() {
+        return Err("SHA256 file not available".to_string());
+    }
+
+    let text = response
+        .text()
+        .await
+        .map_err(|e| format!("Failed to read SHA256 file: {e}"))?;
+
+    // Format is usually: "hash  filename" or just "hash"
+    let hash = text.split_whitespace().next().unwrap_or("").to_string();
+    if hash.len() == 64 && hash.chars().all(|c| c.is_ascii_hexdigit()) {
+        Ok(hash)
+    } else {
+        Err("Invalid SHA256 hash format".to_string())
+    }
+}
+
 /// Download and install ungoogled-chromium.
 /// Emits progress events to the Tauri window.
 pub async fn download_and_install(window: Option<&Window>) -> Result<String, String> {
@@ -124,9 +188,9 @@ pub async fn download_and_install(window: Option<&Window>) -> Result<String, Str
     emit_status(window, "checking", "Checking for latest version...");
     let release = fetch_latest_release().await?;
 
-    eprintln!("[UC] Download URL: {}", release.download_url);
-    eprintln!("[UC] Version: {}", release.version);
-    eprintln!("[UC] Size: {}MB", release.size / 1024 / 1024);
+    log::info!("[UC] Download URL: {}", release.download_url);
+    log::info!("[UC] Version: {}", release.version);
+    log::info!("[UC] Size: {}MB", release.size / 1024 / 1024);
 
     // Step 2: Create install directory
     std::fs::create_dir_all(&install_dir)
@@ -151,7 +215,9 @@ pub async fn download_and_install(window: Option<&Window>) -> Result<String, Str
     if !release.sha256.is_empty() {
         emit_status(window, "verifying", "Verifying download integrity...");
         verify_sha256(&archive_path, &release.sha256)?;
-        eprintln!("[UC] SHA256 verification passed");
+        log::info!("[UC] SHA256 verification passed");
+    } else {
+        log::warn!("[UC] Skipping SHA256 verification — no checksum available");
     }
 
     // Step 5: Extract
@@ -168,7 +234,7 @@ pub async fn download_and_install(window: Option<&Window>) -> Result<String, Str
     // Step 7: macOS quarantine removal
     #[cfg(target_os = "macos")]
     {
-        eprintln!("[UC] Removing macOS quarantine attribute...");
+        log::debug!("[UC] Removing macOS quarantine attribute...");
         let _ = std::process::Command::new("xattr")
             .args([
                 "-r",
@@ -201,10 +267,7 @@ pub async fn download_and_install(window: Option<&Window>) -> Result<String, Str
     let exe_path = platform::find_chrome_binary(&install_dir)
         .ok_or("ungoogled-chromium binary not found after extraction")?;
 
-    eprintln!(
-        "[UC] Installed successfully at: {}",
-        exe_path.display()
-    );
+    log::info!("[UC] Installed successfully at: {}", exe_path.display());
 
     emit_status(
         window,
@@ -215,12 +278,9 @@ pub async fn download_and_install(window: Option<&Window>) -> Result<String, Str
     Ok(exe_path.to_string_lossy().to_string())
 }
 
-/// Download a file with progress tracking
+/// Download a file with progress tracking and timeout
 async fn download_file(url: &str, dest: &Path, window: Option<&Window>) -> Result<(), String> {
-    let client = reqwest::Client::builder()
-        .user_agent("AnguLogin/1.0")
-        .build()
-        .map_err(|e| format!("Failed to create HTTP client: {e}"))?;
+    let client = create_http_client(DOWNLOAD_TIMEOUT)?;
 
     let response = client
         .get(url)
@@ -360,7 +420,7 @@ fn extract_dmg(dmg_path: &Path, dest_dir: &Path) -> Result<(), String> {
             return Err(format!("Failed to mount DMG: {}", stderr));
         }
 
-        eprintln!("[UC] DMG mounted at: {}", mount_point.display());
+        log::debug!("[UC] DMG mounted at: {}", mount_point.display());
 
         // Find Chromium.app in the mounted volume
         let app_src = mount_point.join("Chromium.app");
@@ -391,7 +451,7 @@ fn extract_dmg(dmg_path: &Path, dest_dir: &Path) -> Result<(), String> {
         // Remove mount point
         let _ = std::fs::remove_dir_all(&mount_point);
 
-        eprintln!("[UC] DMG extracted successfully");
+        log::debug!("[UC] DMG extracted successfully");
         Ok(())
     }
 
@@ -461,7 +521,7 @@ fn emit_progress(window: Option<&Window>, percent: u32, downloaded: u64, total: 
 
 /// Emit download status to frontend
 fn emit_status(window: Option<&Window>, status: &str, message: &str) {
-    eprintln!("[UC] Status: {} - {}", status, message);
+    log::debug!("[UC] Status: {} - {}", status, message);
     if let Some(window) = window {
         let _ = window.emit(
             DOWNLOAD_STATUS_EVENT,
@@ -479,7 +539,7 @@ pub fn uninstall() -> Result<(), String> {
     if install_dir.exists() {
         std::fs::remove_dir_all(&install_dir)
             .map_err(|e| format!("Failed to remove installation: {e}"))?;
-        eprintln!("[UC] Uninstalled from {}", install_dir.display());
+        log::info!("[UC] Uninstalled from {}", install_dir.display());
     }
     Ok(())
 }

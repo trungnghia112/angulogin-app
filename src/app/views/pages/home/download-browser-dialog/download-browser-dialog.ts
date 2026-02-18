@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { ProgressBarModule } from 'primeng/progressbar';
@@ -14,7 +14,7 @@ import { BrowserManagerService } from '../../../../services/browser-manager.serv
 export class DownloadBrowserDialog {
     private readonly browserManager = inject(BrowserManagerService);
 
-    readonly visible = true;
+    readonly visible = signal(true);
     readonly isDownloading = this.browserManager.isDownloading;
     readonly downloadProgress = this.browserManager.downloadProgress;
     readonly downloadStatus = this.browserManager.downloadStatus;
