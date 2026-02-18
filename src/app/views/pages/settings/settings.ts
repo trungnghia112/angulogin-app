@@ -169,19 +169,18 @@ export class Settings {
     }
 
     // General Settings Methods
-    updateGeneral<K extends keyof GeneralSettings>(key: K, event: { checked?: boolean; value?: any } | boolean | string | number): void {
+    updateGeneral<K extends keyof GeneralSettings>(key: K, event: { checked?: boolean; value?: GeneralSettings[K] } | boolean | string | number): void {
         // Handle different event types (p-inputSwitch emits event.checked or direct value for SelectButton)
-        let value: any;
+        let value: GeneralSettings[K];
         if (event && typeof event === 'object' && 'checked' in event) {
-            value = event.checked; // InputSwitch
+            value = event.checked as GeneralSettings[K]; // InputSwitch
         } else if (event && typeof event === 'object' && 'value' in event) {
-            value = event.value; // SelectButton (sometimes)
+            value = event.value as GeneralSettings[K]; // SelectButton (sometimes)
         } else {
-            value = event; // Direct value binding
+            value = event as GeneralSettings[K]; // Direct value binding
         }
 
-        // Ensure strictly typed value
-        this.settingsService.setGeneralSetting(key, value as GeneralSettings[K]);
+        this.settingsService.setGeneralSetting(key, value);
     }
 
     async browseProfilesPath(): Promise<void> {

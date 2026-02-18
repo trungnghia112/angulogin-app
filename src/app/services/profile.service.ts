@@ -27,14 +27,10 @@ export class ProfileService {
         this.error.set(null);
 
         try {
-            console.time('[PERF] scanProfiles IPC');
             const profiles = await this.backend.scanProfilesWithMetadata(path);
-            console.timeEnd('[PERF] scanProfiles IPC');
-            console.log(`[PERF] scanProfiles: ${profiles.length} profiles loaded`);
+            debugLog('PERF', `scanProfiles: ${profiles.length} profiles loaded`);
 
-            console.time('[PERF] profiles.set (signal update)');
             this.profiles.set(profiles);
-            console.timeEnd('[PERF] profiles.set (signal update)');
 
             return profiles;
         } catch (e) {
@@ -295,7 +291,7 @@ export class ProfileService {
         const current = this.profiles();
         if (current.length === 0) return;
 
-        console.time(`[PERF] refreshProfileStatus (${current.length} profiles)`);
+        debugLog('PERF', `refreshProfileStatus start (${current.length} profiles)`);
         // PERF: 1 batch call instead of N individual pgrep spawns
         const allPaths = current.map(p => p.path);
         const runningMap = await this.backend.batchCheckRunning(allPaths);
@@ -313,7 +309,7 @@ export class ProfileService {
         if (hasChanges) {
             this.profiles.set(updated);
         }
-        console.timeEnd(`[PERF] refreshProfileStatus (${current.length} profiles)`);
+        debugLog('PERF', `refreshProfileStatus done (${current.length} profiles)`);
     }
 
     async launchBrowser(options: LaunchBrowserOptions & { disableExtensions?: boolean }): Promise<void> {
@@ -375,7 +371,7 @@ export class ProfileService {
         const current = this.profiles();
         if (current.length === 0) return;
 
-        console.time(`[PERF] loadProfileSizes (${current.length} profiles)`);
+        debugLog('PERF', `loadProfileSizes start (${current.length} profiles)`);
         const CHUNK_SIZE = 10;
         const sizeMap = new Map<string, number>();
 
@@ -405,7 +401,7 @@ export class ProfileService {
         if (hasChanges) {
             this.profiles.set(updated);
         }
-        console.timeEnd(`[PERF] loadProfileSizes (${current.length} profiles)`);
+        debugLog('PERF', `loadProfileSizes done (${current.length} profiles)`);
     }
 
     async duplicateProfile(sourcePath: string, newName: string, basePath: string): Promise<string> {
