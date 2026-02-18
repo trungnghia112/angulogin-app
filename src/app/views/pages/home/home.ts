@@ -41,6 +41,7 @@ import { NavigationService } from '../../../services/navigation.service';
 import { CamoufoxService } from '../../../services/camoufox.service';
 import { ColumnConfigService } from '../../../core/services/column-config.service';
 import { GeoIpService } from '../../../services/geoip.service';
+import { ScheduleService, type ScheduleEntry } from '../../../services/schedule.service';
 import { BrowserType, Profile } from '../../../models/profile.model';
 import { validateProfileName } from '../../../core/utils/validation.util';
 import { ColumnSettingsPanel } from '../../components/column-settings-panel/column-settings-panel';
@@ -110,6 +111,7 @@ export class Home implements OnInit, OnDestroy {
     private readonly camoufoxService = inject(CamoufoxService);
     protected readonly columnConfig = inject(ColumnConfigService);
     protected readonly geoIpService = inject(GeoIpService);
+    protected readonly scheduleService = inject(ScheduleService);
     private readonly searchSubject = new Subject<string>();
 
     // Feature 6.9: Zen Mode
@@ -1833,6 +1835,77 @@ export class Home implements OnInit, OnDestroy {
                 summary: 'Export Failed',
                 detail: `Failed to export cookies from ${failed} profile(s)`,
             });
+        }
+    }
+
+    // ==== Feature 3.3: Scheduled Launch ====
+    protected readonly showScheduleDialog = signal(false);
+    protected readonly scheduleProfilePath = signal('');
+    protected readonly scheduleProfileName = signal('');
+    protected readonly scheduleRecurrence = signal<'once' | 'daily' | 'weekdays' | 'custom'>('once');
+    protected readonly scheduleTime = signal('09:00');
+    protected readonly scheduleDate = signal('');
+    protected readonly scheduleCustomDays = signal<number[]>([]);
+    protected readonly profileSchedules = computed<ScheduleEntry[]>(() =>
+        this.scheduleService.getByProfile(this.scheduleProfilePath()),
+    );
+
+    protected readonly scheduleRecurrenceOptions = [
+        { value: 'once' as const, label: 'Once' },
+        { value: 'daily' as const, label: 'Daily' },
+        { value: 'weekdays' as const, label: 'Weekdays' },
+        { value: 'custom' as const, label: 'Custom' },
+    ];
+
+    protected readonly dayNames = [
+        { index: 0, short: 'Su' },
+        { index: 1, short: 'Mo' },
+        { index: 2, short: 'Tu' },
+        { index: 3, short: 'We' },
+        { index: 4, short: 'Th' },
+        { index: 5, short: 'Fr' },
+        { index: 6, short: 'Sa' },
+    ];
+
+    protected openScheduleDialog(profile: Profile, event: Event): void {
+        event.stopPropagation();
+        this.scheduleProfilePath.set(profile.path);
+        this.scheduleProfileName.set(profile.name || profile.path.split('/').pop() || 'Profile');
+        this.scheduleRecurrence.set('once');
+        this.scheduleTime.set('09:00');
+        // Default to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        this.scheduleDate.set(tomorrow.toISOString().split('T')[0]);
+        this.scheduleCustomDays.set([]);
+        this.showScheduleDialog.set(true);
+    }
+
+    protected addSchedule(): void {
+        const recurrence = this.scheduleRecurrence();
+        this.scheduleService.add({
+            profilePath: this.scheduleProfilePath(),
+            profileName: this.scheduleProfileName(),
+            recurrence,
+            time: this.scheduleTime(),
+            date: recurrence === 'once' ? this.scheduleDate() : undefined,
+            customDays: recurrence === 'custom' ? this.scheduleCustomDays() : undefined,
+            enabled: true,
+        });
+        this.messageService.add({
+            severity: 'success',
+            summary: 'Schedule created',
+            detail: `${this.scheduleProfileName()} will launch at ${this.scheduleTime()}`,
+        });
+        this.showScheduleDialog.set(false);
+    }
+
+    protected toggleScheduleDay(day: number): void {
+        const current = this.scheduleCustomDays();
+        if (current.includes(day)) {
+            this.scheduleCustomDays.set(current.filter(d => d !== day));
+        } else {
+            this.scheduleCustomDays.set([...current, day]);
         }
     }
 

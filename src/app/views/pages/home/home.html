@@ -358,6 +358,10 @@
                             <p-button [id]="'home-profile-' + i + '-save-template-btn'"
                                 (click)="openSaveTemplateDialog(profile, $event)" icon="pi pi-bookmark" [rounded]="true"
                                 [text]="true" severity="secondary" size="small" pTooltip="Save as template" />
+                            <p-button [id]="'home-profile-' + i + '-schedule-btn'"
+                                (click)="openScheduleDialog(profile, $event)" icon="pi pi-calendar-clock"
+                                [rounded]="true" [text]="true" severity="secondary" size="small"
+                                pTooltip="Schedule launch" />
                         </div>
                     </td>
                 </tr>
@@ -1007,6 +1011,92 @@
             <p-button label="Cancel" severity="secondary" (click)="showMassMoveDialog.set(false)" />
             <p-button id="home-mass-move-apply-btn" label="Move" icon="pi pi-folder" (click)="bulkMoveToFolder()"
                 [loading]="bulkMoveLoading()" />
+        </ng-template>
+    </p-dialog>
+
+    <!-- Schedule Launch Dialog -->
+    <p-dialog id="home-schedule-dialog" header="Schedule Launch" [visible]="showScheduleDialog()"
+        (visibleChange)="showScheduleDialog.set($event)" [modal]="true" [style]="{ width: '440px' }" [closable]="true">
+        <div class="flex flex-col gap-4 pt-2">
+            <p class="text-sm text-muted-color">
+                Schedule auto-launch for <strong>{{ scheduleProfileName() }}</strong>
+            </p>
+
+            <!-- Recurrence -->
+            <div>
+                <label class="block text-xs font-medium text-color mb-2">Recurrence</label>
+                <div class="flex gap-2 flex-wrap">
+                    @for (opt of scheduleRecurrenceOptions; track opt.value) {
+                    <button [id]="'home-schedule-rec-' + opt.value"
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors" [class]="scheduleRecurrence() === opt.value
+                            ? 'bg-primary/10 text-primary border-primary/30'
+                            : 'border-surface-200 dark:border-surface-700 text-muted-color hover:text-color'"
+                        (click)="scheduleRecurrence.set(opt.value)">
+                        {{ opt.label }}
+                    </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Time Picker -->
+            <div>
+                <label for="home-schedule-time" class="block text-xs font-medium text-color mb-2">Time</label>
+                <input pInputText id="home-schedule-time" type="time" [ngModel]="scheduleTime()"
+                    (ngModelChange)="scheduleTime.set($event)" class="w-full" />
+            </div>
+
+            <!-- Date for one-time -->
+            @if (scheduleRecurrence() === 'once') {
+            <div>
+                <label for="home-schedule-date" class="block text-xs font-medium text-color mb-2">Date</label>
+                <input pInputText id="home-schedule-date" type="date" [ngModel]="scheduleDate()"
+                    (ngModelChange)="scheduleDate.set($event)" class="w-full" />
+            </div>
+            }
+
+            <!-- Custom days -->
+            @if (scheduleRecurrence() === 'custom') {
+            <div>
+                <label class="block text-xs font-medium text-color mb-2">Days</label>
+                <div class="flex gap-1.5">
+                    @for (day of dayNames; track day.index) {
+                    <button [id]="'home-schedule-day-' + day.index"
+                        class="w-9 h-9 rounded-full text-xs font-medium border transition-colors" [class]="scheduleCustomDays().includes(day.index)
+                            ? 'bg-primary text-white border-primary'
+                            : 'border-surface-200 dark:border-surface-700 text-muted-color'"
+                        (click)="toggleScheduleDay(day.index)">
+                        {{ day.short }}
+                    </button>
+                    }
+                </div>
+            </div>
+            }
+
+            <!-- Existing schedules for this profile -->
+            @if (profileSchedules().length > 0) {
+            <div class="border-t border-surface-200 dark:border-surface-700 pt-3">
+                <label class="block text-xs font-medium text-color mb-2">Existing Schedules</label>
+                @for (sch of profileSchedules(); track sch.id) {
+                <div
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 mb-1.5 text-sm">
+                    <span class="flex-1">{{ sch.time }} — {{ sch.recurrence }}</span>
+                    <button class="text-xs text-muted-color hover:text-color cursor-pointer"
+                        (click)="scheduleService.toggle(sch.id)">
+                        <i [class]="sch.enabled ? 'pi pi-pause-circle' : 'pi pi-play-circle'"></i>
+                    </button>
+                    <button class="text-xs text-error hover:text-red-700 cursor-pointer"
+                        (click)="scheduleService.remove(sch.id)">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+                }
+            </div>
+            }
+        </div>
+        <ng-template #footer>
+            <p-button label="Cancel" severity="secondary" (click)="showScheduleDialog.set(false)" />
+            <p-button id="home-schedule-add-btn" label="Add Schedule" icon="pi pi-calendar-plus" (click)="addSchedule()"
+                [disabled]="!scheduleTime()" />
         </ng-template>
     </p-dialog>
 
