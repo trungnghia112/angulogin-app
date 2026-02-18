@@ -40,6 +40,7 @@ export type OnLaunchBehavior = 'keep-open' | 'minimize' | 'close';
 
 export interface AppearanceSettings {
     primaryColor: string;
+    customPrimaryHex?: string;
     surface: string;
     scale: number;
     isDarkMode: boolean;
@@ -183,7 +184,21 @@ export class SettingsService {
 
         this._settings.update(s => ({
             ...s,
-            appearance: { ...s.appearance, primaryColor: colorName },
+            appearance: { ...s.appearance, primaryColor: colorName, customPrimaryHex: undefined },
+        }));
+    }
+
+    /**
+     * Set a custom primary color from a hex value
+     * Generates a full shade palette (50-950) from a single hex color
+     */
+    setCustomPrimaryColor(hex: string): void {
+        const palette = this.generatePaletteFromHex(hex);
+        updatePrimaryPalette(palette);
+
+        this._settings.update(s => ({
+            ...s,
+            appearance: { ...s.appearance, primaryColor: 'custom', customPrimaryHex: hex },
         }));
     }
 
@@ -375,7 +390,7 @@ export class SettingsService {
         const validScales: number[] = UI_SCALES.map(s => s.value);
 
         // Appearance
-        if (!validPrimary.includes(settings.appearance.primaryColor)) {
+        if (!validPrimary.includes(settings.appearance.primaryColor) && settings.appearance.primaryColor !== 'custom') {
             settings.appearance.primaryColor = DEFAULT_SETTINGS.appearance.primaryColor;
         }
         if (!validSurface.includes(settings.appearance.surface)) {
@@ -422,8 +437,13 @@ export class SettingsService {
 
     private applyTheme(appearance: AppearanceSettings): void {
         // Apply primary color
-        const primaryPalette = this.createColorPalette(appearance.primaryColor);
-        updatePrimaryPalette(primaryPalette);
+        if (appearance.primaryColor === 'custom' && appearance.customPrimaryHex) {
+            const customPalette = this.generatePaletteFromHex(appearance.customPrimaryHex);
+            updatePrimaryPalette(customPalette);
+        } else {
+            const primaryPalette = this.createColorPalette(appearance.primaryColor);
+            updatePrimaryPalette(primaryPalette);
+        }
 
         // Apply surface palette
         const surfacePalette = this.createColorPalette(appearance.surface);
@@ -459,5 +479,64 @@ export class SettingsService {
             900: `{${colorName}.900}`,
             950: `{${colorName}.950}`,
         };
+    }
+
+    /**
+     * Generate a palette of 50-950 shades from a single hex color using HSL manipulation
+     */
+    private generatePaletteFromHex(hex: string): Record<string, string> {
+        const { h, s, l } = this.hexToHsl(hex);
+        // Map shade levels to lightness values (light to dark)
+        const shadeMap: Record<string, number> = {
+            50: Math.min(97, l + 45),
+            100: Math.min(95, l + 35),
+            200: Math.min(90, l + 25),
+            300: Math.min(82, l + 15),
+            400: Math.min(70, l + 5),
+            500: l,
+            600: Math.max(20, l - 10),
+            700: Math.max(15, l - 20),
+            800: Math.max(10, l - 30),
+            900: Math.max(7, l - 38),
+            950: Math.max(4, l - 44),
+        };
+
+        const palette: Record<string, string> = {};
+        for (const [shade, lightness] of Object.entries(shadeMap)) {
+            palette[shade] = this.hslToHex(h, s, lightness);
+        }
+        return palette;
+    }
+
+    private hexToHsl(hex: string): { h: number; s: number; l: number } {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        if (!result) return { h: 0, s: 0, l: 50 };
+        const r = parseInt(result[1], 16) / 255;
+        const g = parseInt(result[2], 16) / 255;
+        const b = parseInt(result[3], 16) / 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h = 0, s = 0;
+        const l = (max + min) / 2;
+        if (max !== min) {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                case g: h = ((b - r) / d + 2) / 6; break;
+                case b: h = ((r - g) / d + 4) / 6; break;
+            }
+        }
+        return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }
+
+    private hslToHex(h: number, s: number, l: number): string {
+        const sn = s / 100, ln = l / 100;
+        const a = sn * Math.min(ln, 1 - ln);
+        const f = (n: number) => {
+            const k = (n + h / 30) % 12;
+            const color = ln - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+            return Math.round(255 * color).toString(16).padStart(2, '0');
+        };
+        return `#${f(0)}${f(8)}${f(4)}`;
     }
 }

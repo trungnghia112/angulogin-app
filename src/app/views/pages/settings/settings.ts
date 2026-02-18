@@ -157,6 +157,11 @@ export class Settings {
         this.settingsService.setPrimaryColor(colorName);
     }
 
+    setCustomColor(event: Event): void {
+        const hex = (event.target as HTMLInputElement).value;
+        this.settingsService.setCustomPrimaryColor(hex);
+    }
+
     setSurface(surfaceName: string): void {
         this.settingsService.setSurface(surfaceName);
     }

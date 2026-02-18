@@ -1755,6 +1755,87 @@ export class Home implements OnInit, OnDestroy {
         }
     }
 
+    // ==== Feature 12.3: Mass Profile Transfer (Move to Folder) ====
+    protected readonly showMassMoveDialog = signal(false);
+    protected readonly massMoveTargetFolderId = signal<string | null>(null);
+    protected readonly bulkMoveLoading = signal(false);
+
+    openMassMoveDialog(): void {
+        this.massMoveTargetFolderId.set(null);
+        this.showMassMoveDialog.set(true);
+    }
+
+    async bulkMoveToFolder(): Promise<void> {
+        if (this.bulkMoveLoading()) return;
+        const profiles = this.selectedProfiles();
+        if (profiles.length === 0) return;
+
+        this.bulkMoveLoading.set(true);
+        try {
+            const folderId = this.massMoveTargetFolderId();
+            let updated = 0;
+            for (const profile of profiles) {
+                try {
+                    await this.profileService.saveProfileMetadata(
+                        profile.path,
+                        { folderId: folderId },
+                    );
+                    updated++;
+                } catch (e) {
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: `Failed to move ${profile.name}`,
+                    });
+                }
+            }
+
+            this.showMassMoveDialog.set(false);
+            const folderName = folderId
+                ? this.folderService.getById(folderId)?.name || 'folder'
+                : 'no folder';
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Profiles Moved',
+                detail: `Moved ${updated} profile(s) to ${folderName}`,
+            });
+        } finally {
+            this.bulkMoveLoading.set(false);
+        }
+    }
+
+    // ==== Feature 12.4: Mass Cookie Export ====
+    async bulkExportCookies(): Promise<void> {
+        const profiles = this.selectedProfiles();
+        if (profiles.length === 0) return;
+
+        let exported = 0;
+        let failed = 0;
+        for (const profile of profiles) {
+            try {
+                const browser = profile.metadata?.browser || undefined;
+                await this.profileService.exportCookies(profile.path, browser);
+                exported++;
+            } catch {
+                failed++;
+            }
+        }
+
+        if (exported > 0) {
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Cookies Exported',
+                detail: `Exported cookies from ${exported} profile(s)` + (failed > 0 ? `, ${failed} failed` : ''),
+            });
+        } else {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Export Failed',
+                detail: `Failed to export cookies from ${failed} profile(s)`,
+            });
+        }
+    }
+
     // ==== Feature 11.4: Last Changed - relative date formatting ====
     formatRelativeDate(dateStr: string | null | undefined): string {
         if (!dateStr) return '-';

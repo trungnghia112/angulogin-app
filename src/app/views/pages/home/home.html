@@ -529,6 +529,18 @@
                     <i class="pi pi-globe text-xs"></i>
                     <span class="hidden sm:inline">Proxy</span>
                 </button>
+                <button id="home-bottom-move-btn" (click)="openMassMoveDialog()"
+                    class="h-7 flex items-center gap-1.5 px-2.5 rounded border border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white transition-colors text-xs font-medium"
+                    title="Move selected to folder">
+                    <i class="pi pi-folder text-xs"></i>
+                    <span class="hidden sm:inline">Move</span>
+                </button>
+                <button id="home-bottom-cookies-btn" (click)="bulkExportCookies()"
+                    class="h-7 flex items-center gap-1.5 px-2.5 rounded border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-colors text-xs font-medium"
+                    title="Export cookies from selected">
+                    <i class="pi pi-file-export text-xs"></i>
+                    <span class="hidden sm:inline">Cookies</span>
+                </button>
                 <button id="home-bottom-delete-btn" (click)="bulkDelete()"
                     class="h-7 flex items-center gap-1.5 px-2.5 rounded border border-error text-error hover:bg-error hover:text-white transition-colors text-xs font-medium"
                     title="Delete selected">
@@ -954,6 +966,46 @@
                 [icon]="massProxyMode() === 'none' ? 'pi pi-ban' : 'pi pi-check'"
                 [severity]="massProxyMode() === 'none' ? 'danger' : 'primary'" (click)="bulkAssignProxy()"
                 [loading]="bulkProxyLoading()" [disabled]="massProxyMode() === 'saved' && !massProxySelectedId()" />
+        </ng-template>
+    </p-dialog>
+
+    <!-- Mass Move to Folder Dialog -->
+    <p-dialog id="home-mass-move-dialog" header="Move to Folder" [visible]="showMassMoveDialog()"
+        (visibleChange)="showMassMoveDialog.set($event)" [modal]="true" [style]="{ width: '400px' }" [closable]="true">
+        <div class="flex flex-col gap-3 pt-2">
+            <p class="text-sm text-muted-color">
+                Move {{ selectedProfiles().length }} selected profile(s) to:
+            </p>
+            <div class="flex flex-col gap-1.5 max-h-64 overflow-y-auto">
+                <!-- No folder option -->
+                <button id="home-mass-move-none"
+                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors text-sm" [class]="massMoveTargetFolderId() === null
+                        ? 'bg-primary/10 text-primary border border-primary/30'
+                        : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-color'"
+                    (click)="massMoveTargetFolderId.set(null)">
+                    <i class="pi pi-times-circle text-muted-color"></i>
+                    <span>No Folder (remove from folder)</span>
+                </button>
+                @for (folder of folderService.customFolders(); track folder.id) {
+                <button [id]="'home-mass-move-folder-' + folder.id"
+                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors text-sm" [class]="massMoveTargetFolderId() === folder.id
+                        ? 'bg-primary/10 text-primary border border-primary/30'
+                        : 'hover:bg-surface-100 dark:hover:bg-surface-800 text-color'"
+                    (click)="massMoveTargetFolderId.set(folder.id)">
+                    <i class="pi" [class]="folder.icon || 'pi-folder'" [style.color]="folder.color || 'inherit'"></i>
+                    <span>{{ folder.name }}</span>
+                    <span class="ml-auto text-xs text-muted-color">{{ folder.profileCount }} profiles</span>
+                </button>
+                }
+            </div>
+            @if (folderService.customFolders().length === 0) {
+            <p class="text-xs text-muted-color italic">No custom folders yet. Create folders in the sidebar first.</p>
+            }
+        </div>
+        <ng-template #footer>
+            <p-button label="Cancel" severity="secondary" (click)="showMassMoveDialog.set(false)" />
+            <p-button id="home-mass-move-apply-btn" label="Move" icon="pi pi-folder" (click)="bulkMoveToFolder()"
+                [loading]="bulkMoveLoading()" />
         </ng-template>
     </p-dialog>
 

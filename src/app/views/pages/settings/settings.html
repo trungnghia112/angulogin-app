@@ -75,6 +75,27 @@
                         }
                     </button>
                     }
+                    <!-- Custom Color Picker -->
+                    <label id="settings-color-custom" pTooltip="Custom Color" tooltipPosition="top"
+                        class="w-12 h-12 rounded-full border-2 transition-all duration-200 shadow-sm relative flex items-center justify-center shrink-0 cursor-pointer overflow-hidden"
+                        [class.border-surface-300]="settingsService.appearance().primaryColor !== 'custom'"
+                        [class.dark:border-surface-600]="settingsService.appearance().primaryColor !== 'custom'"
+                        [class.border-primary]="settingsService.appearance().primaryColor === 'custom'"
+                        [class.ring-2]="settingsService.appearance().primaryColor === 'custom'"
+                        [class.ring-offset-2]="settingsService.appearance().primaryColor === 'custom'"
+                        [class.ring-primary]="settingsService.appearance().primaryColor === 'custom'"
+                        [style.background]="settingsService.appearance().primaryColor === 'custom'
+                            ? settingsService.appearance().customPrimaryHex
+                            : 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)'">
+                        @if (settingsService.appearance().primaryColor === 'custom') {
+                        <i class="pi pi-check text-white font-bold text-lg drop-shadow-md"></i>
+                        } @else {
+                        <i class="pi pi-palette text-white font-bold text-sm drop-shadow-md"></i>
+                        }
+                        <input type="color" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                            [value]="settingsService.appearance().customPrimaryHex || '#6366f1'"
+                            (input)="setCustomColor($event)" />
+                    </label>
                 </div>
             </section>
 

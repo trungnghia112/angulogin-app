@@ -12,8 +12,8 @@
 |------------|----------|
 | ✅ Done | 50 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 24 |
-| ❌ Cancelled | 10 |
+| 📋 Backlog | 23 |
+| ❌ Cancelled | 11 |
 
 ---
 
@@ -190,7 +190,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 |---|-----------|-------|--------|--------|
 | 10.1 | Windows Support | Build cho Windows | 🟡 TB | 📋 |
 | 10.2 | Linux Support | Build cho Linux | 🟡 TB | 📋 |
-| 10.3 | Portable Mode | Chạy không cần cài đặt | 🟢 Dễ | 📋 |
+| 10.3 | Portable Mode | Chạy không cần cài đặt | 🟢 Dễ | ❌ |
 | 10.4 | Multi-drive Support | Quản lý profiles từ nhiều ổ cùng lúc | 🟡 TB | 📋 |
 
 ---
@@ -201,7 +201,7 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
-| 11.1 | Customizable Columns ⭐ | Gear icon → sidebar chỉnh: thêm/bớt/reorder cột | 🟡 TB | 📋 |
+| 11.1 | Customizable Columns ⭐ | Gear icon → sidebar chỉnh: thêm/bớt/reorder cột | 🟡 TB | ✅ |
 | 11.2 | Column Sorting | Click header → sort A-Z / Z-A cho mỗi cột | 🟢 Dễ | ✅ |
 | 11.3 | Column Resize | Kéo resize chiều rộng cột | 🟢 Dễ | ✅ |
 | 11.4 | Last Changed Column | Hiện ngày thay đổi cuối (profile metadata) | 🟢 Dễ | ✅ |
