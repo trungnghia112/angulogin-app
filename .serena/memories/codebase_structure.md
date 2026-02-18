@@ -1,127 +1,101 @@
 # Codebase Structure
 
-## Top-Level Directory
+## Root Layout
 ```
 chrome-profile-manager/
 ├── src/                    # Angular frontend source
-├── src-tauri/              # Tauri/Rust desktop backend
-├── functions/              # Firebase Cloud Functions + Genkit
-├── scripts/                # Utility scripts (add-dark-mode.mjs)
+├── src-tauri/              # Tauri/Rust backend
+├── functions/              # Firebase Cloud Functions
 ├── public/                 # Static assets
-├── docs/                   # Documentation
+├── docs/                   # Documentation & reports
+├── scripts/                # Build/utility scripts
 ├── plans/                  # Feature planning docs
-├── .agent/                 # AI workflow configs (AWF)
-├── .gemini/                # Gemini AI configs
-├── .brain/                 # AWF brain data
-├── angular.json            # Angular workspace config
-├── package.json            # Dependencies
-├── tsconfig.json           # TypeScript config
-├── firebase.json           # Firebase project config
+├── .brain/                 # Project memory/context
+├── .agent/                 # AWF workflow definitions
 ├── firestore.rules         # Firestore security rules
 ├── storage.rules           # Storage security rules
+├── firebase.json           # Firebase config
+├── angular.json            # Angular CLI config
+├── package.json            # Node dependencies
 └── AGENTS.md               # AI agent instructions
 ```
 
-## Frontend: src/app/
+## Frontend (`src/app/`)
+```
+src/app/
+├── app.ts / app.html / app.css / app.config.ts / app.routes.ts
+├── core/
+│   ├── constants/          # themes.const.ts
+│   ├── utils/              # platform.util.ts, logger.util.ts, validation.util.ts
+│   ├── models/             # settings.model.ts
+│   ├── handlers/           # global-error.handler.ts
+│   └── services/           # settings.service.ts, column-config.service.ts
+├── models/
+│   ├── profile.model.ts
+│   ├── column-config.model.ts
+│   ├── folder.model.ts
+│   └── navigation.model.ts
+├── services/
+│   ├── profile.service.ts          # Profile state/logic
+│   ├── profile.backend.ts          # Profile persistence (Tauri/Firebase)
+│   ├── profile.backend.interface.ts # Backend abstraction
+│   ├── folder.service.ts           # Folder management
+│   ├── proxy.service.ts            # Proxy management
+│   ├── camoufox.service.ts         # Camoufox browser integration
+│   ├── schedule.service.ts         # Scheduling
+│   ├── activity-log.service.ts     # Activity logging
+│   ├── geoip.service.ts            # GeoIP lookup
+│   └── navigation.service.ts       # App navigation state
+├── mocks/                  # Mock data
+└── views/
+    ├── components/         # Shared components
+    │   ├── main-nav/               # Main navigation sidebar
+    │   ├── command-palette/        # Ctrl+K command palette
+    │   └── column-settings-panel/  # Table column customization
+    └── pages/
+        ├── pages.ts / pages.html   # Layout wrapper
+        ├── home/                   # Main profiles page (/browsers)
+        │   ├── home.ts/.html/.css
+        │   ├── profile-table/      # Profile data table
+        │   ├── profile-toolbar/    # Toolbar actions
+        │   ├── profile-edit-dialog/ # Edit profile dialog
+        │   └── home-sidebar/       # Folder sidebar
+        ├── automation/     # Automation page
+        ├── teams/          # Teams page
+        ├── extensions/     # Extensions page
+        ├── settings/       # Settings page
+        ├── storage-dashboard/   # Storage dashboard
+        └── usage-dashboard/     # Usage dashboard
+```
 
-### Root
-| File | Symbol | Purpose |
-|------|--------|---------|
-| `app.ts` | `App` (class) | Root component, hosts command palette, global keyboard handler |
-| `app.html` | — | Root template |
-| `app.config.ts` | `appConfig`, `MyPreset` | App providers, PrimeNG theme preset |
-| `app.routes.ts` | `routes` | Route definitions with lazy-loaded pages |
-| `main.ts` | — | Bootstrap entry point |
-| `styles.css` | — | Global styles |
-
-### Routes
+## Routes
 | Path | Component | Description |
-|------|-----------|-------------|
-| `/browsers` (default) | `Home` | Main profile management page |
-| `/automation` | `Automation` | Automation workflows (placeholder) |
-| `/teams` | `Teams` | Team collaboration (placeholder) |
-| `/extensions` | `Extensions` | Bulk extension installer |
-| `/settings` | `Settings` | App settings & configuration |
-| `/storage` | `StorageDashboard` | Profile storage analysis |
-| `/usage` | `UsageDashboard` | Usage statistics & activity log |
+|------|-----------|------------|
+| `/` | Redirects to `/browsers` | Default |
+| `/browsers` | Home | Main profile management |
+| `/automation` | Automation | Automation workflows |
+| `/teams` | Teams | Team collaboration |
+| `/extensions` | Extensions | Extension management |
+| `/settings` | Settings | App settings |
+| `/storage` | StorageDashboard | Storage overview |
+| `/usage` | UsageDashboard | Usage analytics |
 
-All routes are children of `Pages` layout component.
-
-### Models (src/app/models/)
-| File | Symbols | Purpose |
-|------|---------|---------|
-| `profile.model.ts` | `Profile`, `ProfileMetadata`, `ProxyRotationConfig`, `WindowPosition`, `AppSettings`, `BrowserType` | Core profile data models |
-| `folder.model.ts` | `Folder`, `ProfileNote`, `ProfileProxy`, `ProfileTag`, `ProfileStatus` | Folder, proxy, tag, note models |
-| `navigation.model.ts` | `NavFeature`, `NAV_FEATURES` | Navigation feature definitions |
-
-### Core (src/app/core/)
-| File | Symbols | Purpose |
-|------|---------|---------|
-| `constants/themes.const.ts` | `APP_THEMES`, `APP_SURFACES` | Theme color definitions |
-| `utils/platform.util.ts` | `isTauriAvailable()`, `isWebDevMode()` | Platform detection helpers |
-| `utils/logger.util.ts` | `debugLog()` | Debug logging utility |
-| `models/settings.model.ts` | `AppSettings`, `AppearanceSettings`, `BrowserSettings`, `GeneralSettings` | Settings model (old/duplicate?) |
-| `services/settings.service.ts` | `SettingsService` | Settings management with 20+ methods for theme, backup, paths |
-
-### Services (src/app/services/)
-| File | Symbol | Key Methods |
-|------|--------|-------------|
-| `profile.service.ts` | `ProfileService` | scanProfiles, createProfile, deleteProfile, launchBrowser, duplicateProfile, backupProfile, etc. |
-| `profile.backend.interface.ts` | `ProfileBackend` (interface) | Contract: scanProfiles, createProfile, launchBrowser, etc. |
-| `profile.backend.ts` | `MockProfileBackend`, `TauriProfileBackend` | Two backend implementations |
-| `folder.service.ts` | `FolderService` | CRUD for custom folders (localStorage) |
-| `proxy.service.ts` | `ProxyService` | CRUD for proxies, health checks, import/export, rotation |
-| `activity-log.service.ts` | `ActivityLogService` | Log profile actions, get recent/today entries |
-| `navigation.service.ts` | `NavigationService` | Manage active nav feature, sidebar state |
-
-### Components (src/app/views/components/)
-| Component | Symbol | Purpose |
-|-----------|--------|---------|
-| `main-nav/` | `MainNav` | Left navigation bar with features, theme toggle |
-| `command-palette/` | `CommandPalette` | Quick search & launch profiles |
-
-### Pages (src/app/views/pages/)
-| Page | Symbol | Key Functionality |
-|------|--------|-------------------|
-| `pages.ts` | `Pages` | Layout wrapper (nav + content) |
-| `home/home.ts` | `Home` | **Main page** — profile table, toolbar, sidebar, dialogs (60+ methods) |
-| `home/profile-toolbar/` | `ProfileToolbar` | Search, filter, sort, view mode, actions |
-| `home/home-sidebar/` | `HomeSidebar` | Folder navigation sidebar |
-| `home/profile-edit-dialog/` | `ProfileEditDialog` | Edit profile metadata (browser, proxy, color, etc.) |
-| `settings/` | `Settings` | App settings (appearance, browser, backup, proxy) |
-| `extensions/` | `Extensions` | Install extensions to multiple profiles |
-| `automation/` | `Automation` | Placeholder |
-| `teams/` | `Teams` | Placeholder |
-| `storage-dashboard/` | `StorageDashboard` | Storage analysis, charts, health checks |
-| `usage-dashboard/` | `UsageDashboard` | Usage stats, activity heatmap, CSV export |
-
-## Backend: src-tauri/
+## Tauri Backend (`src-tauri/src/`)
 ```
-src-tauri/
-├── src/
-│   ├── main.rs         # Tauri app entry
-│   ├── lib.rs          # Tauri plugin setup, command registration
-│   └── commands.rs     # All Rust commands (scan, create, delete, launch, backup, etc.)
-├── Cargo.toml          # Rust dependencies
-├── tauri.conf.json     # Tauri configuration
-├── capabilities/       # Tauri v2 capability permissions
-├── icons/              # App icons
-└── gen/                # Auto-generated Tauri code
+src-tauri/src/
+├── main.rs                 # Entry point
+├── lib.rs                  # Library root
+├── commands.rs             # Tauri IPC commands
+├── camoufox_manager.rs     # Camoufox browser lifecycle
+├── camoufox_downloader.rs  # Download Camoufox binary
+├── camoufox_env.rs         # Camoufox environment setup
+├── cookies.rs              # Cookie management
+├── proxy_relay.rs          # Proxy relay server
+└── fingerprint/            # Browser fingerprint module
 ```
 
-## Cloud Functions: functions/
+## Firebase Functions (`functions/src/`)
 ```
-functions/
-├── src/
-│   ├── index.ts            # Cloud Functions entry
-│   └── genkit-sample.ts    # Genkit AI integration sample
-├── package.json
-└── tsconfig.json
+functions/src/
+└── index.ts                # Cloud Functions entry point
 ```
-
-## Environments
-| File | Purpose |
-|------|---------|
-| `environment.ts` | Active environment (imports dev or prod) |
-| `environment.dev.ts` | Development config (emulators, debug) |
-| `environment.prod.ts` | Production config |

@@ -50,6 +50,7 @@ const PROXY_ROTATION_MODE_OPTIONS = [
 ];
 
 export interface ProfileEditData {
+    profileName: string;
     emoji: string | null;
     notes: string | null;
     group: string | null;
@@ -122,6 +123,7 @@ export class ProfileEditDialog {
     protected readonly browserInfo = BROWSER_INFO;
 
     // Edit state
+    protected readonly editName = signal('');
     protected readonly editEmoji = signal<string | null>(null);
     protected readonly editNotes = signal<string | null>(null);
     protected readonly editGroup = signal<string | null>(null);
@@ -185,6 +187,7 @@ export class ProfileEditDialog {
 
     // Load profile data when dialog opens
     loadProfile(profile: Profile): void {
+        this.editName.set(profile.name);
         this.editEmoji.set(profile.metadata?.emoji || null);
         this.editNotes.set(profile.metadata?.notes || null);
         this.editGroup.set(profile.metadata?.group || null);
@@ -319,6 +322,7 @@ export class ProfileEditDialog {
         }
 
         this.save.emit({
+            profileName: this.editName().trim(),
             emoji: this.editEmoji(),
             notes: this.editNotes(),
             group: this.editGroup(),

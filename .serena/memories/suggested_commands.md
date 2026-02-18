@@ -1,37 +1,33 @@
 # Suggested Commands
 
 ## Development
-```bash
-npm start              # Start Angular dev server at localhost:4200 (browser mode, mock backend)
-npm run build          # Production build to dist/
-npm run watch          # Build with watch mode
-npm run tauri dev      # Start Tauri desktop dev (Angular + Rust backend)
-npm run tauri build    # Build production desktop app
-```
+| Command | Description |
+|---------|------------|
+| `npm run start` | Start Angular dev server (`ng serve`) |
+| `npm run build` | Production build (`ng build`) |
+| `npm run watch` | Dev build with watch mode |
+| `npm run tauri:dev` | Start Tauri desktop app in dev mode |
+| `npm run tauri:build` | Build Tauri desktop app for release |
 
 ## Firebase
-```bash
-firebase emulators:start   # Start Firebase emulators (Firestore, Functions, Auth)
-firebase deploy            # Deploy to Firebase Hosting + Functions
-```
+| Command | Description |
+|---------|------------|
+| `firebase emulators:start` | Start Firebase emulators (Auth, Firestore, Functions, Storage) |
+| `firebase deploy` | Deploy all Firebase services |
+| `firebase deploy --only functions` | Deploy Cloud Functions only |
+| `firebase deploy --only firestore:rules` | Deploy Firestore rules only |
+| `firebase deploy --only storage` | Deploy Storage rules only |
 
-## Git Commands (Semantic Commits)
-```bash
-git add -A && git commit -m "feat: description"
-git add -A && git commit -m "fix: description"
-git add -A && git commit -m "refactor: description"
-git add -A && git commit -m "chore: description"
-git push origin main
-```
+## Git
+| Command | Description |
+|---------|------------|
+| `git add -A && git commit -m "type: message"` | Standard commit (feat/fix/refactor/chore) |
+| `git push` | Push to remote |
+| `git log -n 10 --oneline` | View recent commits |
 
-## Angular CLI
-```bash
-ng generate component path/to/component-name  # Generate component
-ng generate service services/service-name     # Generate service
-ng serve --port 4201                          # Custom port
-```
-
-## Build Validation
-```bash
-npm run build    # MUST run after every code change (per project rules)
-```
+## System Utilities (macOS/Darwin)
+| Command | Description |
+|---------|------------|
+| `grep -r "pattern" src/` | Search in source files |
+| `find src -name "*.ts"` | Find TypeScript files |
+| `ls -la` | List directory contents |

@@ -1,52 +1,43 @@
-# Project Overview
+# Chrome Profile Manager - Project Overview
 
 ## Purpose
-**Chrome Profile Manager** - A cross-platform desktop application for managing Chrome browser profiles.
-Allows users to create, organise, launch, and monitor multiple Chrome browser profiles with distinct settings,
-proxies, extensions, and usage tracking.
+A desktop application for managing and organizing Chrome/Camoufox browser profiles with advanced anti-detect features. Built as a Tauri desktop app with Angular frontend and Firebase backend.
 
 ## Tech Stack
 | Layer | Technology | Version |
-|-------|------------|---------|
-| Framework | Angular | v21.1.0 |
-| Language | TypeScript | v5.9.2 |
-| UI Library | PrimeNG | v21.0.4 |
-| Styling | Tailwind CSS | v4.1.12 |
-| State | Angular Signals | Built-in |
-| Desktop Shell | Tauri (Rust) | v2 |
-| Backend (Cloud) | Firebase | v12.8.0 |
-| AI | Genkit | Latest |
-
-## Firebase Services
-- Authentication
-- Firestore Database
-- Cloud Functions
-- Cloud Storage
-- Hosting
+|-------|-----------|---------|
+| Frontend Framework | Angular | 21.1.1 |
+| Desktop Runtime | Tauri | 2.x (Rust backend) |
+| UI Components | PrimeNG | 21.0.4 |
+| CSS Framework | Tailwind CSS | 4.1.18 |
+| Theme System | PrimeUIX Themes (Aura preset, Fuchsia primary) | 2.0.3 |
+| Icons | PrimeIcons | 7.0.0 |
+| Backend/BaaS | Firebase (Auth, Firestore, Functions, Storage) | 12.8.0 |
+| Language (Frontend) | TypeScript | 5.9.3 |
+| Language (Backend) | Rust (Tauri), TypeScript (Functions) | - |
+| State Management | Angular Signals | - |
+| Change Detection | Zoneless (provideZonelessChangeDetection) | - |
+| Charts | Chart.js | 4.5.1 |
 
 ## Key Features
-- **Profile Management**: Create, rename, duplicate, delete, import/export browser profiles
-- **Multi-Browser Support**: Chrome, Brave, Edge, Arc, Opera, Vivaldi, Chromium
-- **Proxy Management**: Per-profile proxy config, proxy rotation, health checks
-- **Folder Organisation**: Custom folders with color/icon, drag-and-drop profiles
-- **Usage Tracking**: Launch count, session duration, daily/weekly activity heatmap
-- **Storage Dashboard**: Profile size analysis, health checks, cleanup suggestions
-- **Activity Log**: Track all profile actions (create, launch, delete, etc.)
-- **Extensions Manager**: Install extensions across multiple profiles at once
-- **Command Palette**: Quick-launch profiles via keyboard shortcut
-- **Dark Mode**: Full PrimeNG + Tailwind dark mode support
-- **Settings**: Appearance customisation (theme, scale, surface), auto-backup, browser paths
-- **Tauri Desktop**: Native file system access, process management via Rust backend
-- **Mock Backend**: Browser-based dev mode with localStorage mock data
+- Browser profile management (create, edit, organize with folders)
+- Anti-detect browser support via Camoufox integration
+- Proxy management and relay
+- Browser fingerprint management
+- Cookie import/export
+- Extension management
+- Team collaboration
+- Automation workflows
+- Schedule management
+- Activity logging
+- Storage & usage dashboards
+- Command palette (Ctrl+K style)
+- Dark mode support (.dark class toggle)
 
-## Desktop Architecture
-The app runs as a Tauri v2 desktop application:
-- **Frontend**: Angular SPA served inside a Tauri webview
-- **Backend**: Rust commands in `src-tauri/src/commands.rs` provide native file system operations
-- **Fallback**: `MockProfileBackend` allows development in browser without Tauri
-- **Backend Interface**: `ProfileBackend` interface defines the contract between frontend and native layer
-
-## Running Modes
-- `ng serve` — browser dev mode (uses MockProfileBackend)
-- `tauri dev` — desktop dev mode (uses TauriProfileBackend with real FS)
-- `tauri build` — production desktop build
+## Architecture
+- **Zoneless Angular**: No Zone.js, uses `provideZonelessChangeDetection()`
+- **Standalone Components**: All components are standalone (Angular 21 default)
+- **Lazy Loading**: All page routes use `loadComponent()` 
+- **Firebase Emulator Support**: Full emulator support for Auth, Firestore, Functions, Storage
+- **PrimeNG Dark Mode**: Uses `.dark` CSS class selector (not system preference)
+- **Global Error Handler**: Custom `GlobalErrorHandler` class

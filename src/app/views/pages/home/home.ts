@@ -1039,8 +1039,15 @@ export class Home implements OnInit, OnDestroy {
         const profile = this.selectedProfile();
         if (!profile) return;
         try {
+            // Handle rename if name changed
+            let profilePath = profile.path;
+            const newName = data.profileName;
+            if (newName && newName !== profile.name) {
+                profilePath = await this.profileService.renameProfile(profile.path, newName, this.profilesPath());
+            }
+
             await this.profileService.saveProfileMetadata(
-                profile.path,
+                profilePath,
                 {
                     emoji: data.emoji,
                     notes: data.notes,
@@ -1068,7 +1075,9 @@ export class Home implements OnInit, OnDestroy {
             this.messageService.add({
                 severity: 'success',
                 summary: 'Saved',
-                detail: 'Profile updated',
+                detail: newName && newName !== profile.name
+                    ? `Profile renamed to "${newName}" and updated`
+                    : 'Profile updated',
             });
         } catch (e) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });

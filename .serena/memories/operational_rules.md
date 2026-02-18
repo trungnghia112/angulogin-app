@@ -1,36 +1,17 @@
 # Operational Rules
 
-## 1. Memory Trigger
-Khi prompt bắt đầu bằng "Hãy ghi nhớ:", trích xuất thông tin và cập nhật ngay lập tức vào:
-- Serena memories
-- `AGENTS.md`
-- `.gemini/GEMINI.md`
-
-## 2. Mandatory Build
-LUÔN LUÔN chạy `npm run build` để kiểm tra lỗi sau các bước viết code.
-- Fix tất cả `[WARNING]` logs
-
-## 3. Commit Policy
-Commit sau mỗi bước hoàn thành:
-- **Ngôn ngữ**: Tiếng Anh
-- **Format**: Semantic Commit (`feat`, `fix`, `refactor`, `chore`)
-- **Command**: `git add -A && git commit -m "type: description"`
-
-## 4. Communication
-Phản hồi bằng ngôn ngữ của người dùng:
-- Tiếng Việt <-> Tiếng Việt
-- English <-> English
-
-## 5. Execution Flow
-- Thực hiện các bước **tuần tự**
-- **KHÔNG** dừng lại để hỏi "tiếp tục?"
-- **Tự động thử lại** khi gặp lỗi
-
-## 6. Smart Versioning
-Kiểm tra `package.json` và áp dụng cú pháp đúng version:
-
-| Package | Version | Syntax |
-|---------|---------|--------|
-| Angular | v21+ | `@if`, `@for`, `@switch`, standalone default |
-| Tailwind | v4+ | CSS variables, `@theme` directive |
-| TypeScript | v5.9+ | Strict mode |
+1. **Communication**: Mirror user's language (Vietnamese <-> Vietnamese)
+2. **Execution Flow**: Sequential steps. NO asking "continue?". Auto-retry on errors
+3. **Mandatory Build**: ALWAYS run `npm run build` after coding steps
+4. **Commit Policy**: Commit after every step. English messages. Semantic format
+5. **Memory Trigger**: If prompt starts with "Hay ghi nho:", update memories + AGENTS.md + .gemini/GEMINI.md
+6. **Smart Versioning**: Check package.json versions. Apply syntax for detected versions
+7. **Global UI**: `<p-toast>` and `<p-confirmDialog>` in app.html only. Use `key: 'confirmDialog'`
+8. **Seed Data Sync**: Update `tools/seed.ts` for new permissions
+9. **API Docs Sync**: Update `http/api.http` and `http/postman_collection.json` for API changes
+10. **UI Consistency**: Clone existing Master Template for new features
+11. **Performance**:
+    - setInterval/setTimeout >= 30s for background tasks, cleanup in ngOnDestroy
+    - Pause intervals when tab hidden (visibility API)
+    - No new objects/arrays if data unchanged
+    - Use signal/computed instead of getter methods in templates

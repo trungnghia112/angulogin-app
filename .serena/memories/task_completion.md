@@ -1,24 +1,11 @@
 # Task Completion Checklist
 
-## After Every Code Change
-1. **Build Check**: Run `npm run build` - Fix ALL warnings
-2. **Git Commit**: `git add -A && git commit -m "type: description"`
-   - Types: `feat`, `fix`, `refactor`, `chore`
-   - Language: English
+When a coding task is complete, perform these steps in order:
 
-## When Adding New Features
-- [ ] Clone existing Master Template layout
-- [ ] Support dark mode with `dark:` classes
-- [ ] Add `id` attributes to all interactive elements
-- [ ] Verify build has no warnings
-
-## When Modifying API
-- [ ] Update `http/api.http`
-- [ ] Update `http/postman_collection.json`
-
-## When Adding Permissions
-- [ ] Update `tools/seed.ts`
-
-## Testing Protocol
-- **Localhost (4200)**: UI/Layout only
-- **Chrome Extension**: End-to-end flows (user must verify)
+1. **Build**: Run `npm run build` and ensure zero errors/warnings
+2. **Fix Warnings**: MUST fix all `[WARNING]` logs during build
+3. **Commit**: `git add -A && git commit -m "type: description"` 
+   - Use semantic format: `feat`, `fix`, `refactor`, `chore`
+   - English commit messages
+4. **No unit tests** unless explicitly requested
+5. **No markdown docs** unless explicitly requested

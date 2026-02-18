@@ -1,6 +1,14 @@
 <p-dialog id="home-edit-dialog" header="Edit Profile" [visible]="visible()" (visibleChange)="onVisibleChange($event)"
     [modal]="true" [style]="{ width: 'min(500px, 95vw)' }" [draggable]="false" [resizable]="false">
     <div id="home-edit-dialog-content" class="py-2 space-y-5">
+        <!-- Profile Name -->
+        <div id="home-edit-dialog-name-section">
+            <label for="home-edit-dialog-name-input" class="block text-xs font-medium text-color mb-2">Profile
+                Name</label>
+            <input id="home-edit-dialog-name-input" pInputText type="text" [ngModel]="editName()"
+                (ngModelChange)="editName.set($event)" class="w-full" />
+        </div>
+
         <!-- Icon -->
         <div id="home-edit-dialog-icon-section">
             <label class="block text-xs font-medium text-color mb-2">Icon</label>

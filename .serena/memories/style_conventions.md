@@ -1,32 +1,38 @@
-# Code Style & Conventions
+# Style Guide & Conventions
 
-## Component Naming (STRICT)
-- **Files**: `[name].ts`, `[name].html`, `[name].css` - NO `.component.ts`
-- **Class**: `export class [Name]` - NO `Component` suffix
-- **Folder**: Each component in its own subfolder at `src/app/views/pages/[feature]/[component-name]/`
+## Component Naming
+- Files: `[name].ts`, `[name].html`, `[name].css` (NO `.component.ts`)
+- Classes: `export class [Name]` (NO `Component` suffix)
+- Each component in its own subfolder: `src/app/views/pages/[feature]/[component-name]/`
+- Use `templateUrl` and `styleUrl` (separate files, NEVER inline)
 
-## Component Requirements
-- MANDATORY: Use `templateUrl` and `styleUrl` (separate files)
-- FORBIDDEN: Inline `template:` or `styles: []`
-- Set `changeDetection: ChangeDetectionStrategy.OnPush`
-- Use `input()` and `output()` functions, not decorators
+## Angular Patterns
+- Standalone components (default in Angular 21, do NOT set `standalone: true`)
+- `changeDetection: ChangeDetectionStrategy.OnPush` on all components
+- Page components MUST have `host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' }`
+- Use `input()` / `output()` functions instead of decorators
+- Use `inject()` instead of constructor injection
 - Use `computed()` for derived state
+- Native control flow: `@if`, `@for`, `@switch`
+- Reactive forms preferred over template-driven
 
-## Templates
-- Use native control flow: `@if`, `@for`, `@switch`
-- NO: `*ngIf`, `*ngFor`, `*ngSwitch`
-- Use `class` bindings, NOT `ngClass`
-- Use `style` bindings, NOT `ngStyle`
-
-## Services
-- Use `providedIn: 'root'` for singletons
-- Use `inject()` function, not constructor injection
+## State Management
+- Angular Signals for local state
+- `computed()` for derived state
+- NO `mutate()` on signals; use `update()` or `set()`
+- Check `hasChanges` before `.set()` / `.update()`
 
 ## Styling
-- **Tailwind CSS ONLY** - no custom CSS for layout
-- **Dark Mode**: All components MUST support `dark:` classes
-- **Icons**: Use PrimeIcons (`<i class="pi pi-home"></i>`)
+- **Tailwind CSS ONLY** (no custom CSS for layout/styling)
+- PrimeIcons for icons: `<i class="pi pi-home"></i>`
+- Dark mode: ALL components MUST support `dark:` prefix
+- PrimeNG: use `class` NOT `styleClass`
+- Surface colors NOT inverted in dark mode; always add `dark:` variants
 
-## HTML IDs
-- ALWAYS add `id` attributes
-- Format: `[feature]-[section]-[index]`
+## Code Quality
+- Strict TypeScript checking; avoid `any`
+- NO emojis in code/comments
+- HTML IDs: `[feature]-[section]-[index]`
+- `async/await` + `firstValueFrom` + `try/catch/finally` for user actions
+- Observables MUST use `takeUntilDestroyed()` or explicit unsubscribe
+- Firestore: never pass `undefined`, use `null` instead
