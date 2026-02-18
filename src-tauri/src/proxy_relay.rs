@@ -2,10 +2,87 @@ use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::thread;
 use std::time::Duration;
+
+// ---------------------------------------------------------------------------
+// Traffic Stats: per-profile byte counters
+// ---------------------------------------------------------------------------
+
+pub struct TrafficStats {
+    pub bytes_sent: AtomicU64,
+    pub bytes_received: AtomicU64,
+}
+
+impl TrafficStats {
+    fn new() -> Self {
+        Self {
+            bytes_sent: AtomicU64::new(0),
+            bytes_received: AtomicU64::new(0),
+        }
+    }
+}
+
+fn traffic_stats() -> &'static Mutex<HashMap<String, Arc<TrafficStats>>> {
+    static INSTANCE: OnceLock<Mutex<HashMap<String, Arc<TrafficStats>>>> = OnceLock::new();
+    INSTANCE.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+fn get_or_create_stats(profile_id: &str) -> Arc<TrafficStats> {
+    let mut map = traffic_stats().lock().unwrap();
+    map.entry(profile_id.to_string())
+        .or_insert_with(|| Arc::new(TrafficStats::new()))
+        .clone()
+}
+
+/// Get traffic stats for a profile (bytes_sent, bytes_received).
+pub fn get_profile_traffic(profile_id: &str) -> (u64, u64) {
+    let map = traffic_stats().lock().unwrap();
+    if let Some(stats) = map.get(profile_id) {
+        (
+            stats.bytes_sent.load(Ordering::Relaxed),
+            stats.bytes_received.load(Ordering::Relaxed),
+        )
+    } else {
+        (0, 0)
+    }
+}
+
+/// Get traffic stats for all profiles.
+pub fn get_all_traffic() -> HashMap<String, (u64, u64)> {
+    let map = traffic_stats().lock().unwrap();
+    map.iter()
+        .map(|(k, v)| {
+            (
+                k.clone(),
+                (
+                    v.bytes_sent.load(Ordering::Relaxed),
+                    v.bytes_received.load(Ordering::Relaxed),
+                ),
+            )
+        })
+        .collect()
+}
+
+/// Reset traffic stats for a profile.
+pub fn reset_profile_traffic(profile_id: &str) {
+    let map = traffic_stats().lock().unwrap();
+    if let Some(stats) = map.get(profile_id) {
+        stats.bytes_sent.store(0, Ordering::Relaxed);
+        stats.bytes_received.store(0, Ordering::Relaxed);
+    }
+}
+
+/// Reset all traffic stats.
+pub fn reset_all_traffic() {
+    let map = traffic_stats().lock().unwrap();
+    for stats in map.values() {
+        stats.bytes_sent.store(0, Ordering::Relaxed);
+        stats.bytes_received.store(0, Ordering::Relaxed);
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Relay Manager: tracks active relays per profile for graceful cleanup
@@ -61,6 +138,7 @@ fn register_relay(profile_id: &str, port: u16, shutdown: Arc<AtomicBool>) {
 struct RelayConfig {
     upstream_addr: String,
     auth_header: String,
+    stats: Arc<TrafficStats>,
 }
 
 /// Start a local HTTP proxy relay that forwards connections to an upstream proxy with authentication.
@@ -89,9 +167,12 @@ pub fn start_proxy_relay(
     eprintln!("[ProxyRelay] Starting HTTP relay on 127.0.0.1:{} -> {} (user: {})",
         local_port, upstream, username);
 
+    let stats = get_or_create_stats(profile_id);
+
     let config = Arc::new(RelayConfig {
         upstream_addr: upstream,
         auth_header,
+        stats,
     });
 
     let shutdown = Arc::new(AtomicBool::new(false));
@@ -237,7 +318,7 @@ fn handle_http_client(client: TcpStream, config: &RelayConfig) -> Result<(), Str
             // Bidirectional pipe: client <-> upstream
             let upstream_write = upstream;
             let client_read = reader.into_inner();
-            pipe_bidirectional(client_read, writer, upstream_reader.into_inner(), upstream_write);
+            pipe_bidirectional(client_read, writer, upstream_reader.into_inner(), upstream_write, Some(Arc::clone(&config.stats)));
         } else {
             eprintln!("[ProxyRelay] CONNECT failed: {}", status_line.trim());
         }
@@ -301,6 +382,7 @@ struct Socks5Config {
     upstream_addr: String,
     username: String,
     password: String,
+    stats: Arc<TrafficStats>,
 }
 
 /// Start a local HTTP proxy relay that forwards connections through a SOCKS5 upstream with auth.
@@ -329,10 +411,13 @@ pub fn start_socks5_relay(
     eprintln!("[ProxyRelay] Starting SOCKS5 relay on 127.0.0.1:{} -> {} (user: {})",
         local_port, upstream, username);
 
+    let stats = get_or_create_stats(profile_id);
+
     let config = Arc::new(Socks5Config {
         upstream_addr: upstream,
         username: username.to_string(),
         password: password.to_string(),
+        stats,
     });
 
     let shutdown = Arc::new(AtomicBool::new(false));
@@ -552,7 +637,7 @@ fn handle_socks5_client(client: TcpStream, config: &Socks5Config) -> Result<(), 
         let client_read = reader.into_inner();
         let upstream_read = upstream.try_clone()
             .map_err(|e| format!("Upstream clone for pipe: {}", e))?;
-        pipe_bidirectional(client_read, writer, upstream_read, upstream);
+        pipe_bidirectional(client_read, writer, upstream_read, upstream, Some(Arc::clone(&config.stats)));
     } else {
         // HTTP: Forward the original request through the tunnel
         // Reconstruct the HTTP request with relative path (strip scheme+host)
@@ -691,8 +776,10 @@ fn pipe_bidirectional(
     mut client_write: TcpStream,
     mut upstream_read: TcpStream,
     upstream_write: TcpStream,
+    stats: Option<Arc<TrafficStats>>,
 ) {
-    // Client -> Upstream (separate thread)
+    let stats_c2u = stats.clone();
+    // Client -> Upstream (separate thread) = bytes_sent
     let mut c2u_read = client_read.try_clone().unwrap_or_else(|_| client_read);
     let mut c2u_write = upstream_write;
     let t1 = thread::spawn(move || {
@@ -704,6 +791,9 @@ fn pipe_bidirectional(
                     if c2u_write.write_all(&buf[..n]).is_err() {
                         break;
                     }
+                    if let Some(ref s) = stats_c2u {
+                        s.bytes_sent.fetch_add(n as u64, Ordering::Relaxed);
+                    }
                 }
                 Err(_) => break,
             }
@@ -711,7 +801,7 @@ fn pipe_bidirectional(
         c2u_write.shutdown(std::net::Shutdown::Write).ok();
     });
 
-    // Upstream -> Client (current thread)
+    // Upstream -> Client (current thread) = bytes_received
     let mut buf = [0u8; 8192];
     loop {
         match upstream_read.read(&mut buf) {
@@ -719,6 +809,9 @@ fn pipe_bidirectional(
             Ok(n) => {
                 if client_write.write_all(&buf[..n]).is_err() {
                     break;
+                }
+                if let Some(ref s) = stats {
+                    s.bytes_received.fetch_add(n as u64, Ordering::Relaxed);
                 }
             }
             Err(_) => break,

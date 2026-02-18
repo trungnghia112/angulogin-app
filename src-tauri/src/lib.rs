@@ -61,7 +61,10 @@ pub fn run() {
             // Profile Templates
             commands::copy_profile_to,
             // Backup encryption
-            commands::check_backup_encrypted
+            commands::check_backup_encrypted,
+            // Traffic stats
+            commands::get_traffic_stats,
+            commands::reset_traffic_stats
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

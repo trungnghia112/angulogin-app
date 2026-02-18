@@ -1030,6 +1030,46 @@ pub fn check_backup_encrypted(backup_path: String) -> Result<bool, String> {
     Ok(data.len() >= 8 && &data[..8] == ENCRYPTED_MAGIC)
 }
 
+// Feature 13.3: Traffic Stats
+#[derive(Serialize)]
+pub struct ProfileTrafficStats {
+    pub profile_id: String,
+    pub bytes_sent: u64,
+    pub bytes_received: u64,
+}
+
+#[tauri::command]
+pub fn get_traffic_stats(profile_id: Option<String>) -> Vec<ProfileTrafficStats> {
+    match profile_id {
+        Some(pid) => {
+            let (sent, recv) = crate::proxy_relay::get_profile_traffic(&pid);
+            vec![ProfileTrafficStats {
+                profile_id: pid,
+                bytes_sent: sent,
+                bytes_received: recv,
+            }]
+        }
+        None => {
+            crate::proxy_relay::get_all_traffic()
+                .into_iter()
+                .map(|(pid, (sent, recv))| ProfileTrafficStats {
+                    profile_id: pid,
+                    bytes_sent: sent,
+                    bytes_received: recv,
+                })
+                .collect()
+        }
+    }
+}
+
+#[tauri::command]
+pub fn reset_traffic_stats(profile_id: Option<String>) {
+    match profile_id {
+        Some(pid) => crate::proxy_relay::reset_profile_traffic(&pid),
+        None => crate::proxy_relay::reset_all_traffic(),
+    }
+}
+
 #[derive(Serialize)]
 pub struct RestoreResult {
     pub success: bool,
