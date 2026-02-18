@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.1.2",
-        "updated_at": "2026-02-17T18:39:00+07:00"
+        "updated_at": "2026-02-18T11:07:00+07:00"
     },
     "project": {
         "name": "Chrome Profile Manager",
@@ -275,6 +275,43 @@
             "name": "Table UX Columns (11.4+11.5)",
             "status": "implemented",
             "description": "Added Last Changed (relative date) and Running Time (formatted duration) columns to profile table view."
+        },
+        {
+            "name": "Cookie Import/Export (Sprint 1)",
+            "status": "implemented",
+            "description": "Export/import cookies from Chrome profile SQLite database with keychain decryption",
+            "includes": [
+                "Rust: AES-128-CBC decryption via Chrome keychain key",
+                "Export cookies to JSON (domain, name, value, path, expiry, sameSite)",
+                "Import cookies from JSON with upsert (INSERT OR REPLACE)",
+                "SameSite round-trip mapping (lax/strict/none/unspecified)",
+                "10MB JSON size limit, async Tauri commands",
+                "Per-profile loading spinner, file size check before read"
+            ]
+        },
+        {
+            "name": "Bulk Create Profiles (Sprint 1)",
+            "status": "implemented",
+            "description": "Create multiple profiles at once with naming pattern",
+            "includes": [
+                "Prefix + count + start number inputs",
+                "Zero-padded naming (Profile_001, Profile_002...)",
+                "Live preview of generated names",
+                "Skip existing names, max 500",
+                "Toast with created/skipped/errors count"
+            ]
+        },
+        {
+            "name": "Profile Templates (Sprint 1)",
+            "status": "implemented",
+            "description": "Save profile as template, create new profiles from templates",
+            "includes": [
+                "Templates stored in _templates/ subdirectory",
+                "Rust copy_profile_to for cross-directory copies",
+                "Save as Template button on each profile row",
+                "Create from Template dialog with template list",
+                "Delete templates from list"
+            ]
         }
     ],
     "api_endpoints": [
@@ -325,6 +362,18 @@
         {
             "command": "check_profile_health",
             "description": "Kiểm tra integrity của profile: Preferences file, JSON validity, required folders"
+        },
+        {
+            "command": "export_profile_cookies",
+            "description": "Export cookies from Chrome Cookies SQLite DB with keychain decryption (async)"
+        },
+        {
+            "command": "import_profile_cookies",
+            "description": "Import cookies JSON into Chrome Cookies SQLite DB with upsert (async, 10MB limit)"
+        },
+        {
+            "command": "copy_profile_to",
+            "description": "Copy profile directory to specific destination path (used for templates)"
         }
     ],
     "knowledge_items": {
@@ -430,6 +479,18 @@
             {
                 "issue": "DMG build fails with 'Resource busy' when previous DMG still mounted",
                 "solution": "Run 'hdiutil detach /Volumes/Angulogin' before npm run tauri build"
+            },
+            {
+                "issue": "Chrome cookie encryption uses domain-specific key from Keychain",
+                "solution": "Use 'Chrome Safe Storage' key from macOS Keychain, decrypt with PBKDF2 + AES-128-CBC, strip PKCS7 padding"
+            },
+            {
+                "issue": "SameSite cookie value round-trip fails without 'unspecified' mapping",
+                "solution": "Map sameSite: lax→1, strict→2, none→3, unspecified→0 (default). Without 'unspecified' case, import silently corrupts cookies"
+            },
+            {
+                "issue": "Blocking Tauri commands freeze UI during heavy I/O",
+                "solution": "Make commands async: pub async fn ... -> Result<T, String>. Tauri runs async commands on thread pool"
             }
         ],
         "conventions": [
@@ -468,8 +529,6 @@
             "gaps": [
                 "Fingerprint spoofing",
                 "Automation API",
-                "Bulk create",
-                "Cookie import/export",
                 "Team collaboration"
             ],
             "report_path": "competitor_analysis.md (in Antigravity brain artifacts)"
