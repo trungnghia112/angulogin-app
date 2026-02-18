@@ -718,7 +718,7 @@
                         class="w-8 h-8 rounded-md border flex items-center justify-center transition-all cursor-pointer"
                         [class]="newFolderIcon() === icon
                             ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/30'
-                            : 'border-surface-200 dark:border-surface-700 text-muted-color hover:border-primary/50'"
+                            : 'border-surface-100 dark:border-surface-800 text-muted-color hover:border-primary/50'"
                         (click)="newFolderIcon.set(icon)" [pTooltip]="icon">
                         <i [class]="'pi ' + icon + ' text-sm'"></i>
                     </button>
@@ -739,7 +739,7 @@
                     }
                     <!-- No color option -->
                     <button type="button"
-                        class="w-7 h-7 rounded-full border-2 border-surface-300 dark:border-surface-600 transition-all cursor-pointer flex items-center justify-center"
+                        class="w-7 h-7 rounded-full border-2 border-surface-100 dark:border-surface-800 transition-all cursor-pointer flex items-center justify-center"
                         [class]="!newFolderColor() ? 'ring-2 ring-offset-2 ring-primary' : 'hover:scale-110'"
                         (click)="newFolderColor.set('')" pTooltip="No color">
                         <i class="pi pi-ban text-xs text-muted-color"></i>
@@ -767,7 +767,7 @@
                 @for (folder of allFolders(); track folder.id) {
                 @if (!folderService.isSystemFolder(folder.id)) {
                 <div
-                    class="flex items-center justify-between p-3 border border-surface-200 dark:border-surface-700 rounded-lg bg-surface-50 dark:bg-surface-900">
+                    class="flex items-center justify-between p-3 border border-surface-100 dark:border-surface-800 rounded-lg bg-surface-50 dark:bg-surface-900">
                     @if (editingFolderId() === folder.id) {
                     <div class="flex items-center gap-2 flex-1 mr-2">
                         <input pInputText [(ngModel)]="editFolderName" class="w-full p-inputtext-sm"
@@ -786,7 +786,7 @@
                             </button>
                             }
                         </div>
-                        <div class="border-l border-surface-200 dark:border-surface-700 h-5 mx-1"></div>
+                        <div class="border-l border-surface-100 dark:border-surface-800 h-5 mx-1"></div>
                         <div class="flex flex-wrap gap-1">
                             @for (color of folderColors; track color) {
                             <button type="button" class="w-5 h-5 rounded-full transition-all cursor-pointer"
@@ -795,7 +795,7 @@
                             </button>
                             }
                             <button type="button"
-                                class="w-5 h-5 rounded-full border border-surface-300 dark:border-surface-600 flex items-center justify-center cursor-pointer"
+                                class="w-5 h-5 rounded-full border border-surface-100 dark:border-surface-800 flex items-center justify-center cursor-pointer"
                                 [class]="!editFolderColor() ? 'ring-2 ring-offset-1 ring-primary' : ''"
                                 (click)="editFolderColor.set('')">
                                 <i class="pi pi-ban text-[8px] text-muted-color"></i>
@@ -850,7 +850,7 @@
                     <button [id]="'home-mass-tag-chip-' + tag" (click)="toggleMassTag(tag)"
                         [class]="massTagSelection().includes(tag) 
                             ? 'px-3 py-1.5 rounded-lg text-sm font-medium bg-primary text-white border border-primary transition-all duration-200 shadow-sm'
-                            : 'px-3 py-1.5 rounded-lg text-sm font-medium bg-surface-100 dark:bg-surface-800 text-color border border-surface-200 dark:border-surface-700 hover:border-primary/50 transition-all duration-200'">
+                            : 'px-3 py-1.5 rounded-lg text-sm font-medium bg-surface-100 dark:bg-surface-800 text-color border border-surface-100 dark:border-surface-800 hover:border-primary/50 transition-all duration-200'">
                         <i class="pi pi-tag text-xs mr-1.5"></i>{{ tag }}
                     </button>
                     }
@@ -909,13 +909,13 @@
                 <button id="home-mass-proxy-mode-saved" (click)="massProxyMode.set('saved')"
                     [class]="massProxyMode() === 'saved'
                         ? 'flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-primary text-white border border-primary transition-all'
-                        : 'flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-surface-100 dark:bg-surface-800 text-color border border-surface-200 dark:border-surface-700 hover:border-primary/50 transition-all'">
+                        : 'flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-surface-100 dark:bg-surface-800 text-color border border-surface-100 dark:border-surface-800 hover:border-primary/50 transition-all'">
                     <i class="pi pi-list text-xs mr-1.5"></i>Use Saved Proxy
                 </button>
                 <button id="home-mass-proxy-mode-none" (click)="massProxyMode.set('none')"
                     [class]="massProxyMode() === 'none'
                         ? 'flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-red-500 text-white border border-red-500 transition-all'
-                        : 'flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-surface-100 dark:bg-surface-800 text-color border border-surface-200 dark:border-surface-700 hover:border-red-500/50 transition-all'">
+                        : 'flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-surface-100 dark:bg-surface-800 text-color border border-surface-100 dark:border-surface-800 hover:border-red-500/50 transition-all'">
                     <i class="pi pi-ban text-xs mr-1.5"></i>Clear Proxy
                 </button>
             </div>
@@ -1029,7 +1029,7 @@
                     <button [id]="'home-schedule-rec-' + opt.value"
                         class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors" [class]="scheduleRecurrence() === opt.value
                             ? 'bg-primary/10 text-primary border-primary/30'
-                            : 'border-surface-200 dark:border-surface-700 text-muted-color hover:text-color'"
+                            : 'border-surface-100 dark:border-surface-800 text-muted-color hover:text-color'"
                         (click)="scheduleRecurrence.set(opt.value)">
                         {{ opt.label }}
                     </button>
@@ -1062,7 +1062,7 @@
                     <button [id]="'home-schedule-day-' + day.index"
                         class="w-9 h-9 rounded-full text-xs font-medium border transition-colors" [class]="scheduleCustomDays().includes(day.index)
                             ? 'bg-primary text-white border-primary'
-                            : 'border-surface-200 dark:border-surface-700 text-muted-color'"
+                            : 'border-surface-100 dark:border-surface-800 text-muted-color'"
                         (click)="toggleScheduleDay(day.index)">
                         {{ day.short }}
                     </button>
@@ -1073,7 +1073,7 @@
 
             <!-- Existing schedules for this profile -->
             @if (profileSchedules().length > 0) {
-            <div class="border-t border-surface-200 dark:border-surface-700 pt-3">
+            <div class="border-t border-surface-100 dark:border-surface-800 pt-3">
                 <label class="block text-xs font-medium text-color mb-2">Existing Schedules</label>
                 @for (sch of profileSchedules(); track sch.id) {
                 <div
@@ -1223,7 +1223,7 @@
             <textarea id="home-cookie-import-textarea" rows="12" [ngModel]="cookieImportJson()"
                 (ngModelChange)="cookieImportJson.set($event)"
                 placeholder='[{"name":"session","value":"abc123","domain":".example.com","path":"/","expires":1700000000,"httpOnly":true,"secure":true}]'
-                class="w-full p-3 rounded-lg border border-surface-300 dark:border-surface-600 bg-surface-0 dark:bg-surface-800 text-surface-900 dark:text-surface-0 font-mono text-xs resize-y outline-none focus:border-primary">
+                class="w-full p-3 rounded-lg border border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-800 text-surface-900 dark:text-surface-0 font-mono text-xs resize-y outline-none focus:border-primary">
             </textarea>
         </div>
         <ng-template #footer>

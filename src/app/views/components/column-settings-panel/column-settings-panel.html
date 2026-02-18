@@ -1,26 +1,25 @@
 <!-- Column Settings Panel - Slide-in sidebar -->
 @if (visible()) {
 <!-- Backdrop -->
-<div id="column-settings-backdrop" class="fixed inset-0 bg-black/30 z-40 transition-opacity"
-    (click)="close()"></div>
+<div id="column-settings-backdrop" class="fixed inset-0 bg-black/30 z-40 transition-opacity" (click)="close()"></div>
 
 <!-- Panel -->
 <div id="column-settings-panel"
-    class="fixed top-0 right-0 h-full w-80 bg-surface-0 dark:bg-surface-900 border-l border-surface-200 dark:border-surface-700 shadow-2xl z-50 flex flex-col animate-slide-in-right">
+    class="fixed top-0 right-0 h-full w-80 bg-surface-0 dark:bg-surface-900 border-l border-surface-100 dark:border-surface-800 shadow-2xl z-50 flex flex-col animate-slide-in-right">
 
     <!-- Header -->
     <div id="column-settings-header"
-        class="flex items-center justify-between px-5 py-4 border-b border-surface-200 dark:border-surface-700 shrink-0">
+        class="flex items-center justify-between px-5 py-4 border-b border-surface-100 dark:border-surface-800 shrink-0">
         <div class="flex items-center gap-2">
             <i class="pi pi-cog text-primary"></i>
             <h3 class="text-base font-semibold text-color">Table Columns</h3>
         </div>
-        <p-button id="column-settings-close-btn" icon="pi pi-times" [rounded]="true" [text]="true"
-            severity="secondary" (click)="close()" pTooltip="Close" />
+        <p-button id="column-settings-close-btn" icon="pi pi-times" [rounded]="true" [text]="true" severity="secondary"
+            (click)="close()" pTooltip="Close" />
     </div>
 
     <!-- Description -->
-    <div class="px-5 py-3 text-xs text-muted-color border-b border-surface-200 dark:border-surface-700 shrink-0">
+    <div class="px-5 py-3 text-xs text-muted-color border-b border-surface-100 dark:border-surface-800 shrink-0">
         Toggle columns on/off. Drag to reorder.
     </div>
 
@@ -32,15 +31,15 @@
             class="flex items-center gap-3 px-3 py-2.5 my-0.5 rounded-lg cursor-grab hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors group"
             cdkDrag>
             <!-- Drag Handle -->
-            <i class="pi pi-bars text-xs text-muted-color opacity-0 group-hover:opacity-100 transition-opacity cursor-grab"></i>
+            <i
+                class="pi pi-bars text-xs text-muted-color opacity-0 group-hover:opacity-100 transition-opacity cursor-grab"></i>
 
             <!-- Column Icon -->
             <i [class]="getColumnIcon(col.id) + ' text-sm'" [class.text-primary]="col.visible"
                 [class.text-muted-color]="!col.visible"></i>
 
             <!-- Column Label -->
-            <span class="flex-1 text-sm" [class.text-color]="col.visible"
-                [class.text-muted-color]="!col.visible">
+            <span class="flex-1 text-sm" [class.text-color]="col.visible" [class.text-muted-color]="!col.visible">
                 {{ col.label }}
             </span>
 
@@ -53,17 +52,17 @@
             </button>
 
             <!-- Drag Placeholder -->
-            <div *cdkDragPlaceholder
-                class="h-10 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5"></div>
+            <div *cdkDragPlaceholder class="h-10 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5">
+            </div>
         </div>
         }
     </div>
 
     <!-- Footer -->
     <div id="column-settings-footer"
-        class="flex items-center justify-between px-5 py-3 border-t border-surface-200 dark:border-surface-700 shrink-0">
-        <p-button id="column-settings-reset-btn" label="Reset" icon="pi pi-refresh" [text]="true"
-            severity="secondary" size="small" (click)="resetDefaults()" pTooltip="Reset to default columns" />
+        class="flex items-center justify-between px-5 py-3 border-t border-surface-100 dark:border-surface-800 shrink-0">
+        <p-button id="column-settings-reset-btn" label="Reset" icon="pi pi-refresh" [text]="true" severity="secondary"
+            size="small" (click)="resetDefaults()" pTooltip="Reset to default columns" />
         <p-button id="column-settings-done-btn" label="Done" size="small" (click)="close()" />
     </div>
 </div>
