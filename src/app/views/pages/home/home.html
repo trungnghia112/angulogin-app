@@ -600,21 +600,6 @@
         </ng-template>
     </p-dialog>
 
-    <!-- Rename Profile Dialog -->
-    <p-dialog id="home-rename-dialog" header="Rename Profile" [(visible)]="showRenameDialog" [modal]="true"
-        [style]="{ width: 'min(400px, 95vw)' }" [draggable]="false" [resizable]="false">
-        <div id="home-rename-dialog-content">
-            <label for="home-rename-dialog-name-input">New Name</label>
-            <input pInputText id="home-rename-dialog-name-input" type="text" [ngModel]="renameProfileName()"
-                (ngModelChange)="renameProfileName.set($event)" class="w-full" />
-        </div>
-        <ng-template #footer>
-            <p-button id="home-rename-dialog-cancel-btn" label="Cancel" severity="secondary"
-                (click)="showRenameDialog.set(false)" />
-            <p-button id="home-rename-dialog-submit-btn" label="Rename" (click)="renameProfile()" />
-        </ng-template>
-    </p-dialog>
-
     <!-- Edit Profile Dialog -->
     <app-profile-edit-dialog [visible]="showEditDialog()" [profile]="selectedProfile()" [allProfiles]="profiles()"
         [availableBrowsers]="availableBrowsers()" [folders]="allFolders()" [proxyGroups]="proxyGroups()"

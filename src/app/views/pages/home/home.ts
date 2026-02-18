@@ -315,10 +315,8 @@ export class Home implements OnInit, OnDestroy {
 
     // Dialog states
     protected readonly showCreateDialog = signal(false);
-    protected readonly showRenameDialog = signal(false);
     protected readonly showEditDialog = signal(false);
     protected readonly newProfileName = signal('');
-    protected readonly renameProfileName = signal('');
     protected readonly selectedProfile = signal<Profile | null>(null);
 
     // Duplicate dialog
@@ -978,55 +976,7 @@ export class Home implements OnInit, OnDestroy {
         }
     }
 
-    openRenameDialog(profile: Profile, event: Event): void {
-        event.stopPropagation();
-        this.selectedProfile.set(profile);
-        this.renameProfileName.set(profile.name);
-        this.showRenameDialog.set(true);
-    }
 
-    async renameProfile(): Promise<void> {
-        const profile = this.selectedProfile();
-        const newName = this.renameProfileName().trim();
-        if (!profile || !newName || newName === profile.name) {
-            this.showRenameDialog.set(false);
-            return;
-        }
-
-        // Unified validation
-        const validationError = validateProfileName(newName);
-        if (validationError) {
-            this.messageService.add({
-                severity: 'error',
-                summary: 'Invalid Name',
-                detail: validationError,
-            });
-            return;
-        }
-
-        // PM-002: Duplicate Name Validation
-        const exists = this.profiles().some(p => p.name.toLowerCase() === newName.toLowerCase() && p.path !== profile.path);
-        if (exists) {
-            this.messageService.add({
-                severity: 'error',
-                summary: 'Duplicate Name',
-                detail: `Profile "${newName}" already exists.`,
-            });
-            return;
-        }
-
-        try {
-            await this.profileService.renameProfile(profile.path, newName, this.profilesPath());
-            this.showRenameDialog.set(false);
-            this.messageService.add({
-                severity: 'success',
-                summary: 'Renamed',
-                detail: `Renamed to "${newName}"`,
-            });
-        } catch (e) {
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
-        }
-    }
 
     openEditDialog(profile: Profile, event: Event): void {
         event.stopPropagation();
