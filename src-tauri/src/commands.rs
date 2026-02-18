@@ -432,6 +432,8 @@ pub struct ProfileMetadata {
     pub proxy_password: Option<String>,
     // Antidetect: Privacy hardened mode
     pub antidetect_enabled: Option<bool>,
+    // Feature 3.4: Disable extensions per profile
+    pub extensions_disabled: Option<bool>,
 }
 
 #[tauri::command]
@@ -473,13 +475,14 @@ pub fn save_profile_metadata(
     proxy_username: Option<String>,
     proxy_password: Option<String>,
     antidetect_enabled: Option<bool>,
+    extensions_disabled: Option<bool>,
 ) -> Result<(), String> {
     let meta_file = format!("{}/.profile-meta.json", profile_path);
     
     let metadata = ProfileMetadata { 
         emoji, notes, group, shortcut, browser, tags, launch_url, is_pinned, last_opened, 
         color, is_hidden, launch_count, total_usage_minutes, last_session_duration, is_favorite, custom_flags, proxy,
-        proxy_id, proxy_username, proxy_password, antidetect_enabled
+        proxy_id, proxy_username, proxy_password, antidetect_enabled, extensions_disabled
     };
     
     let content = serde_json::to_string_pretty(&metadata)
@@ -539,7 +542,7 @@ pub fn batch_check_running(profile_paths: Vec<String>) -> std::collections::Hash
 }
 
 #[tauri::command]
-pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>, custom_flags: Option<String>, proxy_username: Option<String>, proxy_password: Option<String>, antidetect_enabled: Option<bool>) -> Result<(), String> {
+pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>, custom_flags: Option<String>, proxy_username: Option<String>, proxy_password: Option<String>, antidetect_enabled: Option<bool>, disable_extensions: Option<bool>) -> Result<(), String> {
     let path = std::path::Path::new(&profile_path);
     
     // Detect if this is a native Chrome profile (parent has "Local State" file)
@@ -659,6 +662,11 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
         for flag in privacy_flags {
             args.push(flag.to_string());
         }
+    }
+
+    // Feature 3.4: Disable extensions when requested
+    if disable_extensions.unwrap_or(false) {
+        args.push("--disable-extensions".to_string());
     }
 
     // Security: Sanitize custom flags to block dangerous Chrome flags

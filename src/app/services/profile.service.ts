@@ -42,6 +42,35 @@ export class ProfileService {
         }
     }
 
+    /** Feature 10.4: Scan multiple directories and aggregate results */
+    async scanMultiplePaths(paths: string[]): Promise<Profile[]> {
+        this.loading.set(true);
+        this.error.set(null);
+
+        try {
+            const results: Profile[] = [];
+            for (const path of paths) {
+                try {
+                    const exists = await this.backend.checkPathExists(path);
+                    if (!exists) continue;
+                    const profiles = await this.backend.scanProfilesWithMetadata(path);
+                    results.push(...profiles);
+                } catch {
+                    debugLog('WARN', `scanMultiplePaths: failed to scan ${path}`);
+                }
+            }
+            debugLog('PERF', `scanMultiplePaths: ${results.length} profiles loaded from ${paths.length} dirs`);
+            this.profiles.set(results);
+            return results;
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            this.error.set(errorMsg);
+            throw e;
+        } finally {
+            this.loading.set(false);
+        }
+    }
+
     async checkPathExists(path: string): Promise<boolean> {
         try {
             return await this.backend.checkPathExists(path);
@@ -312,14 +341,8 @@ export class ProfileService {
         debugLog('PERF', `refreshProfileStatus done (${current.length} profiles)`);
     }
 
-    async launchBrowser(options: LaunchBrowserOptions & { disableExtensions?: boolean }): Promise<void> {
+    async launchBrowser(options: LaunchBrowserOptions): Promise<void> {
         try {
-            // Feature 3.4: Build flags with --disable-extensions if requested
-            let finalFlags = options.customFlags || '';
-            if (options.disableExtensions) {
-                finalFlags = finalFlags ? `${finalFlags} --disable-extensions` : '--disable-extensions';
-            }
-
             await this.backend.launchBrowser({
                 profilePath: options.profilePath,
                 browser: options.browser,
@@ -328,8 +351,9 @@ export class ProfileService {
                 proxyServer: options.proxyServer || null,
                 proxyUsername: options.proxyUsername || null,
                 proxyPassword: options.proxyPassword || null,
-                customFlags: finalFlags || null,
+                customFlags: options.customFlags || null,
                 antidetectEnabled: options.antidetectEnabled || null,
+                disableExtensions: options.disableExtensions || null,
             });
 
             if (!isTauriAvailable()) {

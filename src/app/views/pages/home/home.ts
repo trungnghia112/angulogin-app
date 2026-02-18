@@ -606,16 +606,22 @@ export class Home implements OnInit, OnDestroy {
             return;
         }
         try {
-            const exists = await this.profileService.checkPathExists(path);
-            if (!exists) {
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'Error',
-                    detail: 'Path does not exist',
-                });
-                return;
+            const allPaths = this.settingsService.allProfilePaths();
+            if (allPaths.length > 1) {
+                // Feature 10.4: Multi-drive scan
+                await this.profileService.scanMultiplePaths(allPaths);
+            } else {
+                const exists = await this.profileService.checkPathExists(path);
+                if (!exists) {
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'Path does not exist',
+                    });
+                    return;
+                }
+                await this.profileService.scanProfiles(path);
             }
-            await this.profileService.scanProfiles(path);
             this.settingsService.setProfilesPath(path);
             this.messageService.add({
                 severity: 'success',

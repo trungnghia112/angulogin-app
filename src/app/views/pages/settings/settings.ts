@@ -210,6 +210,37 @@ export class Settings {
         }
     }
 
+    /** Feature 10.4: Browse and add an additional profile directory */
+    async browseAdditionalPath(): Promise<void> {
+        try {
+            const selected = await open({
+                directory: true,
+                multiple: false,
+                title: 'Select Additional Profiles Directory',
+            });
+
+            if (selected && typeof selected === 'string') {
+                this.settingsService.addAdditionalPath(selected);
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Directory Added',
+                    detail: selected,
+                });
+            }
+        } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Folder Selection Failed',
+                detail: errorMsg
+            });
+        }
+    }
+
+    removeAdditionalPath(path: string): void {
+        this.settingsService.removeAdditionalPath(path);
+    }
+
     async resetProfilesPath(): Promise<void> {
         const defaultPath = await this.settingsService.detectDefaultPath();
         if (defaultPath) {

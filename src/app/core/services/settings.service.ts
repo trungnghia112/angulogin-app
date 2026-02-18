@@ -56,6 +56,7 @@ export interface GeneralSettings {
 
 export interface BrowserSettings {
     profilesPath: string;
+    additionalPaths?: string[];
 }
 
 export interface AutoBackupSettings {
@@ -88,6 +89,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     },
     browser: {
         profilesPath: '',
+        additionalPaths: [],
     },
     autoBackup: {
         enabled: false,
@@ -261,6 +263,33 @@ export class SettingsService {
         this._settings.update(s => ({
             ...s,
             browser: { ...s.browser, profilesPath: path },
+        }));
+    }
+
+    /**
+     * Feature 10.4: Additional profile directories (multi-drive)
+     */
+    readonly additionalPaths = computed(() => this._settings().browser.additionalPaths || []);
+    readonly allProfilePaths = computed(() => {
+        const primary = this._settings().browser.profilesPath;
+        const additional = this._settings().browser.additionalPaths || [];
+        return primary ? [primary, ...additional] : [...additional];
+    });
+
+    addAdditionalPath(path: string): void {
+        const current = this._settings().browser.additionalPaths || [];
+        if (current.includes(path) || path === this._settings().browser.profilesPath) return;
+        this._settings.update(s => ({
+            ...s,
+            browser: { ...s.browser, additionalPaths: [...current, path] },
+        }));
+    }
+
+    removeAdditionalPath(path: string): void {
+        const current = this._settings().browser.additionalPaths || [];
+        this._settings.update(s => ({
+            ...s,
+            browser: { ...s.browser, additionalPaths: current.filter(p => p !== path) },
         }));
     }
 
