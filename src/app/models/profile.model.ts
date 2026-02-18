@@ -1,6 +1,6 @@
 import { ProfileNote, ProfileStatus } from './folder.model';
 
-export type BrowserType = 'chrome' | 'brave' | 'edge' | 'arc';
+export type BrowserType = 'chrome' | 'brave' | 'edge' | 'arc' | 'ungoogled-chromium';
 
 export interface ProfileMetadata {
     emoji: string | null;
@@ -47,9 +47,11 @@ export interface ProfileMetadata {
     // Antidetect: Privacy hardened mode
     antidetectEnabled?: boolean;
     // Camoufox Integration
-    browserEngine?: 'chrome' | 'camoufox';
+    browserEngine?: 'chrome' | 'camoufox' | 'ungoogled-chromium';
     fingerprintConfig?: string | null;
     fingerprintOs?: string | null;
+    fingerprintWebglRenderer?: string | null;
+    fingerprintWebglVendor?: string | null;
 }
 
 // Proxy Rotation Configuration (Feature 4.2)

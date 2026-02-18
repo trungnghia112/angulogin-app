@@ -39,6 +39,8 @@ import { FolderService } from '../../../services/folder.service';
 import { ProxyService } from '../../../services/proxy.service';
 import { NavigationService } from '../../../services/navigation.service';
 import { CamoufoxService } from '../../../services/camoufox.service';
+import { BrowserManagerService } from '../../../services/browser-manager.service';
+import { DownloadBrowserDialog } from './download-browser-dialog/download-browser-dialog';
 import { ColumnConfigService } from '../../../core/services/column-config.service';
 import { GeoIpService } from '../../../services/geoip.service';
 import { ScheduleService, type ScheduleEntry } from '../../../services/schedule.service';
@@ -95,6 +97,7 @@ interface Tab {
         ProfileEditDialog,
         Select,
         ColumnSettingsPanel,
+        DownloadBrowserDialog,
     ],
 })
 export class Home implements OnInit, OnDestroy {
@@ -109,6 +112,7 @@ export class Home implements OnInit, OnDestroy {
     private readonly destroyRef = inject(DestroyRef);
     private readonly navService = inject(NavigationService);
     private readonly camoufoxService = inject(CamoufoxService);
+    protected readonly browserManager = inject(BrowserManagerService);
     protected readonly columnConfig = inject(ColumnConfigService);
     protected readonly geoIpService = inject(GeoIpService);
     protected readonly scheduleService = inject(ScheduleService);
@@ -117,6 +121,9 @@ export class Home implements OnInit, OnDestroy {
     // Feature 6.9: Zen Mode
     protected readonly zenMode = this.navService.zenMode;
     private statusInterval: ReturnType<typeof setInterval> | null = null;
+    // Download dialog state (ungoogled-chromium)
+    protected readonly showDownloadDialog = signal<boolean>(false);
+    protected pendingLaunchProfile: Profile | null = null;
     // PERF FIX: Cache tooltips to avoid string creation on every render
     private readonly tooltipCache = new Map<string, string>();
 
@@ -715,6 +722,41 @@ export class Home implements OnInit, OnDestroy {
                 };
                 const profileDir = profile.path + '/.camoufox';
                 await this.camoufoxService.launch(profileDir, camoufoxConfig, url);
+            } else if (antidetectEnabled) {
+                // Antidetect enabled: prefer ungoogled-chromium with native flags
+                const isUCInstalled = await this.browserManager.checkInstalled();
+                if (isUCInstalled) {
+                    // Get native antidetect flags
+                    const antidetectFlags = await this.browserManager.getAntidetectFlags(
+                        profile.metadata?.fingerprintWebglRenderer ?? undefined,
+                        profile.metadata?.fingerprintWebglVendor ?? undefined,
+                    );
+                    const allFlags = customFlags
+                        ? `${customFlags} ${antidetectFlags.join(' ')}`
+                        : antidetectFlags.join(' ');
+
+                    // Get UC binary path
+                    const versionInfo = this.browserManager.versionInfo();
+                    const ucBrowser = versionInfo?.executable_path ? 'ungoogled-chromium' : browser;
+
+                    await this.profileService.launchBrowser({
+                        profilePath: profile.path,
+                        browser: ucBrowser,
+                        url,
+                        incognito: false,
+                        proxyServer: proxy,
+                        customFlags: allFlags,
+                        disableExtensions: true, // No extension needed with native flags
+                        antidetectEnabled: false, // Native flags handle it
+                        proxyUsername,
+                        proxyPassword,
+                    });
+                } else {
+                    // UC not installed: show download dialog (handled by template signal)
+                    this.showDownloadDialog.set(true);
+                    this.pendingLaunchProfile = profile;
+                    return; // Exit early, dialog callbacks handle the rest
+                }
             } else {
                 await this.profileService.launchBrowser({
                     profilePath: profile.path,
@@ -759,6 +801,47 @@ export class Home implements OnInit, OnDestroy {
     async launchProfile(profile: Profile, event: Event): Promise<void> {
         event.stopPropagation();
         await this.launchProfileDirect(profile);
+    }
+
+    async onBrowserDownloadComplete(): Promise<void> {
+        this.showDownloadDialog.set(false);
+        if (this.pendingLaunchProfile) {
+            const profile = this.pendingLaunchProfile;
+            this.pendingLaunchProfile = null;
+            await this.launchProfileDirect(profile);
+        }
+    }
+
+    async onBrowserDownloadSkip(): Promise<void> {
+        this.showDownloadDialog.set(false);
+        if (this.pendingLaunchProfile) {
+            const profile = this.pendingLaunchProfile;
+            this.pendingLaunchProfile = null;
+            // Fallback: launch with stock browser + stealth extension
+            const browser = profile.metadata?.browser || 'chrome';
+            const url = profile.metadata?.launchUrl || undefined;
+            const proxy = profile.metadata?.proxy || undefined;
+            const customFlags = profile.metadata?.customFlags || undefined;
+            try {
+                await this.profileService.launchBrowser({
+                    profilePath: profile.path,
+                    browser,
+                    url,
+                    incognito: false,
+                    proxyServer: proxy,
+                    customFlags,
+                    disableExtensions: false,
+                    antidetectEnabled: true, // Use stealth extension as fallback
+                });
+                this.messageService.add({
+                    severity: 'info',
+                    summary: 'Launched (Fallback)',
+                    detail: `Using stealth extension instead of native antidetect`,
+                });
+            } catch (e) {
+                this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+            }
+        }
     }
 
     onPathChange(value: string): void {

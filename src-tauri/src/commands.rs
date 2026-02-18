@@ -1899,3 +1899,30 @@ pub async fn import_profile_cookies(profile_path: String, cookies_json: String) 
     validate_path_safety(&profile_path, "Profile path")?;
     crate::cookies::import_cookies(profile_path, cookies_json)
 }
+
+// ===== Ungoogled-Chromium Browser Manager =====
+
+/// Check if ungoogled-chromium antidetect browser is installed
+#[tauri::command]
+pub fn check_antidetect_browser() -> Result<crate::browser_manager::BrowserVersionInfo, String> {
+    crate::browser_manager::get_version_info()
+}
+
+/// Download and install ungoogled-chromium (emits progress events)
+#[tauri::command]
+pub async fn download_antidetect_browser(window: tauri::Window) -> Result<String, String> {
+    crate::browser_manager::download::download_and_install(Some(&window)).await
+}
+
+/// Get native antidetect flags for ungoogled-chromium
+/// Uses profile-specific WebGL renderer/vendor for deterministic spoofing
+#[tauri::command]
+pub fn get_antidetect_flags(
+    webgl_renderer: Option<String>,
+    webgl_vendor: Option<String>,
+) -> Vec<String> {
+    crate::browser_manager::get_native_antidetect_flags(
+        webgl_renderer.as_deref(),
+        webgl_vendor.as_deref(),
+    )
+}

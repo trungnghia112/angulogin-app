@@ -1219,4 +1219,10 @@
                 [disabled]="!cookieImportJson().trim()" />
         </ng-template>
     </p-dialog>
+
+    <!-- Antidetect Browser Download Dialog -->
+    @if (showDownloadDialog()) {
+    <app-download-browser-dialog (onDownloadComplete)="onBrowserDownloadComplete()"
+        (onSkip)="onBrowserDownloadSkip()" />
+    }
 </div>

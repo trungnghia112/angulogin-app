@@ -1,0 +1,57 @@
+<p-dialog
+    [visible]="visible"
+    [modal]="true"
+    [closable]="false"
+    [draggable]="false"
+    header="Antidetect Browser Required"
+    [style]="{ width: '480px' }"
+>
+    <div class="flex flex-col gap-4">
+        @if (!isDownloading()) {
+            <div class="flex items-start gap-3">
+                <i class="pi pi-shield text-3xl text-primary"></i>
+                <div>
+                    <p class="text-surface-700 dark:text-surface-300 mt-0 mb-2">
+                        Antidetect Mode uses <strong>ungoogled-chromium</strong> with
+                        native C++ fingerprint spoofing that is undetectable by JavaScript.
+                    </p>
+                    <p class="text-surface-500 dark:text-surface-400 text-sm mt-0 mb-0">
+                        Download size: ~150MB. One-time setup, auto-updates.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <p-button
+                    id="download-browser-skip-btn"
+                    label="Skip (use extension)"
+                    severity="secondary"
+                    [outlined]="true"
+                    size="small"
+                    (click)="skip()"
+                />
+                <p-button
+                    id="download-browser-start-btn"
+                    label="Download Now"
+                    icon="pi pi-download"
+                    size="small"
+                    (click)="startDownload()"
+                />
+            </div>
+        } @else {
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center gap-2">
+                    <i class="pi pi-spin pi-spinner text-primary"></i>
+                    <span class="text-surface-700 dark:text-surface-300 text-sm">
+                        {{ downloadStatus() }}
+                    </span>
+                </div>
+                <p-progressBar
+                    [value]="downloadProgress()"
+                    [showValue]="true"
+                    [style]="{ height: '20px' }"
+                />
+            </div>
+        }
+    </div>
+</p-dialog>

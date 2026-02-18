@@ -4,6 +4,7 @@ mod camoufox_downloader;
 mod camoufox_env;
 mod camoufox_manager;
 mod fingerprint;
+mod browser_manager;
 mod proxy_relay;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -67,7 +68,11 @@ pub fn run() {
             commands::reset_traffic_stats,
             // Local proxy server (13.1)
             commands::start_local_proxy,
-            commands::list_active_relays
+            commands::list_active_relays,
+            // Ungoogled-Chromium Browser Manager
+            commands::check_antidetect_browser,
+            commands::download_antidetect_browser,
+            commands::get_antidetect_flags
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

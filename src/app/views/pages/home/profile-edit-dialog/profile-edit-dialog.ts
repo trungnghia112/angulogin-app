@@ -75,7 +75,7 @@ export interface ProfileEditData {
     // Antidetect: Privacy hardened mode
     antidetectEnabled: boolean;
     // Camoufox Integration
-    browserEngine: 'chrome' | 'camoufox';
+    browserEngine: 'chrome' | 'camoufox' | 'ungoogled-chromium';
     fingerprintOs: string | null;
 }
 
@@ -144,13 +144,14 @@ export class ProfileEditDialog {
     // Antidetect: Privacy Mode
     protected readonly editAntidetectEnabled = signal(false);
     // Camoufox Integration
-    protected readonly editBrowserEngine = signal<'chrome' | 'camoufox'>('chrome');
+    protected readonly editBrowserEngine = signal<'chrome' | 'camoufox' | 'ungoogled-chromium'>('chrome');
     protected readonly editFingerprintOs = signal<string | null>(null);
     protected readonly fingerprintPreview = signal<Fingerprint | null>(null);
     protected readonly isLoadingPreview = signal(false);
-    protected readonly engineOptions: { label: string; value: 'chrome' | 'camoufox'; icon: string }[] = [
+    protected readonly engineOptions: { label: string; value: 'chrome' | 'camoufox' | 'ungoogled-chromium'; icon: string }[] = [
         { label: 'Chrome', value: 'chrome', icon: 'pi pi-chrome' },
         { label: 'Firefox', value: 'camoufox', icon: 'pi pi-shield' },
+        { label: 'Ungoogled', value: 'ungoogled-chromium', icon: 'pi pi-lock' },
     ];
     // Feature 4.2: Proxy Rotation
     protected readonly editProxyRotationEnabled = signal(false);
