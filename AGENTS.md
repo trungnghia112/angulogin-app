@@ -175,6 +175,11 @@ const data = { description: form.value.description || null };
     - Chrome Extension: Must test in actual loaded extension.
 15. **UI Consistency**: Clone existing Master Template for new features. No reinventing patterns.
 16. **HTML ID Naming**: ALWAYS add `id` attributes. Format: `[feature]-[section]-[index]`.
+17. **Tauri IPC Sync (CRITICAL)**: When adding new enum values, types, or string literals that cross the Tauri IPC boundary (Angular `invoke()` → Rust `#[tauri::command]`), MUST update BOTH sides simultaneously. Checklist:
+    - Frontend sends new value via `invoke()` → Rust `match` statement MUST handle it.
+    - Rust command adds new param → Frontend `LaunchBrowserOptions` (or equivalent interface) MUST include it.
+    - New `BrowserType` or similar union type → Rust `launch_browser` match + `list_available_browsers` MUST be updated.
+    - **Never assume the backend already handles a new value just because the TypeScript type allows it.**
 
 ## ⚡ Performance Rules (MANDATORY)
 
