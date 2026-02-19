@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.1.2",
-        "updated_at": "2026-02-19T03:42:00+07:00"
+        "updated_at": "2026-02-20T01:01:00+07:00"
     },
     "project": {
         "name": "AnguLogin",
@@ -68,7 +68,12 @@
         "audit_tracker": "docs/FEATURE_AUDIT_TRACKER.md",
         "stealth_extension": "src-tauri/extensions/stealth/content.js",
         "fingerprint_generator": "src-tauri/src/fingerprint/generator.rs",
-        "browser_manager": "src/app/services/browser-manager.service.ts"
+        "browser_manager": "src/app/services/browser-manager.service.ts",
+        "rpa_template_service": "src/app/services/rpa-template.service.ts",
+        "rpa_template_model": "src/app/models/rpa-template.model.ts",
+        "rpa_marketplace": "src/app/views/pages/automation/rpa-marketplace/rpa-marketplace.ts",
+        "firestore_rules": "firestore.rules",
+        "seed_script": "scripts/seed-rpa-templates.ts"
     },
     "security_audit": {
         "grade": "A-",
@@ -335,6 +340,24 @@
             "name": "Fingerprint Checker Page",
             "status": "implemented",
             "description": "Page at /fingerprint-checker with external checker links, embedded preview, and Launch & Check button"
+        },
+        {
+            "name": "RPA Marketplace",
+            "status": "implemented",
+            "description": "Template marketplace for RPA automation scripts with Firestore backend",
+            "includes": [
+                "Firestore 2-tier: catalog index (1 read/session) + detail docs (1 read/click)",
+                "15 pre-built templates: TikTok, Facebook, Instagram, LinkedIn, Amazon, etc.",
+                "Platform filtering, search, sort (popular/recent/name)",
+                "Template detail dialog with steps, variables, tags",
+                "Save to process library (localStorage, future: Firestore user doc)",
+                "3-layer fallback: Firestore → localStorage → bundled asset",
+                "Version-based detail caching (0 reads if version unchanged)",
+                "Process page: view/remove saved templates",
+                "Task page: view/manage automation tasks (mock data)",
+                "Automation sidebar layout with sub-navigation",
+                "Seed script for uploading templates to Firestore"
+            ]
         }
     ],
     "api_endpoints": [
@@ -544,7 +567,9 @@
             "CSV export must use csvSafe() to prevent formula injection (=, +, -, @ prefix escaping)",
             "Structural borders (nav, sidebar, dividers) use lighter shades: border-surface-100 dark:border-surface-800",
             "Main-nav, sidebar, and home-container have border-top for visual separation below title bar",
-            "App rebranded from 'Chrome Profile Manager' to 'AnguLogin' — all source files, paths, and configs updated"
+            "App rebranded from 'Chrome Profile Manager' to 'AnguLogin' — all source files, paths, and configs updated",
+            "Firestore rules: rpa-catalog + rpa-templates = public read, admin-only write",
+            "RPA templates use CatalogEntry (lightweight) for grid, full RpaTemplate (detail) for dialog"
         ],
         "competitor_analysis": {
             "completed_at": "2026-02-16",

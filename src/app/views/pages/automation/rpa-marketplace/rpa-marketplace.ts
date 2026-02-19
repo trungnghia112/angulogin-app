@@ -1,6 +1,8 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
@@ -13,7 +15,7 @@ import { RpaTemplateService, CatalogEntry } from '../../../../services/rpa-templ
     styleUrl: './rpa-marketplace.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
-    imports: [DialogModule, InputTextModule, SelectModule, ButtonModule, FormsModule],
+    imports: [DialogModule, InputTextModule, IconFieldModule, InputIconModule, SelectModule, ButtonModule, FormsModule],
 })
 export class RpaMarketplace implements OnInit {
     protected readonly templateService = inject(RpaTemplateService);

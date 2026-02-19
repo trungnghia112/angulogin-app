@@ -6,14 +6,14 @@
 
         <!-- Sort -->
         <p-select id="rpa-marketplace-sort" [options]="sortOptions" [ngModel]="sortBy()"
-            (ngModelChange)="onSortChange($event)" optionLabel="label" optionValue="value" class="w-40" size="small" />
+            (ngModelChange)="onSortChange($event)" optionLabel="label" optionValue="value" class="w-40" />
 
         <!-- Search -->
-        <span class="p-input-icon-left">
-            <i class="pi pi-search"></i>
+        <p-iconfield>
+            <p-inputicon class="pi pi-search" />
             <input id="rpa-marketplace-search" type="text" pInputText placeholder="Search templates..."
                 [value]="searchQuery()" (input)="onSearch($event)" class="w-64" />
-        </span>
+        </p-iconfield>
     </div>
     <span id="rpa-marketplace-count" class="text-sm text-muted-color">
         Templates: {{ filteredEntries().length }}
