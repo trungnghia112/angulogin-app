@@ -680,11 +680,16 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
     };
     
     // Resolve browser binary path (direct binary, NOT via `open`)
+    let uc_path_buf; // Must outlive browser_binary borrow
     let browser_binary = match browser.as_str() {
         "chrome" => "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
         "brave" => "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
         "edge" => "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
         "arc" => "/Applications/Arc.app/Contents/MacOS/Arc",
+        "ungoogled-chromium" => {
+            uc_path_buf = crate::browser_manager::get_executable_path()?;
+            uc_path_buf.to_str().ok_or("Invalid ungoogled-chromium path")?
+        }
         _ => return Err(format!("Unknown browser: {}", browser)),
     };
     
