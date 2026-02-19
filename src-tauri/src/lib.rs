@@ -6,6 +6,8 @@ mod camoufox_manager;
 mod fingerprint;
 mod browser_manager;
 mod proxy_relay;
+mod api_server;
+mod api_models;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -22,6 +24,20 @@ pub fn run() {
                         .build(),
                 )?;
             }
+
+            // Start Local REST API server if enabled
+            let config = api_server::load_config();
+            if config.enabled {
+                let port = config.port;
+                let api_key = config.api_key.clone();
+                std::thread::spawn(move || {
+                    let rt = tokio::runtime::Runtime::new()
+                        .expect("Failed to create tokio runtime for API server");
+                    rt.block_on(api_server::start(port, api_key));
+                });
+                log::info!("[API] Server thread spawned on port {}", port);
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -72,7 +88,12 @@ pub fn run() {
             // Ungoogled-Chromium Browser Manager
             commands::check_antidetect_browser,
             commands::download_antidetect_browser,
-            commands::get_antidetect_flags
+            commands::get_antidetect_flags,
+            // Local REST API (7.1)
+            api_server::get_api_config,
+            api_server::save_api_config,
+            api_server::regenerate_api_key,
+            api_server::set_api_profiles_path
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

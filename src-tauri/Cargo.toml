@@ -55,3 +55,8 @@ sha1 = "0.10"
 aes-gcm = "0.10"
 rand = "0.8"
 zeroize = "1"
+
+# Local REST API (Feature 7.1)
+axum = "0.8"
+tower-http = { version = "0.6", features = ["cors"] }
+uuid = { version = "1", features = ["v4"] }

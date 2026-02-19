@@ -1,11 +1,11 @@
 # Chrome Profile Manager - Project Overview
 
 ## Purpose
-A desktop application for managing and organizing Chrome/Camoufox browser profiles with advanced anti-detect features. Built as a Tauri desktop app with Angular frontend and Firebase backend.
+A desktop application for managing and organizing Chrome/Camoufox browser profiles with advanced anti-detect features. Built as a Tauri desktop app with Angular frontend and Firebase backend. Product name: **AnguLogin**.
 
 ## Tech Stack
 | Layer | Technology | Version |
-|-------|-----------|---------|
+|-------|-----------|---------| 
 | Frontend Framework | Angular | 21.1.1 |
 | Desktop Runtime | Tauri | 2.x (Rust backend) |
 | UI Components | PrimeNG | 21.0.4 |
@@ -22,9 +22,11 @@ A desktop application for managing and organizing Chrome/Camoufox browser profil
 ## Key Features
 - Browser profile management (create, edit, organize with folders)
 - Anti-detect browser support via Camoufox integration
-- Proxy management and relay
-- Browser fingerprint management
-- Cookie import/export
+- Multi-browser support with download manager
+- Proxy management, rotation and relay
+- Browser fingerprint generation and management
+- Fingerprint checker/verification page
+- Cookie import/export with AES-GCM encryption
 - Extension management
 - Team collaboration
 - Automation workflows
@@ -33,11 +35,25 @@ A desktop application for managing and organizing Chrome/Camoufox browser profil
 - Storage & usage dashboards
 - Command palette (Ctrl+K style)
 - Dark mode support (.dark class toggle)
+- Onboarding wizard for first-run experience
+- Profile templates (save/create/list/delete)
+- Bulk operations (create, export, scan multiple paths)
+- Backup/restore with encryption
 
 ## Architecture
 - **Zoneless Angular**: No Zone.js, uses `provideZonelessChangeDetection()`
 - **Standalone Components**: All components are standalone (Angular 21 default)
-- **Lazy Loading**: All page routes use `loadComponent()` 
+- **Lazy Loading**: All page routes use `loadComponent()`
 - **Firebase Emulator Support**: Full emulator support for Auth, Firestore, Functions, Storage
 - **PrimeNG Dark Mode**: Uses `.dark` CSS class selector (not system preference)
 - **Global Error Handler**: Custom `GlobalErrorHandler` class
+- **Tauri IPC**: Frontend communicates with Rust backend via `invoke()` commands
+- **Profile Backend Abstraction**: `profile.backend.interface.ts` allows switching backends
+
+## npm Scripts
+| Command | Description |
+|---------|-------------|
+| `npm start` | Angular dev server |
+| `npm run build` | Production build |
+| `npm run tauri:dev` | Tauri development mode |
+| `npm run tauri:build` | Tauri production build |

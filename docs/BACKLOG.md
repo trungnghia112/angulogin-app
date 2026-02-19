@@ -1,8 +1,8 @@
 # 📋 BACKLOG: Chrome Profile Manager
 
 **Ngày tạo:** 2026-01-23
-**Cập nhật lần cuối:** 2026-02-16
-**Tổng số tính năng:** 74+
+**Cập nhật lần cuối:** 2026-02-19
+**Tổng số tính năng:** 96+
 
 ---
 
@@ -12,8 +12,8 @@
 |------------|----------|
 | ✅ Done | 50 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 23 |
-| ❌ Cancelled | 11 |
+| 📋 Backlog | 41 |
+| ❌ Cancelled | 5 |
 
 ---
 
@@ -147,20 +147,50 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 ---
 
-## 🔧 NHÓM 7: Automation & Integration ❌ CANCELLED
+## 🤖 NHÓM 7: Automation & API *(Nguồn: AppSumo Logii Q&A + AdsPower Benchmark)*
+
+> Nguồn: Phân tích 181 Q&A từ AppSumo Logii (2026-02-19). Nhu cầu automation là feature request #1.
+> Benchmark: AdsPower Local API + RPA Builder + Multi-Window Synchronizer.
+
+### 7A. Local REST API
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
-| 7.1 | CLI Support | `cpm launch "Profile1"` từ terminal | 🟡 TB | ❌ |
-| 7.2 | Alfred/Raycast Integration | Quick launch từ launcher | 🟡 TB | ❌ |
-| 7.3 | Spotlight-like Search | Global hotkey để search & launch | 🟡 TB | ❌ |
-| 7.4 | AppleScript Support | Automation với macOS scripts | 🔴 Khó | ❌ |
-| 7.5 | Webhook Notifications | Notify khi profile được mở/đóng | 🔴 Khó | ❌ |
-| 7.6 | URL Scheme | `cpm://launch/Profile1` để mở từ browser | 🟡 TB | ❌ |
+| 7.1 | HTTP Server Built-in ⭐ | Local HTTP server tại `localhost:PORT`, expose REST API cho tools bên ngoài kết nối | 🔴 Khó | 📋 |
+| 7.2 | API Key Auth | Bearer token authentication cho API | 🟡 TB | 📋 |
+| 7.3 | Browser Endpoints | `GET /api/v1/browser/open`, `/close`, `/status`, `/active` | 🟡 TB | 📋 |
+| 7.4 | Profile Endpoints | `POST /api/v1/profile/create`, `/update`, `/delete`, `GET /list`, `/detail` | 🟡 TB | 📋 |
+| 7.5 | Proxy Endpoints | `POST /api/v1/proxy/add`, `/update`, `/delete`, `GET /list`, `/check` | 🟡 TB | 📋 |
+| 7.6 | Group Endpoints | `POST /api/v1/group/create`, `GET /list` | 🟢 Dễ | 📋 |
+| 7.7 | CDP Endpoint | Trả về `ws://127.0.0.1:{port}` để Puppeteer/Playwright kết nối | 🟡 TB | 📋 |
+| 7.8 | API Docs Page | Swagger-like docs trong app | 🟡 TB | 📋 |
+
+### 7B. No-Code RPA Builder
+
+| # | Tính năng | Mô tả | Độ khó | Status |
+|---|-----------|-------|--------|--------|
+| 7.9 | Visual Workflow Builder ⭐ | Drag-and-drop UI để tạo automation workflows | 🔴 Khó | 📋 |
+| 7.10 | Action Blocks | Click, Type, Wait, Scroll, Hover, Screenshot, New Tab, Close Tab | 🔴 Khó | 📋 |
+| 7.11 | Logic Blocks | If/Else rẽ nhánh, Loop lặp N lần, Wait for Element | 🔴 Khó | 📋 |
+| 7.12 | Execute JavaScript | Chạy custom JS trong browser context | 🟡 TB | 📋 |
+| 7.13 | Human-like Behavior ⭐ | Random delay (min-max ms), typing speed simulation, smooth scrolling, mouse bezier curves | 🔴 Khó | 📋 |
+| 7.14 | Pre-built Templates | Templates có sẵn cho Facebook Login, LinkedIn Connect, Amazon Check Orders | 🟡 TB | 📋 |
+| 7.15 | Save/Load Workflows | Lưu và tải lại workflows | 🟢 Dễ | 📋 |
+| 7.16 | Execution Log | Realtime hiển thị step đang chạy, kết quả, lỗi | 🟡 TB | 📋 |
+| 7.17 | Multi-profile Run | Chạy 1 workflow trên nhiều profiles cùng lúc | 🟡 TB | 📋 |
+
+### 7C. Multi-Window Synchronizer
+
+| # | Tính năng | Mô tả | Độ khó | Status |
+|---|-----------|-------|--------|--------|
+| 7.18 | Window Sync ⭐ | Thao tác trên 1 main window → mirror sang tất cả windows khác | 🔴 Khó | 📋 |
+| 7.19 | Click/Typing Delay | Delay giữa các windows để giả lập human (configurable ms) | 🟡 TB | 📋 |
+| 7.20 | Tile Windows | Sắp xếp cửa sổ cạnh nhau để quan sát | 🟡 TB | 📋 |
+| 7.21 | Text Input Modes | Identical (cùng text) / Designated (mỗi window text khác) / Random | 🟡 TB | 📋 |
 
 ---
 
-## 🔒 NHÓM 8: Security & Privacy ❌ CANCELLED
+## 🔒 NHÓM 8: Security & Privacy
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
@@ -236,22 +266,57 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 ---
 
+## 🛡️ NHÓM 14: Anti-Detection Pro *(Nguồn: AppSumo Logii Q&A)*
+
+> Nguồn: Phân tích 181 Q&A từ AppSumo Logii (2026-02-19). Users test anti-detection trên iphey.com, pixelscan.net.
+
+| # | Tính năng | Mô tả | Độ khó | Status |
+|---|-----------|-------|--------|--------|
+| 14.1 | Timezone/Geolocation Spoofing | Tự động set timezone + lat/long theo proxy IP location | 🟡 TB | 📋 |
+| 14.2 | Browser Language Matching | Tự động set browser language theo proxy country | 🟢 Dễ | 📋 |
+| 14.3 | Canvas Fingerprint Noise | Thêm noise vào Canvas API để tránh fingerprinting | 🔴 Khó | 📋 |
+| 14.4 | WebRTC Leak Prevention | Block/spoof WebRTC để không leak real IP | 🟡 TB | 📋 |
+| 14.5 | Font Fingerprint Randomization | Random subset fonts cho mỗi profile | 🟡 TB | 📋 |
+| 14.6 | Screen Resolution Spoofing | Giả mạo screen resolution/DPI per profile | 🟢 Dễ | 📋 |
+| 14.7 | Hardware Concurrency Spoofing | Giả mạo số CPU cores | 🟢 Dễ | 📋 |
+| 14.8 | Audio Fingerprint Protection | Thêm noise vào AudioContext API | 🔴 Khó | 📋 |
+
+---
+
+## ☁️ NHÓM 15: Cloud & Cross-Device *(Nguồn: AppSumo Logii Q&A)*
+
+> Nguồn: Phân tích 181 Q&A từ AppSumo Logii (2026-02-19). "Can I sync profiles between devices?" — câu hỏi phổ biến.
+
+| # | Tính năng | Mô tả | Độ khó | Status |
+|---|-----------|-------|--------|--------|
+| 15.1 | Cloud Profile Sync ⭐ | Đồng bộ profile metadata + settings qua cloud (Firebase/Supabase) | 🔴 Khó | 📋 |
+| 15.2 | Cloud Profile Data Sync | Đồng bộ full profile data (cookies, storage) qua cloud | 🔴 Khó | 📋 |
+| 15.3 | Team Workspace | Workspace chung cho team, phân quyền view/edit/launch | 🔴 Khó | 📋 |
+| 15.4 | Selective Sync | Chọn profiles nào sync, profiles nào local-only | 🟡 TB | 📋 |
+| 15.5 | Conflict Resolution | Xử lý conflict khi 2 devices edit cùng profile | 🔴 Khó | 📋 |
+
+---
+
 ## 🔮 TÍNH NĂNG TƯƠNG LAI (Nice to have)
 
 Những ý tưởng táo bạo hơn cho future versions:
 
 - **AI Profile Naming** - Gợi ý tên profile dựa trên usage
-- **Browser Fingerprint** - Basic fingerprint customization (như anti-detect lite)
 - **Session Recording** - Ghi lại session để replay
-- **Profile Templates** - Tạo template profile với settings có sẵn
-- **Team Sharing** - Chia sẻ profile config (không data) với team
 - **Extension Sync** - Sync danh sách extensions giữa profiles
 - **Bookmark Sync** - Sync bookmarks giữa profiles chọn lọc
-- **Synchronizer** - Clone thao tác qua nhiều profile cùng lúc (như Vision)
 - **Cookie Robot** - Import/export cookie hàng loạt với multithreaded
 - **Data Caching** - Cache proxy traffic để tiết kiệm bandwidth
 - **2FA Built-in** - Generate, save, và enter 2FA codes trong profile
 - **Multi-language** - Hỗ trợ nhiều ngôn ngữ (EN, VI, CN...)
+- **Record & Replay** - Ghi lại thao tác → tạo workflow RPA tự động
+- **Cloud Workflow Marketplace** - Cộng đồng chia sẻ RPA templates
+- **AI Element Selector** - AI tự tìm element trên page (không cần CSS selector)
+- **CAPTCHA Solving Integration** - Tích hợp 2Captcha, AntiCaptcha
+- **Google Sheets Integration** - Đọc/ghi data từ Google Sheets trong workflows
+- **Webhook Notifications** - Notify qua webhook khi workflow hoàn thành
+- **SOCKS5 Sticky Sessions** - Giữ IP cố định trong thời gian nhất định
+- **4G/Mobile Proxy Support** - Hỗ trợ rotating mobile proxy với API reset IP
 
 ---
 
@@ -274,6 +339,7 @@ Những ý tưởng táo bạo hơn cho future versions:
 
 | Ngày | Thay đổi |
 |------|----------|
+| 2026-02-19 | **AppSumo Logii Research:** Phân tích 181 Q&A. Revive NHÓM 7 → Automation & API (21 items: Local API 8, RPA Builder 9, Synchronizer 4). Thêm NHÓM 14 Anti-Detection Pro (8 items). Thêm NHÓM 15 Cloud & Cross-Device (5 items). Thêm 4 future ideas. Tổng +34 items mới. Benchmark: AdsPower Local API + RPA |
 | 2026-02-16 | Benchmark Donut Browser: Thêm NHÓM 13 (Proxy Engine Pro: 5 items). Phân tích kiến trúc proxy Rust của donutbrowser, xác định Local Proxy Server là tính năng ưu tiên cao nhất để giải quyết Chrome proxy auth |
 | 2026-02-12 | Benchmark Vision: Thêm NHÓM 11 (Table UX Pro: 5 items), NHÓM 12 (Mass Actions Pro: 4 items). Thêm 2.6, 2.7, 3.8, 6.9. Thêm 5 future ideas từ Vision. Tổng +14 items mới |
 | 2026-02-06 | Sync docs: Auto-backup (5.4), Usage Heatmap (9.2), Proxy Health Check (4.3), Profile Health Check (9.3), Cleanup Suggestions (9.4) đã được implement |

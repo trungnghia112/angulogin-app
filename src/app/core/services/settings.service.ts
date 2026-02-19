@@ -268,6 +268,12 @@ export class SettingsService {
             ...s,
             browser: { ...s.browser, profilesPath: path },
         }));
+        // Sync with Local REST API server
+        if (this.isTauriEnvironment() && path) {
+            import('@tauri-apps/api/core').then(({ invoke }) => {
+                invoke('set_api_profiles_path', { path }).catch(() => { });
+            });
+        }
     }
 
     /**
