@@ -47,6 +47,8 @@ import { ScheduleService, type ScheduleEntry } from '../../../services/schedule.
 import { BrowserType, Profile } from '../../../models/profile.model';
 import { validateProfileName } from '../../../core/utils/validation.util';
 import { ColumnSettingsPanel } from '../../components/column-settings-panel/column-settings-panel';
+import { OnboardingDialog } from '../../components/onboarding-dialog/onboarding-dialog';
+import { type ProtectionLevel } from '../../../core/services/settings.service';
 
 
 
@@ -98,6 +100,7 @@ interface Tab {
         Select,
         ColumnSettingsPanel,
         DownloadBrowserDialog,
+        OnboardingDialog,
     ],
 })
 export class Home implements OnInit, OnDestroy {
@@ -124,6 +127,8 @@ export class Home implements OnInit, OnDestroy {
     // Download dialog state (ungoogled-chromium)
     protected readonly showDownloadDialog = signal<boolean>(false);
     protected pendingLaunchProfile: Profile | null = null;
+    // Onboarding state
+    protected readonly showOnboarding = signal(false);
     // PERF FIX: Cache tooltips to avoid string creation on every render
     private readonly tooltipCache = new Map<string, string>();
 
@@ -388,6 +393,11 @@ export class Home implements OnInit, OnDestroy {
         this.profileService.listAvailableBrowsers().then(browsers => {
             this.availableBrowsers.set(browsers);
         });
+
+        // First-run onboarding check
+        if (typeof localStorage !== 'undefined' && !localStorage.getItem('angulogin-onboarded')) {
+            this.showOnboarding.set(true);
+        }
     }
 
     constructor() {
@@ -848,6 +858,27 @@ export class Home implements OnInit, OnDestroy {
         }
     }
 
+    // Onboarding handlers
+    async onOnboardingComplete(level: ProtectionLevel): Promise<void> {
+        try {
+            this.settingsService.setGeneralSetting('defaultProtectionLevel', level);
+            localStorage.setItem('angulogin-onboarded', 'true');
+            this.showOnboarding.set(false);
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Welcome!',
+                detail: `Default protection set to "${level}". You can change this in Settings.`,
+            });
+        } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: String(e) });
+        }
+    }
+
+    onOnboardingDismiss(): void {
+        localStorage.setItem('angulogin-onboarded', 'true');
+        this.showOnboarding.set(false);
+    }
+
     onPathChange(value: string): void {
         this.settingsService.setProfilesPath(value);
     }
@@ -930,8 +961,18 @@ export class Home implements OnInit, OnDestroy {
 
         try {
             const newPath = await this.profileService.createProfile(this.profilesPath(), name);
+            const profilePath = newPath || `${this.profilesPath()}/${name}`;
+
+            // Apply default protection level from settings
+            const defaultLevel = this.settingsService.defaultProtectionLevel();
+            if (defaultLevel !== 'off') {
+                await this.profileService.saveProfileMetadata(profilePath, {
+                    protectionLevel: defaultLevel,
+                });
+            }
+
             // Phase 3: Log activity
-            this.activityLogService.logCreate(name, newPath || `${this.profilesPath()}/${name}`);
+            this.activityLogService.logCreate(name, profilePath);
             this.showCreateDialog.set(false);
             this.messageService.add({
                 severity: 'success',
@@ -970,6 +1011,23 @@ export class Home implements OnInit, OnDestroy {
             const result = await this.profileService.bulkCreateProfiles(
                 this.profilesPath(), prefix, count, startNum,
             );
+
+            // Apply default protection level to all created profiles
+            const defaultLevel = this.settingsService.defaultProtectionLevel();
+            if (defaultLevel !== 'off' && result.created.length > 0) {
+                const basePath = this.profilesPath();
+                for (const name of result.created) {
+                    try {
+                        await this.profileService.saveProfileMetadata(
+                            `${basePath}/${name}`,
+                            { protectionLevel: defaultLevel },
+                        );
+                    } catch {
+                        // Non-critical: profile works without metadata
+                    }
+                }
+            }
+
             this.showBulkCreateDialog.set(false);
 
             const parts: string[] = [];

@@ -432,6 +432,22 @@
                     <i class="pi pi-eye-slash text-muted-color text-xs"></i>
                 </div>
                 }
+                <!-- Protection Level Badge -->
+                @if (profile.metadata?.protectionLevel && profile.metadata?.protectionLevel !== 'off') {
+                <div class="absolute bottom-2 right-2 z-10">
+                    <span
+                        class="h-5 px-1.5 rounded-full text-[10px] font-semibold flex items-center gap-1 shadow-sm border"
+                        [class]="profile.metadata?.protectionLevel === 'maximum'
+                            ? 'bg-green-50 dark:bg-green-950/50 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800'
+                            : 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'"
+                        [pTooltip]="'Protection: ' + (profile.metadata?.protectionLevel | titlecase)"
+                        tooltipPosition="top">
+                        <i [class]="profile.metadata?.protectionLevel === 'maximum' ? 'pi pi-verified' : 'pi pi-shield'"
+                            class="text-[10px]"></i>
+                        {{ profile.metadata?.protectionLevel === 'maximum' ? 'MAX' : 'STD' }}
+                    </span>
+                </div>
+                }
                 <!-- Avatar/Emoji -->
                 <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-3 text-2xl"
                     [class]="profile.metadata?.isHidden ? 'opacity-50' : ''">
@@ -1224,5 +1240,10 @@
     @if (showDownloadDialog()) {
     <app-download-browser-dialog (onDownloadComplete)="onBrowserDownloadComplete()"
         (onSkip)="onBrowserDownloadSkip()" />
+    }
+
+    <!-- Onboarding Dialog (first-run) -->
+    @if (showOnboarding()) {
+    <app-onboarding-dialog (complete)="onOnboardingComplete($event)" (dismiss)="onOnboardingDismiss()" />
     }
 </div>

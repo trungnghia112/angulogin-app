@@ -1,0 +1,119 @@
+<!-- Fullscreen Overlay -->
+<div id="onboarding-overlay"
+    class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+
+    <!-- Dialog Card -->
+    <div id="onboarding-card"
+        class="w-full max-w-lg mx-4 bg-surface-0 dark:bg-surface-900 rounded-2xl shadow-2xl border border-surface-200 dark:border-surface-700 overflow-hidden animate-onboarding-in">
+
+        <!-- Step Progress -->
+        <div class="flex items-center gap-0 px-6 pt-5 pb-3">
+            @for (step of steps; track step.title; let i = $index) {
+            <div class="flex items-center gap-2"
+                [class]="i <= currentStep() ? 'text-primary' : 'text-surface-300 dark:text-surface-600'">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+                    [class]="i < currentStep()
+                        ? 'bg-primary text-primary-contrast'
+                        : i === currentStep()
+                            ? 'bg-primary/10 text-primary ring-2 ring-primary'
+                            : 'bg-surface-100 dark:bg-surface-800 text-surface-400'">
+                    @if (i < currentStep()) { <i class="pi pi-check text-xs"></i>
+                        } @else {
+                        {{ i + 1 }}
+                        }
+                </div>
+                <span class="text-xs font-medium hidden sm:inline">{{ step.title }}</span>
+            </div>
+            @if (i < steps.length - 1) { <div class="flex-1 h-px mx-2 transition-colors"
+                [class]="i < currentStep() ? 'bg-primary' : 'bg-surface-200 dark:bg-surface-700'">
+        </div>
+        }
+        }
+    </div>
+
+    <!-- Content Area -->
+    <div class="px-6 py-4 min-h-[280px] flex flex-col">
+
+        <!-- Step 0: Welcome -->
+        @if (currentStep() === 0) {
+        <div class="flex-1 flex flex-col items-center justify-center text-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-2">
+                <i class="pi pi-sparkles text-3xl text-primary"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-color">Welcome to AnguLogin</h2>
+            <p class="text-muted-color text-sm leading-relaxed max-w-sm">
+                Manage your browser profiles with ease.
+                Let's set up your preferred protection level — it takes just a moment.
+            </p>
+        </div>
+        }
+
+        <!-- Step 1: Protection Level -->
+        @if (currentStep() === 1) {
+        <div class="flex-1 flex flex-col gap-4">
+            <div class="text-center mb-2">
+                <h2 class="text-lg font-bold text-color">Choose Your Default Protection</h2>
+                <p class="text-xs text-muted-color mt-1">This will be applied to all new profiles you create.</p>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                @for (option of protectionOptions; track option.value) {
+                <button [id]="'onboarding-level-' + option.value" (click)="selectLevel(option.value)"
+                    class="flex items-center gap-3 p-3 rounded-lg border-2 transition-all cursor-pointer text-left"
+                    [class]="selectedLevel() === option.value
+                            ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                            : 'border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600'">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" [class]="option.bgClass">
+                        <i [class]="option.icon + ' ' + option.iconClass"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-semibold text-color">{{ option.label }}</span>
+                            @if (selectedLevel() === option.value) {
+                            <i class="pi pi-check-circle text-primary text-sm"></i>
+                            }
+                        </div>
+                        <p class="text-xs text-muted-color mt-0.5">{{ option.description }}</p>
+                    </div>
+                </button>
+                }
+            </div>
+        </div>
+        }
+
+        <!-- Step 2: Ready -->
+        @if (currentStep() === 2) {
+        <div class="flex-1 flex flex-col items-center justify-center text-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-green-50 dark:bg-green-950/50 flex items-center justify-center mb-2">
+                <i class="pi pi-check-circle text-3xl text-green-500"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-color">You're All Set!</h2>
+            <p class="text-muted-color text-sm leading-relaxed max-w-sm">
+                New profiles will use
+                <strong class="text-color">{{ selectedLevel() | titlecase }}</strong>
+                protection by default. You can change this anytime in Settings.
+            </p>
+        </div>
+        }
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="flex items-center justify-between px-6 py-4 border-t border-surface-100 dark:border-surface-800">
+        <div>
+            @if (currentStep() === 0) {
+            <p-button label="Skip" [text]="true" severity="secondary" size="small" (click)="skip()" />
+            } @else {
+            <p-button label="Back" [text]="true" severity="secondary" size="small" icon="pi pi-arrow-left"
+                (click)="back()" />
+            }
+        </div>
+        <div>
+            @if (currentStep()
+            < 2) { <p-button label="Continue" icon="pi pi-arrow-right" iconPos="right" (click)="next()" />
+            } @else {
+            <p-button label="Get Started" icon="pi pi-check" (click)="finish()" />
+            }
+        </div>
+    </div>
+</div>
+</div>

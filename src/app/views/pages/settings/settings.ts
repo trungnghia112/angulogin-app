@@ -95,6 +95,33 @@ export class Settings {
         { label: 'Close', value: 'close', icon: 'pi pi-times' }
     ];
 
+    protected readonly protectionLevelOptions = [
+        {
+            value: 'off' as const,
+            label: 'Off',
+            description: 'No fingerprint protection. Uses default Chrome settings.',
+            icon: 'pi pi-ban',
+            iconClass: 'text-surface-400',
+            bgClass: 'bg-surface-100 dark:bg-surface-800',
+        },
+        {
+            value: 'standard' as const,
+            label: 'Standard',
+            description: 'Canvas noise, WebGL protection, and timezone masking via stealth injection.',
+            icon: 'pi pi-shield',
+            iconClass: 'text-blue-500',
+            bgClass: 'bg-blue-50 dark:bg-blue-950/50',
+        },
+        {
+            value: 'maximum' as const,
+            label: 'Maximum',
+            description: 'Full antidetect using Camoufox engine with hardware-level fingerprint spoofing.',
+            icon: 'pi pi-verified',
+            iconClass: 'text-green-500',
+            bgClass: 'bg-green-50 dark:bg-green-950/50',
+        },
+    ];
+
     // Restore Dialog state
     protected readonly showRestoreDialog = signal(false);
     protected readonly selectedBackupPath = signal('');

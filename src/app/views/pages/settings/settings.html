@@ -237,6 +237,38 @@
                 </div>
             </section>
 
+            <!-- Default Protection Level -->
+            <section id="settings-default-protection"
+                class="bg-surface-0 dark:bg-surface-900 p-6 rounded-xl border border-surface-100 dark:border-surface-800">
+                <h3 class="text-base font-semibold text-color mb-2">Default Protection Level</h3>
+                <p class="text-sm text-muted-color mb-6">Applied automatically when creating new profiles.</p>
+
+                <div class="flex flex-col gap-3">
+                    @for (level of protectionLevelOptions; track level.value) {
+                    <button [id]="'settings-protection-' + level.value"
+                        (click)="updateGeneral('defaultProtectionLevel', level.value)"
+                        class="flex items-start gap-4 p-4 rounded-lg border-2 transition-all cursor-pointer text-left"
+                        [class]="settingsService.general().defaultProtectionLevel === level.value
+                            ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                            : 'border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600 bg-surface-50 dark:bg-surface-800/50'">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                            [class]="level.bgClass">
+                            <i [class]="level.icon + ' text-lg ' + level.iconClass"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-semibold text-color">{{ level.label }}</span>
+                                @if (settingsService.general().defaultProtectionLevel === level.value) {
+                                <i class="pi pi-check-circle text-primary text-sm"></i>
+                                }
+                            </div>
+                            <p class="text-xs text-muted-color mt-1 leading-relaxed">{{ level.description }}</p>
+                        </div>
+                    </button>
+                    }
+                </div>
+            </section>
+
         </div>
         }
 

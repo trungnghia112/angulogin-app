@@ -37,6 +37,7 @@ export const UI_SCALES = [
 
 export type BrowserType = 'chrome' | 'brave' | 'edge' | 'arc';
 export type OnLaunchBehavior = 'keep-open' | 'minimize' | 'close';
+export type ProtectionLevel = 'off' | 'standard' | 'maximum';
 
 export interface AppearanceSettings {
     primaryColor: string;
@@ -52,6 +53,7 @@ export interface GeneralSettings {
     launchAtStartup: boolean;
     startMinimized: boolean;
     confirmDelete: boolean;
+    defaultProtectionLevel: ProtectionLevel;
 }
 
 export interface BrowserSettings {
@@ -85,7 +87,8 @@ const DEFAULT_SETTINGS: AppSettings = {
         onLaunch: 'keep-open',
         launchAtStartup: false,
         startMinimized: false,
-        confirmDelete: true
+        confirmDelete: true,
+        defaultProtectionLevel: 'off',
     },
     browser: {
         profilesPath: '',
@@ -118,6 +121,7 @@ export class SettingsService {
     readonly browser = computed(() => this._settings().browser);
     readonly isDarkMode = computed(() => this._settings().appearance.isDarkMode);
     readonly autoBackup = computed(() => this._settings().autoBackup || DEFAULT_SETTINGS.autoBackup);
+    readonly defaultProtectionLevel = computed(() => this.general().defaultProtectionLevel || 'off');
 
     constructor() {
         // Apply initial theme on load
@@ -435,6 +439,12 @@ export class SettingsService {
         // Auto backup
         settings.autoBackup.intervalDays = Math.max(1, Math.min(365, Math.round(settings.autoBackup.intervalDays || 7)));
         settings.autoBackup.enabled = !!settings.autoBackup.enabled;
+
+        // General: validate protection level
+        const validLevels: ProtectionLevel[] = ['off', 'standard', 'maximum'];
+        if (!validLevels.includes(settings.general.defaultProtectionLevel)) {
+            settings.general.defaultProtectionLevel = 'off';
+        }
     }
 
     private loadSettings(): AppSettings {
