@@ -434,6 +434,14 @@ pub struct ProfileMetadata {
     pub antidetect_enabled: Option<bool>,
     // Feature 3.4: Disable extensions per profile
     pub extensions_disabled: Option<bool>,
+    // Protection Level (replaces antidetect_enabled + browser_engine)
+    pub protection_level: Option<String>,
+    // Legacy/fingerprint fields
+    pub browser_engine: Option<String>,
+    pub fingerprint_config: Option<String>,
+    pub fingerprint_os: Option<String>,
+    pub fingerprint_webgl_renderer: Option<String>,
+    pub fingerprint_webgl_vendor: Option<String>,
 }
 
 #[tauri::command]
@@ -476,13 +484,21 @@ pub fn save_profile_metadata(
     proxy_password: Option<String>,
     antidetect_enabled: Option<bool>,
     extensions_disabled: Option<bool>,
+    protection_level: Option<String>,
+    browser_engine: Option<String>,
+    fingerprint_config: Option<String>,
+    fingerprint_os: Option<String>,
+    fingerprint_webgl_renderer: Option<String>,
+    fingerprint_webgl_vendor: Option<String>,
 ) -> Result<(), String> {
     let meta_file = format!("{}/.profile-meta.json", profile_path);
     
     let metadata = ProfileMetadata { 
         emoji, notes, group, shortcut, browser, tags, launch_url, is_pinned, last_opened, 
         color, is_hidden, launch_count, total_usage_minutes, last_session_duration, is_favorite, custom_flags, proxy,
-        proxy_id, proxy_username, proxy_password, antidetect_enabled, extensions_disabled
+        proxy_id, proxy_username, proxy_password, antidetect_enabled, extensions_disabled,
+        protection_level, browser_engine, fingerprint_config, fingerprint_os,
+        fingerprint_webgl_renderer, fingerprint_webgl_vendor
     };
     
     let content = serde_json::to_string_pretty(&metadata)
