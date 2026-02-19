@@ -1,0 +1,1052 @@
+[
+    {
+        "id": "tiktok-search-like",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "TikTok Search & Comment Like",
+            "description": "Search videos, browse & random like comments to boost activity.",
+            "platform": "TikTok",
+            "platformIcon": "pi-video",
+            "author": "AnguLogin Team",
+            "tags": [
+                "social",
+                "engagement",
+                "tiktok"
+            ],
+            "createdAt": "2026-01-15",
+            "updatedAt": "2026-02-19",
+            "isPremium": true
+        },
+        "stats": {
+            "usageCount": 1262
+        },
+        "requirements": {
+            "note": "Requires TikTok account login"
+        },
+        "overview": "Visit Home → Search Keywords → Browse Videos → Like Comments by Probability → Screenshot → Loop",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "url": "https://tiktok.com",
+                "description": "Visit TikTok homepage, read the search keywords list"
+            },
+            {
+                "order": 2,
+                "action": "type",
+                "selector": "input[type=search]",
+                "value": "{{searchText}}",
+                "description": "Iterate keywords, input search term to search"
+            },
+            {
+                "order": 3,
+                "action": "scroll",
+                "description": "Get video list, randomly enter video detail page by set count"
+            },
+            {
+                "order": 4,
+                "action": "click",
+                "description": "Open comment section, calculate whether to like based on probability"
+            },
+            {
+                "order": 5,
+                "action": "loop",
+                "description": "Loop like comments by set count, screenshot to save record"
+            },
+            {
+                "order": 6,
+                "action": "extract",
+                "description": "Save like data, switch to the next video or keyword to continue"
+            }
+        ],
+        "variables": [
+            {
+                "name": "searchText",
+                "type": "string",
+                "required": true,
+                "description": "Keywords, one topic per line"
+            },
+            {
+                "name": "viewVideoCount",
+                "type": "number",
+                "required": false,
+                "default": 3,
+                "description": "Videos to browse per search (Default: 3)"
+            },
+            {
+                "name": "CommentLikes",
+                "type": "number",
+                "required": false,
+                "default": 1,
+                "description": "Comment likes per video (Default: 1)"
+            },
+            {
+                "name": "likeRate",
+                "type": "number",
+                "required": false,
+                "default": 7,
+                "description": "Like probability 0-10. 10=100% (Default: 7)"
+            }
+        ]
+    },
+    {
+        "id": "fb-group-exit",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "FB Group Exit",
+            "description": "Visit Facebook, exit specified groups.",
+            "platform": "Facebook",
+            "platformIcon": "pi-facebook",
+            "author": "AnguLogin Team",
+            "tags": [
+                "social",
+                "facebook",
+                "groups"
+            ],
+            "createdAt": "2026-01-20",
+            "updatedAt": "2026-02-10",
+            "isPremium": true
+        },
+        "stats": {
+            "usageCount": 4
+        },
+        "requirements": {
+            "note": "Requires Facebook account login"
+        },
+        "overview": "Open Facebook → Navigate Groups → Leave Group → Confirm → Loop",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "url": "https://facebook.com",
+                "description": "Open Facebook and navigate to groups page"
+            },
+            {
+                "order": 2,
+                "action": "navigate",
+                "description": "Read group URLs from input list"
+            },
+            {
+                "order": 3,
+                "action": "click",
+                "description": "Visit each group and click Leave Group"
+            },
+            {
+                "order": 4,
+                "action": "click",
+                "description": "Confirm leave action"
+            }
+        ],
+        "variables": [
+            {
+                "name": "groupUrls",
+                "type": "string",
+                "required": true,
+                "description": "Group URLs, one per line"
+            }
+        ]
+    },
+    {
+        "id": "fb-group-search-join",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "FB Group Search & Join",
+            "description": "Visit Facebook, search groups & auto-join specified number to expand social network.",
+            "platform": "Facebook",
+            "platformIcon": "pi-facebook",
+            "author": "AnguLogin Team",
+            "tags": [
+                "social",
+                "facebook",
+                "groups",
+                "networking"
+            ],
+            "createdAt": "2026-01-18",
+            "updatedAt": "2026-02-15",
+            "isPremium": false
+        },
+        "stats": {
+            "usageCount": 210
+        },
+        "requirements": {
+            "note": "Requires Facebook account login"
+        },
+        "overview": "Search Groups → Filter Results → Join Groups → Loop",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "url": "https://facebook.com/groups",
+                "description": "Open Facebook and navigate to groups search"
+            },
+            {
+                "order": 2,
+                "action": "type",
+                "description": "Input search keywords and filter results"
+            },
+            {
+                "order": 3,
+                "action": "click",
+                "description": "Auto-join groups up to specified count"
+            },
+            {
+                "order": 4,
+                "action": "wait",
+                "waitMs": 3000,
+                "description": "Wait for confirmation between joins"
+            }
+        ],
+        "variables": [
+            {
+                "name": "searchKeyword",
+                "type": "string",
+                "required": true,
+                "description": "Group search keyword"
+            },
+            {
+                "name": "joinCount",
+                "type": "number",
+                "required": false,
+                "default": 5,
+                "description": "Number of groups to join (Default: 5)"
+            }
+        ]
+    },
+    {
+        "id": "x-like-ai-comment",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "X Like & AI Comment",
+            "description": "Browse feed, like, use AI to auto-comment, loop to boost activity.",
+            "platform": "Twitter/X",
+            "platformIcon": "pi-twitter",
+            "author": "AnguLogin Team",
+            "tags": [
+                "social",
+                "twitter",
+                "ai",
+                "engagement"
+            ],
+            "createdAt": "2026-01-25",
+            "updatedAt": "2026-02-18",
+            "isPremium": true
+        },
+        "stats": {
+            "usageCount": 439
+        },
+        "requirements": {
+            "note": "Requires Twitter/X account login"
+        },
+        "overview": "Open Feed → Scroll → Like Posts → Generate AI Comment → Post Comment → Loop",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "url": "https://x.com/home",
+                "description": "Open Twitter/X home feed"
+            },
+            {
+                "order": 2,
+                "action": "scroll",
+                "description": "Scroll through posts randomly"
+            },
+            {
+                "order": 3,
+                "action": "click",
+                "description": "Like posts based on probability setting"
+            },
+            {
+                "order": 4,
+                "action": "ai",
+                "description": "Generate contextual AI comment using Grok"
+            },
+            {
+                "order": 5,
+                "action": "type",
+                "description": "Post comment and move to next post"
+            },
+            {
+                "order": 6,
+                "action": "loop",
+                "description": "Loop for specified number of iterations"
+            }
+        ],
+        "variables": [
+            {
+                "name": "scrollCount",
+                "type": "number",
+                "required": false,
+                "default": 10,
+                "description": "Number of posts to scroll (Default: 10)"
+            },
+            {
+                "name": "likeRate",
+                "type": "number",
+                "required": false,
+                "default": 5,
+                "description": "Like probability 0-10 (Default: 5)"
+            },
+            {
+                "name": "commentRate",
+                "type": "number",
+                "required": false,
+                "default": 3,
+                "description": "Comment probability 0-10 (Default: 3)"
+            }
+        ]
+    },
+    {
+        "id": "fb-friends-counter",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "FB Friends Counter",
+            "description": "Visit Facebook friends page, auto-scroll to load and extract all friends names, save to txt file.",
+            "platform": "Facebook",
+            "platformIcon": "pi-facebook",
+            "author": "AnguLogin Team",
+            "tags": [
+                "social",
+                "facebook",
+                "extraction"
+            ],
+            "createdAt": "2026-02-01",
+            "updatedAt": "2026-02-19",
+            "isPremium": true
+        },
+        "stats": {
+            "usageCount": 13
+        },
+        "requirements": {
+            "note": "Requires Facebook account login"
+        },
+        "overview": "Visit Friends Page → Auto Scroll → Extract Names → Save to File",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "url": "https://facebook.com/friends",
+                "description": "Navigate to Facebook friends page"
+            },
+            {
+                "order": 2,
+                "action": "scroll",
+                "description": "Auto-scroll to load all friends"
+            },
+            {
+                "order": 3,
+                "action": "extract",
+                "description": "Extract friend names and profile links"
+            },
+            {
+                "order": 4,
+                "action": "export",
+                "description": "Save results to text file"
+            }
+        ],
+        "variables": []
+    },
+    {
+        "id": "ig-auto-follow",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "Instagram Auto Follow",
+            "description": "Search hashtags, browse posts, auto-follow users to grow your network.",
+            "platform": "Instagram",
+            "platformIcon": "pi-instagram",
+            "author": "AnguLogin Team",
+            "tags": [
+                "social",
+                "instagram",
+                "growth"
+            ],
+            "createdAt": "2026-01-28",
+            "updatedAt": "2026-02-17",
+            "isPremium": false
+        },
+        "stats": {
+            "usageCount": 876
+        },
+        "requirements": {
+            "note": "Requires Instagram account login"
+        },
+        "overview": "Search Hashtag → Browse Posts → Visit Profile → Follow → Loop",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "url": "https://instagram.com",
+                "description": "Open Instagram and search for specified hashtag"
+            },
+            {
+                "order": 2,
+                "action": "scroll",
+                "description": "Browse top/recent posts in the hashtag feed"
+            },
+            {
+                "order": 3,
+                "action": "click",
+                "description": "Visit user profiles from posts"
+            },
+            {
+                "order": 4,
+                "action": "click",
+                "description": "Follow user if not already following"
+            },
+            {
+                "order": 5,
+                "action": "wait",
+                "waitMs": 5000,
+                "description": "Add random delay between follows"
+            }
+        ],
+        "variables": [
+            {
+                "name": "hashtags",
+                "type": "string",
+                "required": true,
+                "description": "Hashtags to search, one per line"
+            },
+            {
+                "name": "followCount",
+                "type": "number",
+                "required": false,
+                "default": 10,
+                "description": "Max follows per hashtag (Default: 10)"
+            },
+            {
+                "name": "delaySeconds",
+                "type": "number",
+                "required": false,
+                "default": 5,
+                "description": "Delay between follows in seconds (Default: 5)"
+            }
+        ]
+    },
+    {
+        "id": "amazon-review-scraper",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "Amazon Review Scraper",
+            "description": "Extract product reviews from Amazon listings, save to CSV for analysis.",
+            "platform": "Amazon",
+            "platformIcon": "pi-shopping-cart",
+            "author": "AnguLogin Team",
+            "tags": [
+                "ecommerce",
+                "amazon",
+                "scraping",
+                "data"
+            ],
+            "createdAt": "2026-02-05",
+            "updatedAt": "2026-02-19",
+            "isPremium": true
+        },
+        "stats": {
+            "usageCount": 534
+        },
+        "requirements": {
+            "note": "No login required for public reviews"
+        },
+        "overview": "Visit Product → Load Reviews → Paginate → Extract Data → Export CSV",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "description": "Navigate to Amazon product page"
+            },
+            {
+                "order": 2,
+                "action": "click",
+                "description": "Click on reviews section"
+            },
+            {
+                "order": 3,
+                "action": "scroll",
+                "description": "Paginate through all reviews"
+            },
+            {
+                "order": 4,
+                "action": "extract",
+                "description": "Extract reviewer name, rating, date, comment"
+            },
+            {
+                "order": 5,
+                "action": "export",
+                "description": "Export data to CSV file"
+            }
+        ],
+        "variables": [
+            {
+                "name": "productUrl",
+                "type": "string",
+                "required": true,
+                "description": "Amazon product URL"
+            },
+            {
+                "name": "maxPages",
+                "type": "number",
+                "required": false,
+                "default": 10,
+                "description": "Max review pages to scrape (Default: 10)"
+            }
+        ]
+    },
+    {
+        "id": "shopee-browse-products",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "Shopee Browse Products",
+            "description": "Open Shopee, search keywords, browse products randomly to warm up account.",
+            "platform": "Shopee",
+            "platformIcon": "pi-shopping-bag",
+            "author": "AnguLogin Team",
+            "tags": [
+                "ecommerce",
+                "shopee",
+                "warmup"
+            ],
+            "createdAt": "2026-02-03",
+            "updatedAt": "2026-02-18",
+            "isPremium": false
+        },
+        "stats": {
+            "usageCount": 321
+        },
+        "requirements": {
+            "note": "Requires Shopee account login"
+        },
+        "overview": "Open Shopee → Search → Browse Products → Add to Cart → Loop",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "url": "https://shopee.com",
+                "description": "Open shopee.com and log in"
+            },
+            {
+                "order": 2,
+                "action": "type",
+                "description": "Search for specified keywords"
+            },
+            {
+                "order": 3,
+                "action": "scroll",
+                "description": "Browse product listings randomly"
+            },
+            {
+                "order": 4,
+                "action": "click",
+                "description": "Click into product details"
+            },
+            {
+                "order": 5,
+                "action": "click",
+                "description": "Optionally add to cart"
+            }
+        ],
+        "variables": [
+            {
+                "name": "searchKeywords",
+                "type": "string",
+                "required": true,
+                "description": "Keywords to search, one per line"
+            },
+            {
+                "name": "browseCount",
+                "type": "number",
+                "required": false,
+                "default": 5,
+                "description": "Products to browse per keyword (Default: 5)"
+            }
+        ]
+    },
+    {
+        "id": "linkedin-connect",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "LinkedIn Auto Connect",
+            "description": "Search professionals by keyword, send connection requests with personalized notes.",
+            "platform": "LinkedIn",
+            "platformIcon": "pi-linkedin",
+            "author": "AnguLogin Team",
+            "tags": [
+                "social",
+                "linkedin",
+                "networking",
+                "business"
+            ],
+            "createdAt": "2026-01-22",
+            "updatedAt": "2026-02-16",
+            "isPremium": true
+        },
+        "stats": {
+            "usageCount": 1450
+        },
+        "requirements": {
+            "note": "Requires LinkedIn account login"
+        },
+        "overview": "Search People → Visit Profile → Send Connect Request → Add Note → Loop",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "url": "https://linkedin.com",
+                "description": "Open LinkedIn and search for people"
+            },
+            {
+                "order": 2,
+                "action": "type",
+                "description": "Filter by location, industry, or keyword"
+            },
+            {
+                "order": 3,
+                "action": "click",
+                "description": "Visit profile and click Connect"
+            },
+            {
+                "order": 4,
+                "action": "type",
+                "value": "{{noteTemplate}}",
+                "description": "Add personalized connection note"
+            },
+            {
+                "order": 5,
+                "action": "wait",
+                "waitMs": 5000,
+                "description": "Wait between requests to avoid rate limits"
+            }
+        ],
+        "variables": [
+            {
+                "name": "searchQuery",
+                "type": "string",
+                "required": true,
+                "description": "People search query"
+            },
+            {
+                "name": "connectCount",
+                "type": "number",
+                "required": false,
+                "default": 20,
+                "description": "Max connections to send (Default: 20)"
+            },
+            {
+                "name": "noteTemplate",
+                "type": "string",
+                "required": false,
+                "description": "Connection note template (use {name} placeholder)"
+            }
+        ]
+    },
+    {
+        "id": "reddit-upvote-comment",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "Reddit Upvote & Comment",
+            "description": "Browse subreddits, upvote posts and leave comments to build karma.",
+            "platform": "Reddit",
+            "platformIcon": "pi-reddit",
+            "author": "AnguLogin Team",
+            "tags": [
+                "social",
+                "reddit",
+                "engagement"
+            ],
+            "createdAt": "2026-02-07",
+            "updatedAt": "2026-02-19",
+            "isPremium": false
+        },
+        "stats": {
+            "usageCount": 198
+        },
+        "requirements": {
+            "note": "Requires Reddit account login"
+        },
+        "overview": "Visit Subreddit → Browse Posts → Upvote → Comment → Loop",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "description": "Navigate to specified subreddit"
+            },
+            {
+                "order": 2,
+                "action": "scroll",
+                "description": "Browse hot/new posts"
+            },
+            {
+                "order": 3,
+                "action": "click",
+                "description": "Upvote posts based on probability"
+            },
+            {
+                "order": 4,
+                "action": "type",
+                "description": "Leave pre-written comments on posts"
+            },
+            {
+                "order": 5,
+                "action": "click",
+                "description": "Move to next post"
+            }
+        ],
+        "variables": [
+            {
+                "name": "subreddits",
+                "type": "string",
+                "required": true,
+                "description": "Subreddit names, one per line"
+            },
+            {
+                "name": "comments",
+                "type": "string",
+                "required": true,
+                "description": "Comment pool, one per line (random pick)"
+            },
+            {
+                "name": "upvoteRate",
+                "type": "number",
+                "required": false,
+                "default": 7,
+                "description": "Upvote probability 0-10 (Default: 7)"
+            }
+        ]
+    },
+    {
+        "id": "youtube-watch-subscribe",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "YouTube Watch & Subscribe",
+            "description": "Search videos by keyword, watch for specified duration, like and subscribe.",
+            "platform": "YouTube",
+            "platformIcon": "pi-youtube",
+            "author": "AnguLogin Team",
+            "tags": [
+                "social",
+                "youtube",
+                "engagement"
+            ],
+            "createdAt": "2026-01-30",
+            "updatedAt": "2026-02-19",
+            "isPremium": true
+        },
+        "stats": {
+            "usageCount": 2100
+        },
+        "requirements": {
+            "note": "Requires Google account login"
+        },
+        "overview": "Search Videos → Watch → Like → Subscribe → Loop",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "url": "https://youtube.com",
+                "description": "Open YouTube and search for keywords"
+            },
+            {
+                "order": 2,
+                "action": "click",
+                "description": "Click on video from search results"
+            },
+            {
+                "order": 3,
+                "action": "wait",
+                "waitMs": 30000,
+                "description": "Watch video for specified duration"
+            },
+            {
+                "order": 4,
+                "action": "click",
+                "description": "Like video and subscribe to channel"
+            },
+            {
+                "order": 5,
+                "action": "click",
+                "description": "Move to next search result"
+            }
+        ],
+        "variables": [
+            {
+                "name": "searchKeywords",
+                "type": "string",
+                "required": true,
+                "description": "Video search keywords"
+            },
+            {
+                "name": "watchDuration",
+                "type": "number",
+                "required": false,
+                "default": 30,
+                "description": "Watch duration in seconds (Default: 30)"
+            },
+            {
+                "name": "subscribeRate",
+                "type": "number",
+                "required": false,
+                "default": 5,
+                "description": "Subscribe probability 0-10 (Default: 5)"
+            }
+        ]
+    },
+    {
+        "id": "gmail-send-bulk",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "Gmail Bulk Sender",
+            "description": "Send personalized emails to a list of recipients using Gmail.",
+            "platform": "Gmail",
+            "platformIcon": "pi-envelope",
+            "author": "AnguLogin Team",
+            "tags": [
+                "email",
+                "gmail",
+                "marketing"
+            ],
+            "createdAt": "2026-02-10",
+            "updatedAt": "2026-02-19",
+            "isPremium": true
+        },
+        "stats": {
+            "usageCount": 756
+        },
+        "requirements": {
+            "note": "Requires Gmail account login"
+        },
+        "overview": "Open Gmail → Compose → Fill Template → Send → Loop",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "url": "https://mail.google.com",
+                "description": "Open Gmail and click Compose"
+            },
+            {
+                "order": 2,
+                "action": "type",
+                "description": "Fill in recipient from list"
+            },
+            {
+                "order": 3,
+                "action": "type",
+                "description": "Apply email template with personalization"
+            },
+            {
+                "order": 4,
+                "action": "click",
+                "description": "Send email"
+            },
+            {
+                "order": 5,
+                "action": "wait",
+                "waitMs": 10000,
+                "description": "Wait between sends to avoid rate limits"
+            }
+        ],
+        "variables": [
+            {
+                "name": "recipients",
+                "type": "string",
+                "required": true,
+                "description": "Email addresses, one per line"
+            },
+            {
+                "name": "subject",
+                "type": "string",
+                "required": true,
+                "description": "Email subject line"
+            },
+            {
+                "name": "bodyTemplate",
+                "type": "string",
+                "required": true,
+                "description": "Email body (use {name} for personalization)"
+            },
+            {
+                "name": "delaySeconds",
+                "type": "number",
+                "required": false,
+                "default": 10,
+                "description": "Delay between sends (Default: 10)"
+            }
+        ]
+    },
+    {
+        "id": "etsy-browse-goods",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "Browse Goods on Etsy",
+            "description": "Open www.etsy.com, browse 3 products randomly to warm up your account.",
+            "platform": "Etsy",
+            "platformIcon": "pi-shopping-bag",
+            "author": "AnguLogin Team",
+            "tags": [
+                "ecommerce",
+                "etsy",
+                "warmup"
+            ],
+            "createdAt": "2026-01-10",
+            "updatedAt": "2026-02-15",
+            "isPremium": false
+        },
+        "stats": {
+            "usageCount": 3500
+        },
+        "requirements": {
+            "note": "No login required"
+        },
+        "overview": "Open Etsy → Browse → Click Products → View Details → Loop",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "url": "https://etsy.com",
+                "description": "Open etsy.com homepage"
+            },
+            {
+                "order": 2,
+                "action": "scroll",
+                "description": "Browse product categories"
+            },
+            {
+                "order": 3,
+                "action": "click",
+                "description": "Click on random products"
+            },
+            {
+                "order": 4,
+                "action": "scroll",
+                "description": "View product details and scroll through images"
+            }
+        ],
+        "variables": [
+            {
+                "name": "browseCount",
+                "type": "number",
+                "required": false,
+                "default": 3,
+                "description": "Number of products to browse (Default: 3)"
+            }
+        ]
+    },
+    {
+        "id": "fb-add-friends",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "FB Add Suggested Friends",
+            "description": "Open Facebook, add recommended friends randomly to expand your network.",
+            "platform": "Facebook",
+            "platformIcon": "pi-facebook",
+            "author": "AnguLogin Team",
+            "tags": [
+                "social",
+                "facebook",
+                "networking"
+            ],
+            "createdAt": "2026-01-12",
+            "updatedAt": "2026-02-14",
+            "isPremium": false
+        },
+        "stats": {
+            "usageCount": 2920
+        },
+        "requirements": {
+            "note": "Requires Facebook account login"
+        },
+        "overview": "Visit Suggestions → Add Friends → Scroll → Loop",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "url": "https://facebook.com/friends/suggestions",
+                "description": "Open Facebook friend suggestions page"
+            },
+            {
+                "order": 2,
+                "action": "click",
+                "description": "Click Add Friend on suggested profiles"
+            },
+            {
+                "order": 3,
+                "action": "scroll",
+                "description": "Scroll to load more suggestions"
+            },
+            {
+                "order": 4,
+                "action": "loop",
+                "description": "Continue until target count reached"
+            }
+        ],
+        "variables": [
+            {
+                "name": "addCount",
+                "type": "number",
+                "required": false,
+                "default": 3,
+                "description": "Number of friends to add (Default: 3)"
+            }
+        ]
+    },
+    {
+        "id": "poshmark-share-listings",
+        "version": "1.0.0",
+        "metadata": {
+            "title": "Poshmark Auto Share",
+            "description": "Automatically share your Poshmark closet listings to boost visibility.",
+            "platform": "Poshmark",
+            "platformIcon": "pi-share-alt",
+            "author": "AnguLogin Team",
+            "tags": [
+                "ecommerce",
+                "poshmark",
+                "marketing"
+            ],
+            "createdAt": "2026-02-08",
+            "updatedAt": "2026-02-19",
+            "isPremium": false
+        },
+        "stats": {
+            "usageCount": 890
+        },
+        "requirements": {
+            "note": "Requires Poshmark account login"
+        },
+        "overview": "Open Closet → Share Listings → Solve Captcha → Loop",
+        "steps": [
+            {
+                "order": 1,
+                "action": "navigate",
+                "url": "https://poshmark.com/closet",
+                "description": "Open your Poshmark closet"
+            },
+            {
+                "order": 2,
+                "action": "scroll",
+                "description": "Iterate through listings"
+            },
+            {
+                "order": 3,
+                "action": "click",
+                "description": "Click Share on each listing"
+            },
+            {
+                "order": 4,
+                "action": "wait",
+                "description": "Handle any captcha challenges"
+            },
+            {
+                "order": 5,
+                "action": "loop",
+                "description": "Continue to next listing"
+            }
+        ],
+        "variables": [
+            {
+                "name": "maxShares",
+                "type": "number",
+                "required": false,
+                "description": "Max listings to share (Default: all)"
+            }
+        ]
+    }
+]
