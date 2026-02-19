@@ -143,6 +143,58 @@ export class Automation implements OnInit {
             exampleBody: '{\n  "profile_id": "OldProfile"\n}',
             exampleResponse: '{\n  "code": 0,\n  "msg": "success",\n  "data": {\n    "msg": "Profile deleted",\n    "profile_id": "OldProfile"\n  }\n}',
         },
+        // --- Proxy Endpoints ---
+        {
+            method: 'GET', path: '/api/v1/proxy/list',
+            description: 'List all configured proxies.',
+            auth: true,
+            params: [],
+            exampleBody: null,
+            exampleResponse: '{\n  "code": 0,\n  "msg": "success",\n  "data": [\n    {\n      "id": "proxy-abc123",\n      "name": "US Proxy",\n      "host": "1.2.3.4",\n      "port": 8080,\n      "type": "http",\n      "isAlive": true\n    }\n  ]\n}',
+        },
+        {
+            method: 'POST', path: '/api/v1/proxy/add',
+            description: 'Add a new proxy.',
+            auth: true,
+            params: [
+                { name: 'host', type: 'string', required: true, description: 'Proxy host/IP' },
+                { name: 'port', type: 'number', required: true, description: 'Proxy port' },
+                { name: 'type', type: 'string', required: false, description: 'http | socks4 | socks5' },
+                { name: 'username', type: 'string', required: false, description: 'Auth username' },
+                { name: 'password', type: 'string', required: false, description: 'Auth password' },
+            ],
+            exampleBody: '{\n  "host": "1.2.3.4",\n  "port": 8080,\n  "type": "http",\n  "group": "us-proxies"\n}',
+            exampleResponse: '{\n  "code": 0,\n  "msg": "success",\n  "data": {\n    "id": "proxy-abc123",\n    "name": "1.2.3.4:8080",\n    "host": "1.2.3.4",\n    "port": 8080\n  }\n}',
+        },
+        {
+            method: 'POST', path: '/api/v1/proxy/delete',
+            description: 'Delete a proxy by ID.',
+            auth: true,
+            params: [
+                { name: 'id', type: 'string', required: true, description: 'Proxy ID' },
+            ],
+            exampleBody: '{\n  "id": "proxy-abc123"\n}',
+            exampleResponse: '{\n  "code": 0,\n  "msg": "success",\n  "data": { "msg": "Proxy deleted" }\n}',
+        },
+        {
+            method: 'GET', path: '/api/v1/proxy/check',
+            description: 'Health check proxies via TCP connect test.',
+            auth: true,
+            params: [
+                { name: 'id', type: 'string', required: false, description: 'Check specific proxy (omit for all)' },
+            ],
+            exampleBody: null,
+            exampleResponse: '{\n  "code": 0,\n  "msg": "success",\n  "data": [\n    {\n      "id": "proxy-abc123",\n      "host": "1.2.3.4",\n      "port": 8080,\n      "is_alive": true,\n      "latency_ms": 142\n    }\n  ]\n}',
+        },
+        // --- Group Endpoints ---
+        {
+            method: 'GET', path: '/api/v1/group/list',
+            description: 'List all profile groups with counts.',
+            auth: true,
+            params: [],
+            exampleBody: null,
+            exampleResponse: '{\n  "code": 0,\n  "msg": "success",\n  "data": [\n    { "group_id": "ecommerce", "group_name": "ecommerce", "profile_count": 12 },\n    { "group_id": "social", "group_name": "social", "profile_count": 5 }\n  ]\n}',
+        },
     ];
 
     ngOnInit(): void {

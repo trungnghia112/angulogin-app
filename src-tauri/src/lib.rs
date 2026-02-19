@@ -93,7 +93,8 @@ pub fn run() {
             api_server::get_api_config,
             api_server::save_api_config,
             api_server::regenerate_api_key,
-            api_server::set_api_profiles_path
+            api_server::set_api_profiles_path,
+            api_server::sync_api_proxies
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

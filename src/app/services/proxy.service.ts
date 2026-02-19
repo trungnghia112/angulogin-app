@@ -209,6 +209,21 @@ export class ProxyService {
         } catch {
             console.warn('Failed to save proxies to storage');
         }
+        // Sync to Rust API server file
+        this.syncToApi();
+    }
+
+    private async syncToApi(): Promise<void> {
+        try {
+            if (typeof (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ === 'undefined') {
+                return; // Skip in web dev mode
+            }
+            const { invoke } = await import('@tauri-apps/api/core');
+            const data = { proxies: this._proxies() };
+            await invoke('sync_api_proxies', { proxiesJson: JSON.stringify(data) });
+        } catch {
+            console.warn('[ProxyService] Failed to sync proxies to API server');
+        }
     }
 
     // === Helpers ===

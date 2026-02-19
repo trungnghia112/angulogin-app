@@ -4,6 +4,8 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use std::net::TcpStream;
+use std::time::{Duration, Instant};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tower_http::cors::{Any, CorsLayer};
@@ -29,6 +31,40 @@ fn get_profiles_path() -> Result<String, String> {
     lock.as_ref()
         .cloned()
         .ok_or_else(|| "Profiles path not configured. Open the app and set a profiles directory first.".to_string())
+}
+
+// ---------------------------------------------------------------------------
+// Proxy data persistence (JSON file on disk)
+// ---------------------------------------------------------------------------
+
+fn proxies_path() -> std::path::PathBuf {
+    directories::BaseDirs::new()
+        .expect("Failed to get base dirs")
+        .data_dir()
+        .join("AnguLogin")
+        .join("proxies.json")
+}
+
+fn load_proxies() -> ProxyData {
+    let path = proxies_path();
+    if path.exists() {
+        if let Ok(content) = std::fs::read_to_string(&path) {
+            if let Ok(data) = serde_json::from_str(&content) {
+                return data;
+            }
+        }
+    }
+    ProxyData::default()
+}
+
+fn save_proxies(data: &ProxyData) {
+    let path = proxies_path();
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    if let Ok(json) = serde_json::to_string_pretty(data) {
+        let _ = std::fs::write(&path, json);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -443,6 +479,190 @@ async fn profile_delete(
 }
 
 // ---------------------------------------------------------------------------
+// Proxy handlers
+// ---------------------------------------------------------------------------
+
+async fn proxy_list(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<Vec<ProxyEntry>>>) {
+    if let Err(e) = check_auth(&headers, &state.api_key) {
+        return (e.0, Json(ApiResponse::error(-1, "Unauthorized")));
+    }
+    let data = load_proxies();
+    (StatusCode::OK, Json(ApiResponse::success(data.proxies)))
+}
+
+async fn proxy_add(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(body): Json<AddProxyRequest>,
+) -> (StatusCode, Json<ApiResponse<ProxyEntry>>) {
+    if let Err(e) = check_auth(&headers, &state.api_key) {
+        return (e.0, Json(ApiResponse::error(-1, "Unauthorized")));
+    }
+
+    let new_proxy = ProxyEntry {
+        id: format!("proxy-{}", uuid::Uuid::new_v4().to_string().replace("-", "")),
+        name: body.name.unwrap_or_else(|| format!("{}:{}", body.host, body.port)),
+        host: body.host,
+        port: body.port,
+        proxy_type: body.proxy_type.unwrap_or_else(|| "http".to_string()),
+        username: body.username,
+        password: body.password,
+        group: body.group,
+        last_checked: None,
+        is_alive: None,
+        latency_ms: None,
+    };
+
+    let mut data = load_proxies();
+    data.proxies.push(new_proxy.clone());
+    save_proxies(&data);
+
+    (StatusCode::OK, Json(ApiResponse::success(new_proxy)))
+}
+
+async fn proxy_update(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(body): Json<UpdateProxyRequest>,
+) -> (StatusCode, Json<ApiResponse<serde_json::Value>>) {
+    if let Err(e) = check_auth(&headers, &state.api_key) {
+        return (e.0, Json(ApiResponse::error(-1, "Unauthorized")));
+    }
+
+    let mut data = load_proxies();
+    let found = data.proxies.iter_mut().find(|p| p.id == body.id);
+
+    match found {
+        Some(proxy) => {
+            if let Some(name) = body.name { proxy.name = name; }
+            if let Some(host) = body.host { proxy.host = host; }
+            if let Some(port) = body.port { proxy.port = port; }
+            if let Some(t) = body.proxy_type { proxy.proxy_type = t; }
+            if let Some(u) = body.username { proxy.username = Some(u); }
+            if let Some(p) = body.password { proxy.password = Some(p); }
+            if let Some(g) = body.group { proxy.group = Some(g); }
+            save_proxies(&data);
+            (StatusCode::OK, Json(ApiResponse::success(serde_json::json!({ "msg": "Proxy updated" }))))
+        }
+        None => (StatusCode::NOT_FOUND, Json(ApiResponse::error(-1, "Proxy not found"))),
+    }
+}
+
+async fn proxy_delete(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(body): Json<DeleteProxyRequest>,
+) -> (StatusCode, Json<ApiResponse<serde_json::Value>>) {
+    if let Err(e) = check_auth(&headers, &state.api_key) {
+        return (e.0, Json(ApiResponse::error(-1, "Unauthorized")));
+    }
+
+    let mut data = load_proxies();
+    let before_len = data.proxies.len();
+    data.proxies.retain(|p| p.id != body.id);
+
+    if data.proxies.len() == before_len {
+        return (StatusCode::NOT_FOUND, Json(ApiResponse::error(-1, "Proxy not found")));
+    }
+
+    save_proxies(&data);
+    (StatusCode::OK, Json(ApiResponse::success(serde_json::json!({
+        "msg": "Proxy deleted",
+        "id": body.id
+    }))))
+}
+
+async fn proxy_check(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Query(params): Query<ProxyCheckParams>,
+) -> (StatusCode, Json<ApiResponse<Vec<ProxyCheckResult>>>) {
+    if let Err(e) = check_auth(&headers, &state.api_key) {
+        return (e.0, Json(ApiResponse::error(-1, "Unauthorized")));
+    }
+
+    let mut data = load_proxies();
+    let targets: Vec<&mut ProxyEntry> = if let Some(ref id) = params.id {
+        data.proxies.iter_mut().filter(|p| &p.id == id).collect()
+    } else {
+        data.proxies.iter_mut().collect()
+    };
+
+    let mut results = Vec::new();
+    for proxy in targets {
+        let addr = format!("{}:{}", proxy.host, proxy.port);
+        let start = Instant::now();
+        let is_alive = TcpStream::connect_timeout(
+            &addr.parse().unwrap_or_else(|_| "0.0.0.0:0".parse().unwrap()),
+            Duration::from_secs(5),
+        ).is_ok();
+        let latency = if is_alive { Some(start.elapsed().as_millis() as u64) } else { None };
+
+        // Update proxy health data
+        proxy.is_alive = Some(is_alive);
+        proxy.latency_ms = latency;
+        proxy.last_checked = Some(chrono::Utc::now().to_rfc3339());
+
+        results.push(ProxyCheckResult {
+            id: proxy.id.clone(),
+            host: proxy.host.clone(),
+            port: proxy.port,
+            is_alive,
+            latency_ms: latency,
+        });
+    }
+
+    save_proxies(&data);
+    (StatusCode::OK, Json(ApiResponse::success(results)))
+}
+
+// ---------------------------------------------------------------------------
+// Group handlers
+// ---------------------------------------------------------------------------
+
+async fn group_list(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<Vec<GroupEntry>>>) {
+    if let Err(e) = check_auth(&headers, &state.api_key) {
+        return (e.0, Json(ApiResponse::error(-1, "Unauthorized")));
+    }
+
+    let profiles_path = match get_profiles_path() {
+        Ok(p) => p,
+        Err(e) => return (StatusCode::BAD_REQUEST, Json(ApiResponse::error(-1, e))),
+    };
+
+    // Scan profiles to extract groups
+    let mut group_counts: HashMap<String, usize> = HashMap::new();
+    match commands::scan_profiles_with_metadata(profiles_path) {
+        Ok(profiles) => {
+            for profile in &profiles {
+                if let Some(ref group) = profile.metadata.group {
+                    if !group.is_empty() {
+                        *group_counts.entry(group.clone()).or_insert(0) += 1;
+                    }
+                }
+            }
+        }
+        Err(_) => {}
+    }
+
+    let groups: Vec<GroupEntry> = group_counts.into_iter()
+        .map(|(name, count)| GroupEntry {
+            group_id: name.clone(),
+            group_name: name,
+            profile_count: count,
+        })
+        .collect();
+
+    (StatusCode::OK, Json(ApiResponse::success(groups)))
+}
+
+// ---------------------------------------------------------------------------
 // Config persistence
 // ---------------------------------------------------------------------------
 
@@ -509,6 +729,14 @@ pub async fn start(port: u16, api_key: String) {
         .route("/api/v1/profile/create", post(profile_create))
         .route("/api/v1/profile/update", post(profile_update))
         .route("/api/v1/profile/delete", post(profile_delete))
+        // Proxy
+        .route("/api/v1/proxy/list", get(proxy_list))
+        .route("/api/v1/proxy/add", post(proxy_add))
+        .route("/api/v1/proxy/update", post(proxy_update))
+        .route("/api/v1/proxy/delete", post(proxy_delete))
+        .route("/api/v1/proxy/check", get(proxy_check))
+        // Group
+        .route("/api/v1/group/list", get(group_list))
         .layer(cors)
         .with_state(state.clone());
 
@@ -557,9 +785,16 @@ pub fn regenerate_api_key() -> String {
 /// Called by frontend when profile path changes, so API server knows where to find profiles
 #[tauri::command]
 pub fn set_api_profiles_path(path: String) {
-    // Store in a global so the API server can access it
-    // The API server reads this via its shared state
     API_PROFILES_PATH.lock().unwrap().replace(path);
+}
+
+/// Called by frontend to sync proxy data to disk for API server access
+#[tauri::command]
+pub fn sync_api_proxies(proxies_json: String) -> Result<(), String> {
+    let data: ProxyData = serde_json::from_str(&proxies_json)
+        .map_err(|e| format!("Invalid proxy data: {}", e))?;
+    save_proxies(&data);
+    Ok(())
 }
 
 lazy_static::lazy_static! {

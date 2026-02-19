@@ -164,3 +164,88 @@ impl Default for ApiConfig {
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// Proxy endpoints
+// ---------------------------------------------------------------------------
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ProxyEntry {
+    pub id: String,
+    pub name: String,
+    pub host: String,
+    pub port: u16,
+    #[serde(rename = "type")]
+    pub proxy_type: String, // "http" | "socks4" | "socks5"
+    pub username: Option<String>,
+    pub password: Option<String>,
+    pub group: Option<String>,
+    #[serde(rename = "lastChecked")]
+    pub last_checked: Option<String>,
+    #[serde(rename = "isAlive")]
+    pub is_alive: Option<bool>,
+    #[serde(rename = "latencyMs")]
+    pub latency_ms: Option<u64>,
+}
+
+/// Proxy data stored on disk for API server access
+#[derive(Serialize, Deserialize, Clone, Default)]
+pub struct ProxyData {
+    pub proxies: Vec<ProxyEntry>,
+}
+
+#[derive(Deserialize)]
+pub struct AddProxyRequest {
+    pub name: Option<String>,
+    pub host: String,
+    pub port: u16,
+    #[serde(rename = "type")]
+    pub proxy_type: Option<String>,
+    pub username: Option<String>,
+    pub password: Option<String>,
+    pub group: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct UpdateProxyRequest {
+    pub id: String,
+    pub name: Option<String>,
+    pub host: Option<String>,
+    pub port: Option<u16>,
+    #[serde(rename = "type")]
+    pub proxy_type: Option<String>,
+    pub username: Option<String>,
+    pub password: Option<String>,
+    pub group: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct DeleteProxyRequest {
+    pub id: String,
+}
+
+#[derive(Deserialize)]
+pub struct ProxyCheckParams {
+    pub id: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct ProxyCheckResult {
+    pub id: String,
+    pub host: String,
+    pub port: u16,
+    pub is_alive: bool,
+    pub latency_ms: Option<u64>,
+}
+
+// ---------------------------------------------------------------------------
+// Group endpoints
+// ---------------------------------------------------------------------------
+
+#[derive(Serialize)]
+pub struct GroupEntry {
+    pub group_id: String,
+    pub group_name: String,
+    pub profile_count: usize,
+}
+
