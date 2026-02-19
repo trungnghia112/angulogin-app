@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.1.2",
-        "updated_at": "2026-02-20T01:01:00+07:00"
+        "updated_at": "2026-02-20T04:08:00+07:00"
     },
     "project": {
         "name": "AnguLogin",
@@ -29,9 +29,14 @@
                 "tauri-plugin-log"
             ]
         },
+        "cloud": {
+            "auth": "Firebase Auth (@angular/fire v21)",
+            "database": "Firestore (user profiles, RPA templates)",
+            "payment": "LemonSqueezy (planned)"
+        },
         "database": {
-            "type": "file-based",
-            "format": "JSON metadata per profile (.profile-meta.json)"
+            "local": "JSON metadata per profile (.profile-meta.json)",
+            "cloud": "Firestore: users/{uid}, rpa-catalog/index, rpa-templates/{id}"
         }
     },
     "architecture": {
@@ -73,7 +78,16 @@
         "rpa_template_model": "src/app/models/rpa-template.model.ts",
         "rpa_marketplace": "src/app/views/pages/automation/rpa-marketplace/rpa-marketplace.ts",
         "firestore_rules": "firestore.rules",
-        "seed_script": "scripts/seed-rpa-templates.ts"
+        "seed_script": "scripts/seed-rpa-templates.ts",
+        "auth_service": "src/app/services/auth.service.ts",
+        "plan_service": "src/app/services/plan.service.ts",
+        "user_model": "src/app/core/models/user.model.ts",
+        "auth_guard": "src/app/core/guards/auth.guard.ts",
+        "login_page": "src/app/views/auth/login/login.ts",
+        "register_page": "src/app/views/auth/register/register.ts",
+        "forgot_password_page": "src/app/views/auth/forgot-password/forgot-password.ts",
+        "terms_page": "src/app/views/auth/terms/terms.ts",
+        "privacy_page": "src/app/views/auth/privacy/privacy.ts"
     },
     "security_audit": {
         "grade": "A-",
@@ -358,6 +372,40 @@
                 "Automation sidebar layout with sub-navigation",
                 "Seed script for uploading templates to Firestore"
             ]
+        },
+        {
+            "name": "Auth + License System (Phase 1)",
+            "status": "implemented",
+            "description": "Firebase Authentication with freemium plan gating",
+            "includes": [
+                "AuthService: login, register, Google sign-in, forgot password, logout",
+                "PlanService: feature gating by plan tier (trial/starter/pro/team)",
+                "UserProfile model in Firestore (users/{uid})",
+                "authGuard (protect app routes) + guestGuard (protect auth routes)",
+                "Dynamic user avatar and logout menu in main-nav"
+            ]
+        },
+        {
+            "name": "Premium Auth UI",
+            "status": "implemented",
+            "description": "Split-screen auth pages: gradient branding panel + clean form panel",
+            "includes": [
+                "Login: feature highlights + social proof + Google SVG icon",
+                "Register: free trial benefits checklist",
+                "Forgot Password: security trust message",
+                "Real logo-square.svg (not placeholder icons)",
+                "Responsive: mobile shows form only, desktop split-screen"
+            ]
+        },
+        {
+            "name": "Terms of Use & Privacy Policy",
+            "status": "implemented",
+            "description": "Legal pages at /terms and /privacy, linked from login and register",
+            "includes": [
+                "10-section Terms: account, billing, acceptable use, IP, liability, termination",
+                "10-section Privacy: data collection, storage, sharing, user rights, GDPR, cookies",
+                "Public routes (no auth guard), cross-linked footer"
+            ]
         }
     ],
     "api_endpoints": [
@@ -569,7 +617,11 @@
             "Main-nav, sidebar, and home-container have border-top for visual separation below title bar",
             "App rebranded from 'Chrome Profile Manager' to 'AnguLogin' — all source files, paths, and configs updated",
             "Firestore rules: rpa-catalog + rpa-templates = public read, admin-only write",
-            "RPA templates use CatalogEntry (lightweight) for grid, full RpaTemplate (detail) for dialog"
+            "RPA templates use CatalogEntry (lightweight) for grid, full RpaTemplate (detail) for dialog",
+            "Auth pages use split-screen layout: left branding panel + right form panel",
+            "Auth pages use host: { class: 'block min-h-screen' } (not flex-1 like app pages)",
+            "Google sign-in button uses real SVG logo, not PrimeIcon",
+            "Legal pages (/terms, /privacy) are public routes with no guard"
         ],
         "competitor_analysis": {
             "completed_at": "2026-02-16",
@@ -584,12 +636,17 @@
                 "Dolphin Anty"
             ],
             "usp": [
-                "Free & unlimited profiles",
-                "Offline-first",
-                "Data on external drive",
                 "Lightweight (~10MB)",
-                "Uses real Chrome"
+                "Uses real Chrome",
+                "Freemium pricing (trial → starter $9 → pro $19 → team $39)"
             ],
+            "pricing": {
+                "trial": "7 days, 3 profiles, basic fingerprinting",
+                "starter_9": "10 profiles, standard fingerprinting, proxy management",
+                "pro_19": "100 profiles, max fingerprinting, cloud sync, RPA marketplace",
+                "team_39": "300 profiles, all Pro + team collaboration, API access"
+            },
+            "payment_provider": "LemonSqueezy",
             "gaps": [
                 "Automation API",
                 "Team collaboration"
