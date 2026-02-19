@@ -1,0 +1,55 @@
+<div id="login-container" class="w-full max-w-md mx-auto px-6">
+    <!-- Logo & Title -->
+    <div id="login-header" class="text-center mb-8">
+        <div
+            class="w-16 h-16 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-purple-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <i class="pi pi-shield text-2xl text-white"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-color m-0">Welcome back</h1>
+        <p class="text-sm text-muted-color mt-1">Sign in to AnguLogin</p>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-form"
+        class="bg-surface-0 dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800 p-8 shadow-sm">
+        <!-- Google Login -->
+        <p-button id="login-google-btn" label="Continue with Google" icon="pi pi-google" [outlined]="true"
+            class="w-full" [style]="{ width: '100%' }" (click)="onGoogleLogin()" [loading]="loading()" />
+
+        <p-divider align="center">
+            <span class="text-sm text-muted-color">or</span>
+        </p-divider>
+
+        <!-- Email -->
+        <div class="flex flex-col gap-2 mb-4">
+            <label for="login-email" class="text-sm font-medium text-color">Email</label>
+            <input id="login-email" type="email" pInputText placeholder="your@email.com" [ngModel]="email()"
+                (ngModelChange)="email.set($event)" (keydown.enter)="onLogin()" class="w-full" />
+        </div>
+
+        <!-- Password -->
+        <div class="flex flex-col gap-2 mb-2">
+            <label for="login-password" class="text-sm font-medium text-color">Password</label>
+            <p-password id="login-password" placeholder="Enter password" [ngModel]="password()"
+                (ngModelChange)="password.set($event)" [toggleMask]="true" [feedback]="false" [fluid]="true"
+                (keydown.enter)="onLogin()" />
+        </div>
+
+        <!-- Forgot Password -->
+        <div class="text-right mb-6">
+            <a routerLink="/forgot-password" class="text-xs text-primary hover:underline cursor-pointer">
+                Forgot password?
+            </a>
+        </div>
+
+        <!-- Submit -->
+        <p-button id="login-submit-btn" label="Sign In" icon="pi pi-sign-in" class="w-full" [style]="{ width: '100%' }"
+            (click)="onLogin()" [loading]="loading()" />
+    </div>
+
+    <!-- Register Link -->
+    <p id="login-register-link" class="text-center text-sm text-muted-color mt-6">
+        Don't have an account?
+        <a routerLink="/register" class="text-primary font-medium hover:underline cursor-pointer">Sign up</a>
+    </p>
+</div>

@@ -1,0 +1,71 @@
+<div id="register-container" class="w-full max-w-md mx-auto px-6">
+    <!-- Logo & Title -->
+    <div id="register-header" class="text-center mb-8">
+        <div
+            class="w-16 h-16 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-purple-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <i class="pi pi-shield text-2xl text-white"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-color m-0">Create your account</h1>
+        <p class="text-sm text-muted-color mt-1">Start your 7-day free trial</p>
+    </div>
+
+    <!-- Register Form -->
+    <div id="register-form"
+        class="bg-surface-0 dark:bg-surface-900 rounded-2xl border border-surface-100 dark:border-surface-800 p-8 shadow-sm">
+        <!-- Google -->
+        <p-button id="register-google-btn" label="Continue with Google" icon="pi pi-google" [outlined]="true"
+            class="w-full" [style]="{ width: '100%' }" (click)="onGoogleLogin()" [loading]="loading()" />
+
+        <p-divider align="center">
+            <span class="text-sm text-muted-color">or</span>
+        </p-divider>
+
+        <!-- Display Name -->
+        <div class="flex flex-col gap-2 mb-4">
+            <label for="register-name" class="text-sm font-medium text-color">Full Name</label>
+            <input id="register-name" type="text" pInputText placeholder="John Doe" [ngModel]="displayName()"
+                (ngModelChange)="displayName.set($event)" class="w-full" />
+        </div>
+
+        <!-- Email -->
+        <div class="flex flex-col gap-2 mb-4">
+            <label for="register-email" class="text-sm font-medium text-color">Email</label>
+            <input id="register-email" type="email" pInputText placeholder="your@email.com" [ngModel]="email()"
+                (ngModelChange)="email.set($event)" class="w-full" />
+        </div>
+
+        <!-- Password -->
+        <div class="flex flex-col gap-2 mb-4">
+            <label for="register-password" class="text-sm font-medium text-color">Password</label>
+            <p-password id="register-password" placeholder="Min. 6 characters" [ngModel]="password()"
+                (ngModelChange)="password.set($event)" [toggleMask]="true" [fluid]="true" />
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="flex flex-col gap-2 mb-4">
+            <label for="register-confirm" class="text-sm font-medium text-color">Confirm Password</label>
+            <p-password id="register-confirm" placeholder="Repeat password" [ngModel]="confirmPassword()"
+                (ngModelChange)="confirmPassword.set($event)" [toggleMask]="true" [feedback]="false" [fluid]="true"
+                (keydown.enter)="onRegister()" />
+        </div>
+
+        <!-- Terms -->
+        <div class="flex items-center gap-2 mb-6">
+            <p-checkbox id="register-terms" [binary]="true" [ngModel]="acceptTerms()"
+                (ngModelChange)="acceptTerms.set($event)" />
+            <label for="register-terms" class="text-sm text-muted-color cursor-pointer">
+                I accept the <a class="text-primary hover:underline">Terms of Service</a>
+            </label>
+        </div>
+
+        <!-- Submit -->
+        <p-button id="register-submit-btn" label="Create Account" icon="pi pi-user-plus" class="w-full"
+            [style]="{ width: '100%' }" (click)="onRegister()" [loading]="loading()" />
+    </div>
+
+    <!-- Login Link -->
+    <p id="register-login-link" class="text-center text-sm text-muted-color mt-6">
+        Already have an account?
+        <a routerLink="/login" class="text-primary font-medium hover:underline cursor-pointer">Sign in</a>
+    </p>
+</div>

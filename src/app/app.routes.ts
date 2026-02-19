@@ -1,10 +1,30 @@
 import { Routes } from '@angular/router';
 import { Pages } from './views/pages/pages';
+import { authGuard, guestGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
+    // Auth routes (full-screen, no app shell)
+    {
+        path: 'login',
+        loadComponent: () => import('./views/auth/login/login').then((m) => m.Login),
+        canActivate: [guestGuard],
+    },
+    {
+        path: 'register',
+        loadComponent: () => import('./views/auth/register/register').then((m) => m.Register),
+        canActivate: [guestGuard],
+    },
+    {
+        path: 'forgot-password',
+        loadComponent: () =>
+            import('./views/auth/forgot-password/forgot-password').then((m) => m.ForgotPassword),
+        canActivate: [guestGuard],
+    },
+    // App routes (behind auth)
     {
         path: '',
         component: Pages,
+        canActivate: [authGuard],
         children: [
             {
                 path: '',
@@ -81,3 +101,4 @@ export const routes: Routes = [
         ],
     },
 ];
+
