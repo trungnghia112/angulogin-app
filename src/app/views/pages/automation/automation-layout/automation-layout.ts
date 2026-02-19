@@ -24,7 +24,7 @@ export class AutomationLayout {
         { id: 'process', label: 'Process', icon: 'pi-sitemap', route: './process' },
         { id: 'task', label: 'Task', icon: 'pi-play-circle', route: './task' },
         { id: 'api-docs', label: 'API Docs', icon: 'pi-book', route: './api-docs' },
-        { id: 'task-log', label: 'Task Log', icon: 'pi-history', route: './task', badge: 'Soon' },
+        { id: 'task-log', label: 'Task Log', icon: 'pi-history', route: './task-log', badge: 'Soon' },
     ];
 
     protected readonly sidebarCollapsed = signal(false);

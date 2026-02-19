@@ -1,10 +1,10 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import {
-    Firestore, collection, doc,
+    Firestore, doc,
     onSnapshot, getDoc,
 } from '@angular/fire/firestore';
 import {
-    RpaTemplate, RpaTemplateStep, RpaTemplateVariable,
+    RpaTemplate,
     PLATFORM_COLORS, RPA_PLATFORMS,
 } from '../models/rpa-template.model';
 
@@ -89,7 +89,7 @@ export class RpaTemplateService {
      * Only 1 read on connect + 1 read per catalog change (rare).
      */
     subscribeCatalog(): void {
-        if (this._loaded() || this._loading()) return;
+        if (this.unsubCatalog || this._loading()) return;
         this._loading.set(true);
 
         // Try local cache first for instant render
@@ -266,6 +266,13 @@ export class RpaTemplateService {
 
     private saveDetailCacheToStorage(): void {
         try {
+            // LRU eviction: keep only last 50 entries
+            if (this.detailCache.size > 50) {
+                const keys = [...this.detailCache.keys()];
+                for (let i = 0; i < keys.length - 50; i++) {
+                    this.detailCache.delete(keys[i]);
+                }
+            }
             const obj: Record<string, CachedDetail> = {};
             this.detailCache.forEach((v, k) => obj[k] = v);
             localStorage.setItem(DETAIL_CACHE_KEY, JSON.stringify(obj));

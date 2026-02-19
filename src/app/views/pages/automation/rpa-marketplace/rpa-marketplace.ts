@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -15,7 +15,7 @@ import { RpaTemplateService, CatalogEntry } from '../../../../services/rpa-templ
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
     imports: [DialogModule, InputTextModule, SelectModule, ButtonModule, FormsModule],
 })
-export class RpaMarketplace implements OnInit, OnDestroy {
+export class RpaMarketplace implements OnInit {
     protected readonly templateService = inject(RpaTemplateService);
 
     protected readonly selectedPlatform = signal('All');
@@ -44,10 +44,6 @@ export class RpaMarketplace implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.templateService.subscribeCatalog();
-    }
-
-    ngOnDestroy(): void {
-        this.templateService.destroy();
     }
 
     selectPlatform(platform: string): void {

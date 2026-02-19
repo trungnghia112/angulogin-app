@@ -30,6 +30,20 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    // RPA Catalog — public read, admin-only write
+    match /rpa-catalog/{doc} {
+      allow read: if true;
+      allow write: if isAuthenticated()
+        && request.auth.token.admin == true;
+    }
+
+    // RPA Templates — public read, admin-only write
+    match /rpa-templates/{templateId} {
+      allow read: if true;
+      allow write: if isAuthenticated()
+        && request.auth.token.admin == true;
+    }
+
     // Default rule: Deny all
     match /{document=**} {
       allow read, write: if false;
