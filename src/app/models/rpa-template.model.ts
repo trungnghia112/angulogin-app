@@ -56,7 +56,7 @@ export interface RpaTemplate {
     variables: RpaTemplateVariable[];
 }
 
-/** Platform color map for UI rendering */
+/** Platform color map for UI rendering (light mode) */
 export const PLATFORM_COLORS: Record<string, string> = {
     Facebook: '#1877F2',
     TikTok: '#000000',
@@ -72,6 +72,13 @@ export const PLATFORM_COLORS: Record<string, string> = {
     Mercari: '#4DC9F6',
     Poshmark: '#CF0032',
     Other: '#6B7280',
+};
+
+/** Platform color map for dark mode (lighter variants for contrast) */
+export const PLATFORM_COLORS_DARK: Record<string, string> = {
+    TikTok: '#E8E8E8',
+    LinkedIn: '#4A9AE8',
+    Other: '#9CA3AF',
 };
 
 /** All supported platform categories for filtering */

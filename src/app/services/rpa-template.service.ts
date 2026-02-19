@@ -5,7 +5,7 @@ import {
 } from '@angular/fire/firestore';
 import {
     RpaTemplate,
-    PLATFORM_COLORS, RPA_PLATFORMS,
+    PLATFORM_COLORS, PLATFORM_COLORS_DARK, RPA_PLATFORMS,
 } from '../models/rpa-template.model';
 
 /**
@@ -215,8 +215,12 @@ export class RpaTemplateService {
         return this._savedTemplateIds().has(templateId);
     }
 
-    /** Get platform color */
+    /** Get platform color (dark-mode aware) */
     getPlatformColor(platform: string): string {
+        const isDark = document.documentElement.classList.contains('dark');
+        if (isDark && PLATFORM_COLORS_DARK[platform]) {
+            return PLATFORM_COLORS_DARK[platform];
+        }
         return PLATFORM_COLORS[platform] || PLATFORM_COLORS['Other'];
     }
 
