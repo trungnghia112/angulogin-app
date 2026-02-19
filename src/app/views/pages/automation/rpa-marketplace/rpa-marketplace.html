@@ -16,7 +16,7 @@
         </span>
     </div>
     <span id="rpa-marketplace-count" class="text-sm text-muted-color">
-        Templates: {{ filteredTemplates().length }}
+        Templates: {{ filteredEntries().length }}
     </span>
 </div>
 
@@ -37,7 +37,7 @@
 
 <!-- Card Grid -->
 <div id="rpa-marketplace-grid" class="flex-1 overflow-y-auto p-6 bg-surface-50 dark:bg-surface-950">
-    @if (filteredTemplates().length === 0) {
+    @if (filteredEntries().length === 0) {
     <div class="flex flex-col items-center justify-center h-64 text-muted-color">
         <i class="pi pi-search text-4xl mb-4"></i>
         <p class="text-lg font-medium">No templates found</p>
@@ -45,19 +45,19 @@
     </div>
     } @else {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        @for (template of filteredTemplates(); track template.id; let i = $index) {
+        @for (entry of filteredEntries(); track entry.id; let i = $index) {
         <div [id]="'rpa-card-' + i"
             class="rpa-card bg-surface-0 dark:bg-surface-900 rounded-xl border border-surface-100 dark:border-surface-800 p-5 cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5 relative group"
-            (click)="openDetail(template)">
+            (click)="openDetail(entry)">
             <!-- Premium badge -->
-            @if (template.metadata.isPremium) {
+            @if (entry.isPremium) {
             <span class="absolute top-3 right-3 text-amber-500">
                 <i class="pi pi-verified text-lg"></i>
             </span>
             }
 
             <!-- Saved indicator -->
-            @if (isTemplateSaved(template.id)) {
+            @if (isTemplateSaved(entry.id)) {
             <span class="absolute top-3 left-3 text-green-500">
                 <i class="pi pi-check-circle text-sm"></i>
             </span>
@@ -66,24 +66,24 @@
             <!-- Header: Icon + Title + Badge -->
             <div class="flex items-start gap-3 mb-3">
                 <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                    [style.background-color]="getPlatformColor(template.metadata.platform) + '18'">
-                    <i [class]="'pi ' + template.metadata.platformIcon + ' text-lg'"
-                        [style.color]="getPlatformColor(template.metadata.platform)"></i>
+                    [style.background-color]="getPlatformColor(entry.platform) + '18'">
+                    <i [class]="'pi ' + entry.platformIcon + ' text-lg'"
+                        [style.color]="getPlatformColor(entry.platform)"></i>
                 </div>
                 <div class="flex-1 min-w-0">
                     <h3
                         class="text-sm font-semibold text-color truncate mb-1 group-hover:text-primary transition-colors">
-                        {{ template.metadata.title }}
+                        {{ entry.title }}
                     </h3>
                     <div class="flex items-center gap-2">
-                        <span class="platform-badge text-[11px] font-medium px-2 py-0.5 rounded-full"
-                            [style.background-color]="getPlatformColor(template.metadata.platform) + '18'"
-                            [style.color]="getPlatformColor(template.metadata.platform)">
-                            {{ template.metadata.platform }}
+                        <span class="text-[11px] font-medium px-2 py-0.5 rounded-full"
+                            [style.background-color]="getPlatformColor(entry.platform) + '18'"
+                            [style.color]="getPlatformColor(entry.platform)">
+                            {{ entry.platform }}
                         </span>
                         <span class="flex items-center gap-1 text-xs text-muted-color">
                             <i class="pi pi-users text-[10px]"></i>
-                            {{ formatCount(template.stats.usageCount) }}
+                            {{ formatCount(entry.usageCount) }}
                         </span>
                     </div>
                 </div>
@@ -91,7 +91,7 @@
 
             <!-- Description -->
             <p class="text-xs text-muted-color leading-relaxed line-clamp-2 m-0">
-                {{ template.metadata.description }}
+                {{ entry.description }}
             </p>
         </div>
         }
@@ -103,6 +103,16 @@
 <p-dialog id="rpa-detail-dialog" header="About the template" [(visible)]="detailVisible" [modal]="true"
     [draggable]="false" [resizable]="false" [style]="{ width: '640px', maxHeight: '80vh' }"
     [contentStyle]="{ overflow: 'auto' }">
+
+    <!-- Loading State -->
+    @if (detailLoading()) {
+    <div class="flex flex-col items-center justify-center py-12 text-muted-color">
+        <i class="pi pi-spin pi-spinner text-3xl mb-3"></i>
+        <p class="text-sm">Loading template...</p>
+    </div>
+    }
+
+    <!-- Detail Content -->
     @if (selectedTemplate(); as t) {
     <div class="flex flex-col gap-5">
         <!-- Title + Stats -->

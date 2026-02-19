@@ -1,11 +1,11 @@
-import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit, OnDestroy } from '@angular/core';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
 import { RpaTemplate } from '../../../../models/rpa-template.model';
-import { RpaTemplateService } from '../../../../services/rpa-template.service';
+import { RpaTemplateService, CatalogEntry } from '../../../../services/rpa-template.service';
 
 @Component({
     selector: 'app-rpa-marketplace',
@@ -15,7 +15,7 @@ import { RpaTemplateService } from '../../../../services/rpa-template.service';
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
     imports: [DialogModule, InputTextModule, SelectModule, ButtonModule, FormsModule],
 })
-export class RpaMarketplace implements OnInit {
+export class RpaMarketplace implements OnInit, OnDestroy {
     protected readonly templateService = inject(RpaTemplateService);
 
     protected readonly selectedPlatform = signal('All');
@@ -23,6 +23,7 @@ export class RpaMarketplace implements OnInit {
     protected readonly sortBy = signal('popular');
     protected readonly selectedTemplate = signal<RpaTemplate | null>(null);
     protected readonly detailVisible = signal(false);
+    protected readonly detailLoading = signal(false);
 
     protected readonly sortOptions = [
         { label: 'Most Popular', value: 'popular' },
@@ -32,8 +33,9 @@ export class RpaMarketplace implements OnInit {
 
     protected readonly platforms = this.templateService.platforms;
 
-    protected readonly filteredTemplates = computed(() =>
-        this.templateService.filterTemplates(
+    /** Filtered catalog entries (lightweight, no detail) */
+    protected readonly filteredEntries = computed(() =>
+        this.templateService.filterCatalog(
             this.selectedPlatform(),
             this.searchQuery(),
             this.sortBy()
@@ -41,7 +43,11 @@ export class RpaMarketplace implements OnInit {
     );
 
     ngOnInit(): void {
-        this.templateService.loadTemplates();
+        this.templateService.subscribeCatalog();
+    }
+
+    ngOnDestroy(): void {
+        this.templateService.destroy();
     }
 
     selectPlatform(platform: string): void {
@@ -56,9 +62,15 @@ export class RpaMarketplace implements OnInit {
         this.sortBy.set(event as string);
     }
 
-    openDetail(template: RpaTemplate): void {
-        this.selectedTemplate.set(template);
+    /** Open detail dialog — fetches full template from Firestore (1 read, cached) */
+    async openDetail(entry: CatalogEntry): Promise<void> {
         this.detailVisible.set(true);
+        this.detailLoading.set(true);
+        this.selectedTemplate.set(null);
+
+        const detail = await this.templateService.getTemplateDetail(entry.id);
+        this.selectedTemplate.set(detail);
+        this.detailLoading.set(false);
     }
 
     closeDetail(): void {

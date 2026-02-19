@@ -17,7 +17,7 @@
 
 <!-- Content -->
 <div id="rpa-process-content" class="flex-1 overflow-auto bg-surface-50 dark:bg-surface-950">
-    @if (savedTemplates().length === 0) {
+    @if (savedEntries().length === 0) {
     <div class="flex flex-col items-center justify-center h-64 text-muted-color">
         <i class="pi pi-box text-4xl mb-4"></i>
         <p class="text-lg font-medium">No saved processes</p>
@@ -41,43 +41,43 @@
             </tr>
         </thead>
         <tbody>
-            @for (proc of savedTemplates(); track proc.id; let i = $index) {
+            @for (entry of savedEntries(); track entry.id; let i = $index) {
             <tr [id]="'rpa-process-row-' + i"
                 class="border-b border-surface-50 dark:border-surface-800 hover:bg-surface-100/50 dark:hover:bg-surface-800/50 transition-colors">
                 <td class="px-6 py-3">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                            [style.background-color]="getPlatformColor(proc.metadata.platform) + '18'">
-                            <i [class]="'pi ' + proc.metadata.platformIcon + ' text-sm'"
-                                [style.color]="getPlatformColor(proc.metadata.platform)"></i>
+                            [style.background-color]="getPlatformColor(entry.platform) + '18'">
+                            <i [class]="'pi ' + entry.platformIcon + ' text-sm'"
+                                [style.color]="getPlatformColor(entry.platform)"></i>
                         </div>
-                        <span class="text-sm font-medium text-color">{{ proc.metadata.title }}</span>
+                        <span class="text-sm font-medium text-color">{{ entry.title }}</span>
                     </div>
                 </td>
                 <td class="px-4 py-3">
                     <span class="text-xs font-medium px-2 py-0.5 rounded-full"
-                        [style.background-color]="getPlatformColor(proc.metadata.platform) + '18'"
-                        [style.color]="getPlatformColor(proc.metadata.platform)">
-                        {{ proc.metadata.platform }}
+                        [style.background-color]="getPlatformColor(entry.platform) + '18'"
+                        [style.color]="getPlatformColor(entry.platform)">
+                        {{ entry.platform }}
                     </span>
                 </td>
                 <td class="px-4 py-3">
-                    <span class="text-sm text-muted-color">{{ proc.metadata.author }}</span>
+                    <span class="text-sm text-muted-color">{{ entry.author }}</span>
                 </td>
                 <td class="px-4 py-3">
                     <span class="text-xs text-muted-color bg-surface-100 dark:bg-surface-800 rounded px-2 py-0.5">
-                        v{{ proc.version }}
+                        v{{ entry.version }}
                     </span>
                 </td>
                 <td class="px-4 py-3">
-                    <span class="text-sm text-muted-color">{{ formatDate(proc.metadata.updatedAt) }}</span>
+                    <span class="text-sm text-muted-color">{{ formatDate(entry.updatedAt) }}</span>
                 </td>
                 <td class="px-6 py-3 text-right">
                     <div class="flex items-center justify-end gap-1">
                         <p-button icon="pi pi-play" [rounded]="true" [text]="true" severity="success" size="small"
                             pTooltip="Run" tooltipPosition="top" />
                         <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
-                            pTooltip="Remove" tooltipPosition="top" (click)="removeProcess(proc)" />
+                            pTooltip="Remove" tooltipPosition="top" (click)="removeProcess(entry)" />
                     </div>
                 </td>
             </tr>
