@@ -20,6 +20,14 @@ export const routes: Routes = [
             import('./views/auth/forgot-password/forgot-password').then((m) => m.ForgotPassword),
         canActivate: [guestGuard],
     },
+    {
+        path: 'terms',
+        loadComponent: () => import('./views/auth/terms/terms').then((m) => m.Terms),
+    },
+    {
+        path: 'privacy',
+        loadComponent: () => import('./views/auth/privacy/privacy').then((m) => m.Privacy),
+    },
     // App routes (behind auth)
     {
         path: '',

@@ -135,8 +135,8 @@
                 <p-checkbox id="register-terms" [binary]="true" [ngModel]="acceptTerms()"
                     (ngModelChange)="acceptTerms.set($event)" />
                 <label for="register-terms" class="text-xs text-muted-color leading-relaxed cursor-pointer">
-                    I agree to the <a class="text-primary hover:underline">Terms of Service</a> and <a
-                        class="text-primary hover:underline">Privacy Policy</a>
+                    I agree to the <a routerLink="/terms" class="text-primary hover:underline">Terms of Service</a> and
+                    <a routerLink="/privacy" class="text-primary hover:underline">Privacy Policy</a>
                 </label>
             </div>
 
