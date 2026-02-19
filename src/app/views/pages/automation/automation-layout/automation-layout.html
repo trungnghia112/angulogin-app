@@ -1,0 +1,40 @@
+<aside id="automation-sidebar"
+    class="flex flex-col h-full w-56 border-r border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900 shrink-0">
+    <!-- Header -->
+    <div id="automation-sidebar-header"
+        class="flex items-center justify-between px-4 h-[var(--spacing-header)] shrink-0 border-b border-surface-100 dark:border-surface-800">
+        <span class="text-base font-semibold text-color">Automation</span>
+    </div>
+
+    <!-- Menu Items -->
+    <nav class="flex-1 overflow-y-auto px-2 py-3" aria-label="Automation navigation">
+        @for (item of menuItems; track item.id; let i = $index) {
+        <a [id]="'automation-sidebar-' + item.id" [routerLink]="item.route" routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{ exact: item.id !== 'process' && item.id !== 'task' && item.id !== 'task-log' }"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-all duration-150 cursor-pointer text-muted-color hover:text-color hover:bg-surface-100 dark:hover:bg-surface-800"
+            [class.pointer-events-none]="item.badge === 'Soon'" [class.opacity-50]="item.badge === 'Soon'">
+            <i [class]="'pi ' + item.icon + ' text-base'"></i>
+            <span class="flex-1">{{ item.label }}</span>
+            @if (item.badge) {
+            <span
+                class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800 text-muted-color">
+                {{ item.badge }}
+            </span>
+            }
+        </a>
+        }
+    </nav>
+
+    <!-- Bottom -->
+    <div class="border-t border-surface-100 dark:border-surface-800 px-4 py-3">
+        <div class="text-xs text-muted-color">
+            <i class="pi pi-info-circle mr-1"></i>
+            RPA features coming soon
+        </div>
+    </div>
+</aside>
+
+<!-- Content -->
+<div class="flex-1 flex flex-col min-h-0 overflow-hidden">
+    <router-outlet />
+</div>

@@ -1,0 +1,164 @@
+<!-- Header Bar -->
+<div id="rpa-marketplace-header"
+    class="flex items-center justify-between px-6 h-[var(--spacing-header)] shrink-0 border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
+    <div class="flex items-center gap-4">
+        <h1 id="rpa-marketplace-title" class="text-xl font-bold text-color m-0">Marketplace</h1>
+
+        <!-- Sort -->
+        <p-select id="rpa-marketplace-sort" [options]="sortOptions" [ngModel]="sortBy()"
+            (ngModelChange)="onSortChange($event)" optionLabel="label" optionValue="value" class="w-40" size="small" />
+
+        <!-- Search -->
+        <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input id="rpa-marketplace-search" type="text" pInputText placeholder="Search templates..."
+                [value]="searchQuery()" (input)="onSearch($event)" class="w-64" />
+        </span>
+    </div>
+    <span id="rpa-marketplace-count" class="text-sm text-muted-color">
+        Templates: {{ filteredTemplates().length }}
+    </span>
+</div>
+
+<!-- Platform Tabs -->
+<div id="rpa-marketplace-tabs"
+    class="flex items-center gap-2 px-6 py-3 overflow-x-auto shrink-0 border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
+    @for (platform of platforms; track platform) {
+    <button [id]="'rpa-tab-' + platform"
+        class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 cursor-pointer border"
+        [class]="selectedPlatform() === platform
+            ? 'bg-primary text-primary-contrast border-primary'
+            : 'bg-surface-50 dark:bg-surface-800 text-muted-color hover:text-color border-surface-200 dark:border-surface-700 hover:border-primary/50'"
+        (click)="selectPlatform(platform)">
+        {{ platform }}
+    </button>
+    }
+</div>
+
+<!-- Card Grid -->
+<div id="rpa-marketplace-grid" class="flex-1 overflow-y-auto p-6 bg-surface-50 dark:bg-surface-950">
+    @if (filteredTemplates().length === 0) {
+    <div class="flex flex-col items-center justify-center h-64 text-muted-color">
+        <i class="pi pi-search text-4xl mb-4"></i>
+        <p class="text-lg font-medium">No templates found</p>
+        <p class="text-sm">Try adjusting your search or filter</p>
+    </div>
+    } @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        @for (template of filteredTemplates(); track template.id; let i = $index) {
+        <div [id]="'rpa-card-' + i"
+            class="rpa-card bg-surface-0 dark:bg-surface-900 rounded-xl border border-surface-100 dark:border-surface-800 p-5 cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5 relative group"
+            (click)="openDetail(template)">
+            <!-- Premium badge -->
+            @if (template.isPremium) {
+            <span class="absolute top-3 right-3 text-amber-500">
+                <i class="pi pi-verified text-lg"></i>
+            </span>
+            }
+
+            <!-- Header: Icon + Title + Badge -->
+            <div class="flex items-start gap-3 mb-3">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                    [style.background-color]="getPlatformColor(template.platform) + '18'">
+                    <i [class]="'pi ' + template.platformIcon + ' text-lg'"
+                        [style.color]="getPlatformColor(template.platform)"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3
+                        class="text-sm font-semibold text-color truncate mb-1 group-hover:text-primary transition-colors">
+                        {{ template.title }}
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <span class="platform-badge text-[11px] font-medium px-2 py-0.5 rounded-full"
+                            [style.background-color]="getPlatformColor(template.platform) + '18'"
+                            [style.color]="getPlatformColor(template.platform)">
+                            {{ template.platform }}
+                        </span>
+                        <span class="flex items-center gap-1 text-xs text-muted-color">
+                            <i class="pi pi-users text-[10px]"></i>
+                            {{ formatCount(template.usageCount) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <p class="text-xs text-muted-color leading-relaxed line-clamp-2 m-0">
+                {{ template.description }}
+            </p>
+        </div>
+        }
+    </div>
+    }
+</div>
+
+<!-- Template Detail Dialog -->
+<p-dialog id="rpa-detail-dialog" header="About the template" [(visible)]="detailVisible" [modal]="true"
+    [draggable]="false" [resizable]="false" [style]="{ width: '640px', maxHeight: '80vh' }"
+    [contentStyle]="{ overflow: 'auto' }">
+    @if (selectedTemplate(); as t) {
+    <div class="flex flex-col gap-5">
+        <!-- Title + Stats -->
+        <div class="text-center">
+            <h2 class="text-lg font-bold text-color m-0 mb-1">{{ t.title }}</h2>
+            <div class="flex items-center justify-center gap-4 text-sm text-muted-color">
+                <span class="flex items-center gap-1">
+                    <i class="pi pi-users text-xs"></i>
+                    {{ formatCount(t.usageCount) }}
+                </span>
+                <span class="flex items-center gap-1">
+                    <i class="pi pi-box text-xs"></i>
+                    AnguLogin
+                </span>
+            </div>
+        </div>
+
+        <!-- Note -->
+        <div
+            class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2.5 text-sm text-amber-800 dark:text-amber-300">
+            <i class="pi pi-info-circle mr-1"></i>
+            Environment requires {{ t.platform }} account login
+        </div>
+
+        <!-- Overview -->
+        <div>
+            <h4 class="text-sm font-semibold text-color mb-2">Overview:</h4>
+            <p class="text-sm text-muted-color m-0">{{ t.overview }}</p>
+        </div>
+
+        <!-- Execution Flow -->
+        <div>
+            <h4 class="text-sm font-semibold text-color mb-2">Script Execution Flow:</h4>
+            <ol class="m-0 pl-5 flex flex-col gap-1.5">
+                @for (step of t.steps; track step) {
+                <li class="text-sm text-muted-color">{{ step }}</li>
+                }
+            </ol>
+        </div>
+
+        <!-- Variables -->
+        @if (t.variables.length > 0) {
+        <div>
+            <h4 class="text-sm font-semibold text-color mb-2">Global Variables:</h4>
+            <ul class="m-0 pl-5 flex flex-col gap-1.5">
+                @for (v of t.variables; track v.name) {
+                <li class="text-sm text-muted-color">
+                    <strong class="text-color">{{ v.name }}</strong>
+                    <span class="text-xs ml-1">({{ v.required ? 'Required' : 'Optional' }})</span>:
+                    {{ v.description }}
+                </li>
+                }
+            </ul>
+        </div>
+        }
+
+        <!-- Actions -->
+        <div class="flex items-center gap-3 pt-2 border-t border-surface-100 dark:border-surface-800">
+            <p-button id="rpa-detail-save" label="Save process" icon="pi pi-save" severity="secondary" class="flex-1"
+                [style]="{ width: '100%' }" />
+            <p-button id="rpa-detail-save-run" label="Save and create task" icon="pi pi-play" class="flex-1"
+                [style]="{ width: '100%' }" />
+        </div>
+    </div>
+    }
+</p-dialog>

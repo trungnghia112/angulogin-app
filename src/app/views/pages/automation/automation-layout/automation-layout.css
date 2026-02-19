@@ -1,0 +1,4 @@
+.active-link {
+    color: var(--p-primary-color) !important;
+    background-color: color-mix(in srgb, var(--p-primary-color) 10%, transparent) !important;
+}

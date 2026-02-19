@@ -18,7 +18,20 @@ export const routes: Routes = [
             {
                 path: 'automation',
                 loadComponent: () =>
-                    import('./views/pages/automation/automation').then((m) => m.Automation),
+                    import('./views/pages/automation/automation-layout/automation-layout').then((m) => m.AutomationLayout),
+                children: [
+                    { path: '', redirectTo: 'marketplace', pathMatch: 'full' as const },
+                    {
+                        path: 'marketplace',
+                        loadComponent: () =>
+                            import('./views/pages/automation/rpa-marketplace/rpa-marketplace').then((m) => m.RpaMarketplace),
+                    },
+                    {
+                        path: 'api-docs',
+                        loadComponent: () =>
+                            import('./views/pages/automation/automation').then((m) => m.Automation),
+                    },
+                ],
             },
             {
                 path: 'teams',

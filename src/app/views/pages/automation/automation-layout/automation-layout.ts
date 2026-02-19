@@ -1,0 +1,35 @@
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { TooltipModule } from 'primeng/tooltip';
+
+interface AutomationMenuItem {
+    id: string;
+    label: string;
+    icon: string;
+    route: string;
+    badge?: string;
+}
+
+@Component({
+    selector: 'app-automation-layout',
+    templateUrl: './automation-layout.html',
+    styleUrl: './automation-layout.css',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    host: { class: 'flex-1 flex min-h-0 overflow-hidden' },
+    imports: [RouterOutlet, RouterLink, RouterLinkActive, TooltipModule],
+})
+export class AutomationLayout {
+    protected readonly menuItems: AutomationMenuItem[] = [
+        { id: 'marketplace', label: 'Marketplace', icon: 'pi-shop', route: './marketplace' },
+        { id: 'api-docs', label: 'API Docs', icon: 'pi-book', route: './api-docs' },
+        { id: 'process', label: 'Process', icon: 'pi-sitemap', route: './marketplace', badge: 'Soon' },
+        { id: 'task', label: 'Task', icon: 'pi-play-circle', route: './marketplace', badge: 'Soon' },
+        { id: 'task-log', label: 'Task Log', icon: 'pi-history', route: './marketplace', badge: 'Soon' },
+    ];
+
+    protected readonly sidebarCollapsed = signal(false);
+
+    toggleSidebar(): void {
+        this.sidebarCollapsed.update(v => !v);
+    }
+}

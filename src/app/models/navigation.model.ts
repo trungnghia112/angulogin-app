@@ -4,7 +4,7 @@ export interface NavFeature {
     icon: string;
     route: string;
     hasSidebar: boolean;
-    sidebarType?: 'folders' | 'extensions' | 'settings' | null;
+    sidebarType?: 'folders' | 'extensions' | 'settings' | 'automation' | null;
     badge?: number;
     hidden?: boolean;
 }
@@ -23,8 +23,8 @@ export const NAV_FEATURES: NavFeature[] = [
         name: 'Automation',
         icon: 'pi-bolt',
         route: '/automation',
-        hasSidebar: false,
-        hidden: true,
+        hasSidebar: true,
+        sidebarType: 'automation',
     },
     {
         id: 'teams',
