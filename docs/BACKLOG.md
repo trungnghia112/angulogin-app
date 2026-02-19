@@ -10,9 +10,9 @@
 
 | Trạng thái | Số lượng |
 |------------|----------|
-| ✅ Done | 50 |
+| ✅ Done | 58 |
 | 🔄 In Progress | 0 |
-| 📋 Backlog | 41 |
+| 📋 Backlog | 33 |
 | ❌ Cancelled | 5 |
 
 ---
@@ -156,14 +156,14 @@ Những tính năng nên làm sớm vì mang lại giá trị cao:
 
 | # | Tính năng | Mô tả | Độ khó | Status |
 |---|-----------|-------|--------|--------|
-| 7.1 | HTTP Server Built-in ⭐ | Local HTTP server tại `localhost:PORT`, expose REST API cho tools bên ngoài kết nối | 🔴 Khó | 📋 |
-| 7.2 | API Key Auth | Bearer token authentication cho API | 🟡 TB | 📋 |
-| 7.3 | Browser Endpoints | `GET /api/v1/browser/open`, `/close`, `/status`, `/active` | 🟡 TB | 📋 |
-| 7.4 | Profile Endpoints | `POST /api/v1/profile/create`, `/update`, `/delete`, `GET /list`, `/detail` | 🟡 TB | 📋 |
-| 7.5 | Proxy Endpoints | `POST /api/v1/proxy/add`, `/update`, `/delete`, `GET /list`, `/check` | 🟡 TB | 📋 |
-| 7.6 | Group Endpoints | `POST /api/v1/group/create`, `GET /list` | 🟢 Dễ | 📋 |
-| 7.7 | CDP Endpoint | Trả về `ws://127.0.0.1:{port}` để Puppeteer/Playwright kết nối | 🟡 TB | 📋 |
-| 7.8 | API Docs Page | Swagger-like docs trong app | 🟡 TB | 📋 |
+| 7.1 | HTTP Server Built-in ⭐ | Local HTTP server tại `localhost:PORT`, expose REST API cho tools bên ngoài kết nối | 🔴 Khó | ✅ |
+| 7.2 | API Key Auth | Bearer token authentication cho API | 🟡 TB | ✅ |
+| 7.3 | Browser Endpoints | `GET /api/v1/browser/open`, `/close`, `/status`, `/active` | 🟡 TB | ✅ |
+| 7.4 | Profile Endpoints | `POST /api/v1/profile/create`, `/update`, `/delete`, `GET /list`, `/detail` | 🟡 TB | ✅ |
+| 7.5 | Proxy Endpoints | `POST /api/v1/proxy/add`, `/update`, `/delete`, `GET /list`, `/check` | 🟡 TB | ✅ |
+| 7.6 | Group Endpoints | `POST /api/v1/group/create`, `GET /list` | 🟢 Dễ | ✅ |
+| 7.7 | CDP Endpoint | Trả về `ws://127.0.0.1:{port}` để Puppeteer/Playwright kết nối | 🟡 TB | ✅ |
+| 7.8 | API Docs Page | Swagger-like docs trong app | 🟡 TB | ✅ |
 
 ### 7B. No-Code RPA Builder
 
