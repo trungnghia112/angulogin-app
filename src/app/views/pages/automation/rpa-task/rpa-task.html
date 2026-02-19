@@ -1,0 +1,112 @@
+<!-- Header -->
+<div id="rpa-task-header"
+    class="flex items-center justify-between px-6 h-[var(--spacing-header)] shrink-0 border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
+    <div class="flex items-center gap-4">
+        <h1 class="text-xl font-bold text-color m-0">Task</h1>
+        <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input id="rpa-task-search" type="text" pInputText placeholder="Search tasks..." [value]="searchQuery()"
+                (input)="onSearch($event)" class="w-56" />
+        </span>
+    </div>
+    <p-button id="rpa-task-create" label="Create task" icon="pi pi-plus" size="small" />
+</div>
+
+<!-- Tabs -->
+<div id="rpa-task-tabs"
+    class="flex items-center gap-1 px-6 py-2 border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
+    @for (tab of tabs; track tab.id) {
+    <button [id]="'rpa-task-tab-' + tab.id"
+        class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer" [class]="activeTab() === tab.id
+            ? 'bg-primary/10 text-primary'
+            : 'text-muted-color hover:text-color hover:bg-surface-100 dark:hover:bg-surface-800'"
+        (click)="selectTab(tab.id)">
+        {{ tab.label }}
+    </button>
+    }
+</div>
+
+<!-- Table -->
+<div id="rpa-task-table" class="flex-1 overflow-auto bg-surface-50 dark:bg-surface-950">
+    @if (filteredTasks().length === 0) {
+    <div class="flex flex-col items-center justify-center h-64 text-muted-color">
+        <i class="pi pi-play-circle text-4xl mb-4"></i>
+        <p class="text-lg font-medium">No tasks yet</p>
+        <p class="text-sm">Create a task from a saved process to start automation</p>
+    </div>
+    } @else {
+    <table class="w-full">
+        <thead>
+            <tr class="border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
+                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-6 py-3">Process
+                </th>
+                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Profiles
+                </th>
+                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Status
+                </th>
+                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Progress
+                </th>
+                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Frequency
+                </th>
+                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Start
+                </th>
+                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">End</th>
+                <th class="text-right text-xs font-semibold text-muted-color uppercase tracking-wide px-6 py-3">Actions
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (task of filteredTasks(); track task.id; let i = $index) {
+            <tr [id]="'rpa-task-row-' + i"
+                class="border-b border-surface-50 dark:border-surface-800 hover:bg-surface-100/50 dark:hover:bg-surface-800/50 transition-colors">
+                <td class="px-6 py-3">
+                    <span class="text-sm font-medium text-color">{{ task.processName }}</span>
+                </td>
+                <td class="px-4 py-3">
+                    <span class="text-sm text-muted-color">{{ task.profileCount }}</span>
+                </td>
+                <td class="px-4 py-3">
+                    <p-tag [value]="task.status" [severity]="getStatusSeverity(task.status)" [rounded]="true" />
+                </td>
+                <td class="px-4 py-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-20 h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-300"
+                                [class]="task.status === 'failed' ? 'bg-red-500' : 'bg-primary'"
+                                [style.width.%]="task.progress"></div>
+                        </div>
+                        <span class="text-xs text-muted-color">{{ task.progress }}%</span>
+                    </div>
+                </td>
+                <td class="px-4 py-3">
+                    <span class="text-xs text-muted-color bg-surface-100 dark:bg-surface-800 rounded px-2 py-0.5">
+                        {{ getFrequencyLabel(task.frequency) }}
+                    </span>
+                </td>
+                <td class="px-4 py-3">
+                    <span class="text-sm text-muted-color">{{ formatDate(task.startTime) }}</span>
+                </td>
+                <td class="px-4 py-3">
+                    <span class="text-sm text-muted-color">{{ formatDate(task.endTime) }}</span>
+                </td>
+                <td class="px-6 py-3 text-right">
+                    <div class="flex items-center justify-end gap-1">
+                        @if (task.status === 'running') {
+                        <p-button icon="pi pi-pause" [rounded]="true" [text]="true" severity="warn" size="small"
+                            pTooltip="Pause" tooltipPosition="top" />
+                        } @else if (task.status !== 'completed') {
+                        <p-button icon="pi pi-play" [rounded]="true" [text]="true" severity="success" size="small"
+                            pTooltip="Start" tooltipPosition="top" />
+                        }
+                        <p-button icon="pi pi-list" [rounded]="true" [text]="true" severity="secondary" size="small"
+                            pTooltip="View Log" tooltipPosition="top" />
+                        <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+                            pTooltip="Delete" tooltipPosition="top" />
+                    </div>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+    }
+</div>

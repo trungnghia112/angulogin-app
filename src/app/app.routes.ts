@@ -31,6 +31,16 @@ export const routes: Routes = [
                         loadComponent: () =>
                             import('./views/pages/automation/automation').then((m) => m.Automation),
                     },
+                    {
+                        path: 'process',
+                        loadComponent: () =>
+                            import('./views/pages/automation/rpa-process/rpa-process').then((m) => m.RpaProcess),
+                    },
+                    {
+                        path: 'task',
+                        loadComponent: () =>
+                            import('./views/pages/automation/rpa-task/rpa-task').then((m) => m.RpaTask),
+                    },
                 ],
             },
             {

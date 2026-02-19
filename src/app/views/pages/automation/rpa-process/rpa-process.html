@@ -1,0 +1,98 @@
+<!-- Header -->
+<div id="rpa-process-header"
+    class="flex items-center justify-between px-6 h-[var(--spacing-header)] shrink-0 border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
+    <div class="flex items-center gap-4">
+        <h1 class="text-xl font-bold text-color m-0">Process</h1>
+        <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input id="rpa-process-search" type="text" pInputText placeholder="Search processes..."
+                [value]="searchQuery()" (input)="onSearch($event)" class="w-56" />
+        </span>
+    </div>
+    <div class="flex items-center gap-2">
+        <p-button id="rpa-process-import" label="Import" icon="pi pi-upload" severity="secondary" size="small" />
+        <p-button id="rpa-process-export" label="Export" icon="pi pi-download" severity="secondary" size="small" />
+        <p-button id="rpa-process-create" label="Create process" icon="pi pi-plus" size="small" />
+    </div>
+</div>
+
+<!-- Tabs -->
+<div id="rpa-process-tabs"
+    class="flex items-center gap-1 px-6 py-2 border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
+    @for (tab of tabs; track tab.id) {
+    <button [id]="'rpa-process-tab-' + tab.id"
+        class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer" [class]="activeTab() === tab.id
+            ? 'bg-primary/10 text-primary'
+            : 'text-muted-color hover:text-color hover:bg-surface-100 dark:hover:bg-surface-800'"
+        (click)="selectTab(tab.id)">
+        {{ tab.label }}
+    </button>
+    }
+</div>
+
+<!-- Table -->
+<div id="rpa-process-table" class="flex-1 overflow-auto bg-surface-50 dark:bg-surface-950">
+    @if (filteredProcesses().length === 0) {
+    <div class="flex flex-col items-center justify-center h-64 text-muted-color">
+        <i class="pi pi-box text-4xl mb-4"></i>
+        <p class="text-lg font-medium">No processes yet</p>
+        <p class="text-sm">Save templates from the Marketplace or create your own</p>
+    </div>
+    } @else {
+    <table class="w-full">
+        <thead>
+            <tr class="border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
+                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-6 py-3">Name</th>
+                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Platform
+                </th>
+                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Source
+                </th>
+                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Status
+                </th>
+                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Last Run
+                </th>
+                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Runs</th>
+                <th class="text-right text-xs font-semibold text-muted-color uppercase tracking-wide px-6 py-3">Actions
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (proc of filteredProcesses(); track proc.id; let i = $index) {
+            <tr [id]="'rpa-process-row-' + i"
+                class="border-b border-surface-50 dark:border-surface-800 hover:bg-surface-100/50 dark:hover:bg-surface-800/50 transition-colors">
+                <td class="px-6 py-3">
+                    <span class="text-sm font-medium text-color">{{ proc.name }}</span>
+                </td>
+                <td class="px-4 py-3">
+                    <span class="text-sm text-muted-color">{{ proc.platform }}</span>
+                </td>
+                <td class="px-4 py-3">
+                    <span class="text-xs text-muted-color bg-surface-100 dark:bg-surface-800 rounded px-2 py-0.5">
+                        {{ getSourceLabel(proc.source) }}
+                    </span>
+                </td>
+                <td class="px-4 py-3">
+                    <p-tag [value]="proc.status" [severity]="getStatusSeverity(proc.status)" [rounded]="true" />
+                </td>
+                <td class="px-4 py-3">
+                    <span class="text-sm text-muted-color">{{ formatDate(proc.lastRun) }}</span>
+                </td>
+                <td class="px-4 py-3">
+                    <span class="text-sm text-muted-color">{{ proc.totalRuns }}</span>
+                </td>
+                <td class="px-6 py-3 text-right">
+                    <div class="flex items-center justify-end gap-1">
+                        <p-button icon="pi pi-play" [rounded]="true" [text]="true" severity="success" size="small"
+                            pTooltip="Run" tooltipPosition="top" />
+                        <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" size="small"
+                            pTooltip="Edit" tooltipPosition="top" />
+                        <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+                            pTooltip="Delete" tooltipPosition="top" />
+                    </div>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+    }
+</div>

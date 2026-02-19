@@ -21,10 +21,10 @@ interface AutomationMenuItem {
 export class AutomationLayout {
     protected readonly menuItems: AutomationMenuItem[] = [
         { id: 'marketplace', label: 'Marketplace', icon: 'pi-shop', route: './marketplace' },
+        { id: 'process', label: 'Process', icon: 'pi-sitemap', route: './process' },
+        { id: 'task', label: 'Task', icon: 'pi-play-circle', route: './task' },
         { id: 'api-docs', label: 'API Docs', icon: 'pi-book', route: './api-docs' },
-        { id: 'process', label: 'Process', icon: 'pi-sitemap', route: './marketplace', badge: 'Soon' },
-        { id: 'task', label: 'Task', icon: 'pi-play-circle', route: './marketplace', badge: 'Soon' },
-        { id: 'task-log', label: 'Task Log', icon: 'pi-history', route: './marketplace', badge: 'Soon' },
+        { id: 'task-log', label: 'Task Log', icon: 'pi-history', route: './task', badge: 'Soon' },
     ];
 
     protected readonly sidebarCollapsed = signal(false);
