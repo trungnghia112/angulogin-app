@@ -11,7 +11,7 @@ import { AuthService } from '../../../services/auth.service';
     templateUrl: './forgot-password.html',
     styleUrl: './forgot-password.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    host: { class: 'flex items-center justify-center min-h-screen bg-surface-50 dark:bg-surface-950' },
+    host: { class: 'block min-h-screen' },
     imports: [FormsModule, RouterLink, InputTextModule, ButtonModule],
 })
 export class ForgotPassword {
@@ -26,7 +26,6 @@ export class ForgotPassword {
         try {
             await this.authService.forgotPassword(this.email());
             this.sent.set(true);
-            this.messageService.add({ severity: 'success', summary: 'Email Sent', detail: 'Check your inbox for the reset link' });
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Failed to send reset email';
             this.messageService.add({ severity: 'error', summary: 'Error', detail: msg });

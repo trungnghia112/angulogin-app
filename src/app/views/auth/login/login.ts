@@ -4,7 +4,6 @@ import { RouterLink } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
-import { DividerModule } from 'primeng/divider';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '../../../services/auth.service';
 
@@ -13,8 +12,8 @@ import { AuthService } from '../../../services/auth.service';
     templateUrl: './login.html',
     styleUrl: './login.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    host: { class: 'flex items-center justify-center min-h-screen bg-surface-50 dark:bg-surface-950' },
-    imports: [FormsModule, RouterLink, InputTextModule, PasswordModule, ButtonModule, DividerModule],
+    host: { class: 'block min-h-screen' },
+    imports: [FormsModule, RouterLink, InputTextModule, PasswordModule, ButtonModule],
 })
 export class Login {
     private readonly authService = inject(AuthService);

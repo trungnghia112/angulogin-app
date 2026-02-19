@@ -4,7 +4,6 @@ import { RouterLink } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
-import { DividerModule } from 'primeng/divider';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '../../../services/auth.service';
@@ -14,8 +13,8 @@ import { AuthService } from '../../../services/auth.service';
     templateUrl: './register.html',
     styleUrl: './register.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    host: { class: 'flex items-center justify-center min-h-screen bg-surface-50 dark:bg-surface-950' },
-    imports: [FormsModule, RouterLink, InputTextModule, PasswordModule, ButtonModule, DividerModule, CheckboxModule],
+    host: { class: 'block min-h-screen' },
+    imports: [FormsModule, RouterLink, InputTextModule, PasswordModule, ButtonModule, CheckboxModule],
 })
 export class Register {
     private readonly authService = inject(AuthService);
