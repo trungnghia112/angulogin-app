@@ -83,6 +83,30 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 
 ---
 
+## PrimeNG Component Reference (CRITICAL)
+
+**MUST READ before using ANY PrimeNG component.** Do NOT rely on old patterns from training data.
+
+- **LLMs Docs:** `https://primeng.org/llms/llms.txt` (index) or `https://primeng.org/llms/llms-full.txt` (full)
+- **Per-component docs:** Add `.md` to any page URL, e.g. `https://primeng.org/llms/components/button.md`
+- **Always fetch the latest docs** using `read_url_content` for the specific component before writing code.
+
+### Deprecated Patterns (DO NOT USE)
+
+| Deprecated (old) | Correct (v21+) |
+|---|---|
+| `<span class="p-input-icon-left">` | `<p-iconfield>` + `<p-inputicon>` |
+| `<span class="p-input-icon-right">` | `<p-iconfield iconPosition="right">` + `<p-inputicon>` |
+| `styleClass="..."` | `class="..."` |
+
+### Form Controls Consistency Rule
+
+When multiple form controls (`p-select`, `pInputText`, `p-iconfield`, etc.) are on the **same row**:
+- **ALL must have the same `size`** (or none at all). Never set `size="small"` on one but not others.
+- Always visually verify height/padding alignment between adjacent controls.
+
+---
+
 ## Dark Mode Architecture (CRITICAL)
 
 This project uses **PrimeNG + Tailwind CSS** with a unified dark mode system based on the `.dark` class.
@@ -252,6 +276,7 @@ const data = { description: form.value.description || null };
    - NO Markdown docs unless requested.
    - NO emojis in code/comments.
    - **NO `styleClass` on PrimeNG. Use `class` instead.**
+   - **PrimeNG components: ALWAYS check `https://primeng.org/llms/components/<name>.md` before using.** Never rely on old patterns.
 8. **UI Styling**:
    - **Tailwind CSS ONLY**: No custom CSS for layout/styling.
    - **Icons**: Use `PrimeIcons` (e.g., `<i class="pi pi-home"></i>`).
