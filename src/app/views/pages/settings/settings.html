@@ -449,6 +449,142 @@
         </div>
         }
 
+        <!-- Local API Section -->
+        @if (activeCategory() === 'api') {
+        <div class="max-w-3xl flex flex-col gap-8">
+
+            <!-- API Toggle -->
+            <section id="settings-api-toggle"
+                class="bg-surface-0 dark:bg-surface-900 p-6 rounded-xl border border-surface-100 dark:border-surface-800">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-semibold text-color mb-1">Enable Local REST API</h3>
+                        <p class="text-sm text-muted-color">Allow external tools to control profiles via HTTP on
+                            localhost.</p>
+                    </div>
+                    <p-toggleSwitch [ngModel]="apiService.isEnabled()" (onChange)="toggleApi()" />
+                </div>
+            </section>
+
+            <!-- Connection Info -->
+            <section id="settings-api-connection"
+                class="bg-surface-0 dark:bg-surface-900 p-6 rounded-xl border border-surface-100 dark:border-surface-800"
+                [class.opacity-50]="!apiService.isEnabled()" [class.pointer-events-none]="!apiService.isEnabled()">
+                <h3 class="text-sm font-semibold text-muted-color mb-5 uppercase tracking-wider">Connection</h3>
+
+                <div class="flex flex-col gap-5">
+                    <!-- Port -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-color">Port</p>
+                            <p class="text-xs text-muted-color">Changes take effect on next app restart.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            @if (apiPortEditing()) {
+                            <input id="settings-api-port-input" pInputText type="number" [ngModel]="apiPortValue()"
+                                (ngModelChange)="apiPortValue.set($event)" class="w-28 text-right" />
+                            <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success"
+                                (click)="saveApiPort()" pTooltip="Save" />
+                            <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="secondary"
+                                (click)="apiPortEditing.set(false)" pTooltip="Cancel" />
+                            } @else {
+                            <span class="text-sm font-mono text-color bg-surface-100 dark:bg-surface-800 px-3 py-1.5 rounded-lg">{{
+                                apiService.port() }}</span>
+                            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
+                                size="small" (click)="apiPortEditing.set(true)" pTooltip="Edit" />
+                            }
+                        </div>
+                    </div>
+
+                    <div class="h-px bg-surface-100 dark:bg-surface-800"></div>
+
+                    <!-- Connection URL -->
+                    <div>
+                        <p class="text-sm font-medium text-color mb-2">Base URL</p>
+                        <div
+                            class="flex items-center gap-3 px-4 py-3 bg-surface-50 dark:bg-surface-800/50 rounded-lg font-mono text-sm text-color">
+                            <i class="pi pi-link text-muted-color"></i>
+                            <span>{{ apiService.connectionUrl() }}</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- API Key -->
+            <section id="settings-api-key"
+                class="bg-surface-0 dark:bg-surface-900 p-6 rounded-xl border border-surface-100 dark:border-surface-800"
+                [class.opacity-50]="!apiService.isEnabled()" [class.pointer-events-none]="!apiService.isEnabled()">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h3 class="text-sm font-semibold text-muted-color uppercase tracking-wider">API Key</h3>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <p-button [icon]="apiKeyVisible() ? 'pi pi-eye-slash' : 'pi pi-eye'" [rounded]="true"
+                            [text]="true" severity="secondary" size="small"
+                            (click)="apiKeyVisible.set(!apiKeyVisible())"
+                            [pTooltip]="apiKeyVisible() ? 'Hide' : 'Show'" />
+                    </div>
+                </div>
+
+                <!-- Key Display -->
+                <div
+                    class="flex items-center gap-3 px-4 py-3 bg-surface-50 dark:bg-surface-800/50 rounded-lg mb-4">
+                    <i class="pi pi-key text-muted-color"></i>
+                    <span class="flex-1 font-mono text-sm text-color select-all">
+                        {{ apiKeyVisible() ? apiService.apiKey() : getMaskedKey() }}
+                    </span>
+                    <p-button [icon]="apiKeyCopied() ? 'pi pi-check' : 'pi pi-copy'" [rounded]="true" [text]="true"
+                        [severity]="apiKeyCopied() ? 'success' : 'secondary'" size="small" (click)="copyApiKey()"
+                        [pTooltip]="apiKeyCopied() ? 'Copied!' : 'Copy'" />
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center justify-between">
+                    <p class="text-xs text-muted-color">Use as <span class="font-mono">Authorization: Bearer
+                            &lt;key&gt;</span></p>
+                    <p-button label="Regenerate" icon="pi pi-refresh" [outlined]="true" size="small"
+                        [loading]="apiRegenerating()" (click)="regenerateApiKey()" />
+                </div>
+            </section>
+
+            <!-- Quick Reference -->
+            <section id="settings-api-reference"
+                class="bg-surface-0 dark:bg-surface-900 p-6 rounded-xl border border-surface-100 dark:border-surface-800"
+                [class.opacity-50]="!apiService.isEnabled()" [class.pointer-events-none]="!apiService.isEnabled()">
+                <h3 class="text-sm font-semibold text-muted-color mb-5 uppercase tracking-wider">Quick Reference</h3>
+
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-3 text-sm">
+                        <span class="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded font-mono text-xs font-semibold">GET</span>
+                        <span class="font-mono text-muted-color">/api/v1/status</span>
+                        <span class="text-xs text-muted-color ml-auto">Health check (public)</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm">
+                        <span class="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded font-mono text-xs font-semibold">GET</span>
+                        <span class="font-mono text-muted-color">/api/v1/browser/open</span>
+                        <span class="text-xs text-muted-color ml-auto">Open profile + CDP</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm">
+                        <span class="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded font-mono text-xs font-semibold">GET</span>
+                        <span class="font-mono text-muted-color">/api/v1/profile/list</span>
+                        <span class="text-xs text-muted-color ml-auto">List all profiles</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm">
+                        <span class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono text-xs font-semibold">POST</span>
+                        <span class="font-mono text-muted-color">/api/v1/profile/create</span>
+                        <span class="text-xs text-muted-color ml-auto">Create new profile</span>
+                    </div>
+                </div>
+
+                <div class="mt-5 p-4 bg-surface-50 dark:bg-surface-800/50 rounded-lg">
+                    <p class="text-xs text-muted-color mb-2">Example cURL:</p>
+                    <code class="text-xs font-mono text-color leading-relaxed block">curl -H "Authorization: Bearer &lt;key&gt;" {{ apiService.connectionUrl() }}/api/v1/profile/list</code>
+                </div>
+            </section>
+
+        </div>
+        }
+
         <!-- Proxy Section -->
         @if (activeCategory() === 'proxy') {
         <div class="max-w-3xl flex flex-col gap-8">

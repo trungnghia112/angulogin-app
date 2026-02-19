@@ -25,6 +25,7 @@ import {
 } from '../../../core/services/settings.service';
 import { ProfileService } from '../../../services/profile.service';
 import { ProxyService } from '../../../services/proxy.service';
+import { ApiSettingsService } from '../../../services/api-settings.service';
 import { ProfileProxy } from '../../../models/folder.model';
 
 interface SettingsCategory {
@@ -59,6 +60,14 @@ export class Settings {
     protected readonly proxyService = inject(ProxyService);
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
+    protected readonly apiService = inject(ApiSettingsService);
+
+    // API Settings state
+    protected readonly apiKeyVisible = signal(false);
+    protected readonly apiKeyCopied = signal(false);
+    protected readonly apiRegenerating = signal(false);
+    protected readonly apiPortEditing = signal(false);
+    protected readonly apiPortValue = signal(50200);
 
     // Settings categories for sidebar navigation
     protected readonly categories: SettingsCategory[] = [
@@ -66,6 +75,7 @@ export class Settings {
         { id: 'appearance', label: 'Appearance', icon: 'pi pi-palette' },
         { id: 'browser', label: 'Browser Paths', icon: 'pi pi-folder' },
         { id: 'proxy', label: 'Proxy', icon: 'pi pi-globe' },
+        { id: 'api', label: 'Local API', icon: 'pi pi-server' },
         { id: 'data', label: 'Data', icon: 'pi pi-database' },
     ];
 
@@ -169,9 +179,14 @@ export class Settings {
         { label: 'SOCKS5', value: 'socks5' },
     ];
 
-    // Navigate to category
     selectCategory(id: string): void {
         this.activeCategory.set(id);
+        // Load API config when switching to API tab
+        if (id === 'api') {
+            this.apiService.loadConfig().then(() => {
+                this.apiPortValue.set(this.apiService.port());
+            });
+        }
     }
 
     // Check if running in Tauri
@@ -199,6 +214,66 @@ export class Settings {
 
     toggleDarkMode(): void {
         this.settingsService.toggleDarkMode();
+    }
+
+    // === Local API Methods ===
+
+    async toggleApi(): Promise<void> {
+        try {
+            await this.apiService.toggleEnabled();
+            this.messageService.add({
+                severity: 'info',
+                summary: 'API ' + (this.apiService.isEnabled() ? 'Enabled' : 'Disabled'),
+                detail: this.apiService.isEnabled()
+                    ? 'API will start on next app launch.'
+                    : 'API will be disabled on next app launch.',
+            });
+        } catch {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to toggle API.' });
+        }
+    }
+
+    async copyApiKey(): Promise<void> {
+        try {
+            await navigator.clipboard.writeText(this.apiService.apiKey());
+            this.apiKeyCopied.set(true);
+            setTimeout(() => this.apiKeyCopied.set(false), 2000);
+        } catch {
+            this.messageService.add({ severity: 'error', summary: 'Copy Failed', detail: 'Could not copy to clipboard.' });
+        }
+    }
+
+    async regenerateApiKey(): Promise<void> {
+        this.apiRegenerating.set(true);
+        try {
+            await this.apiService.regenerateKey();
+            this.messageService.add({ severity: 'success', summary: 'Key Regenerated', detail: 'A new API key has been generated.' });
+        } catch {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to regenerate key.' });
+        } finally {
+            this.apiRegenerating.set(false);
+        }
+    }
+
+    async saveApiPort(): Promise<void> {
+        const port = this.apiPortValue();
+        if (port < 1024 || port > 65535) {
+            this.messageService.add({ severity: 'warn', summary: 'Invalid Port', detail: 'Port must be between 1024 and 65535.' });
+            return;
+        }
+        try {
+            await this.apiService.saveConfig({ port });
+            this.apiPortEditing.set(false);
+            this.messageService.add({ severity: 'success', summary: 'Port Updated', detail: `API will use port ${port} on next restart.` });
+        } catch {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to save port.' });
+        }
+    }
+
+    getMaskedKey(): string {
+        const key = this.apiService.apiKey();
+        if (!key) return '—';
+        return key.substring(0, 14) + '••••••••••••';
     }
 
     // General Settings Methods
