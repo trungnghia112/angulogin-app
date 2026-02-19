@@ -395,7 +395,7 @@ export class Home implements OnInit, OnDestroy {
         });
 
         // First-run onboarding check
-        if (typeof localStorage !== 'undefined' && !localStorage.getItem('angulogin-onboarded')) {
+        if (typeof localStorage !== 'undefined' && !localStorage.getItem('angulogin-onboarded-v1')) {
             this.showOnboarding.set(true);
         }
     }
@@ -862,7 +862,7 @@ export class Home implements OnInit, OnDestroy {
     async onOnboardingComplete(level: ProtectionLevel): Promise<void> {
         try {
             this.settingsService.setGeneralSetting('defaultProtectionLevel', level);
-            localStorage.setItem('angulogin-onboarded', 'true');
+            localStorage.setItem('angulogin-onboarded-v1', 'true');
             this.showOnboarding.set(false);
             this.messageService.add({
                 severity: 'success',
@@ -875,7 +875,7 @@ export class Home implements OnInit, OnDestroy {
     }
 
     onOnboardingDismiss(): void {
-        localStorage.setItem('angulogin-onboarded', 'true');
+        localStorage.setItem('angulogin-onboarded-v1', 'true');
         this.showOnboarding.set(false);
     }
 
