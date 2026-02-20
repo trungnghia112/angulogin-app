@@ -16,3 +16,20 @@
         filter: hue-rotate(45deg);
     }
 }
+
+/* Custom dropdown fade-in */
+.animate-fadein {
+    animation: navFadeIn 150ms ease-out;
+}
+
+@keyframes navFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

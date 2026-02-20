@@ -54,13 +54,3 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
 }
-
-/**
- * Nav sidebar user menu: force popup ABOVE the avatar button.
- * PrimeNG sets inline top/left via JS, so we must use !important.
- */
-.nav-user-menu.p-menu-overlay {
-    top: auto !important;
-    bottom: 56px !important;
-    left: 64px !important;
-}

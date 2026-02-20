@@ -83,17 +83,38 @@
             <i class="pi pi-cog text-lg"></i>
         </button>
 
-        <!-- User Avatar with Menu -->
-        <button id="main-nav-profile-btn" aria-label="Open user menu"
-            class="w-10 h-10 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium mt-2 hover:scale-105 transition-transform cursor-pointer"
-            pTooltip="Account" tooltipPosition="right" (click)="userMenu.toggle($event)">
-            @if (authService.photoURL()) {
-            <img [src]="authService.photoURL()" alt="User avatar" class="w-full h-full rounded-full object-cover" />
-            } @else {
-            {{ authService.initial() }}
+        <!-- User Avatar with Custom Dropdown -->
+        <div class="relative mt-2">
+            <button id="main-nav-profile-btn" aria-label="Open user menu"
+                class="w-10 h-10 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium hover:scale-105 transition-transform cursor-pointer overflow-hidden"
+                [pTooltip]="userMenuOpen() ? '' : 'Account'" tooltipPosition="right" (click)="toggleUserMenu($event)">
+                @if (authService.photoURL()) {
+                <img [src]="authService.photoURL()" alt="User avatar" class="w-full h-full rounded-full object-cover"
+                    referrerpolicy="no-referrer" />
+                } @else {
+                {{ authService.initial() }}
+                }
+            </button>
+
+            <!-- Custom dropdown menu (positioned above avatar) -->
+            @if (userMenuOpen()) {
+            <div id="main-nav-user-dropdown"
+                class="absolute bottom-full left-full mb-1 ml-1 min-w-40 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shadow-lg z-50 py-1 animate-fadein"
+                (click)="userMenuOpen.set(false)">
+                <button (click)="navigateToProfile()"
+                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-color hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors cursor-pointer">
+                    <i class="pi pi-user text-muted-color"></i>
+                    My Account
+                </button>
+                <div class="h-px bg-surface-200 dark:bg-surface-700 mx-2"></div>
+                <button (click)="onLogout()"
+                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-color hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors cursor-pointer">
+                    <i class="pi pi-sign-out text-muted-color"></i>
+                    Logout
+                </button>
+            </div>
             }
-        </button>
-        <p-menu #userMenu [model]="userMenuItems" [popup]="true" appendTo="body" class="nav-user-menu" />
+        </div>
     </div>
 
 </nav>
