@@ -8,7 +8,8 @@ export const environment = {
         apiKey: 'AIzaSyAiGkUU2Hp3Z9GNVoCym1bjX6Pt1tdX_4c',
         authDomain: 'angulogin-com.firebaseapp.com',
         messagingSenderId: '206038392526',
-        measurementId: 'G-WLLVN5J7JR'
+        measurementId: 'G-WLLVN5J7JR',
+        googleClientId: '206038392526-3luktmt5vhgv1sfaeekrhb81p75kbphf.apps.googleusercontent.com',
     },
     emulators: {
         auth: 9099,

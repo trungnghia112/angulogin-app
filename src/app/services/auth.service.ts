@@ -103,47 +103,58 @@ export class AuthService {
     }
 
     /**
-     * Open Google OAuth in system browser for Tauri desktop.
-     * Rust callback server on port 8923 captures the access_token.
+     * Google OAuth via system browser for Tauri desktop.
+     * Opens Google consent screen in Safari/Chrome, Rust captures the token.
      */
     private async loginWithGoogleViaBrowser(): Promise<void> {
         const { invoke } = await import('@tauri-apps/api/core');
         const { open } = await import('@tauri-apps/plugin-shell');
         const { listen } = await import('@tauri-apps/api/event');
+        const { environment } = await import('../../environments/environment');
 
-        // 1. Start Rust callback server → returns redirect URI
+        // 1. Start Rust callback server (port 8923)
         const redirectUri: string = await invoke('oauth_start_google');
 
-        // 2. Build Google OAuth URL directly (not Firebase auth handler)
+        // 2. Open Google OAuth in system browser
         const oauthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' +
             new URLSearchParams({
-                client_id: '206038392526-3luktmt5vhgv1sfaeekrhb81p75kbphf.apps.googleusercontent.com',
+                client_id: environment.firebase.googleClientId,
                 redirect_uri: redirectUri,
                 response_type: 'token',
                 scope: 'openid email profile',
                 prompt: 'select_account',
             }).toString();
 
-        // 3. Open in system browser (Safari/Chrome)
         await open(oauthUrl);
 
-        // 4. Wait for Rust to emit the access_token (max 120s)
+        // 3. Wait for Rust callback event (cleanup listeners on resolve/reject)
         const accessToken = await new Promise<string>((resolve, reject) => {
+            let unlistenOk: (() => void) | null = null;
+            let unlistenErr: (() => void) | null = null;
             const timeout = setTimeout(() => {
-                reject(new Error('Google login timed out. Please try again.'));
+                unlistenOk?.();
+                unlistenErr?.();
+                reject(new Error('Google login timed out (120s). Please try again.'));
             }, 120_000);
 
+            const cleanup = () => {
+                clearTimeout(timeout);
+                unlistenOk?.();
+                unlistenErr?.();
+            };
+
             listen<string>('oauth-callback', (e) => {
-                clearTimeout(timeout);
+                cleanup();
                 resolve(e.payload);
-            });
+            }).then(fn => { unlistenOk = fn; });
+
             listen<string>('oauth-callback-error', (e) => {
-                clearTimeout(timeout);
+                cleanup();
                 reject(new Error(e.payload));
-            });
+            }).then(fn => { unlistenErr = fn; });
         });
 
-        // 5. Exchange access token for Firebase credential
+        // 4. Exchange access token for Firebase credential
         const credential = GoogleAuthProvider.credential(null, accessToken);
         await signInWithCredential(this.auth, credential);
         await this.updateLastLogin();
