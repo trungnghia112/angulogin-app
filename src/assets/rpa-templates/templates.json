@@ -1,7 +1,7 @@
 [
     {
         "id": "tiktok-search-like",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "metadata": {
             "title": "TikTok Search & Comment Like",
             "description": "Search videos, browse & random like comments to boost activity.",
@@ -14,7 +14,7 @@
                 "tiktok"
             ],
             "createdAt": "2026-01-15",
-            "updatedAt": "2026-02-19",
+            "updatedAt": "2026-02-20",
             "isPremium": true
         },
         "stats": {
@@ -23,40 +23,76 @@
         "requirements": {
             "note": "Requires TikTok account login"
         },
-        "overview": "Visit Home → Search Keywords → Browse Videos → Like Comments by Probability → Screenshot → Loop",
+        "overview": "Visit Home → Search Keywords → Browse Videos → Like Comments → Loop",
         "steps": [
             {
                 "order": 1,
                 "action": "navigate",
-                "url": "https://tiktok.com",
-                "description": "Visit TikTok homepage, read the search keywords list"
+                "url": "https://www.tiktok.com",
+                "description": "Open TikTok homepage",
+                "waitForSelector": "[data-e2e='search-box-input'], input[type='search'], form[action*='search'] input",
+                "timeout": 15000,
+                "humanDelay": [
+                    2000,
+                    4000
+                ]
             },
             {
                 "order": 2,
                 "action": "type",
-                "selector": "input[type=search]",
+                "selector": "[data-e2e='search-box-input']",
+                "fallbackSelectors": [
+                    "input[type='search']",
+                    "input[name='q']",
+                    "input[placeholder*='Search']"
+                ],
                 "value": "{{searchText}}",
-                "description": "Iterate keywords, input search term to search"
+                "description": "Type search keyword into search box and submit",
+                "timeout": 8000,
+                "humanDelay": [
+                    1000,
+                    3000
+                ]
             },
             {
                 "order": 3,
-                "action": "scroll",
-                "description": "Get video list, randomly enter video detail page by set count"
+                "action": "wait",
+                "waitMs": 4000,
+                "description": "Wait for search results to load",
+                "humanDelay": [
+                    1000,
+                    2000
+                ]
             },
             {
                 "order": 4,
-                "action": "click",
-                "description": "Open comment section, calculate whether to like based on probability"
+                "action": "scroll",
+                "description": "Scroll through search results to load videos",
+                "iterations": 3,
+                "humanDelay": [
+                    2000,
+                    4000
+                ]
             },
             {
                 "order": 5,
-                "action": "loop",
-                "description": "Loop like comments by set count, screenshot to save record"
+                "action": "click",
+                "description": "Click on a video from search results",
+                "jsExpression": "(() => { const videos = document.querySelectorAll('[data-e2e=\"search-card-desc\"] a, [class*=\"DivVideoCardContainer\"] a, a[href*=\"/video/\"]'); if (videos.length) { const idx = Math.floor(Math.random() * Math.min(videos.length, {{viewVideoCount}})); videos[idx]?.click(); return 'clicked video ' + idx; } return 'no videos found'; })()",
+                "humanDelay": [
+                    3000,
+                    6000
+                ]
             },
             {
                 "order": 6,
-                "action": "extract",
-                "description": "Save like data, switch to the next video or keyword to continue"
+                "action": "click",
+                "description": "Like random comments based on probability",
+                "jsExpression": "(() => { const likeRate = {{likeRate}}; const btns = document.querySelectorAll('[data-e2e=\"comment-like-icon\"], [class*=\"like-icon\"], svg[class*=\"Like\"]'); let liked = 0; btns.forEach((btn, i) => { if (i < {{CommentLikes}} && Math.random() * 10 < likeRate) { btn.click(); liked++; } }); return 'liked ' + liked + ' comments'; })()",
+                "humanDelay": [
+                    2000,
+                    5000
+                ]
             }
         ],
         "variables": [
@@ -493,7 +529,7 @@
     },
     {
         "id": "shopee-browse-products",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "metadata": {
             "title": "Shopee Browse Products",
             "description": "Open Shopee, search keywords, browse products randomly to warm up account.",
@@ -506,7 +542,7 @@
                 "warmup"
             ],
             "createdAt": "2026-02-03",
-            "updatedAt": "2026-02-18",
+            "updatedAt": "2026-02-20",
             "isPremium": false
         },
         "stats": {
@@ -515,33 +551,92 @@
         "requirements": {
             "note": "Requires Shopee account login"
         },
-        "overview": "Open Shopee → Search → Browse Products → Add to Cart → Loop",
+        "overview": "Open Shopee → Search → Browse Products → View Details → Loop",
         "steps": [
             {
                 "order": 1,
                 "action": "navigate",
-                "url": "https://shopee.com",
-                "description": "Open shopee.com and log in"
+                "url": "https://shopee.vn",
+                "description": "Open Shopee homepage",
+                "waitForSelector": ".shopee-searchbar-input input, input[name='keyword'], input[type='text'][autocomplete='off']",
+                "timeout": 15000,
+                "humanDelay": [
+                    3000,
+                    5000
+                ]
             },
             {
                 "order": 2,
                 "action": "type",
-                "description": "Search for specified keywords"
+                "selector": ".shopee-searchbar-input input",
+                "fallbackSelectors": [
+                    "input[name='keyword']",
+                    "input[type='text'][autocomplete='off']",
+                    ".navbar__search-input input"
+                ],
+                "value": "{{searchKeywords}}",
+                "description": "Type search keyword into Shopee search bar",
+                "timeout": 8000,
+                "humanDelay": [
+                    1000,
+                    2000
+                ]
             },
             {
                 "order": 3,
-                "action": "scroll",
-                "description": "Browse product listings randomly"
+                "action": "click",
+                "selector": "button.btn-solid-primary",
+                "fallbackSelectors": [
+                    "button[type='button'].shopee-searchbar-input__search-icon",
+                    ".shopee-searchbar-input__search-icon",
+                    "button[class*='search']"
+                ],
+                "description": "Click the Search button",
+                "timeout": 5000,
+                "humanDelay": [
+                    2000,
+                    4000
+                ]
             },
             {
                 "order": 4,
-                "action": "click",
-                "description": "Click into product details"
+                "action": "wait",
+                "waitMs": 4000,
+                "description": "Wait for search results to load",
+                "humanDelay": [
+                    1000,
+                    2000
+                ]
             },
             {
                 "order": 5,
+                "action": "scroll",
+                "description": "Scroll through product listings",
+                "iterations": 4,
+                "humanDelay": [
+                    2000,
+                    4000
+                ]
+            },
+            {
+                "order": 6,
                 "action": "click",
-                "description": "Optionally add to cart"
+                "description": "Click on a random product to view details",
+                "jsExpression": "(() => { const items = document.querySelectorAll('.shopee-search-item-result__item a, [data-sqe=\"link\"] a, .col-xs-2-4 a[href*=\"-i.\"]'); const count = Math.min(items.length, {{browseCount}}); if (count > 0) { const idx = Math.floor(Math.random() * count); items[idx]?.click(); return 'clicked product ' + idx + ' of ' + items.length; } return 'no products found'; })()",
+                "humanDelay": [
+                    4000,
+                    8000
+                ]
+            },
+            {
+                "order": 7,
+                "action": "scroll",
+                "description": "Scroll through product detail page",
+                "iterations": 3,
+                "humanDelay": [
+                    2000,
+                    4000
+                ]
             }
         ],
         "variables": [
@@ -714,7 +809,7 @@
     },
     {
         "id": "youtube-watch-subscribe",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "metadata": {
             "title": "YouTube Watch & Subscribe",
             "description": "Search videos by keyword, watch for specified duration, like and subscribe.",
@@ -727,7 +822,7 @@
                 "engagement"
             ],
             "createdAt": "2026-01-30",
-            "updatedAt": "2026-02-19",
+            "updatedAt": "2026-02-20",
             "isPremium": true
         },
         "stats": {
@@ -741,29 +836,98 @@
             {
                 "order": 1,
                 "action": "navigate",
-                "url": "https://youtube.com",
-                "description": "Open YouTube and search for keywords"
+                "url": "https://www.youtube.com",
+                "description": "Open YouTube homepage",
+                "waitForSelector": "input#search, ytd-searchbox input, #search-input input",
+                "timeout": 15000,
+                "humanDelay": [
+                    2000,
+                    4000
+                ]
             },
             {
                 "order": 2,
-                "action": "click",
-                "description": "Click on video from search results"
+                "action": "type",
+                "selector": "input#search",
+                "fallbackSelectors": [
+                    "ytd-searchbox input",
+                    "#search-input input",
+                    "input[name='search_query']"
+                ],
+                "value": "{{searchKeywords}}",
+                "description": "Type search keyword in YouTube search box",
+                "timeout": 8000,
+                "humanDelay": [
+                    1000,
+                    2000
+                ]
             },
             {
                 "order": 3,
-                "action": "wait",
-                "waitMs": 30000,
-                "description": "Watch video for specified duration"
+                "action": "click",
+                "selector": "#search-icon-legacy",
+                "fallbackSelectors": [
+                    "button#search-icon-legacy",
+                    "button[aria-label='Search']",
+                    "ytd-searchbox button"
+                ],
+                "description": "Click search button",
+                "timeout": 5000,
+                "humanDelay": [
+                    2000,
+                    4000
+                ]
             },
             {
                 "order": 4,
-                "action": "click",
-                "description": "Like video and subscribe to channel"
+                "action": "wait",
+                "waitMs": 3000,
+                "description": "Wait for search results to load",
+                "humanDelay": [
+                    1000,
+                    2000
+                ]
             },
             {
                 "order": 5,
                 "action": "click",
-                "description": "Move to next search result"
+                "description": "Click on the first video result",
+                "jsExpression": "(() => { const videos = document.querySelectorAll('ytd-video-renderer a#video-title, ytd-video-renderer h3 a, a#video-title'); if (videos.length > 0) { const idx = Math.floor(Math.random() * Math.min(videos.length, 5)); videos[idx]?.click(); return 'clicked video ' + idx; } return 'no videos found'; })()",
+                "humanDelay": [
+                    2000,
+                    4000
+                ]
+            },
+            {
+                "order": 6,
+                "action": "wait",
+                "description": "Watch video for specified duration",
+                "jsExpression": "(() => { const secs = {{watchDuration}} || 30; return 'watching for ' + secs + 's'; })()",
+                "waitMs": 30000,
+                "humanDelay": [
+                    1000,
+                    2000
+                ]
+            },
+            {
+                "order": 7,
+                "action": "click",
+                "description": "Like the video based on probability",
+                "jsExpression": "(() => { const rate = {{subscribeRate}}; if (Math.random() * 10 < rate) { const likeBtn = document.querySelector('like-button-view-model button, ytd-toggle-button-renderer button[aria-label*=\"like\"], #top-level-buttons-computed button:first-child'); if (likeBtn) { likeBtn.click(); return 'liked video'; } } return 'skipped like'; })()",
+                "humanDelay": [
+                    2000,
+                    4000
+                ]
+            },
+            {
+                "order": 8,
+                "action": "click",
+                "description": "Subscribe to channel based on probability",
+                "jsExpression": "(() => { const rate = {{subscribeRate}}; if (Math.random() * 10 < rate) { const subBtn = document.querySelector('ytd-subscribe-button-renderer button, #subscribe-button button, button[aria-label*=\"Subscribe\"]'); if (subBtn && !subBtn.getAttribute('subscribed') && !subBtn.closest('[subscribed]')) { subBtn.click(); return 'subscribed'; } return 'already subscribed'; } return 'skipped subscribe'; })()",
+                "humanDelay": [
+                    3000,
+                    6000
+                ]
             }
         ],
         "variables": [
@@ -873,10 +1037,10 @@
     },
     {
         "id": "etsy-browse-goods",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "metadata": {
             "title": "Browse Goods on Etsy",
-            "description": "Open www.etsy.com, browse 3 products randomly to warm up your account.",
+            "description": "Open www.etsy.com, browse products randomly to warm up your account.",
             "platform": "Etsy",
             "platformIcon": "pi-shopping-bag",
             "author": "AnguLogin Team",
@@ -886,7 +1050,7 @@
                 "warmup"
             ],
             "createdAt": "2026-01-10",
-            "updatedAt": "2026-02-15",
+            "updatedAt": "2026-02-20",
             "isPremium": false
         },
         "stats": {
@@ -895,28 +1059,69 @@
         "requirements": {
             "note": "No login required"
         },
-        "overview": "Open Etsy → Browse → Click Products → View Details → Loop",
+        "overview": "Open Etsy → Scroll → Click Products → View Details → Loop",
         "steps": [
             {
                 "order": 1,
                 "action": "navigate",
-                "url": "https://etsy.com",
-                "description": "Open etsy.com homepage"
+                "url": "https://www.etsy.com",
+                "description": "Open Etsy homepage",
+                "waitForSelector": ".listing-card, .v2-listing-card, [data-listing-id], a[href*='/listing/']",
+                "timeout": 15000,
+                "humanDelay": [
+                    3000,
+                    5000
+                ]
             },
             {
                 "order": 2,
                 "action": "scroll",
-                "description": "Browse product categories"
+                "description": "Scroll down to browse product categories and listings",
+                "iterations": 4,
+                "humanDelay": [
+                    2000,
+                    4000
+                ]
             },
             {
                 "order": 3,
                 "action": "click",
-                "description": "Click on random products"
+                "description": "Click on a random product listing",
+                "jsExpression": "(() => { const cards = document.querySelectorAll('.listing-card a.listing-link, .v2-listing-card a, [data-listing-id] a, a[href*=\"/listing/\"]'); const count = Math.min(cards.length, {{browseCount}}); if (count > 0) { const idx = Math.floor(Math.random() * count); cards[idx]?.click(); return 'clicked product ' + idx + ' of ' + cards.length; } return 'no products found'; })()",
+                "humanDelay": [
+                    4000,
+                    7000
+                ]
             },
             {
                 "order": 4,
+                "action": "wait",
+                "waitMs": 3000,
+                "description": "Wait for product page to load",
+                "humanDelay": [
+                    1000,
+                    2000
+                ]
+            },
+            {
+                "order": 5,
                 "action": "scroll",
-                "description": "View product details and scroll through images"
+                "description": "Scroll through product detail page to view images and description",
+                "iterations": 3,
+                "humanDelay": [
+                    2000,
+                    4000
+                ]
+            },
+            {
+                "order": 6,
+                "action": "scroll",
+                "description": "Scroll through reviews section",
+                "jsExpression": "(() => { const reviewSection = document.querySelector('#reviews, [data-appears-component-name=\"Reviews\"]'); if (reviewSection) { reviewSection.scrollIntoView({ behavior: 'smooth' }); return 'scrolled to reviews'; } window.scrollBy({ top: 600, behavior: 'smooth' }); return 'scrolled down'; })()",
+                "humanDelay": [
+                    3000,
+                    5000
+                ]
             }
         ],
         "variables": [
@@ -931,7 +1136,7 @@
     },
     {
         "id": "fb-add-friends",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "metadata": {
             "title": "FB Add Suggested Friends",
             "description": "Open Facebook, add recommended friends randomly to expand your network.",
@@ -944,7 +1149,7 @@
                 "networking"
             ],
             "createdAt": "2026-01-12",
-            "updatedAt": "2026-02-14",
+            "updatedAt": "2026-02-20",
             "isPremium": false
         },
         "stats": {
@@ -958,23 +1163,54 @@
             {
                 "order": 1,
                 "action": "navigate",
-                "url": "https://facebook.com/friends/suggestions",
-                "description": "Open Facebook friend suggestions page"
+                "url": "https://www.facebook.com/friends/suggestions",
+                "description": "Open Facebook friend suggestions page",
+                "waitForSelector": "[role='main'], #pagelet_ego_pane, div[data-pagelet]",
+                "timeout": 15000,
+                "humanDelay": [
+                    3000,
+                    6000
+                ]
             },
             {
                 "order": 2,
-                "action": "click",
-                "description": "Click Add Friend on suggested profiles"
+                "action": "wait",
+                "waitMs": 4000,
+                "description": "Wait for friend suggestions to fully load",
+                "humanDelay": [
+                    1000,
+                    2000
+                ]
             },
             {
                 "order": 3,
                 "action": "scroll",
-                "description": "Scroll to load more suggestions"
+                "description": "Scroll down to load more friend suggestions",
+                "iterations": 3,
+                "humanDelay": [
+                    2000,
+                    4000
+                ]
             },
             {
                 "order": 4,
-                "action": "loop",
-                "description": "Continue until target count reached"
+                "action": "click",
+                "description": "Click Add Friend on suggested profiles",
+                "jsExpression": "(() => { const addBtns = document.querySelectorAll('div[aria-label=\"Add friend\"], button[aria-label=\"Add friend\"], div[role=\"button\"]:has(span:contains(\"Add Friend\")), button:has(span:contains(\"Add\"))'); const count = Math.min(addBtns.length, {{addCount}}); let added = 0; for (let i = 0; i < count; i++) { const btn = addBtns[i]; if (btn && !btn.getAttribute('disabled')) { btn.click(); added++; } } return 'sent ' + added + ' friend requests'; })()",
+                "humanDelay": [
+                    3000,
+                    6000
+                ]
+            },
+            {
+                "order": 5,
+                "action": "scroll",
+                "description": "Scroll to load more suggestions after adding",
+                "iterations": 2,
+                "humanDelay": [
+                    3000,
+                    5000
+                ]
             }
         ],
         "variables": [

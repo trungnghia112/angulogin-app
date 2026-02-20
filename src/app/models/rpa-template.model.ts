@@ -87,3 +87,65 @@ export const RPA_PLATFORMS = [
     'LinkedIn', 'Amazon', 'Shopee', 'Reddit', 'YouTube',
     'Gmail', 'Etsy', 'Mercari', 'Poshmark', 'Other',
 ];
+
+// --- Execution-layer types ---
+
+/** Status of an RPA task execution */
+export type RpaTaskStatus = 'pending' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
+
+/** Enhanced step with executable details */
+export interface ExecutableStep {
+    order: number;
+    action: 'navigate' | 'click' | 'type' | 'scroll' | 'wait' | 'extract' | 'loop' | 'ai' | 'export';
+    description: string;
+    /** URL for navigate action */
+    url?: string;
+    /** Primary CSS selector */
+    selector?: string;
+    /** Fallback selectors if primary fails */
+    fallbackSelectors?: string[];
+    /** Value to type or use */
+    value?: string;
+    /** JavaScript expression to evaluate in page context */
+    jsExpression?: string;
+    /** CSS selector to wait for before executing this step */
+    waitForSelector?: string;
+    /** Max wait time in ms (default: 10000) */
+    timeout?: number;
+    /** Fixed wait in ms */
+    waitMs?: number;
+    /** Human-like delay range [min, max] in ms (default: [2000, 5000]) */
+    humanDelay?: [number, number];
+    /** Number of iterations for loop action */
+    iterations?: number;
+}
+
+/** Log entry from task execution */
+export interface RpaLogEntry {
+    timestamp: string;
+    level: 'info' | 'warn' | 'error' | 'success';
+    step: number;
+    message: string;
+}
+
+/** Running task instance */
+export interface RpaTaskExecution {
+    id: string;
+    templateId: string;
+    templateTitle: string;
+    profilePath: string;
+    profileName: string;
+    browser: string;
+    status: RpaTaskStatus;
+    currentStep: number;
+    totalSteps: number;
+    progress: number; // 0-100
+    startTime: string;
+    endTime: string | null;
+    variables: Record<string, string | number | boolean>;
+    logs: RpaLogEntry[];
+    sessionId: string | null;
+    /** Frequency for scheduled tasks */
+    frequency: 'once' | 'daily' | 'weekly' | 'custom';
+}
+

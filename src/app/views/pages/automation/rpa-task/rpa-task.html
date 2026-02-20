@@ -1,112 +1,154 @@
-<!-- Header -->
-<div id="rpa-task-header"
-    class="flex items-center justify-between px-6 h-[var(--spacing-header)] shrink-0 border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
-    <div class="flex items-center gap-4">
-        <h1 class="text-xl font-bold text-color m-0">Task</h1>
-        <span class="p-input-icon-left">
-            <i class="pi pi-search"></i>
-            <input id="rpa-task-search" type="text" pInputText placeholder="Search tasks..." [value]="searchQuery()"
-                (input)="onSearch($event)" class="w-56" />
-        </span>
+<div class="flex flex-col gap-4 p-4 h-full overflow-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4 flex-shrink-0">
+        <h2 id="rpa-task-title" class="text-xl font-bold text-surface-900 dark:text-surface-0 m-0">
+            <i class="pi pi-list-check mr-2"></i>RPA Tasks
+        </h2>
+        <div class="flex items-center gap-2">
+            <input pInputText id="rpa-task-search" type="text" placeholder="Search tasks..." class="w-64"
+                (input)="onSearch($event)" />
+            <p-button id="rpa-task-create-btn" label="Create Task" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+        </div>
     </div>
-    <p-button id="rpa-task-create" label="Create task" icon="pi pi-plus" size="small" />
-</div>
 
-<!-- Tabs -->
-<div id="rpa-task-tabs"
-    class="flex items-center gap-1 px-6 py-2 border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
-    @for (tab of tabs; track tab.id) {
-    <button [id]="'rpa-task-tab-' + tab.id"
-        class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer" [class]="activeTab() === tab.id
-            ? 'bg-primary/10 text-primary'
-            : 'text-muted-color hover:text-color hover:bg-surface-100 dark:hover:bg-surface-800'"
-        (click)="selectTab(tab.id)">
-        {{ tab.label }}
-    </button>
-    }
-</div>
+    <!-- Tabs -->
+    <div class="flex items-center gap-2 flex-shrink-0">
+        @for (tab of tabs; track tab.id) {
+        <p-button [id]="'rpa-task-tab-' + tab.id" [label]="tab.label"
+            [severity]="activeTab() === tab.id ? 'primary' : 'secondary'" [outlined]="activeTab() !== tab.id"
+            size="small" (onClick)="selectTab(tab.id)" />
+        }
+    </div>
 
-<!-- Table -->
-<div id="rpa-task-table" class="flex-1 overflow-auto bg-surface-50 dark:bg-surface-950">
+    <!-- Task Table -->
     @if (filteredTasks().length === 0) {
-    <div class="flex flex-col items-center justify-center h-64 text-muted-color">
-        <i class="pi pi-play-circle text-4xl mb-4"></i>
+    <div class="flex flex-col items-center justify-center py-16 text-surface-500 dark:text-surface-400">
+        <i class="pi pi-inbox text-4xl mb-3"></i>
         <p class="text-lg font-medium">No tasks yet</p>
-        <p class="text-sm">Create a task from a saved process to start automation</p>
+        <p class="text-sm">Click "Create Task" to start your first RPA automation</p>
     </div>
     } @else {
-    <table class="w-full">
-        <thead>
-            <tr class="border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
-                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-6 py-3">Process
-                </th>
-                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Profiles
-                </th>
-                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Status
-                </th>
-                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Progress
-                </th>
-                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Frequency
-                </th>
-                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">Start
-                </th>
-                <th class="text-left text-xs font-semibold text-muted-color uppercase tracking-wide px-4 py-3">End</th>
-                <th class="text-right text-xs font-semibold text-muted-color uppercase tracking-wide px-6 py-3">Actions
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (task of filteredTasks(); track task.id; let i = $index) {
-            <tr [id]="'rpa-task-row-' + i"
-                class="border-b border-surface-50 dark:border-surface-800 hover:bg-surface-100/50 dark:hover:bg-surface-800/50 transition-colors">
-                <td class="px-6 py-3">
-                    <span class="text-sm font-medium text-color">{{ task.processName }}</span>
-                </td>
-                <td class="px-4 py-3">
-                    <span class="text-sm text-muted-color">{{ task.profileCount }}</span>
-                </td>
-                <td class="px-4 py-3">
-                    <p-tag [value]="task.status" [severity]="getStatusSeverity(task.status)" [rounded]="true" />
-                </td>
-                <td class="px-4 py-3">
-                    <div class="flex items-center gap-2">
-                        <div class="w-20 h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
-                            <div class="h-full rounded-full transition-all duration-300"
-                                [class]="task.status === 'failed' ? 'bg-red-500' : 'bg-primary'"
-                                [style.width.%]="task.progress"></div>
+    <div class="overflow-auto flex-1 rounded-lg border border-surface-200 dark:border-surface-700">
+        <table class="w-full border-collapse">
+            <thead class="bg-surface-50 dark:bg-surface-800 sticky top-0">
+                <tr>
+                    <th class="text-left px-4 py-3 text-sm font-semibold text-surface-700 dark:text-surface-200">
+                        Template</th>
+                    <th class="text-left px-4 py-3 text-sm font-semibold text-surface-700 dark:text-surface-200">Profile
+                    </th>
+                    <th class="text-center px-4 py-3 text-sm font-semibold text-surface-700 dark:text-surface-200">
+                        Status</th>
+                    <th class="text-center px-4 py-3 text-sm font-semibold text-surface-700 dark:text-surface-200">
+                        Progress</th>
+                    <th class="text-center px-4 py-3 text-sm font-semibold text-surface-700 dark:text-surface-200">
+                        Started</th>
+                    <th class="text-center px-4 py-3 text-sm font-semibold text-surface-700 dark:text-surface-200">
+                        Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (task of filteredTasks(); track task.id) {
+                <tr
+                    class="border-t border-surface-200 dark:border-surface-700 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
+                    <td class="px-4 py-3">
+                        <div class="font-medium text-surface-900 dark:text-surface-0">{{ task.templateTitle }}</div>
+                        <div class="text-xs text-surface-500 dark:text-surface-400 mt-0.5">{{ task.browser }}</div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="text-sm text-surface-700 dark:text-surface-200">{{ task.profileName }}</div>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <p-tag [value]="task.status" [severity]="getStatusSeverity(task.status)" />
+                    </td>
+                    <td class="px-4 py-3 text-center" style="min-width: 140px;">
+                        <p-progressbar [value]="task.progress" [showValue]="true" class="w-full" />
+                        <div class="text-xs text-surface-500 dark:text-surface-400 mt-1">
+                            Step {{ task.currentStep }}/{{ task.totalSteps }}
                         </div>
-                        <span class="text-xs text-muted-color">{{ task.progress }}%</span>
-                    </div>
-                </td>
-                <td class="px-4 py-3">
-                    <span class="text-xs text-muted-color bg-surface-100 dark:bg-surface-800 rounded px-2 py-0.5">
-                        {{ getFrequencyLabel(task.frequency) }}
-                    </span>
-                </td>
-                <td class="px-4 py-3">
-                    <span class="text-sm text-muted-color">{{ formatDate(task.startTime) }}</span>
-                </td>
-                <td class="px-4 py-3">
-                    <span class="text-sm text-muted-color">{{ formatDate(task.endTime) }}</span>
-                </td>
-                <td class="px-6 py-3 text-right">
-                    <div class="flex items-center justify-end gap-1">
-                        @if (task.status === 'running') {
-                        <p-button icon="pi pi-pause" [rounded]="true" [text]="true" severity="warn" size="small"
-                            pTooltip="Pause" tooltipPosition="top" />
-                        } @else if (task.status !== 'completed') {
-                        <p-button icon="pi pi-play" [rounded]="true" [text]="true" severity="success" size="small"
-                            pTooltip="Start" tooltipPosition="top" />
-                        }
-                        <p-button icon="pi pi-list" [rounded]="true" [text]="true" severity="secondary" size="small"
-                            pTooltip="View Log" tooltipPosition="top" />
-                        <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
-                            pTooltip="Delete" tooltipPosition="top" />
-                    </div>
-                </td>
-            </tr>
-            }
-        </tbody>
-    </table>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="text-sm text-surface-700 dark:text-surface-200">{{ formatDate(task.startTime) }}
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex items-center justify-center gap-1">
+                            @if (task.status === 'running') {
+                            <p-button icon="pi pi-stop" [rounded]="true" [text]="true" severity="danger"
+                                pTooltip="Cancel" (onClick)="cancelTask(task.id)" />
+                            }
+                            <p-button icon="pi pi-file" [rounded]="true" [text]="true" severity="secondary"
+                                pTooltip="View Logs" (onClick)="viewLogs(task.id)" />
+                            @if (task.status !== 'running') {
+                            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                                pTooltip="Remove" (onClick)="removeTask(task.id)" />
+                            }
+                        </div>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
     }
 </div>
+
+<!-- Create Task Dialog -->
+<p-dialog header="Create RPA Task" [(visible)]="showCreateDialog" [modal]="true" [style]="{ width: '520px' }"
+    [closable]="true">
+    <div class="flex flex-col gap-4 pt-2">
+        <!-- Template Selection -->
+        <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Template</label>
+            <p-select id="rpa-task-create-template" [options]="savedTemplates()" [(ngModel)]="selectedTemplateId"
+                placeholder="Select a saved template" class="w-full" (onChange)="onTemplateSelected()" />
+        </div>
+
+        <!-- Profile Selection -->
+        <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Profile</label>
+            <p-select id="rpa-task-create-profile" [options]="availableProfiles()" [(ngModel)]="selectedProfilePath"
+                placeholder="Select a Chrome profile" class="w-full" />
+        </div>
+
+        <!-- Browser -->
+        <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Browser</label>
+            <p-select id="rpa-task-create-browser"
+                [options]="[{label: 'Google Chrome', value: 'chrome'}, {label: 'Brave', value: 'brave'}, {label: 'Edge', value: 'edge'}]"
+                [(ngModel)]="selectedBrowser" class="w-full" />
+        </div>
+
+        <!-- Start Button -->
+        <div class="flex justify-end gap-2 pt-2">
+            <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="showCreateDialog.set(false)" />
+            <p-button id="rpa-task-create-start" label="Start Task" icon="pi pi-play"
+                [disabled]="!selectedTemplateId() || !selectedProfilePath()" (onClick)="startTask()" />
+        </div>
+    </div>
+</p-dialog>
+
+<!-- Log Viewer Dialog -->
+<p-dialog header="Task Logs" [(visible)]="showLogDialog" [modal]="true" [style]="{ width: '640px', maxHeight: '80vh' }"
+    [closable]="true">
+    <div class="flex flex-col gap-1 max-h-96 overflow-auto font-mono text-xs">
+        @for (log of viewingTaskLogs(); track log.timestamp) {
+        <div class="flex gap-2 px-2 py-1 rounded" [class.bg-green-50]="log.level === 'success'"
+            [class.dark:bg-green-900]="log.level === 'success'" [class.bg-red-50]="log.level === 'error'"
+            [class.dark:bg-red-900]="log.level === 'error'" [class.bg-yellow-50]="log.level === 'warn'"
+            [class.dark:bg-yellow-900]="log.level === 'warn'">
+            <span class="text-surface-500 dark:text-surface-400 shrink-0">
+                {{ formatDate(log.timestamp) }}
+            </span>
+            <span class="shrink-0" [class.text-green-600]="log.level === 'success'"
+                [class.text-red-600]="log.level === 'error'" [class.text-yellow-600]="log.level === 'warn'"
+                [class.text-blue-600]="log.level === 'info'">
+                [{{ log.level.toUpperCase() }}]
+            </span>
+            <span class="text-surface-800 dark:text-surface-200">{{ log.message }}</span>
+        </div>
+        }
+        @if (viewingTaskLogs().length === 0) {
+        <div class="text-center text-surface-500 dark:text-surface-400 py-8">No logs available</div>
+        }
+    </div>
+</p-dialog>

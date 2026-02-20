@@ -1,42 +1,16 @@
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-
-interface RpaTaskItem {
-    id: string;
-    processName: string;
-    profileCount: number;
-    status: 'pending' | 'running' | 'completed' | 'failed' | 'scheduled';
-    frequency: 'once' | 'daily' | 'weekly' | 'custom';
-    startTime: string;
-    endTime: string | null;
-    progress: number; // 0-100
-}
-
-const MOCK_TASKS: RpaTaskItem[] = [
-    {
-        id: 'task-001', processName: 'TikTok Search & Comment Like', profileCount: 5,
-        status: 'completed', frequency: 'once', startTime: '2026-02-19T10:30:00Z', endTime: '2026-02-19T10:45:00Z', progress: 100,
-    },
-    {
-        id: 'task-002', processName: 'FB Add Suggested Friends', profileCount: 3,
-        status: 'running', frequency: 'once', startTime: '2026-02-19T15:00:00Z', endTime: null, progress: 60,
-    },
-    {
-        id: 'task-003', processName: 'LinkedIn Auto Connect', profileCount: 10,
-        status: 'scheduled', frequency: 'daily', startTime: '2026-02-20T09:00:00Z', endTime: null, progress: 0,
-    },
-    {
-        id: 'task-004', processName: 'Etsy Browse Products', profileCount: 8,
-        status: 'failed', frequency: 'once', startTime: '2026-02-19T08:00:00Z', endTime: '2026-02-19T08:12:00Z', progress: 37,
-    },
-    {
-        id: 'task-005', processName: 'TikTok Search & Comment Like', profileCount: 2,
-        status: 'pending', frequency: 'weekly', startTime: '2026-02-21T14:00:00Z', endTime: null, progress: 0,
-    },
-];
+import { DialogModule } from 'primeng/dialog';
+import { SelectModule } from 'primeng/select';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { FormsModule } from '@angular/forms';
+import { RpaExecutorService } from '../../../../services/rpa-executor.service';
+import { RpaTemplateService } from '../../../../services/rpa-template.service';
+import { ProfileService } from '../../../../services/profile.service';
+import { RpaTaskExecution, RpaTemplate, RpaTaskStatus } from '../../../../models/rpa-template.model';
 
 @Component({
     selector: 'app-rpa-task',
@@ -44,34 +18,81 @@ const MOCK_TASKS: RpaTaskItem[] = [
     styleUrl: './rpa-task.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
-    imports: [ButtonModule, InputTextModule, TagModule, TooltipModule],
+    imports: [
+        ButtonModule, InputTextModule, TagModule, TooltipModule,
+        DialogModule, SelectModule, ProgressBarModule, FormsModule,
+    ],
 })
 export class RpaTask {
-    protected readonly activeTab = signal<'all' | 'regular' | 'scheduled'>('all');
+    private readonly executor = inject(RpaExecutorService);
+    private readonly templateService = inject(RpaTemplateService);
+    private readonly profileService = inject(ProfileService);
+
+    // --- Tabs & Filters ---
+    protected readonly activeTab = signal<'all' | 'active' | 'history'>('all');
     protected readonly searchQuery = signal('');
 
+    // --- Create Task Dialog ---
+    protected readonly showCreateDialog = signal(false);
+    protected readonly selectedTemplateId = signal<string | null>(null);
+    protected readonly selectedProfilePath = signal<string | null>(null);
+    protected readonly selectedBrowser = signal('chrome');
+    protected readonly templateVariables = signal<Record<string, string | number | boolean>>({});
+
+    // --- Log Viewer ---
+    protected readonly showLogDialog = signal(false);
+    protected readonly viewingTaskId = signal<string | null>(null);
+
+    // --- Data from executor ---
+    protected readonly tasks = this.executor.tasks;
+
     protected readonly filteredTasks = computed(() => {
-        let list = [...MOCK_TASKS];
+        let list = [...this.tasks()];
         const tab = this.activeTab();
-        if (tab === 'regular') {
-            list = list.filter(t => t.frequency === 'once');
-        } else if (tab === 'scheduled') {
-            list = list.filter(t => t.frequency !== 'once');
+        if (tab === 'active') {
+            list = list.filter(t => t.status === 'running' || t.status === 'paused' || t.status === 'pending');
+        } else if (tab === 'history') {
+            list = list.filter(t => ['completed', 'failed', 'cancelled'].includes(t.status));
         }
         const q = this.searchQuery().toLowerCase();
         if (q) {
-            list = list.filter(t => t.processName.toLowerCase().includes(q));
+            list = list.filter(t => t.templateTitle.toLowerCase().includes(q));
         }
         return list;
     });
 
     protected readonly tabs = [
         { id: 'all' as const, label: 'All tasks' },
-        { id: 'regular' as const, label: 'Regular task' },
-        { id: 'scheduled' as const, label: 'Scheduled task' },
+        { id: 'active' as const, label: 'Active' },
+        { id: 'history' as const, label: 'History' },
     ];
 
-    selectTab(tab: 'all' | 'regular' | 'scheduled'): void {
+    // --- Available templates & profiles for Create dialog ---
+    protected readonly savedTemplates = computed(() => {
+        const entries = this.templateService.savedEntries();
+        return entries.map(e => ({
+            label: e.title,
+            value: e.id,
+        }));
+    });
+
+    protected readonly availableProfiles = computed(() => {
+        return this.profileService.profiles().map(p => ({
+            label: p.name,
+            value: p.path,
+        }));
+    });
+
+    protected readonly viewingTaskLogs = computed(() => {
+        const taskId = this.viewingTaskId();
+        if (!taskId) return [];
+        const task = this.tasks().find(t => t.id === taskId);
+        return task?.logs || [];
+    });
+
+    // --- Actions ---
+
+    selectTab(tab: 'all' | 'active' | 'history'): void {
         this.activeTab.set(tab);
     }
 
@@ -79,28 +100,98 @@ export class RpaTask {
         this.searchQuery.set((event.target as HTMLInputElement).value);
     }
 
-    getStatusSeverity(status: string): 'success' | 'danger' | 'info' | 'warn' | 'secondary' {
+    openCreateDialog(): void {
+        this.selectedTemplateId.set(null);
+        this.selectedProfilePath.set(null);
+        this.selectedBrowser.set('chrome');
+        this.templateVariables.set({});
+        this.showCreateDialog.set(true);
+    }
+
+    async startTask(): Promise<void> {
+        const templateId = this.selectedTemplateId();
+        const profilePath = this.selectedProfilePath();
+        if (!templateId || !profilePath) return;
+
+        const template = await this.templateService.getTemplateDetail(templateId);
+        if (!template) return;
+
+        const profile = this.profileService.profiles().find(p => p.path === profilePath);
+        const profileName = profile?.name || 'Unknown';
+
+        // Merge default variable values
+        const variables = { ...this.templateVariables() };
+        for (const v of template.variables || []) {
+            if (variables[v.name] === undefined && v.default !== undefined) {
+                variables[v.name] = v.default;
+            }
+        }
+
+        this.executor.startTask(
+            template,
+            profilePath,
+            profileName,
+            this.selectedBrowser(),
+            variables,
+        );
+
+        this.showCreateDialog.set(false);
+        this.activeTab.set('active');
+    }
+
+    cancelTask(taskId: string): void {
+        this.executor.cancelTask(taskId);
+    }
+
+    removeTask(taskId: string): void {
+        this.executor.removeTask(taskId);
+    }
+
+    viewLogs(taskId: string): void {
+        this.viewingTaskId.set(taskId);
+        this.showLogDialog.set(true);
+    }
+
+    // --- Helpers ---
+
+    getStatusSeverity(status: RpaTaskStatus): 'success' | 'danger' | 'info' | 'warn' | 'secondary' {
         switch (status) {
             case 'running': return 'info';
             case 'completed': return 'success';
             case 'failed': return 'danger';
-            case 'scheduled': return 'warn';
+            case 'paused': return 'warn';
+            case 'cancelled': return 'secondary';
             default: return 'secondary';
         }
     }
 
     formatDate(dateStr: string | null): string {
-        if (!dateStr) return '—';
+        if (!dateStr) return '\u2014';
         const d = new Date(dateStr);
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     }
 
-    getFrequencyLabel(freq: string): string {
-        switch (freq) {
-            case 'daily': return 'Daily';
-            case 'weekly': return 'Weekly';
-            case 'custom': return 'Custom';
-            default: return 'Once';
-        }
+    getSelectedTemplate(): RpaTemplate | null {
+        const id = this.selectedTemplateId();
+        if (!id) return null;
+        // Template details are fetched async, so we check the cache
+        return null;
+    }
+
+    onTemplateSelected(): void {
+        const id = this.selectedTemplateId();
+        if (!id) return;
+        // Pre-load template detail for variables
+        this.templateService.getTemplateDetail(id).then(detail => {
+            if (detail?.variables) {
+                const vars: Record<string, string | number | boolean> = {};
+                for (const v of detail.variables) {
+                    if (v.default !== undefined) {
+                        vars[v.name] = v.default;
+                    }
+                }
+                this.templateVariables.set(vars);
+            }
+        });
     }
 }
