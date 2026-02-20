@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.1.2",
-        "updated_at": "2026-02-20T04:08:00+07:00"
+        "updated_at": "2026-02-21T03:40:00+07:00"
     },
     "project": {
         "name": "AnguLogin",
@@ -32,7 +32,8 @@
         "cloud": {
             "auth": "Firebase Auth (@angular/fire v21)",
             "database": "Firestore (user profiles, RPA templates)",
-            "payment": "LemonSqueezy (planned)"
+            "payment": "LemonSqueezy (planned)",
+            "oauth": "Google OAuth 2.0 implicit flow via system browser + Rust callback server (port 8923)"
         },
         "database": {
             "local": "JSON metadata per profile (.profile-meta.json)",
@@ -87,7 +88,9 @@
         "register_page": "src/app/views/auth/register/register.ts",
         "forgot_password_page": "src/app/views/auth/forgot-password/forgot-password.ts",
         "terms_page": "src/app/views/auth/terms/terms.ts",
-        "privacy_page": "src/app/views/auth/privacy/privacy.ts"
+        "privacy_page": "src/app/views/auth/privacy/privacy.ts",
+        "oauth_server": "src-tauri/src/oauth.rs",
+        "main_nav": "src/app/views/components/main-nav/main-nav.ts"
     },
     "security_audit": {
         "grade": "A-",
@@ -382,7 +385,12 @@
                 "PlanService: feature gating by plan tier (trial/starter/pro/team)",
                 "UserProfile model in Firestore (users/{uid})",
                 "authGuard (protect app routes) + guestGuard (protect auth routes)",
-                "Dynamic user avatar and logout menu in main-nav"
+                "Dynamic user avatar and logout menu in main-nav",
+                "Tauri: Google OAuth via system browser + Rust callback (port 8923)",
+                "OAuth loading overlay: spinner + waiting message + cancel button",
+                "Custom dropdown (replaced p-menu) for sidebar user menu",
+                "Google avatar sync (photoURL + displayName) on each login",
+                "referrerpolicy=no-referrer for Google profile photos (fix ORB block)"
             ]
         },
         {
@@ -527,6 +535,21 @@
                 "note": "Never expose config via window globals. Replace placeholder in content.js before loading extension."
             },
             {
+                "name": "Tauri Google OAuth Flow",
+                "code": "invoke('oauth_start_google') → shell.open(oauthUrl) → listen('oauth-callback') → signInWithCredential()",
+                "note": "System browser handles Google consent, Rust HTTP server (port 8923) captures access_token from hash fragment, emits Tauri event. Angular uses GoogleAuthProvider.credential(null, accessToken)."
+            },
+            {
+                "name": "Custom Dropdown Menu Pattern",
+                "code": "<div class='absolute bottom-full left-full'> + signal(false) + (document:click) dismiss",
+                "note": "Use when PrimeNG popup components (p-menu) set inline JS positions that can't be overridden. Position with CSS absolute + bottom-full/left-full."
+            },
+            {
+                "name": "Google Avatar ORB Fix",
+                "code": "<img [src]=\"photoURL()\" referrerpolicy=\"no-referrer\" />",
+                "note": "Google profile photos from lh3.googleusercontent.com are blocked by ORB without referrerpolicy=no-referrer"
+            },
+            {
                 "name": "Protection Levels Data Model",
                 "code": "protectionLevel?: 'off' | 'standard' | 'maximum'",
                 "note": "Maps to: off→stock chrome, standard→chrome+stealth+flags, maximum→camoufox. Legacy fields (antidetectEnabled, browserEngine) kept for backward compat."
@@ -600,6 +623,22 @@
             {
                 "issue": "Blocking Tauri commands freeze UI during heavy I/O",
                 "solution": "Make commands async: pub async fn ... -> Result<T, String>. Tauri runs async commands on thread pool"
+            },
+            {
+                "issue": "Rust OAuth callback server only accepts 2 connections, browser favicon consumes a slot",
+                "solution": "Set MAX_REQUESTS=10, handle favicon/unknown requests as 204 No Content, log each request for debugging"
+            },
+            {
+                "issue": "PrimeNG p-menu popup position cannot be overridden with CSS !important",
+                "solution": "PrimeNG sets inline top/left via JS after rendering. Replace with custom HTML dropdown using CSS absolute positioning (bottom-full left-full)"
+            },
+            {
+                "issue": "Google avatar blocked by ORB (ERR_BLOCKED_BY_ORB)",
+                "solution": "Add referrerpolicy='no-referrer' to img tag. Google CDN blocks cross-origin reads without this."
+            },
+            {
+                "issue": "Tauri event listeners (listen()) leak memory if not cleaned up",
+                "solution": "listen() returns Promise<UnlistenFn>. Store the unlisten function and call it on resolve/reject/timeout."
             }
         ],
         "conventions": [
@@ -621,7 +660,12 @@
             "Auth pages use split-screen layout: left branding panel + right form panel",
             "Auth pages use host: { class: 'block min-h-screen' } (not flex-1 like app pages)",
             "Google sign-in button uses real SVG logo, not PrimeIcon",
-            "Legal pages (/terms, /privacy) are public routes with no guard"
+            "Legal pages (/terms, /privacy) are public routes with no guard",
+            "Google OAuth client ID stored in environment.ts (firebase.googleClientId), NOT hardcoded in services",
+            "Sidebar user menu: custom HTML dropdown (not PrimeNG p-menu) for reliable positioning",
+            "Google photos: always use referrerpolicy=no-referrer on img tags",
+            "Tauri event listeners: always cleanup with unlisten() on resolve/reject",
+            "Firestore rules: always deploy after local changes (firebase deploy --only firestore:rules)"
         ],
         "competitor_analysis": {
             "completed_at": "2026-02-16",
