@@ -92,26 +92,84 @@ export class AuthService {
         }
     }
 
-    /** Login with Google — popup first, redirect fallback for Tauri WebView */
+    /** Login with Google — uses system browser in Tauri, popup in browser */
     async loginWithGoogle(): Promise<void> {
         this._loading.set(true);
         try {
             const provider = new GoogleAuthProvider();
-            try {
-                // Try popup first (works in regular browsers)
+
+            // Check if running in Tauri (window.__TAURI__ exists)
+            if ((window as any).__TAURI__) {
+                await this.loginWithGoogleTauri();
+            } else {
+                // Standard browser — use popup
                 await signInWithPopup(this.auth, provider);
-            } catch (popupErr: any) {
-                // If popup blocked (Tauri WebView), fallback to redirect
-                if (popupErr?.code === 'auth/popup-blocked' || popupErr?.code === 'auth/popup-closed-by-user') {
-                    await signInWithRedirect(this.auth, provider);
-                    return; // Redirect will reload the page, result handled in constructor
-                }
-                throw popupErr;
+                await this.updateLastLogin();
+                this.router.navigate(['/browsers']);
             }
-            await this.updateLastLogin();
-            this.router.navigate(['/browsers']);
         } finally {
             this._loading.set(false);
+        }
+    }
+
+    /** Google OAuth via system browser for Tauri desktop app */
+    private async loginWithGoogleTauri(): Promise<void> {
+        const { invoke } = await import('@tauri-apps/api/core');
+        const { open } = await import('@tauri-apps/plugin-shell');
+        const { listen } = await import('@tauri-apps/api/event');
+
+        // 1. Start local OAuth callback server in Rust
+        const redirectUri: string = await invoke('oauth_start_google');
+
+        // 2. Build Google OAuth URL
+        const { firebase } = (await import('../../environments/environment')).environment;
+        const params = new URLSearchParams({
+            client_id: firebase.apiKey.includes('AIza')
+                ? `${firebase.messagingSenderId}-compute@developer.gserviceaccount.com`
+                : '',
+            redirect_uri: redirectUri,
+            response_type: 'code',
+            scope: 'openid email profile',
+            access_type: 'offline',
+            prompt: 'select_account',
+        });
+
+        // Use Firebase Auth's OAuth handler instead of raw Google OAuth
+        // This works because Firebase Auth handles the token exchange
+        const authUrl = `https://${firebase.authDomain}/__/auth/handler?` +
+            `apiKey=${firebase.apiKey}&authType=signInViaRedirect&providerId=google.com&` +
+            `redirectUrl=${encodeURIComponent(redirectUri)}&v=10&scopes=profile%20email`;
+
+        // 3. Open in system browser
+        await open(authUrl);
+
+        // 4. Wait for callback from Rust (with timeout)
+        const authCode = await new Promise<string>((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('OAuth timeout (60s)')), 60000);
+
+            listen<string>('oauth-callback', (event) => {
+                clearTimeout(timeout);
+                resolve(event.payload);
+            });
+
+            listen<string>('oauth-callback-error', (event) => {
+                clearTimeout(timeout);
+                reject(new Error(event.payload));
+            });
+        });
+
+        // 5. Exchange auth code for Firebase credential
+        // Use signInWithCredential with the Google OAuth credential
+        const { OAuthProvider, signInWithCredential: signInCred } = await import('@angular/fire/auth');
+        const credential = OAuthProvider.credentialFromJSON({
+            providerId: 'google.com',
+            signInMethod: 'google.com',
+            oauthAccessToken: authCode,
+        });
+        if (credential) {
+            await signInCred(this.auth, credential);
+            await this.updateLastLogin();
+            this.router.navigate(['/browsers']);
         }
     }
 

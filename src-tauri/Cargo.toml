@@ -63,3 +63,6 @@ uuid = { version = "1", features = ["v4"] }
 
 # RPA CDP Engine
 tokio-tungstenite = { version = "0.24", features = ["native-tls"] }
+
+# OAuth callback
+urlencoding = "2"

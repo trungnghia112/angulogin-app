@@ -10,6 +10,7 @@ mod api_server;
 mod api_models;
 mod cdp;
 mod rpa;
+mod oauth;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -102,7 +103,9 @@ pub fn run() {
             rpa::rpa_connect,
             rpa::rpa_execute,
             rpa::rpa_evaluate_js,
-            rpa::rpa_disconnect
+            rpa::rpa_disconnect,
+            // OAuth (Google login via system browser)
+            oauth::oauth_start_google
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
