@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import {
     Auth, User,
     signInWithEmailAndPassword, createUserWithEmailAndPassword,
-    signInWithPopup, signInWithRedirect, getRedirectResult,
+    signInWithPopup, signInWithCredential,
     GoogleAuthProvider, EmailAuthProvider,
     signOut, sendPasswordResetEmail,
     updateProfile, updatePassword, reauthenticateWithCredential,
@@ -57,16 +57,6 @@ export class AuthService {
             }
             this._authReady.set(true);
         });
-
-        // Handle Google redirect result (after signInWithRedirect returns)
-        getRedirectResult(this.auth).then(async (result) => {
-            if (result?.user) {
-                await this.updateLastLogin();
-                this.router.navigate(['/browsers']);
-            }
-        }).catch((err) => {
-            console.error('[Auth] Redirect result error:', err);
-        });
     }
 
     /** Login with email + password */
@@ -94,20 +84,74 @@ export class AuthService {
         }
     }
 
-    /** Login with Google — redirect-based (works in both browser and Tauri WebView) */
+    /** Login with Google — popup in browser, system browser in Tauri */
     async loginWithGoogle(): Promise<void> {
         this._loading.set(true);
         try {
-            const provider = new GoogleAuthProvider();
-            // signInWithRedirect navigates the whole page to Google (no popup).
-            // After auth, Google redirects back here.
-            // getRedirectResult() in constructor picks up the result.
-            await signInWithRedirect(this.auth, provider);
-        } catch (err) {
+            // Tauri 2.x detection
+            if ('__TAURI_INTERNALS__' in window) {
+                await this.loginWithGoogleViaBrowser();
+            } else {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(this.auth, provider);
+                await this.updateLastLogin();
+                this.router.navigate(['/browsers']);
+            }
+        } finally {
             this._loading.set(false);
-            throw err;
         }
-        // Note: loading stays true — page will redirect/reload
+    }
+
+    /**
+     * Open Google OAuth in system browser for Tauri desktop.
+     * Rust callback server on port 8923 captures the access_token.
+     */
+    private async loginWithGoogleViaBrowser(): Promise<void> {
+        const { invoke } = await import('@tauri-apps/api/core');
+        const { open } = await import('@tauri-apps/plugin-shell');
+        const { listen } = await import('@tauri-apps/api/event');
+
+        // 1. Start Rust callback server → returns redirect URI
+        const redirectUri: string = await invoke('oauth_start_google');
+
+        // 2. Build Google OAuth URL using Firebase's built-in auth handler
+        //    (no separate client ID needed — Firebase manages it)
+        const env = (await import('../../environments/environment')).environment;
+        const authUrl = `https://${env.firebase.authDomain}/__/auth/handler?` +
+            new URLSearchParams({
+                apiKey: env.firebase.apiKey,
+                authType: 'signInViaRedirect',
+                providerId: 'google.com',
+                scopes: 'profile,email',
+                redirectUrl: redirectUri,
+                eventId: crypto.randomUUID(),
+                v: '10.15.1',
+            }).toString();
+
+        // 3. Open in system browser (Safari/Chrome)
+        await open(authUrl);
+
+        // 4. Wait for Rust to emit the access_token (max 120s)
+        const accessToken = await new Promise<string>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                reject(new Error('Google login timed out. Please try again.'));
+            }, 120_000);
+
+            listen<string>('oauth-callback', (e) => {
+                clearTimeout(timeout);
+                resolve(e.payload);
+            });
+            listen<string>('oauth-callback-error', (e) => {
+                clearTimeout(timeout);
+                reject(new Error(e.payload));
+            });
+        });
+
+        // 5. Exchange access token for Firebase credential
+        const credential = GoogleAuthProvider.credential(null, accessToken);
+        await signInWithCredential(this.auth, credential);
+        await this.updateLastLogin();
+        this.router.navigate(['/browsers']);
     }
 
     /** Send password reset email */
