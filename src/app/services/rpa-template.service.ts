@@ -111,6 +111,9 @@ export class RpaTemplateService {
                     this._loaded.set(true);
                     // Cache for offline
                     this.saveCatalogToStorage(data.templates);
+                } else if (!this._loaded()) {
+                    // Doc doesn't exist (e.g. empty emulator) — fallback to local asset
+                    this.fallbackToLocalAsset();
                 }
                 this._loading.set(false);
             },
