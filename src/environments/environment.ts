@@ -15,5 +15,11 @@ export const environment = {
         firestore: 8080,
         functions: 5001,
         storage: 9199
-    }
+    },
+    // LemonSqueezy checkout URLs (fill after creating LS store products)
+    lemonSqueezy: {
+        starter: '' as string,
+        pro: '' as string,
+        team: '' as string,
+    } as Record<string, string>,
 };

@@ -7,9 +7,11 @@ import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { DividerModule } from 'primeng/divider';
 import { MessageService } from 'primeng/api';
+import { TooltipModule } from 'primeng/tooltip';
 import { AuthService } from '../../../services/auth.service';
 import { PlanService } from '../../../services/plan.service';
-import { PLAN_CONFIG, TRIAL_DURATION_DAYS } from '../../../core/models/user.model';
+import { CheckoutService } from '../../../services/checkout.service';
+import { PLAN_CONFIG, PlanTier, TRIAL_DURATION_DAYS } from '../../../core/models/user.model';
 
 @Component({
     selector: 'app-profile',
@@ -17,11 +19,12 @@ import { PLAN_CONFIG, TRIAL_DURATION_DAYS } from '../../../core/models/user.mode
     styleUrl: './profile.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
-    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, CardModule, TagModule, DividerModule],
+    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, CardModule, TagModule, DividerModule, TooltipModule],
 })
 export class Profile {
     protected readonly authService = inject(AuthService);
     protected readonly planService = inject(PlanService);
+    protected readonly checkoutService = inject(CheckoutService);
     private readonly messageService = inject(MessageService);
 
     // Edit state
@@ -39,6 +42,19 @@ export class Profile {
     protected readonly profile = this.authService.profile;
     protected readonly isPasswordUser = this.authService.isPasswordUser;
     protected readonly planConfig = computed(() => PLAN_CONFIG[this.planService.currentPlan()]);
+    protected readonly subscriptionStatus = computed(() => this.profile()?.subscriptionStatus || null);
+
+    // All plan tiers for pricing cards
+    protected readonly planTiers = computed(() => {
+        const current = this.planService.currentPlan();
+        const tiers: PlanTier[] = ['starter', 'pro', 'team'];
+        return tiers.map(tier => ({
+            tier,
+            ...PLAN_CONFIG[tier],
+            isCurrent: tier === current,
+            isUpgrade: this.checkoutService.isUpgrade(tier),
+        }));
+    });
 
     protected readonly trialDaysLeft = computed(() => {
         const p = this.profile();
@@ -113,5 +129,10 @@ export class Profile {
         } finally {
             this.savingPassword.set(false);
         }
+    }
+
+    onUpgrade(tier: PlanTier): void {
+        if (tier === 'trial') return;
+        this.checkoutService.openCheckout(tier);
     }
 }

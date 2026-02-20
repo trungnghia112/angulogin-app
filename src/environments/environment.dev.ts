@@ -15,5 +15,10 @@ export const environment = {
         firestore: 8080,
         functions: 5001,
         storage: 9199
-    }
+    },
+    lemonSqueezy: {
+        starter: '' as string,
+        pro: '' as string,
+        team: '' as string,
+    } as Record<string, string>,
 };

@@ -101,12 +101,18 @@
         <!-- Plan & Subscription Section -->
         <div id="profile-plan-section"
             class="p-6 rounded-xl bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 mb-6">
-            <h3 class="text-base font-semibold text-color mb-4">
-                <i class="pi pi-credit-card mr-2 text-primary"></i>Plan & Subscription
-            </h3>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-color">
+                    <i class="pi pi-credit-card mr-2 text-primary"></i>Plan & Subscription
+                </h3>
+                @if (subscriptionStatus()) {
+                <p-tag id="profile-sub-status" [value]="subscriptionStatus()!"
+                    [severity]="subscriptionStatus() === 'active' ? 'success' : 'warn'" />
+                }
+            </div>
 
-            <!-- Current Plan Card -->
-            <div class="p-4 rounded-lg bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 mb-4">
+            <!-- Current Plan Summary -->
+            <div class="p-4 rounded-lg bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 mb-5">
                 <div class="flex items-center justify-between mb-3">
                     <div>
                         <h4 class="text-lg font-bold text-color">{{ planConfig().label }}</h4>
@@ -122,10 +128,7 @@
                         [severity]="trialDaysLeft()! > 3 ? 'info' : 'danger'" />
                     }
                 </div>
-
-                <p-divider />
-
-                <div class="grid grid-cols-2 gap-3 mt-3">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <p class="text-xs text-muted-color mb-1">Profile Limit</p>
                         <p class="text-sm font-semibold text-color">{{ planConfig().profileLimit }} profiles</p>
@@ -137,26 +140,42 @@
                 </div>
             </div>
 
-            <!-- Features List -->
-            @if (planFeatures().length > 0) {
-            <div class="mb-4">
-                <p class="text-xs font-medium text-muted-color mb-2">Included Features</p>
-                <div class="flex flex-wrap gap-2">
-                    @for (feature of planFeatures(); track feature) {
-                    <span
-                        class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-medium">
-                        <i class="pi pi-check text-[10px]"></i>{{ feature }}
-                    </span>
+            <!-- Pricing Cards Grid -->
+            @if (planService.currentPlan() !== 'team') {
+            <p class="text-xs font-medium text-muted-color mb-3">Available Plans</p>
+            <div class="grid grid-cols-3 gap-3 mb-4">
+                @for (plan of planTiers(); track plan.tier) {
+                <div id="profile-plan-card-{{plan.tier}}" class="p-4 rounded-lg border transition-all"
+                    [class]="plan.isCurrent
+                        ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                        : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 hover:border-primary/50'">
+                    <h5 class="text-sm font-bold text-color mb-1">{{ plan.label }}</h5>
+                    <p class="text-xl font-bold text-color mb-1">${{ plan.price }}<span
+                            class="text-xs font-normal text-muted-color">/mo</span></p>
+                    <p class="text-xs text-muted-color mb-3">{{ plan.profileLimit }} profiles</p>
+
+                    @if (plan.isCurrent) {
+                    <p-button id="profile-current-plan-btn" label="Current Plan" size="small" severity="secondary"
+                        [disabled]="true" [fluid]="true" />
+                    } @else if (plan.isUpgrade) {
+                    <p-button id="profile-upgrade-{{plan.tier}}-btn" label="Upgrade" icon="pi pi-arrow-up-right"
+                        size="small" severity="primary" [fluid]="true" (click)="onUpgrade(plan.tier)" />
+                    } @else {
+                    <p-button id="profile-downgrade-{{plan.tier}}-btn" label="Downgrade" size="small"
+                        severity="secondary" [outlined]="true" [fluid]="true" [disabled]="true"
+                        pTooltip="Contact support to downgrade" tooltipPosition="top" />
                     }
                 </div>
+                }
             </div>
             }
 
-            <!-- Upgrade CTA -->
-            @if (planService.currentPlan() !== 'team') {
-            <p-button id="profile-upgrade-btn" label="Upgrade Plan" icon="pi pi-arrow-up-right" severity="contrast"
-                size="small" [disabled]="true" pTooltip="Coming soon — LemonSqueezy integration"
-                tooltipPosition="top" />
+            <!-- Manage Subscription Link -->
+            @if (subscriptionStatus() === 'active') {
+            <a [href]="checkoutService.getPortalUrl()" target="_blank" rel="noopener"
+                class="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                <i class="pi pi-external-link text-[10px]"></i>Manage Subscription on LemonSqueezy
+            </a>
             }
         </div>
 

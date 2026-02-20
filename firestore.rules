@@ -30,6 +30,17 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    // Users Collection — owner can read/create, but NOT update plan fields
+    // Plan/subscription fields are ONLY updated by Cloud Function (admin SDK)
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['plan', 'planExpiry', 'profileLimit', 'subscriptionStatus',
+                      'lsCustomerId', 'lsSubscriptionId']);
+    }
+
     // RPA Catalog — public read, admin-only write
     match /rpa-catalog/{doc} {
       allow read: if true;

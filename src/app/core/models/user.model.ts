@@ -11,6 +11,10 @@ export interface UserProfile {
     profileLimit: number;
     createdAt: Timestamp;
     lastLoginAt: Timestamp;
+    // LemonSqueezy subscription tracking (set by webhook)
+    lsCustomerId?: number | null;
+    lsSubscriptionId?: number | null;
+    subscriptionStatus?: 'active' | 'past_due' | 'cancelled' | 'expired' | null;
 }
 
 export type PlanTier = 'trial' | 'starter' | 'pro' | 'team';
