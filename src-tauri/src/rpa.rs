@@ -45,13 +45,17 @@ pub async fn rpa_launch(
 
     // Launch Chrome
     let arg_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+
+    // CRITICAL: Delete stale DevToolsActivePort before launch (it may exist from previous sessions)
+    let port_file = format!("{}/DevToolsActivePort", profile_path);
+    let _ = std::fs::remove_file(&port_file);
+
     Command::new(browser_binary)
         .args(&arg_refs)
         .spawn()
         .map_err(|e| format!("Failed to launch browser: {}", e))?;
 
     // Wait for DevToolsActivePort file (Chrome writes it after startup)
-    let port_file = format!("{}/DevToolsActivePort", profile_path);
     let port_path = std::path::Path::new(&port_file);
 
     let start = std::time::Instant::now();

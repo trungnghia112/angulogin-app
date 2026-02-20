@@ -104,6 +104,7 @@ pub async fn disconnect(session_id: &str) -> Result<(), String> {
 }
 
 /// Check if a session exists.
+#[allow(dead_code)]
 pub async fn has_session(session_id: &str) -> bool {
     let sessions = SESSIONS.lock().await;
     sessions.contains_key(session_id)
