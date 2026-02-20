@@ -3,7 +3,8 @@ import { Router } from '@angular/router';
 import {
     Auth, User,
     signInWithEmailAndPassword, createUserWithEmailAndPassword,
-    signInWithPopup, GoogleAuthProvider, EmailAuthProvider,
+    signInWithPopup, signInWithRedirect, getRedirectResult,
+    GoogleAuthProvider, EmailAuthProvider,
     signOut, sendPasswordResetEmail,
     updateProfile, updatePassword, reauthenticateWithCredential,
     onAuthStateChanged,
@@ -56,6 +57,14 @@ export class AuthService {
             }
             this._authReady.set(true);
         });
+
+        // Handle redirect result (for Tauri WebView Google login fallback)
+        getRedirectResult(this.auth).then(async (result) => {
+            if (result?.user) {
+                await this.updateLastLogin();
+                this.router.navigate(['/browsers']);
+            }
+        }).catch(() => { /* no redirect result — normal flow */ });
     }
 
     /** Login with email + password */
@@ -83,12 +92,22 @@ export class AuthService {
         }
     }
 
-    /** Login with Google popup */
+    /** Login with Google — popup first, redirect fallback for Tauri WebView */
     async loginWithGoogle(): Promise<void> {
         this._loading.set(true);
         try {
             const provider = new GoogleAuthProvider();
-            await signInWithPopup(this.auth, provider);
+            try {
+                // Try popup first (works in regular browsers)
+                await signInWithPopup(this.auth, provider);
+            } catch (popupErr: any) {
+                // If popup blocked (Tauri WebView), fallback to redirect
+                if (popupErr?.code === 'auth/popup-blocked' || popupErr?.code === 'auth/popup-closed-by-user') {
+                    await signInWithRedirect(this.auth, provider);
+                    return; // Redirect will reload the page, result handled in constructor
+                }
+                throw popupErr;
+            }
             await this.updateLastLogin();
             this.router.navigate(['/browsers']);
         } finally {
