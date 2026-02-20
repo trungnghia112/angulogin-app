@@ -114,22 +114,18 @@ export class AuthService {
         // 1. Start Rust callback server → returns redirect URI
         const redirectUri: string = await invoke('oauth_start_google');
 
-        // 2. Build Google OAuth URL using Firebase's built-in auth handler
-        //    (no separate client ID needed — Firebase manages it)
-        const env = (await import('../../environments/environment')).environment;
-        const authUrl = `https://${env.firebase.authDomain}/__/auth/handler?` +
+        // 2. Build Google OAuth URL directly (not Firebase auth handler)
+        const oauthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' +
             new URLSearchParams({
-                apiKey: env.firebase.apiKey,
-                authType: 'signInViaRedirect',
-                providerId: 'google.com',
-                scopes: 'profile,email',
-                redirectUrl: redirectUri,
-                eventId: crypto.randomUUID(),
-                v: '10.15.1',
+                client_id: '206038392526-3luktmt5vhgv1sfaeekrhb81p75kbphf.apps.googleusercontent.com',
+                redirect_uri: redirectUri,
+                response_type: 'token',
+                scope: 'openid email profile',
+                prompt: 'select_account',
             }).toString();
 
         // 3. Open in system browser (Safari/Chrome)
-        await open(authUrl);
+        await open(oauthUrl);
 
         // 4. Wait for Rust to emit the access_token (max 120s)
         const accessToken = await new Promise<string>((resolve, reject) => {
