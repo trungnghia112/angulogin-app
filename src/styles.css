@@ -50,6 +50,16 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
+}
+
+/**
+ * Nav sidebar user menu: open ABOVE the avatar (bottom of sidebar)
+ * PrimeNG calculates position dynamically, but we need to shift it up.
+ */
+.nav-user-menu.p-menu-overlay {
+    margin-top: -8px;
+    transform: translateY(-100%);
 }

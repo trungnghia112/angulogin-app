@@ -256,8 +256,17 @@ export class AuthService {
         const ref = doc(this.firestore, 'users', user.uid);
         const snap = await getDoc(ref);
         if (snap.exists()) {
-            await updateDoc(ref, { lastLoginAt: Timestamp.now() });
-            this._profile.set({ ...snap.data(), lastLoginAt: Timestamp.now() } as UserProfile);
+            // Sync auth profile data (photoURL, displayName) on each login
+            const updates: Record<string, unknown> = { lastLoginAt: Timestamp.now() };
+            const data = snap.data() as UserProfile;
+            if (user.photoURL && user.photoURL !== data.photoURL) {
+                updates['photoURL'] = user.photoURL;
+            }
+            if (user.displayName && user.displayName !== data.displayName) {
+                updates['displayName'] = user.displayName;
+            }
+            await updateDoc(ref, updates);
+            this._profile.set({ ...data, ...updates } as UserProfile);
         } else {
             await this.createUserProfile(user, user.displayName || 'User');
         }
