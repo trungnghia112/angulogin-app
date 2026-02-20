@@ -56,10 +56,11 @@ body {
 }
 
 /**
- * Nav sidebar user menu: open ABOVE the avatar (bottom of sidebar)
- * PrimeNG calculates position dynamically, but we need to shift it up.
+ * Nav sidebar user menu: force popup ABOVE the avatar button.
+ * PrimeNG sets inline top/left via JS, so we must use !important.
  */
 .nav-user-menu.p-menu-overlay {
-    margin-top: -8px;
-    transform: translateY(-100%);
+    top: auto !important;
+    bottom: 56px !important;
+    left: 64px !important;
 }
