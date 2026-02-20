@@ -91,6 +91,11 @@ export const routes: Routes = [
                     import('./views/pages/storage-dashboard/storage-dashboard').then((m) => m.StorageDashboard),
             },
             {
+                path: 'profile',
+                loadComponent: () =>
+                    import('./views/pages/profile/profile').then((m) => m.Profile),
+            },
+            {
                 path: 'usage',
                 loadComponent: () =>
                     import('./views/pages/usage-dashboard/usage-dashboard').then((m) => m.UsageDashboard),

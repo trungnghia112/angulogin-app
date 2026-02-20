@@ -3,9 +3,10 @@ import { Router } from '@angular/router';
 import {
     Auth, User,
     signInWithEmailAndPassword, createUserWithEmailAndPassword,
-    signInWithPopup, GoogleAuthProvider,
+    signInWithPopup, GoogleAuthProvider, EmailAuthProvider,
     signOut, sendPasswordResetEmail,
-    updateProfile, onAuthStateChanged,
+    updateProfile, updatePassword, reauthenticateWithCredential,
+    onAuthStateChanged,
 } from '@angular/fire/auth';
 import {
     Firestore, doc, getDoc, setDoc, updateDoc,
@@ -40,6 +41,10 @@ export class AuthService {
     readonly photoURL = computed(() => this._profile()?.photoURL || this._user()?.photoURL || null);
     readonly initial = computed(() => this.displayName().charAt(0).toUpperCase());
     readonly currentPlan = computed<PlanTier>(() => this._profile()?.plan || 'trial');
+    readonly isPasswordUser = computed(() => {
+        const user = this._user();
+        return user?.providerData?.some(p => p.providerId === 'password') ?? false;
+    });
 
     constructor() {
         onAuthStateChanged(this.auth, async (user) => {
@@ -106,6 +111,37 @@ export class AuthService {
         await signOut(this.auth);
         this._profile.set(null);
         this.router.navigate(['/login']);
+    }
+
+    /** Update display name (Firebase Auth + Firestore) */
+    async updateDisplayName(name: string): Promise<void> {
+        const user = this._user();
+        if (!user) throw new Error('Not authenticated');
+        await updateProfile(user, { displayName: name });
+        const ref = doc(this.firestore, 'users', user.uid);
+        await updateDoc(ref, { displayName: name });
+        const current = this._profile();
+        if (current) this._profile.set({ ...current, displayName: name });
+    }
+
+    /** Update photo URL (Firebase Auth + Firestore) */
+    async updatePhotoURL(url: string | null): Promise<void> {
+        const user = this._user();
+        if (!user) throw new Error('Not authenticated');
+        await updateProfile(user, { photoURL: url });
+        const ref = doc(this.firestore, 'users', user.uid);
+        await updateDoc(ref, { photoURL: url || null });
+        const current = this._profile();
+        if (current) this._profile.set({ ...current, photoURL: url || null });
+    }
+
+    /** Change password (re-authenticate first, then update) */
+    async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+        const user = this._user();
+        if (!user || !user.email) throw new Error('Not authenticated');
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+        await reauthenticateWithCredential(user, credential);
+        await updatePassword(user, newPassword);
     }
 
     /** Wait for auth state to resolve (used by guard) */

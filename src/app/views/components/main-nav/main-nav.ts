@@ -37,7 +37,7 @@ export class MainNav {
         {
             label: 'My Account',
             icon: 'pi pi-user',
-            command: () => this.router.navigate(['/settings']),
+            command: () => this.router.navigate(['/profile']),
         },
         { separator: true },
         {

@@ -1,0 +1,224 @@
+<div id="profile-page" class="flex-1 overflow-y-auto">
+    <div class="max-w-2xl mx-auto px-6 py-8">
+
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold text-color tracking-tight">My Account</h1>
+            <p class="text-sm text-muted-color mt-1">Manage your profile and subscription</p>
+        </div>
+
+        <!-- Profile Header Card -->
+        <div id="profile-header-card"
+            class="flex items-center gap-5 p-6 rounded-xl bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 mb-6">
+            <!-- Avatar -->
+            <div id="profile-avatar"
+                class="w-16 h-16 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-600 flex items-center justify-center text-white text-2xl font-medium shrink-0">
+                @if (authService.photoURL()) {
+                <img [src]="authService.photoURL()" alt="Avatar" class="w-full h-full rounded-full object-cover" />
+                } @else {
+                {{ authService.initial() }}
+                }
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                    <h2 class="text-lg font-semibold text-color truncate">{{ authService.displayName() }}</h2>
+                    <p-tag [value]="planConfig().label"
+                        [severity]="planService.currentPlan() === 'trial' ? 'warn' : 'success'" />
+                </div>
+                <p class="text-sm text-muted-color truncate">{{ profile()?.email }}</p>
+                <p class="text-xs text-muted-color mt-1">Member since {{ memberSince() }}</p>
+            </div>
+        </div>
+
+        <!-- Account Info Section -->
+        <div id="profile-account-section"
+            class="p-6 rounded-xl bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 mb-6">
+            <h3 class="text-base font-semibold text-color mb-4">
+                <i class="pi pi-user mr-2 text-primary"></i>Account Information
+            </h3>
+
+            <!-- Display Name -->
+            <div class="flex items-center justify-between py-3">
+                <div>
+                    <p class="text-xs font-medium text-muted-color mb-1">Display Name</p>
+                    @if (editingName()) {
+                    <div class="flex items-center gap-2">
+                        <input id="profile-edit-name" type="text" pInputText [ngModel]="editName()"
+                            (ngModelChange)="editName.set($event)" (keydown.enter)="saveDisplayName()" class="w-56" />
+                        <p-button id="profile-save-name-btn" icon="pi pi-check" [rounded]="true" [text]="true"
+                            severity="success" (click)="saveDisplayName()" [loading]="savingName()" size="small" />
+                        <p-button id="profile-cancel-name-btn" icon="pi pi-times" [rounded]="true" [text]="true"
+                            severity="secondary" (click)="cancelEditName()" size="small" />
+                    </div>
+                    } @else {
+                    <p class="text-sm text-color">{{ authService.displayName() }}</p>
+                    }
+                </div>
+                @if (!editingName()) {
+                <p-button id="profile-edit-name-btn" icon="pi pi-pencil" [rounded]="true" [text]="true"
+                    (click)="startEditName()" size="small" />
+                }
+            </div>
+
+            <p-divider />
+
+            <!-- Email (read-only) -->
+            <div class="py-3">
+                <p class="text-xs font-medium text-muted-color mb-1">Email</p>
+                <p class="text-sm text-color">{{ profile()?.email }}</p>
+            </div>
+
+            <p-divider />
+
+            <!-- Auth Provider -->
+            <div class="py-3">
+                <p class="text-xs font-medium text-muted-color mb-1">Sign-in Method</p>
+                <div class="flex items-center gap-2">
+                    @if (isPasswordUser()) {
+                    <i class="pi pi-envelope text-sm text-primary"></i>
+                    <span class="text-sm text-color">Email / Password</span>
+                    } @else {
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                        <path
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                            fill="#4285F4" />
+                        <path
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            fill="#34A853" />
+                        <path
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            fill="#FBBC05" />
+                        <path
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            fill="#EA4335" />
+                    </svg>
+                    <span class="text-sm text-color">Google</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Plan & Subscription Section -->
+        <div id="profile-plan-section"
+            class="p-6 rounded-xl bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 mb-6">
+            <h3 class="text-base font-semibold text-color mb-4">
+                <i class="pi pi-credit-card mr-2 text-primary"></i>Plan & Subscription
+            </h3>
+
+            <!-- Current Plan Card -->
+            <div class="p-4 rounded-lg bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 mb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h4 class="text-lg font-bold text-color">{{ planConfig().label }}</h4>
+                        @if (planConfig().price > 0) {
+                        <p class="text-sm text-muted-color">${{ planConfig().price }}/month</p>
+                        } @else {
+                        <p class="text-sm text-muted-color">Free</p>
+                        }
+                    </div>
+                    @if (trialDaysLeft() !== null) {
+                    <p-tag id="profile-trial-badge"
+                        [value]="trialDaysLeft()! > 0 ? trialDaysLeft() + ' days left' : 'Expired'"
+                        [severity]="trialDaysLeft()! > 3 ? 'info' : 'danger'" />
+                    }
+                </div>
+
+                <p-divider />
+
+                <div class="grid grid-cols-2 gap-3 mt-3">
+                    <div>
+                        <p class="text-xs text-muted-color mb-1">Profile Limit</p>
+                        <p class="text-sm font-semibold text-color">{{ planConfig().profileLimit }} profiles</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-muted-color mb-1">Features</p>
+                        <p class="text-sm font-semibold text-color">{{ planFeatures().length }} included</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features List -->
+            @if (planFeatures().length > 0) {
+            <div class="mb-4">
+                <p class="text-xs font-medium text-muted-color mb-2">Included Features</p>
+                <div class="flex flex-wrap gap-2">
+                    @for (feature of planFeatures(); track feature) {
+                    <span
+                        class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-medium">
+                        <i class="pi pi-check text-[10px]"></i>{{ feature }}
+                    </span>
+                    }
+                </div>
+            </div>
+            }
+
+            <!-- Upgrade CTA -->
+            @if (planService.currentPlan() !== 'team') {
+            <p-button id="profile-upgrade-btn" label="Upgrade Plan" icon="pi pi-arrow-up-right" severity="contrast"
+                size="small" [disabled]="true" pTooltip="Coming soon — LemonSqueezy integration"
+                tooltipPosition="top" />
+            }
+        </div>
+
+        <!-- Security Section -->
+        <div id="profile-security-section"
+            class="p-6 rounded-xl bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 mb-6">
+            <h3 class="text-base font-semibold text-color mb-4">
+                <i class="pi pi-shield mr-2 text-primary"></i>Security
+            </h3>
+
+            @if (isPasswordUser()) {
+            <p class="text-xs text-muted-color mb-4">Change your account password. You will need to enter your
+                current password for verification.</p>
+
+            <div class="flex flex-col gap-4 max-w-sm">
+                <div class="flex flex-col gap-1.5">
+                    <label for="profile-current-pw" class="text-xs font-medium text-color">Current Password</label>
+                    <p-password id="profile-current-pw" [ngModel]="currentPassword()"
+                        (ngModelChange)="currentPassword.set($event)" [toggleMask]="true" [feedback]="false"
+                        [fluid]="true" placeholder="Enter current password" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label for="profile-new-pw" class="text-xs font-medium text-color">New Password</label>
+                    <p-password id="profile-new-pw" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)"
+                        [toggleMask]="true" [feedback]="true" [fluid]="true" placeholder="Enter new password" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label for="profile-confirm-pw" class="text-xs font-medium text-color">Confirm New
+                        Password</label>
+                    <p-password id="profile-confirm-pw" [ngModel]="confirmPassword()"
+                        (ngModelChange)="confirmPassword.set($event)" [toggleMask]="true" [feedback]="false"
+                        [fluid]="true" placeholder="Confirm new password" (keydown.enter)="onChangePassword()" />
+                    @if (confirmPassword().length > 0 && !passwordsMatch()) {
+                    <small class="text-red-500 text-xs">Passwords do not match</small>
+                    }
+                </div>
+
+                <p-button id="profile-change-pw-btn" label="Change Password" icon="pi pi-lock" severity="primary"
+                    size="small" (click)="onChangePassword()" [loading]="savingPassword()"
+                    [disabled]="!passwordsMatch() || currentPassword().length === 0" />
+            </div>
+            } @else {
+            <div
+                class="flex items-center gap-3 p-4 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+                <i class="pi pi-info-circle text-muted-color"></i>
+                <p class="text-sm text-muted-color">Password management is not available for Google sign-in accounts.
+                    Your account security is managed through Google.</p>
+            </div>
+            }
+        </div>
+
+        <!-- Danger Zone -->
+        <div id="profile-danger-section"
+            class="p-6 rounded-xl bg-surface-0 dark:bg-surface-900 border border-red-300 dark:border-red-900/50 mb-8">
+            <h3 class="text-base font-semibold text-red-600 dark:text-red-400 mb-2">
+                <i class="pi pi-exclamation-triangle mr-2"></i>Danger Zone
+            </h3>
+            <p class="text-xs text-muted-color mb-4">Permanently delete your account and all associated data. This
+                action cannot be undone.</p>
+            <p-button id="profile-delete-btn" label="Delete Account" icon="pi pi-trash" severity="danger"
+                [outlined]="true" size="small" [disabled]="true" pTooltip="Coming soon" tooltipPosition="top" />
+        </div>
+
+    </div>
+</div>
