@@ -1,7 +1,7 @@
 # AnguLogin — Hướng Dẫn Tính Năng Automation (RPA)
 
 > Tài liệu dành cho đội Marketing & Founder  
-> Cập nhật: 21/02/2026  
+> Cập nhật: 22/02/2026  
 > ⚠️ Nội dung đã verify 100% với source code thực tế
 
 ---
@@ -25,10 +25,10 @@ Module Automation gồm 4 tab chính trên sidebar:
 
 | Tab | Chức năng thực tế |
 |-----|-------------------|
-| **Marketplace** | Duyệt kho template → xem chi tiết → lưu về (nút "Save process") |
+| **Marketplace** | Duyệt kho template (chỉ hiện templates đã **published**) → xem chi tiết → lưu về (nút "Save process") |
 | **Process** | Hiện danh sách template đã lưu. Bấm ▶ Play → chuyển sang tab Task với dialog Create Task đã chọn sẵn template |
 | **Task** | **Đây là nơi chạy automation thật.** Bấm "Create Task" → chọn template + profile + browser → Start Task. Theo dõi realtime, xem logs, cancel task |
-| **My Templates** | Template do user tự tạo (chưa có template editor hoàn chỉnh) |
+| **My Templates** | Template do user tự tạo (template editor cơ bản — thêm/sửa steps, variables) |
 
 ---
 
@@ -237,40 +237,44 @@ Mỗi profile = 1 trình duyệt Chrome = 1 tab active. Nếu chạy 2 task cùn
 
 ## 8. Danh sách 15 Templates hiện có
 
-### Social Media — Engagement
+> **Hệ thống trạng thái:** Mỗi template có `status` — chỉ templates `published` hiện trong Marketplace cho user. Templates `draft` đang phát triển, chỉ admin thấy qua Admin Panel riêng.
 
-| Template | Platform | Steps | Cần login |
-|---------|----------|:-----:|:---------:|
-| TikTok Search & Like Comment | TikTok | 6 | ✅ |
-| X Like & AI Comment | Twitter/X | 6 | ✅ |
-| Instagram Auto Follow | Instagram | 5 | ✅ |
-| YouTube Watch & Subscribe | YouTube | 8 | ✅ |
-| Reddit Upvote & Comment | Reddit | 5 | ✅ |
+### Social Media — Engagement (5 templates, 4 published)
 
-### Social Media — Quản lý
+| Template | Platform | Steps | Cần login | Status |
+|---------|----------|:-----:|:---------:|:------:|
+| TikTok Search & Like Comment | TikTok | 6 | ✅ | ✅ Published |
+| X Like & AI Comment | Twitter/X | 6 | ✅ | ✅ Published |
+| Instagram Auto Follow | Instagram | 5 | ✅ | ✅ Published |
+| YouTube Watch & Subscribe | YouTube | 8 | ✅ | ✅ Published |
+| Reddit Upvote & Comment | Reddit | 5 | ✅ | 📝 Draft |
 
-| Template | Platform | Steps | Cần login |
-|---------|----------|:-----:|:---------:|
-| FB Group Search & Join | Facebook | 4 | ✅ |
-| FB Group Exit | Facebook | 4 | ✅ |
-| FB Add Suggested Friends | Facebook | 5 | ✅ |
-| FB Friends Counter | Facebook | 4 | ✅ |
+### Social Media — Quản lý (4 templates, tất cả published)
 
-### E-Commerce
+| Template | Platform | Steps | Cần login | Status |
+|---------|----------|:-----:|:---------:|:------:|
+| FB Group Search & Join | Facebook | 4 | ✅ | ✅ Published |
+| FB Group Exit | Facebook | 4 | ✅ | ✅ Published |
+| FB Add Suggested Friends | Facebook | 5 | ✅ | ✅ Published |
+| FB Friends Counter | Facebook | 4 | ✅ | ✅ Published |
 
-| Template | Platform | Steps | Cần login |
-|---------|----------|:-----:|:---------:|
-| Etsy Browse Goods | Etsy | 6 | ❌ |
-| Shopee Browse Products | Shopee | 7 | ❌ |
-| Amazon Review Scraper | Amazon | 5 | ❌ |
-| Poshmark Auto Share | Poshmark | 5 | ✅ |
+### E-Commerce (4 templates, 3 published)
 
-### Networking & Communication
+| Template | Platform | Steps | Cần login | Status |
+|---------|----------|:-----:|:---------:|:------:|
+| Etsy Browse Goods | Etsy | 6 | ❌ | ✅ Published |
+| Shopee Browse Products | Shopee | 7 | ❌ | ✅ Published |
+| Amazon Review Scraper | Amazon | 5 | ❌ | 📝 Draft |
+| Poshmark Auto Share | Poshmark | 5 | ✅ | ✅ Published |
 
-| Template | Platform | Steps | Cần login |
-|---------|----------|:-----:|:---------:|
-| LinkedIn Auto Connect | LinkedIn | 5 | ✅ |
-| Gmail Bulk Sender | Gmail | 5 | ✅ |
+### Networking & Communication (2 templates, tất cả published)
+
+| Template | Platform | Steps | Cần login | Status |
+|---------|----------|:-----:|:---------:|:------:|
+| LinkedIn Auto Connect | LinkedIn | 5 | ✅ | ✅ Published |
+| Gmail Bulk Sender | Gmail | 5 | ✅ | ✅ Published |
+
+> **Tổng kết:** 13 published (hiện trong Marketplace), 2 draft (đang phát triển)
 
 ---
 
@@ -303,26 +307,67 @@ Lưu tại `~/Library/Application Support/AnguLogin/api_config.json`. Truyền q
 |-----------|:---------:|:-------:|:----------:|:--------:|
 | Multi-profile Chrome | ✅ | ✅ | ✅ | ✅ |
 | Anti-fingerprint | ✅ | ✅ | ✅ | ✅ |
-| RPA Automation tích hợp | ✅ | ❌ | ❌ | ✅ (hạn chế) |
-| Marketplace templates | ✅ (15+) | ❌ | ❌ | ✅ (ít) |
-| REST API headless | ✅ | ❌ | ✅ (riêng) | ❌ |
+| RPA Automation tích hợp | ✅ | ❌ (API only) | ❌ | ✅ (Visual RPA) |
+| Marketplace templates | ✅ (13 published) | ❌ | ❌ | ✅ (Marketplace + Creator Program) |
+| REST API headless | ✅ | ✅ (MCP Server) | ✅ (riêng) | ❌ |
 | Human-like behavior (6 lớp) | ✅ | ❌ | ❌ | ❌ |
+| Template admin system | ✅ (riêng) | ❌ | ❌ | ✅ (built-in) |
 | Chi phí | Miễn phí | $49/tháng | $99/tháng | $9/tháng |
 
 ---
 
-## 11. Hạn chế hiện tại (trung thực)
+## 11. Kiến trúc Template Distribution
+
+### Firestore 2-Tier Architecture
+
+```
+Tier 1: rpa-catalog/index       → 1 document chứa TẤT CẢ summaries (1 read/session)
+Tier 2: rpa-templates/{id}      → Full detail per template (1 read/click, cached)
+```
+
+| Khía cạnh | Chi tiết |
+|-----------|----------|
+| Chi phí | ~2K reads/ngày cho 500 users = 4% free tier |
+| Caching | Client-side (localStorage) + version-based invalidation |
+| Offline | Fallback về bundled `templates.json` nếu Firestore fail |
+| Realtime | `onSnapshot` listener — template update tức thì |
+
+### Template Lifecycle
+
+```
+draft → published → deprecated
+  ↑        ↓
+  └── admin edit
+```
+
+| Status | Hiện trong Marketplace | Admin thấy |
+|--------|:---------------------:|:---------:|
+| `published` | ✅ | ✅ |
+| `draft` | ❌ | ✅ |
+| `deprecated` | ❌ | ✅ |
+
+### Admin System
+
+- **Admin Panel:** Web app riêng (Firebase Hosting) — KHÔNG embed trong Tauri app
+- **Xác thực:** Firebase Custom Claims (`token.admin == true`)
+- **Firestore Rules:** Admin write, public read
+- **Versioning:** Date-based (VD: `2026.02.22`)
+
+---
+
+## 12. Hạn chế hiện tại (trung thực)
 
 | Hạn chế | Mô tả |
 |---------|-------|
 | Nút "Save and create task" ở Marketplace | Hiện chỉ save, chưa tự navigate sang Create Task |
-| Template Editor | Chưa hoàn thiện — tạo template phức tạp cần hiểu JSON |
+| Admin Panel | Chưa build — hiện dùng seed script để push templates |
+| 2 template Draft | Reddit Upvote, Amazon Scraper cần implement selectors |
 | Chỉ macOS | App desktop chỉ chạy trên macOS |
 | Cần app mở | API server chỉ hoạt động khi app AnguLogin đang mở |
 
 ---
 
-## 12. FAQ
+## 13. FAQ
 
 **Q: Template chạy được khi chưa đăng nhập không?**  
 A: Etsy, Shopee, Amazon → được (chỉ browse/xem). Facebook, TikTok, Instagram, LinkedIn, Gmail → cần đăng nhập trước.
@@ -332,3 +377,9 @@ A: Có 6 lớp chống phát hiện nhưng không đảm bảo 100%. Nên giới
 
 **Q: App phải mở liên tục không?**  
 A: Có. API server chạy trên port 50200, chỉ hoạt động khi app đang mở.
+
+**Q: Sao có template `draft` không thấy trong Marketplace?**  
+A: Templates draft chưa implement đầy đủ (thiếu selectors). Chỉ admin thấy qua Admin Panel. Khi hoàn thiện sẽ publish.
+
+**Q: Template bị lỗi khi website đổi giao diện?**  
+A: Templates dùng CSS selectors + fallback selectors. Nếu website đổi DOM, admin sẽ update selectors và publish phiên bản mới. User nhận update tự động qua Firestore realtime.
