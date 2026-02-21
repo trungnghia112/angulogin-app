@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
-import { filter, Subscription } from 'rxjs';
+import { filter } from 'rxjs';
 import { MainNav } from '../components/main-nav/main-nav';
 import { NavigationService } from '../../services/navigation.service';
 import { ButtonModule } from 'primeng/button';
@@ -14,10 +15,10 @@ import { TooltipModule } from 'primeng/tooltip';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(document:keydown)': 'onKeyDown($event)' },
 })
-export class Pages implements OnInit, OnDestroy {
+export class Pages implements OnInit {
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   protected readonly navService = inject(NavigationService);
-  private routeSub?: Subscription;
 
   // Feature 6.9: Zen Mode
   protected readonly zenMode = this.navService.zenMode;
@@ -35,15 +36,14 @@ export class Pages implements OnInit, OnDestroy {
     this.updateActiveFeatureFromRoute(this.router.url);
 
     // Listen to route changes
-    this.routeSub = this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe((event) => {
         this.updateActiveFeatureFromRoute((event as NavigationEnd).urlAfterRedirects);
       });
-  }
-
-  ngOnDestroy(): void {
-    this.routeSub?.unsubscribe();
   }
 
   protected exitZenMode(): void {
