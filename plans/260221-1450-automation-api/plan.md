@@ -38,7 +38,7 @@ Add automation execution endpoints to the existing Local REST API, enabling exte
 | 02 | Template Execution API | ✅ Done | 5 |
 | 03 | Task Monitoring API | ✅ Done | 3 |
 | 04 | API Docs Page (Angular) | ⬜ Pending | 3 |
-| 05 | Testing & Documentation | ⬜ Pending | 4 |
+| 05 | Testing & Documentation | ✅ Done | 4 |
 
 **Total:** 19 tasks | Estimate: 2-3 sessions
 
