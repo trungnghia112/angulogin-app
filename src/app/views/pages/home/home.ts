@@ -51,6 +51,7 @@ import { OnboardingDialog } from '../../components/onboarding-dialog/onboarding-
 import { type ProtectionLevel } from '../../../core/services/settings.service';
 import { DurationPipe } from '../../../core/pipes/duration.pipe';
 import { TimeAgoPipe } from '../../../core/pipes/time-ago.pipe';
+import { FileSizePipe } from '../../../core/pipes/file-size.pipe';
 
 
 
@@ -105,6 +106,7 @@ interface Tab {
         OnboardingDialog,
         DurationPipe,
         TimeAgoPipe,
+        FileSizePipe,
     ],
 })
 export class Home implements OnInit, OnDestroy {
@@ -113,6 +115,7 @@ export class Home implements OnInit, OnDestroy {
     private readonly settingsService = inject(SettingsService);
     private readonly activityLogService = inject(ActivityLogService);
     private readonly durationPipe = inject(DurationPipe);
+    private readonly fileSizePipe = inject(FileSizePipe);
     protected readonly folderService = inject(FolderService);
     protected readonly proxyService = inject(ProxyService);
     private readonly messageService = inject(MessageService);
@@ -542,13 +545,7 @@ export class Home implements OnInit, OnDestroy {
         }
     }
 
-    formatSize(bytes: number | undefined): string {
-        if (!bytes) return '';
-        const gb = bytes / (1024 * 1024 * 1024);
-        if (gb >= 1) return `${gb.toFixed(1)} GB`;
-        const mb = bytes / (1024 * 1024);
-        return `${mb.toFixed(0)} MB`;
-    }
+
 
     // Phase 4: Profile Preview Tooltip
     // PERF FIX: Use cache to avoid string creation on every render
@@ -573,7 +570,7 @@ export class Home implements OnInit, OnDestroy {
             lines.push(`Tags: ${profile.metadata.tags.join(', ')}`);
         }
         if (profile.size) {
-            lines.push(`Size: ${this.formatSize(profile.size)}`);
+            lines.push(`Size: ${this.fileSizePipe.transform(profile.size)}`);
         }
         // Usage Statistics
         if (profile.metadata?.launchCount) {
@@ -2020,28 +2017,6 @@ export class Home implements OnInit, OnDestroy {
         }
     }
 
-    // ==== Feature 11.4: Last Changed - relative date formatting ====
-    formatRelativeDate(dateStr: string | null | undefined): string {
-        if (!dateStr) return '-';
-        try {
-            const date = new Date(dateStr);
-            const now = Date.now();
-            const diffMs = now - date.getTime();
-            const diffSec = Math.floor(diffMs / 1000);
-            const diffMin = Math.floor(diffSec / 60);
-            const diffHour = Math.floor(diffMin / 60);
-            const diffDay = Math.floor(diffHour / 24);
-
-            if (diffSec < 60) return 'Just now';
-            if (diffMin < 60) return `${diffMin}m ago`;
-            if (diffHour < 24) return `${diffHour}h ago`;
-            if (diffDay < 7) return `${diffDay}d ago`;
-            if (diffDay < 30) return `${Math.floor(diffDay / 7)}w ago`;
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        } catch {
-            return '-';
-        }
-    }
 
 
     // Drag & Drop Reordering

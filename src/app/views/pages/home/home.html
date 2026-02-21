@@ -255,7 +255,7 @@
                     @if (columnConfig.isVisible('lastChanged')) {
                     <td>
                         <span class="text-xs text-muted-color whitespace-nowrap">{{
-                            formatRelativeDate(profile.metadata?.lastOpened) }}</span>
+                            profile.metadata?.lastOpened | timeAgo:'-' }}</span>
                     </td>
                     }
 
@@ -277,7 +277,7 @@
                     <!-- Size (Feature 11.1 - new column) -->
                     @if (columnConfig.isVisible('size')) {
                     <td>
-                        <span class="text-xs text-muted-color whitespace-nowrap">{{ formatSize(profile.size) || '-'
+                        <span class="text-xs text-muted-color whitespace-nowrap">{{ (profile.size | fileSize) || '-'
                             }}</span>
                     </td>
                     }

@@ -9,6 +9,7 @@ import { TableModule } from 'primeng/table';
 
 import { ProfileService } from '../../../services/profile.service';
 import { Profile } from '../../../models/profile.model';
+import { FileSizePipe } from '../../../core/pipes/file-size.pipe';
 
 interface CleanupSuggestion {
     type: 'large' | 'unused';
@@ -30,11 +31,12 @@ interface HealthCheckResult {
     styleUrl: './storage-dashboard.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
-    imports: [ChartModule, ButtonModule, CardModule, TooltipModule, TableModule],
+    imports: [ChartModule, ButtonModule, CardModule, TooltipModule, TableModule, FileSizePipe],
 })
 export class StorageDashboard implements OnInit, OnDestroy {
     private readonly profileService = inject(ProfileService);
     private readonly router = inject(Router);
+    private readonly fileSizePipe = inject(FileSizePipe);
     private observer: MutationObserver | null = null;
 
     // Dark mode signal
@@ -188,7 +190,7 @@ export class StorageDashboard implements OnInit, OnDestroy {
                 suggestions.push({
                     type: 'large',
                     profile,
-                    reason: `${this.formatSize(profile.size)} - Consider cleaning cache`
+                    reason: `${this.fileSizePipe.transform(profile.size)} - Consider cleaning cache`
                 });
             }
 
@@ -209,13 +211,7 @@ export class StorageDashboard implements OnInit, OnDestroy {
     });
 
     // Helpers
-    formatSize(bytes: number | undefined): string {
-        if (!bytes) return '0 MB';
-        const gb = bytes / (1024 * 1024 * 1024);
-        if (gb >= 1) return `${gb.toFixed(1)} GB`;
-        const mb = bytes / (1024 * 1024);
-        return `${mb.toFixed(0)} MB`;
-    }
+
 
 
 

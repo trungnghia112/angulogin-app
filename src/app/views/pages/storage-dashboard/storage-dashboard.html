@@ -27,7 +27,7 @@
                     @if (sizesLoading()) {
                     <p class="text-2xl font-bold text-color"><i class="pi pi-spin pi-spinner"></i></p>
                     } @else {
-                    <p class="text-2xl font-bold text-color">{{ formatSize(totalSize()) }}</p>
+                    <p class="text-2xl font-bold text-color">{{ totalSize() | fileSize }}</p>
                     }
                 </div>
             </div>
@@ -50,7 +50,7 @@
                 </div>
                 <div>
                     <p class="text-sm text-muted-color">Average Size</p>
-                    <p class="text-2xl font-bold text-color">{{ formatSize(avgSize()) }}</p>
+                    <p class="text-2xl font-bold text-color">{{ avgSize() | fileSize }}</p>
                 </div>
             </div>
 
@@ -131,7 +131,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-sm font-medium text-muted-color">{{ formatSize(suggestion.profile.size)
+                        <span class="text-sm font-medium text-muted-color">{{ suggestion.profile.size | fileSize
                             }}</span>
                         <p-button icon="pi pi-external-link" severity="secondary" [outlined]="true" size="small"
                             (click)="openProfile(suggestion.profile)" pTooltip="Open Profile" />
