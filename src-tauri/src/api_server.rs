@@ -274,6 +274,88 @@ async fn browser_active(
     (StatusCode::OK, Json(ApiResponse::success(list)))
 }
 
+async fn browser_cdp(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Query(params): Query<CdpInfoParams>,
+) -> (StatusCode, Json<ApiResponse<CdpInfoData>>) {
+    if let Err(e) = check_auth(&headers, &state.api_key) {
+        return (e.0, Json(ApiResponse::error(-1, "Unauthorized")));
+    }
+
+    let profile_id = match params.profile_id {
+        Some(id) => id,
+        None => return (StatusCode::BAD_REQUEST, Json(ApiResponse::error(-1, "profile_id is required"))),
+    };
+
+    // Look up active browser
+    let (debug_port, _) = {
+        let browsers = state.active_browsers.lock().unwrap();
+        match browsers.get(&profile_id) {
+            Some(entry) => entry.clone(),
+            None => return (StatusCode::NOT_FOUND, Json(ApiResponse::error(-1, format!(
+                "No active browser for profile '{}'. Launch it first via /api/v1/browser/open",
+                profile_id
+            )))),
+        }
+    };
+
+    // Fetch real WebSocket URL from Chrome's /json/version endpoint
+    let version_url = format!("http://127.0.0.1:{}/json/version", debug_port);
+    let ws_endpoint;
+    let browser_version;
+
+    match reqwest::get(&version_url).await {
+        Ok(resp) => {
+            match resp.json::<serde_json::Value>().await {
+                Ok(json) => {
+                    ws_endpoint = json.get("webSocketDebuggerUrl")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    browser_version = json.get("Browser")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("unknown")
+                        .to_string();
+                }
+                Err(_) => {
+                    ws_endpoint = format!("ws://127.0.0.1:{}", debug_port);
+                    browser_version = "unknown".to_string();
+                }
+            }
+        }
+        Err(_) => {
+            return (StatusCode::SERVICE_UNAVAILABLE, Json(ApiResponse::error(-1, format!(
+                "Browser CDP not reachable on port {}. It may still be starting up — retry in 1-2 seconds.",
+                debug_port
+            ))));
+        }
+    }
+
+    // Update tracked ws_endpoint with the real one
+    {
+        let mut browsers = state.active_browsers.lock().unwrap();
+        if let Some(entry) = browsers.get_mut(&profile_id) {
+            entry.1 = ws_endpoint.clone();
+        }
+    }
+
+    // Fetch open pages via /json/list
+    let pages_url = format!("http://127.0.0.1:{}/json/list", debug_port);
+    let pages: Vec<CdpPageEntry> = match reqwest::get(&pages_url).await {
+        Ok(resp) => resp.json().await.unwrap_or_default(),
+        Err(_) => Vec::new(),
+    };
+
+    (StatusCode::OK, Json(ApiResponse::success(CdpInfoData {
+        profile_id,
+        debug_port,
+        ws_endpoint,
+        browser_version,
+        pages,
+    })))
+}
+
 async fn profile_list(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -723,6 +805,7 @@ pub async fn start(port: u16, api_key: String) {
         .route("/api/v1/browser/close", get(browser_close))
         .route("/api/v1/browser/status", get(browser_status))
         .route("/api/v1/browser/active", get(browser_active))
+        .route("/api/v1/browser/cdp", get(browser_cdp))
         // Profile
         .route("/api/v1/profile/list", get(profile_list))
         .route("/api/v1/profile/detail", get(profile_detail))

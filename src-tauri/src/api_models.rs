@@ -73,6 +73,31 @@ pub struct ActiveBrowserEntry {
     pub ws_endpoint: String,
 }
 
+#[derive(Deserialize)]
+pub struct CdpInfoParams {
+    pub profile_id: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct CdpInfoData {
+    pub profile_id: String,
+    pub debug_port: u16,
+    pub ws_endpoint: String,
+    pub browser_version: String,
+    pub pages: Vec<CdpPageEntry>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CdpPageEntry {
+    pub id: String,
+    pub url: String,
+    pub title: String,
+    #[serde(rename = "type")]
+    pub page_type: String,
+    #[serde(rename = "webSocketDebuggerUrl")]
+    pub ws_debugger_url: Option<String>,
+}
+
 // ---------------------------------------------------------------------------
 // Profile endpoints
 // ---------------------------------------------------------------------------
