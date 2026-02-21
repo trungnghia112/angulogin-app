@@ -1,0 +1,440 @@
+{
+    "info": {
+        "name": "AnguLogin Local API",
+        "description": "AnguLogin Local REST API — Profile management, browser control, automation",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{apiKey}}",
+                "type": "string"
+            }
+        ]
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:50200"
+        },
+        {
+            "key": "apiKey",
+            "value": "YOUR_API_KEY_HERE"
+        },
+        {
+            "key": "profileId",
+            "value": "Profile 1"
+        }
+    ],
+    "item": [
+        {
+            "name": "Status",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/v1/status",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Browser",
+            "item": [
+                {
+                    "name": "Open Browser",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/browser/open?profile_id={{profileId}}&browser=chrome",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "browser",
+                                "open"
+                            ],
+                            "query": [
+                                {
+                                    "key": "profile_id",
+                                    "value": "{{profileId}}"
+                                },
+                                {
+                                    "key": "browser",
+                                    "value": "chrome"
+                                },
+                                {
+                                    "key": "open_url",
+                                    "value": "https://google.com",
+                                    "disabled": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Close Browser",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/browser/close?profile_id={{profileId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "browser",
+                                "close"
+                            ],
+                            "query": [
+                                {
+                                    "key": "profile_id",
+                                    "value": "{{profileId}}"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Browser Status",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/browser/status?profile_id={{profileId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "browser",
+                                "status"
+                            ],
+                            "query": [
+                                {
+                                    "key": "profile_id",
+                                    "value": "{{profileId}}"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Active Browsers",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/v1/browser/active"
+                    }
+                },
+                {
+                    "name": "CDP Info (WebSocket URL + Pages)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/browser/cdp?profile_id={{profileId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "browser",
+                                "cdp"
+                            ],
+                            "query": [
+                                {
+                                    "key": "profile_id",
+                                    "value": "{{profileId}}"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Profile",
+            "item": [
+                {
+                    "name": "List Profiles",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/v1/profile/list"
+                    }
+                },
+                {
+                    "name": "Profile Detail",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/profile/detail?profile_id={{profileId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "profile",
+                                "detail"
+                            ],
+                            "query": [
+                                {
+                                    "key": "profile_id",
+                                    "value": "{{profileId}}"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Profile",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/v1/profile/create",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"API Test Profile\",\n  \"browser\": \"chrome\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Update Profile",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/v1/profile/update",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"profile_id\": \"API Test Profile\",\n  \"group_id\": \"Work\",\n  \"notes\": \"Updated via API\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Profile",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/v1/profile/delete",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"profile_id\": \"API Test Profile\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Proxy",
+            "item": [
+                {
+                    "name": "List Proxies",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/v1/proxy/list"
+                    }
+                },
+                {
+                    "name": "Add Proxy",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/v1/proxy/add",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"host\": \"proxy.example.com\",\n  \"port\": 8080,\n  \"type\": \"http\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Check Proxy Health",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/v1/proxy/check"
+                    }
+                },
+                {
+                    "name": "Delete Proxy",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/v1/proxy/delete",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"id\": \"proxy-XXXXX\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Group",
+            "item": [
+                {
+                    "name": "List Groups",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{baseUrl}}/api/v1/group/list"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Automation",
+            "description": "Execute automation steps, monitor tasks, and manage execution",
+            "item": [
+                {
+                    "name": "Execute Steps",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/v1/automation/execute",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"profile_id\": \"{{profileId}}\",\n  \"steps\": [\n    {\n      \"action\": \"navigate\",\n      \"url\": \"https://www.google.com\",\n      \"description\": \"Go to Google\"\n    },\n    {\n      \"action\": \"wait\",\n      \"waitMs\": 2000\n    },\n    {\n      \"action\": \"type\",\n      \"selector\": \"textarea[name='q']\",\n      \"value\": \"AnguLogin automation\"\n    },\n    {\n      \"action\": \"click\",\n      \"selector\": \"input[name='btnK']\"\n    }\n  ],\n  \"variables\": {}\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Execute with Variables",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/v1/automation/execute",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"profile_id\": \"{{profileId}}\",\n  \"steps\": [\n    {\n      \"action\": \"navigate\",\n      \"url\": \"https://www.google.com/search?q={{searchQuery}}\"\n    },\n    {\n      \"action\": \"scroll\",\n      \"iterations\": 3\n    }\n  ],\n  \"variables\": {\n    \"searchQuery\": \"automation tools 2026\"\n  }\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Execute JavaScript",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/v1/automation/execute",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"profile_id\": \"{{profileId}}\",\n  \"steps\": [\n    {\n      \"action\": \"navigate\",\n      \"url\": \"https://example.com\"\n    },\n    {\n      \"action\": \"evaluate\",\n      \"jsExpression\": \"document.title\"\n    }\n  ]\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "List Tasks",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/automation/tasks",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "automation",
+                                "tasks"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "running",
+                                    "disabled": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Task Detail",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/automation/task?task_id=task_XXXXX",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "automation",
+                                "task"
+                            ],
+                            "query": [
+                                {
+                                    "key": "task_id",
+                                    "value": "task_XXXXX"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Cancel Task",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/api/v1/automation/cancel",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"task_id\": \"task_XXXXX\"\n}"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

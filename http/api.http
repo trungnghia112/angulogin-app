@@ -1,0 +1,254 @@
+### AnguLogin Local REST API
+### Base URL: http://localhost:50200
+### Auth: Bearer token via Authorization header
+
+@baseUrl = http://localhost:50200
+@apiKey = YOUR_API_KEY_HERE
+
+
+###############################################################################
+# STATUS (Public — no auth required)
+###############################################################################
+
+### Health Check
+GET {{baseUrl}}/api/v1/status
+
+
+###############################################################################
+# BROWSER
+###############################################################################
+
+### Open Browser (launch profile)
+GET {{baseUrl}}/api/v1/browser/open?profile_id=Profile 1&browser=chrome
+Authorization: Bearer {{apiKey}}
+
+### Open Browser with URL
+GET {{baseUrl}}/api/v1/browser/open?profile_id=Profile 1&browser=chrome&open_url=https://google.com
+Authorization: Bearer {{apiKey}}
+
+### Close Browser
+GET {{baseUrl}}/api/v1/browser/close?profile_id=Profile 1
+Authorization: Bearer {{apiKey}}
+
+### Browser Status
+GET {{baseUrl}}/api/v1/browser/status?profile_id=Profile 1
+Authorization: Bearer {{apiKey}}
+
+### Active Browsers (list all running)
+GET {{baseUrl}}/api/v1/browser/active
+Authorization: Bearer {{apiKey}}
+
+### CDP Info (get WebSocket URL + open pages)
+GET {{baseUrl}}/api/v1/browser/cdp?profile_id=Profile 1
+Authorization: Bearer {{apiKey}}
+
+
+###############################################################################
+# PROFILE
+###############################################################################
+
+### List Profiles
+GET {{baseUrl}}/api/v1/profile/list
+Authorization: Bearer {{apiKey}}
+
+### List Profiles by Group
+GET {{baseUrl}}/api/v1/profile/list?group_id=Work
+Authorization: Bearer {{apiKey}}
+
+### Profile Detail
+GET {{baseUrl}}/api/v1/profile/detail?profile_id=Profile 1
+Authorization: Bearer {{apiKey}}
+
+### Create Profile
+POST {{baseUrl}}/api/v1/profile/create
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "name": "API Test Profile",
+  "browser": "chrome"
+}
+
+### Update Profile
+POST {{baseUrl}}/api/v1/profile/update
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "profile_id": "API Test Profile",
+  "group_id": "Work",
+  "notes": "Created via API"
+}
+
+### Delete Profile
+POST {{baseUrl}}/api/v1/profile/delete
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "profile_id": "API Test Profile"
+}
+
+
+###############################################################################
+# PROXY
+###############################################################################
+
+### List Proxies
+GET {{baseUrl}}/api/v1/proxy/list
+Authorization: Bearer {{apiKey}}
+
+### Add Proxy
+POST {{baseUrl}}/api/v1/proxy/add
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "host": "proxy.example.com",
+  "port": 8080,
+  "type": "http",
+  "username": "user",
+  "password": "pass"
+}
+
+### Check Proxy Health
+GET {{baseUrl}}/api/v1/proxy/check
+Authorization: Bearer {{apiKey}}
+
+### Delete Proxy
+POST {{baseUrl}}/api/v1/proxy/delete
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "id": "proxy-XXXXX"
+}
+
+
+###############################################################################
+# GROUP
+###############################################################################
+
+### List Groups
+GET {{baseUrl}}/api/v1/group/list
+Authorization: Bearer {{apiKey}}
+
+
+###############################################################################
+# AUTOMATION
+###############################################################################
+
+### Execute Automation Steps
+# Prerequisite: profile must be launched first via /browser/open
+POST {{baseUrl}}/api/v1/automation/execute
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "profile_id": "Profile 1",
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "https://www.google.com",
+      "description": "Go to Google"
+    },
+    {
+      "action": "wait",
+      "waitMs": 2000,
+      "description": "Wait for page load"
+    },
+    {
+      "action": "type",
+      "selector": "textarea[name='q']",
+      "value": "AnguLogin automation",
+      "description": "Type search query"
+    },
+    {
+      "action": "click",
+      "selector": "input[name='btnK']",
+      "description": "Click search"
+    },
+    {
+      "action": "wait",
+      "waitMs": 3000,
+      "description": "Wait for results"
+    }
+  ],
+  "variables": {}
+}
+
+### Execute with Variables
+POST {{baseUrl}}/api/v1/automation/execute
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "profile_id": "Profile 1",
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "https://www.google.com/search?q={{searchQuery}}",
+      "description": "Search Google"
+    },
+    {
+      "action": "scroll",
+      "iterations": 3,
+      "description": "Scroll through results"
+    }
+  ],
+  "variables": {
+    "searchQuery": "automation tools 2026"
+  }
+}
+
+### Execute JavaScript
+POST {{baseUrl}}/api/v1/automation/execute
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "profile_id": "Profile 1",
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "https://example.com"
+    },
+    {
+      "action": "evaluate",
+      "jsExpression": "document.title",
+      "description": "Get page title"
+    }
+  ]
+}
+
+### List Tasks (all)
+GET {{baseUrl}}/api/v1/automation/tasks
+Authorization: Bearer {{apiKey}}
+
+### List Tasks (running only)
+GET {{baseUrl}}/api/v1/automation/tasks?status=running
+Authorization: Bearer {{apiKey}}
+
+### Task Detail
+GET {{baseUrl}}/api/v1/automation/task?task_id=task_XXXXX
+Authorization: Bearer {{apiKey}}
+
+### Cancel Task
+POST {{baseUrl}}/api/v1/automation/cancel
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "task_id": "task_XXXXX"
+}
+
+
+###############################################################################
+# PUPPETEER / PLAYWRIGHT INTEGRATION
+###############################################################################
+# Full workflow:
+#   1. GET /browser/open?profile_id=X   → launches browser, returns debug_port
+#   2. GET /browser/cdp?profile_id=X    → returns wsUrl for Puppeteer/Playwright
+#   3. Connect Puppeteer:
+#      const browser = await puppeteer.connect({ browserWSEndpoint: data.ws_endpoint })
+#   4. GET /browser/close?profile_id=X  → when done
