@@ -100,14 +100,15 @@
         <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Template</label>
             <p-select id="rpa-task-create-template" [options]="savedTemplates()" [(ngModel)]="selectedTemplateId"
-                placeholder="Select a saved template" class="w-full" (onChange)="onTemplateSelected()" />
+                placeholder="Select a saved template" [fluid]="true" appendTo="body"
+                (onChange)="onTemplateSelected()" />
         </div>
 
         <!-- Profile Selection -->
         <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Profile</label>
             <p-select id="rpa-task-create-profile" [options]="availableProfiles()" [(ngModel)]="selectedProfilePath"
-                placeholder="Select a Chrome profile" class="w-full" />
+                placeholder="Select a Chrome profile" [fluid]="true" appendTo="body" />
         </div>
 
         <!-- Browser -->
@@ -115,7 +116,7 @@
             <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Browser</label>
             <p-select id="rpa-task-create-browser"
                 [options]="[{label: 'Google Chrome', value: 'chrome'}, {label: 'Brave', value: 'brave'}, {label: 'Edge', value: 'edge'}]"
-                [(ngModel)]="selectedBrowser" class="w-full" />
+                [(ngModel)]="selectedBrowser" [fluid]="true" appendTo="body" />
         </div>
 
         <!-- Start Button -->
