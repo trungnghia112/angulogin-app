@@ -35,8 +35,8 @@ Add automation execution endpoints to the existing Local REST API, enabling exte
 | Phase | Name | Status | Tasks |
 |-------|------|--------|-------|
 | 01 | CDP Connection API | ✅ Done | 4 |
-| 02 | Template Execution API | ⬜ Pending | 5 |
-| 03 | Task Monitoring API | ⬜ Pending | 3 |
+| 02 | Template Execution API | ✅ Done | 5 |
+| 03 | Task Monitoring API | ✅ Done | 3 |
 | 04 | API Docs Page (Angular) | ⬜ Pending | 3 |
 | 05 | Testing & Documentation | ⬜ Pending | 4 |
 
