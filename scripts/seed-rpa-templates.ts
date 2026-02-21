@@ -1,19 +1,31 @@
 /**
  * Seed RPA Templates to Firestore
  *
- * Usage: npx ts-node scripts/seed-rpa-templates.ts
+ * Usage:
+ *   npx ts-node scripts/seed-rpa-templates.ts              # Production (requires GOOGLE_APPLICATION_CREDENTIALS)
+ *   npx ts-node scripts/seed-rpa-templates.ts --emulator   # Local emulator (localhost:8080)
  *
  * Creates:
  * 1. rpa-catalog/index — lightweight catalog with all template summaries
  * 2. rpa-templates/{id} — full detail for each template
  */
-import { initializeApp, cert } from 'firebase-admin/app';
+import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const useEmulator = process.argv.includes('--emulator');
+
+if (useEmulator) {
+    process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
+    console.log('Using Firestore Emulator at localhost:8080\n');
+}
 
 // Initialize Firebase Admin
-// Uses GOOGLE_APPLICATION_CREDENTIALS env var or default service account
 const app = initializeApp({
     projectId: 'angulogin-com',
 });
@@ -88,7 +100,7 @@ async function seed() {
     await batch.commit();
     console.log(`Wrote ${templates.length} documents to rpa-templates/`);
 
-    console.log('\nSeed complete!');
+    console.log(`\nSeed complete! (${useEmulator ? 'emulator' : 'production'})`);
 }
 
 seed().catch(console.error);
