@@ -1,10 +1,10 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import {
     Firestore, doc,
-    onSnapshot, getDoc,
+    onSnapshot, getDoc, setDoc, serverTimestamp,
 } from '@angular/fire/firestore';
 import {
-    RpaTemplate,
+    RpaTemplate, TemplateStatus,
     PLATFORM_COLORS, PLATFORM_COLORS_DARK, RPA_PLATFORMS,
 } from '../models/rpa-template.model';
 
@@ -24,6 +24,7 @@ export interface CatalogEntry {
     usageCount: number;
     version: string;
     updatedAt: string;
+    status?: TemplateStatus;
 }
 
 /** Cached detail with version for smart invalidation */
@@ -280,6 +281,136 @@ export class RpaTemplateService {
         this.unsubCatalog?.();
     }
 
+    // --- Admin: Publish & Seed ---
+
+    /**
+     * Publish a template to Firestore (admin only).
+     * Updates both the template detail doc and the catalog index.
+     * Uses date-based versioning (e.g. "2026.02.21").
+     */
+    async publishTemplate(template: RpaTemplate, changeDescription?: string): Promise<void> {
+        const now = new Date();
+        const newVersion = this.generateVersion(now);
+
+        // Prepare template for publish
+        const publishedTemplate: RpaTemplate = {
+            ...template,
+            version: newVersion,
+            status: 'published',
+            metadata: {
+                ...template.metadata,
+                updatedAt: now.toISOString().slice(0, 10),
+            },
+            changelog: [
+                ...(template.changelog || []),
+                {
+                    version: newVersion,
+                    date: now.toISOString().slice(0, 10),
+                    changes: changeDescription || 'Updated template',
+                },
+            ],
+        };
+
+        // 1. Push full template
+        await setDoc(
+            doc(this.firestore, 'rpa-templates', template.id),
+            publishedTemplate,
+        );
+
+        // 2. Update catalog index
+        await this.updateCatalogIndex(publishedTemplate);
+
+        // 3. Update local cache
+        this.detailCache.set(template.id, {
+            version: newVersion,
+            data: publishedTemplate,
+        });
+        this.saveDetailCacheToStorage();
+    }
+
+    /**
+     * Seed all templates from local JSON to Firestore (admin, one-time).
+     * Pushes each template individually, then rebuilds catalog index.
+     */
+    async seedAllTemplates(templates: RpaTemplate[]): Promise<{ published: number; draft: number }> {
+        let published = 0;
+        let draft = 0;
+
+        // Determine status: templates with real selectors/JS = published, others = draft
+        for (const t of templates) {
+            const hasImpl = t.steps.some(s => s.selector || s.jsExpression || s.url || s.waitMs);
+            const status = hasImpl ? 'published' : 'draft';
+            const seeded: RpaTemplate = {
+                ...t,
+                status: status as 'published' | 'draft',
+            };
+
+            await setDoc(doc(this.firestore, 'rpa-templates', t.id), seeded);
+
+            if (status === 'published') published++;
+            else draft++;
+        }
+
+        // Rebuild catalog index with ALL templates (admin sees drafts too)
+        const entries: CatalogEntry[] = templates.map(t => this.templateToCatalogEntry(t));
+        await setDoc(doc(this.firestore, 'rpa-catalog', 'index'), {
+            templates: entries,
+            lastUpdated: serverTimestamp(),
+        });
+
+        return { published, draft };
+    }
+
+    /**
+     * Update the catalog index after a single template is published/changed.
+     */
+    private async updateCatalogIndex(template: RpaTemplate): Promise<void> {
+        const catalogRef = doc(this.firestore, 'rpa-catalog', 'index');
+        const catalogSnap = await getDoc(catalogRef);
+        const catalog = catalogSnap.exists()
+            ? (catalogSnap.data() as { templates: CatalogEntry[] })
+            : { templates: [] };
+
+        const entry = this.templateToCatalogEntry(template);
+        const idx = catalog.templates.findIndex(t => t.id === template.id);
+        if (idx >= 0) {
+            catalog.templates[idx] = entry;
+        } else {
+            catalog.templates.push(entry);
+        }
+
+        await setDoc(catalogRef, {
+            templates: catalog.templates,
+            lastUpdated: serverTimestamp(),
+        });
+    }
+
+    /** Convert full RpaTemplate to lightweight CatalogEntry */
+    private templateToCatalogEntry(template: RpaTemplate): CatalogEntry {
+        return {
+            id: template.id,
+            title: template.metadata.title,
+            description: template.metadata.description,
+            platform: template.metadata.platform,
+            platformIcon: template.metadata.platformIcon,
+            author: template.metadata.author,
+            tags: template.metadata.tags,
+            isPremium: template.metadata.isPremium,
+            usageCount: template.stats.usageCount,
+            version: template.version,
+            updatedAt: template.metadata.updatedAt,
+            status: template.status,
+        };
+    }
+
+    /** Generate date-based version string (e.g. "2026.02.21") */
+    private generateVersion(date: Date = new Date()): string {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}.${m}.${d}`;
+    }
+
     /**
      * Get full template detail — 1 Firestore read, then cached by version.
      * Subsequent calls with same version = 0 reads.
@@ -312,9 +443,14 @@ export class RpaTemplateService {
         return null;
     }
 
-    /** Filter catalog entries by platform, query, and sort */
-    filterCatalog(platform: string, query: string, sort: string): CatalogEntry[] {
+    /** Filter catalog entries by platform, query, sort, and admin access */
+    filterCatalog(platform: string, query: string, sort: string, isAdmin = false): CatalogEntry[] {
         let list = [...this._catalog()];
+
+        // Non-admin users only see published templates (or those without status for backward compat)
+        if (!isAdmin) {
+            list = list.filter(t => !t.status || t.status === 'published');
+        }
 
         if (platform !== 'All') {
             list = list.filter(t => t.platform === platform);

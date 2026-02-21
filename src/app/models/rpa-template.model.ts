@@ -20,6 +20,18 @@ export interface RpaTemplateStep {
     url?: string;
     value?: string;
     waitMs?: number;
+    /** Fallback selectors if primary fails */
+    fallbackSelectors?: string[];
+    /** JavaScript expression to evaluate in page context */
+    jsExpression?: string;
+    /** CSS selector to wait for before executing */
+    waitForSelector?: string;
+    /** Max wait time in ms */
+    timeout?: number;
+    /** Human-like delay range [min, max] in ms */
+    humanDelay?: [number, number];
+    /** Number of iterations for scroll/loop */
+    iterations?: number;
 }
 
 export interface RpaTemplateMetadata {
@@ -45,6 +57,16 @@ export interface RpaTemplateRequirements {
     extensions?: string[];
 }
 
+/** Template publication status */
+export type TemplateStatus = 'published' | 'draft' | 'deprecated';
+
+/** Changelog entry for template version history */
+export interface TemplateChangelogEntry {
+    version: string;
+    date: string;
+    changes: string;
+}
+
 export interface RpaTemplate {
     id: string;
     version: string;
@@ -54,6 +76,10 @@ export interface RpaTemplate {
     overview: string;
     steps: RpaTemplateStep[];
     variables: RpaTemplateVariable[];
+    /** Publication status — only 'published' shown in marketplace */
+    status?: TemplateStatus;
+    /** Version history */
+    changelog?: TemplateChangelogEntry[];
 }
 
 /** Platform color map for UI rendering (light mode) */
