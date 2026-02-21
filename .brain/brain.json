@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.1.2",
-        "updated_at": "2026-02-21T03:40:00+07:00"
+        "updated_at": "2026-02-21T13:37:00+07:00"
     },
     "project": {
         "name": "AnguLogin",
@@ -90,7 +90,9 @@
         "terms_page": "src/app/views/auth/terms/terms.ts",
         "privacy_page": "src/app/views/auth/privacy/privacy.ts",
         "oauth_server": "src-tauri/src/oauth.rs",
-        "main_nav": "src/app/views/components/main-nav/main-nav.ts"
+        "main_nav": "src/app/views/components/main-nav/main-nav.ts",
+        "my_templates": "src/app/views/pages/automation/my-templates/my-templates.ts",
+        "template_editor": "src/app/views/pages/automation/template-editor/template-editor.ts"
     },
     "security_audit": {
         "grade": "A-",
@@ -413,6 +415,20 @@
                 "10-section Terms: account, billing, acceptable use, IP, liability, termination",
                 "10-section Privacy: data collection, storage, sharing, user rights, GDPR, cookies",
                 "Public routes (no auth guard), cross-linked footer"
+            ]
+        },
+        {
+            "name": "Template Authoring (Phase 3)",
+            "status": "implemented",
+            "description": "Full CRUD editor for custom RPA automation templates with form and JSON modes",
+            "includes": [
+                "My Templates page: grid view with search, create, edit, duplicate, delete, import/export",
+                "Template Editor: form mode (metadata, steps reorder, variables, tags) + JSON mode toggle",
+                "Custom template CRUD in RpaTemplateService (localStorage, Firestore-ready)",
+                "Import JSON (with validation, 1MB limit) and export as .json file",
+                "Duplicate template with new ID, blank template scaffold",
+                "Sidebar navigation item + lazy-loaded routes",
+                "Tag sanitization (lowercase, alphanumeric only)"
             ]
         }
     ],
