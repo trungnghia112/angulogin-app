@@ -26,7 +26,7 @@ Module Automation gồm 4 tab chính trên sidebar:
 | Tab | Chức năng thực tế |
 |-----|-------------------|
 | **Marketplace** | Duyệt kho template → xem chi tiết → lưu về (nút "Save process") |
-| **Process** | Hiện danh sách template đã lưu. Có nút ▶ Play nhưng **hiện chưa hoạt động** (chưa nối logic). Chỉ dùng để xem/xoá template đã save |
+| **Process** | Hiện danh sách template đã lưu. Bấm ▶ Play → chuyển sang tab Task với dialog Create Task đã chọn sẵn template |
 | **Task** | **Đây là nơi chạy automation thật.** Bấm "Create Task" → chọn template + profile + browser → Start Task. Theo dõi realtime, xem logs, cancel task |
 | **My Templates** | Template do user tự tạo (chưa có template editor hoàn chỉnh) |
 
@@ -315,7 +315,6 @@ Lưu tại `~/Library/Application Support/AnguLogin/api_config.json`. Truyền q
 
 | Hạn chế | Mô tả |
 |---------|-------|
-| Nút ▶ Play trên trang Process | Chưa hoạt động — phải tạo task qua tab Task |
 | Nút "Save and create task" ở Marketplace | Hiện chỉ save, chưa tự navigate sang Create Task |
 | Template Editor | Chưa hoàn thiện — tạo template phức tạp cần hiểu JSON |
 | Chỉ macOS | App desktop chỉ chạy trên macOS |
