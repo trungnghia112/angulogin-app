@@ -1,6 +1,6 @@
 export const environment = {
     production: false,
-    useEmulators: true,
+    useEmulators: false,
     firebase: {
         projectId: 'angulogin-com',
         appId: '1:206038392526:web:a3a11143f93f96ced5ba9f',
