@@ -71,33 +71,47 @@ pub async fn rpa_launch(
                 let lines: Vec<&str> = content.trim().lines().collect();
                 if let Some(port_str) = lines.first() {
                     if let Ok(port) = port_str.trim().parse::<u16>() {
-                        // Fetch the WebSocket debugger URL from /json/version
-                        let version_url = format!("http://127.0.0.1:{}/json/version", port);
-                        
                         // Give Chrome a moment to fully initialize the debugger
                         tokio::time::sleep(std::time::Duration::from_millis(500)).await;
 
                         let client = reqwest::Client::new();
+
+                        // CRITICAL: Fetch PAGE-LEVEL target from /json (not /json/version).
+                        // /json/version returns the browser-level endpoint which does NOT
+                        // support Page.enable, DOM, Network, etc.
+                        // /json returns a list of all targets (pages, service workers, etc.)
+                        let targets_url = format!("http://127.0.0.1:{}/json", port);
                         let resp = client
-                            .get(&version_url)
+                            .get(&targets_url)
                             .timeout(std::time::Duration::from_secs(5))
                             .send()
                             .await
-                            .map_err(|e| format!("Failed to query CDP version: {}", e))?;
+                            .map_err(|e| format!("Failed to query CDP targets: {}", e))?;
 
-                        let version_info: serde_json::Value = resp
+                        let targets: Vec<serde_json::Value> = resp
                             .json()
                             .await
-                            .map_err(|e| format!("Failed to parse CDP version: {}", e))?;
+                            .map_err(|e| format!("Failed to parse CDP targets: {}", e))?;
 
-                        let ws_url = version_info
+                        // Find the first "page" type target
+                        let page_target = targets
+                            .iter()
+                            .find(|t| {
+                                t.get("type")
+                                    .and_then(|v| v.as_str())
+                                    .map(|s| s == "page")
+                                    .unwrap_or(false)
+                            })
+                            .ok_or("No page target found in CDP targets")?;
+
+                        let ws_url = page_target
                             .get("webSocketDebuggerUrl")
                             .and_then(|v| v.as_str())
-                            .ok_or("webSocketDebuggerUrl not found")?
+                            .ok_or("webSocketDebuggerUrl not found in page target")?
                             .to_string();
 
                         log::info!(
-                            "[RPA] Chrome launched with CDP on port {} — {}",
+                            "[RPA] Chrome launched with CDP on port {} — page target: {}",
                             port,
                             ws_url
                         );
