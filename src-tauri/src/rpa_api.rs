@@ -192,6 +192,10 @@ async fn run_task(
 
     add_log(&task_id, 0, "info", &format!("CDP connected: {}", ws_url)).await;
 
+    // Inject anti-detection JS patches
+    inject_anti_detection_js(&session_id).await;
+    add_log(&task_id, 0, "info", "Anti-detection patches injected").await;
+
     // Execute steps
     for (i, step) in steps.iter().enumerate() {
         // Check cancellation
@@ -220,9 +224,11 @@ async fn run_task(
             return;
         }
 
-        // Human delay between steps
+        // Human delay between steps (gaussian distribution for realistic timing)
         if let Some([min, max]) = step.human_delay {
-            let delay = min + (rand::random::<u64>() % (max - min + 1));
+            let mean = (min + max) / 2;
+            let stddev = (max - min) / 4; // ~95% of values within [min, max]
+            let delay = gaussian_delay(mean, stddev.max(1));
             tokio::time::sleep(std::time::Duration::from_millis(delay)).await;
         }
     }
@@ -292,13 +298,19 @@ async fn execute_step(
                 crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
             } else {
                 let sel = resolve_selector(session_id, step, variables).await;
-                if let Some(sel) = sel {
-                    let js = format!("document.querySelector('{}')?.click()", sel);
-                    let params = serde_json::json!({
-                        "expression": js,
-                        "returnByValue": true,
-                    });
-                    crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
+                if let Some(ref sel) = sel {
+                    // Human-like click via CDP Input events
+                    if let Some((x, y)) = get_element_center(session_id, sel).await {
+                        human_click_at(session_id, x, y).await?;
+                    } else {
+                        // Fallback to JS click if coordinates unavailable
+                        let js = format!("document.querySelector('{}')?.click()", sel);
+                        let params = serde_json::json!({
+                            "expression": js,
+                            "returnByValue": true,
+                        });
+                        crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
+                    }
                 }
             }
             Ok(())
@@ -308,17 +320,37 @@ async fn execute_step(
             let value = replace_variables(value, variables);
             let sel = resolve_selector(session_id, step, variables).await;
             if let Some(sel) = sel {
-                // Focus + set value + fire input event + submit on Enter
-                let js = format!(
-                    r#"(() => {{ const el = document.querySelector('{sel}'); if (el) {{ el.focus(); el.value = '{val}'; el.dispatchEvent(new Event('input', {{ bubbles: true }})); el.dispatchEvent(new Event('change', {{ bubbles: true }})); el.dispatchEvent(new KeyboardEvent('keydown', {{ key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }})); return 'typed'; }} return 'not found'; }})()"#,
-                    sel = sel.replace('\'', "\\'"),
-                    val = value.replace('\'', "\\'"),
+                // Click to focus the input field (human-like)
+                if let Some((x, y)) = get_element_center(session_id, &sel).await {
+                    human_click_at(session_id, x, y).await?;
+                    tokio::time::sleep(std::time::Duration::from_millis(gaussian_delay(200, 80))).await;
+                } else {
+                    // Fallback: JS focus
+                    let focus_js = format!("document.querySelector('{}')?.focus()", sel.replace('\'', "\\'"));
+                    let params = serde_json::json!({
+                        "expression": focus_js,
+                        "returnByValue": true,
+                    });
+                    crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
+                }
+
+                // Clear existing value
+                let clear_js = format!(
+                    "(() => {{ const el = document.querySelector('{}'); if (el) {{ el.value = ''; el.dispatchEvent(new Event('input', {{ bubbles: true }})); }} }})()",
+                    sel.replace('\'', "\\'")
                 );
                 let params = serde_json::json!({
-                    "expression": js,
+                    "expression": clear_js,
                     "returnByValue": true,
                 });
                 crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
+
+                // Type character by character (human-like)
+                human_type(session_id, &value).await?;
+
+                // Press Enter to submit
+                tokio::time::sleep(std::time::Duration::from_millis(gaussian_delay(300, 100))).await;
+                dispatch_key_press(session_id, "Enter", "Enter", 13).await?;
             }
             Ok(())
         }
@@ -332,16 +364,30 @@ async fn execute_step(
                 });
                 crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
             } else {
-                // Default: scroll down by viewport height
+                // Human-like scroll: randomized distance, speed, occasional scroll-up
                 let iterations = step.iterations.unwrap_or(3);
-                for _ in 0..iterations {
-                    let js = "window.scrollBy(0, window.innerHeight * 0.8)";
+                for i in 0..iterations {
+                    // 15% chance to scroll up slightly before scrolling down (natural behavior)
+                    if i > 0 && rand::random::<f64>() < 0.15 {
+                        let up_amount = 50.0 + rand::random::<f64>() * 150.0;
+                        let js = format!("window.scrollBy({{ top: -{}, behavior: 'smooth' }})", up_amount as i64);
+                        let params = serde_json::json!({
+                            "expression": js,
+                            "returnByValue": true,
+                        });
+                        crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
+                        tokio::time::sleep(std::time::Duration::from_millis(gaussian_delay(400, 150))).await;
+                    }
+                    // Random scroll amount: 50-110% of viewport height
+                    let factor = 0.5 + rand::random::<f64>() * 0.6;
+                    let js = format!("window.scrollBy({{ top: Math.round(window.innerHeight * {}), behavior: 'smooth' }})", factor);
                     let params = serde_json::json!({
                         "expression": js,
                         "returnByValue": true,
                     });
                     crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
-                    tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+                    // Gaussian delay between scrolls: mean=1200ms, stddev=400ms
+                    tokio::time::sleep(std::time::Duration::from_millis(gaussian_delay(1200, 400))).await;
                 }
             }
             Ok(())
@@ -427,6 +473,230 @@ fn replace_variables(text: &str, variables: &HashMap<String, serde_json::Value>)
         result = result.replace(&placeholder, &replacement);
     }
     result
+}
+
+// ---------------------------------------------------------------------------
+// Anti-Bot: Human-like behavior helpers
+// ---------------------------------------------------------------------------
+
+/// Gaussian random delay (ms) using Box-Muller transform.
+/// Returns a value clamped between min_ms and max_ms.
+fn gaussian_delay(mean_ms: u64, stddev_ms: u64) -> u64 {
+    let u1: f64 = rand::random::<f64>().max(1e-10);
+    let u2: f64 = rand::random::<f64>();
+    let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
+    let value = mean_ms as f64 + z * stddev_ms as f64;
+    value.round().max(20.0) as u64
+}
+
+/// Human-like typing via CDP Input.dispatchKeyEvent (char by char).
+/// Includes random delay per keystroke and occasional typo simulation.
+async fn human_type(session_id: &str, text: &str) -> Result<(), String> {
+    for ch in text.chars() {
+        // 5% chance of typo: type wrong char then backspace
+        if rand::random::<f64>() < 0.05 && ch.is_alphabetic() {
+            let wrong = if ch.is_uppercase() {
+                ((rand::random::<u8>() % 26) + b'A') as char
+            } else {
+                ((rand::random::<u8>() % 26) + b'a') as char
+            };
+            dispatch_key_char(session_id, wrong).await?;
+            tokio::time::sleep(std::time::Duration::from_millis(gaussian_delay(80, 30))).await;
+            dispatch_key_press(session_id, "Backspace", "Backspace", 8).await?;
+            tokio::time::sleep(std::time::Duration::from_millis(gaussian_delay(60, 20))).await;
+        }
+
+        dispatch_key_char(session_id, ch).await?;
+        // Random delay between keystrokes: mean=90ms, stddev=35ms
+        tokio::time::sleep(std::time::Duration::from_millis(gaussian_delay(90, 35))).await;
+    }
+    Ok(())
+}
+
+/// Dispatch a single character keystroke via CDP Input.dispatchKeyEvent
+async fn dispatch_key_char(session_id: &str, ch: char) -> Result<(), String> {
+    let text = ch.to_string();
+    // keyDown
+    let params = serde_json::json!({
+        "type": "keyDown",
+        "text": &text,
+        "unmodifiedText": &text,
+        "key": &text,
+    });
+    crate::cdp::send_command(session_id, "Input.dispatchKeyEvent", params).await?;
+    // char
+    let params = serde_json::json!({
+        "type": "char",
+        "text": &text,
+        "unmodifiedText": &text,
+        "key": &text,
+    });
+    crate::cdp::send_command(session_id, "Input.dispatchKeyEvent", params).await?;
+    // keyUp
+    let params = serde_json::json!({
+        "type": "keyUp",
+        "text": &text,
+        "unmodifiedText": &text,
+        "key": &text,
+    });
+    crate::cdp::send_command(session_id, "Input.dispatchKeyEvent", params).await?;
+    Ok(())
+}
+
+/// Dispatch a special key press (Enter, Backspace, Tab, etc.)
+async fn dispatch_key_press(session_id: &str, key: &str, code: &str, key_code: u32) -> Result<(), String> {
+    let params = serde_json::json!({
+        "type": "rawKeyDown",
+        "key": key,
+        "code": code,
+        "windowsVirtualKeyCode": key_code,
+        "nativeVirtualKeyCode": key_code,
+    });
+    crate::cdp::send_command(session_id, "Input.dispatchKeyEvent", params).await?;
+    let params = serde_json::json!({
+        "type": "keyUp",
+        "key": key,
+        "code": code,
+        "windowsVirtualKeyCode": key_code,
+        "nativeVirtualKeyCode": key_code,
+    });
+    crate::cdp::send_command(session_id, "Input.dispatchKeyEvent", params).await?;
+    Ok(())
+}
+
+/// Get element center coordinates from a CSS selector.
+/// Returns (x, y) or None if element not found.
+async fn get_element_center(session_id: &str, selector: &str) -> Option<(f64, f64)> {
+    let js = format!(
+        r#"(() => {{ const el = document.querySelector('{}'); if (!el) return null; const r = el.getBoundingClientRect(); return {{ x: r.x + r.width/2, y: r.y + r.height/2, w: r.width, h: r.height }}; }})()"#,
+        selector.replace('\'', "\\'")
+    );
+    let params = serde_json::json!({
+        "expression": js,
+        "returnByValue": true,
+    });
+    let resp = crate::cdp::send_command(session_id, "Runtime.evaluate", params).await.ok()?;
+    let value = resp.get("result")?.get("value")?;
+    let x = value.get("x")?.as_f64()?;
+    let y = value.get("y")?.as_f64()?;
+    let w = value.get("w")?.as_f64().unwrap_or(10.0);
+    let h = value.get("h")?.as_f64().unwrap_or(10.0);
+    // Add random offset within element bounds (±30% of dimensions)
+    let offset_x = (rand::random::<f64>() - 0.5) * w * 0.3;
+    let offset_y = (rand::random::<f64>() - 0.5) * h * 0.3;
+    Some((x + offset_x, y + offset_y))
+}
+
+/// Human-like click at coordinates via CDP Input.dispatchMouseEvent.
+/// Simulates: mouseMoved → mousePressed → (delay) → mouseReleased
+async fn human_click_at(session_id: &str, x: f64, y: f64) -> Result<(), String> {
+    // Mouse move to target (with small intermediate moves)
+    mouse_jitter(session_id, x, y).await;
+
+    // Move to target
+    let params = serde_json::json!({
+        "type": "mouseMoved",
+        "x": x as i64,
+        "y": y as i64,
+    });
+    crate::cdp::send_command(session_id, "Input.dispatchMouseEvent", params).await?;
+    tokio::time::sleep(std::time::Duration::from_millis(gaussian_delay(60, 20))).await;
+
+    // Press
+    let params = serde_json::json!({
+        "type": "mousePressed",
+        "x": x as i64,
+        "y": y as i64,
+        "button": "left",
+        "clickCount": 1,
+    });
+    crate::cdp::send_command(session_id, "Input.dispatchMouseEvent", params).await?;
+    // Human press-release delay: 50-120ms
+    tokio::time::sleep(std::time::Duration::from_millis(gaussian_delay(70, 25))).await;
+
+    // Release
+    let params = serde_json::json!({
+        "type": "mouseReleased",
+        "x": x as i64,
+        "y": y as i64,
+        "button": "left",
+        "clickCount": 1,
+    });
+    crate::cdp::send_command(session_id, "Input.dispatchMouseEvent", params).await?;
+    Ok(())
+}
+
+/// Inject 1-3 small random mouse movements near target area (simulates natural jitter).
+async fn mouse_jitter(session_id: &str, target_x: f64, target_y: f64) {
+    let moves = 1 + (rand::random::<u8>() % 3) as usize;
+    for i in 0..moves {
+        // Interpolate from random offset toward target
+        let progress = (i + 1) as f64 / (moves + 1) as f64;
+        let jx = target_x + (rand::random::<f64>() - 0.5) * 80.0 * (1.0 - progress);
+        let jy = target_y + (rand::random::<f64>() - 0.5) * 80.0 * (1.0 - progress);
+        let params = serde_json::json!({
+            "type": "mouseMoved",
+            "x": jx.max(0.0) as i64,
+            "y": jy.max(0.0) as i64,
+        });
+        let _ = crate::cdp::send_command(session_id, "Input.dispatchMouseEvent", params).await;
+        tokio::time::sleep(std::time::Duration::from_millis(gaussian_delay(30, 15))).await;
+    }
+}
+
+/// Inject anti-detection JS at the start of each task.
+/// Patches detectable CDP/automation artifacts.
+async fn inject_anti_detection_js(session_id: &str) {
+    let js = r#"
+    (() => {
+        // 1. Force document.hasFocus() to always return true
+        if (document.hasFocus.toString().includes('native code')) {
+            Object.defineProperty(Document.prototype, 'hasFocus', {
+                value: () => true,
+                configurable: false,
+                writable: false
+            });
+        }
+
+        // 2. Mask CDP detection via Error.stack
+        const origError = Error;
+        window.Error = class extends origError {
+            constructor(...args) {
+                super(...args);
+                if (this.stack) {
+                    this.stack = this.stack
+                        .split('\n')
+                        .filter(l => !l.includes('__puppeteer') && !l.includes('__cdp'))
+                        .join('\n');
+                }
+            }
+        };
+        window.Error.prototype = origError.prototype;
+
+        // 3. Fuzz Performance.now() precision (prevents timing fingerprinting)
+        const origNow = Performance.prototype.now;
+        Performance.prototype.now = function() {
+            return origNow.call(this) + (Math.random() * 0.1);
+        };
+
+        // 4. Prevent detection via window.chrome.runtime
+        if (!window.chrome) window.chrome = {};
+        if (!window.chrome.runtime) window.chrome.runtime = {};
+
+        // 5. Override Notification.permission to look normal
+        try {
+            Object.defineProperty(Notification, 'permission', {
+                get: () => 'default',
+                configurable: true
+            });
+        } catch(e) {}
+    })();
+    "#;
+    let params = serde_json::json!({
+        "expression": js,
+        "returnByValue": true,
+    });
+    let _ = crate::cdp::send_command(session_id, "Runtime.evaluate", params).await;
 }
 
 async fn resolve_ws_url(port: u16) -> Result<String, String> {
