@@ -75,6 +75,36 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Do not assume globals like (`new Date()`) are available.
 - Do not write arrow functions in templates (they are not supported).
 
+### Template Method Calls → Pipes (CRITICAL)
+
+**Rule: NEVER call component methods in templates for data transformation/formatting.**  
+Angular re-evaluates method calls on every change detection cycle. Use pipes instead — they have built-in caching (pure pipe only re-evaluates when input changes).
+
+**Decision Process for template method calls:**
+
+| Scenario | Solution | Example |
+|----------|----------|---------|
+| Format/transform value (string→string) | **Dedicated pipe** | `{{ bytes \| fileSize }}`, `{{ mins \| duration }}` |
+| Pure lookup from Record/map | **`LookupPipe`** (generic) | `{{ type \| lookup:typeIconMap:'default' }}` |
+| Method depends on external state (DOM, theme, time) | **Keep as method** | `getPlatformColor()` checks dark mode |
+| Complex object input with custom cache | **Keep as method** | `getProfileTooltip()` with own Map cache |
+| Called once / behind `@if` / rarely rendered | **Keep as method** | `getCurlCommand()` in hidden tab |
+
+**Existing custom pipes** (in `src/app/core/pipes/`):
+- `LookupPipe` (`lookup`) — generic Record/function lookup
+- `DurationPipe` (`duration`) — minutes → "2h 30m"
+- `TimeAgoPipe` (`timeAgo`) — timestamp → "5m ago", "2w ago"
+- `FileSizePipe` (`fileSize`) — bytes → "500 MB", "1.2 GB"
+- `StatusSeverityPipe` (`statusSeverity`) — status → PrimeNG severity
+
+**When refactoring template methods — MANDATORY process:**
+1. **Scan ALL** method calls in templates first: `grep -rn 'get[A-Z]\|format[A-Z]' --include='*.html'`
+2. **Categorize** every match (pure lookup? format? theme-dependent? cached?)
+3. **Design generic solution first** before creating individual pipes
+4. **Verify purity** — read the method implementation before converting to pipe. Check: side effects? external state (DOM, theme)? If impure → keep as method
+5. **Name uniquely** — avoid generic names like `map` that collide with common functions
+
+
 ## Services
 
 - Design services around a single responsibility
