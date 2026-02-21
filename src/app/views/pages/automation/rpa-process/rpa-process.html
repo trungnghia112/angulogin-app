@@ -75,7 +75,7 @@
                 <td class="px-6 py-3 text-right">
                     <div class="flex items-center justify-end gap-1">
                         <p-button icon="pi pi-play" [rounded]="true" [text]="true" severity="success" size="small"
-                            pTooltip="Run" tooltipPosition="top" />
+                            pTooltip="Run" tooltipPosition="top" (click)="runProcess(entry)" />
                         <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
                             pTooltip="Remove" tooltipPosition="top" (click)="removeProcess(entry)" />
                     </div>

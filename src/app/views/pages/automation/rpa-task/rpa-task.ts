@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
@@ -23,10 +24,11 @@ import { RpaTaskExecution, RpaTemplate, RpaTaskStatus } from '../../../../models
         DialogModule, SelectModule, ProgressBarModule, FormsModule,
     ],
 })
-export class RpaTask {
+export class RpaTask implements OnInit {
     private readonly executor = inject(RpaExecutorService);
     private readonly templateService = inject(RpaTemplateService);
     private readonly profileService = inject(ProfileService);
+    private readonly route = inject(ActivatedRoute);
 
     // --- Tabs & Filters ---
     protected readonly activeTab = signal<'all' | 'active' | 'history'>('all');
@@ -91,6 +93,19 @@ export class RpaTask {
     });
 
     // --- Actions ---
+
+    ngOnInit(): void {
+        this.route.queryParams.subscribe(params => {
+            const templateId = params['templateId'];
+            if (templateId) {
+                this.selectedTemplateId.set(templateId);
+                this.selectedProfilePath.set(null);
+                this.selectedBrowser.set('chrome');
+                this.onTemplateSelected();
+                this.showCreateDialog.set(true);
+            }
+        });
+    }
 
     selectTab(tab: 'all' | 'active' | 'history'): void {
         this.activeTab.set(tab);

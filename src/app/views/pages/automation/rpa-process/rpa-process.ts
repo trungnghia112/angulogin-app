@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -16,6 +17,7 @@ import { RpaTemplateService, CatalogEntry } from '../../../../services/rpa-templ
 })
 export class RpaProcess implements OnInit {
     private readonly templateService = inject(RpaTemplateService);
+    private readonly router = inject(Router);
 
     protected readonly searchQuery = signal('');
 
@@ -39,6 +41,12 @@ export class RpaProcess implements OnInit {
 
     removeProcess(entry: CatalogEntry): void {
         this.templateService.removeTemplate(entry.id);
+    }
+
+    runProcess(entry: CatalogEntry): void {
+        this.router.navigate(['/automation/task'], {
+            queryParams: { templateId: entry.id },
+        });
     }
 
     formatDate(dateStr: string): string {
