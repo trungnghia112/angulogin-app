@@ -311,21 +311,26 @@ export class RpaTemplateService {
             ],
         };
 
-        // 1. Push full template
-        await setDoc(
-            doc(this.firestore, 'rpa-templates', template.id),
-            publishedTemplate,
-        );
+        try {
+            // 1. Push full template
+            await setDoc(
+                doc(this.firestore, 'rpa-templates', template.id),
+                publishedTemplate,
+            );
 
-        // 2. Update catalog index
-        await this.updateCatalogIndex(publishedTemplate);
+            // 2. Update catalog index
+            await this.updateCatalogIndex(publishedTemplate);
 
-        // 3. Update local cache
-        this.detailCache.set(template.id, {
-            version: newVersion,
-            data: publishedTemplate,
-        });
-        this.saveDetailCacheToStorage();
+            // 3. Update local cache
+            this.detailCache.set(template.id, {
+                version: newVersion,
+                data: publishedTemplate,
+            });
+            this.saveDetailCacheToStorage();
+        } catch (err) {
+            console.error(`[RpaTemplateService] Failed to publish template ${template.id}:`, err);
+            throw err;
+        }
     }
 
     /**
@@ -339,10 +344,10 @@ export class RpaTemplateService {
         // Determine status: templates with real selectors/JS = published, others = draft
         for (const t of templates) {
             const hasImpl = t.steps.some(s => s.selector || s.jsExpression || s.url || s.waitMs);
-            const status = hasImpl ? 'published' : 'draft';
+            const status: TemplateStatus = hasImpl ? 'published' : 'draft';
             const seeded: RpaTemplate = {
                 ...t,
-                status: status as 'published' | 'draft',
+                status,
             };
 
             await setDoc(doc(this.firestore, 'rpa-templates', t.id), seeded);
@@ -575,20 +580,8 @@ export class RpaTemplateService {
             const response = await fetch('assets/rpa-templates/templates.json');
             if (!response.ok) return;
             const templates: RpaTemplate[] = await response.json();
-            // Convert to catalog entries
-            const entries: CatalogEntry[] = templates.map(t => ({
-                id: t.id,
-                title: t.metadata.title,
-                description: t.metadata.description,
-                platform: t.metadata.platform,
-                platformIcon: t.metadata.platformIcon,
-                author: t.metadata.author,
-                tags: t.metadata.tags,
-                isPremium: t.metadata.isPremium,
-                usageCount: t.stats.usageCount,
-                version: t.version,
-                updatedAt: t.metadata.updatedAt,
-            }));
+            // Reuse templateToCatalogEntry to avoid duplication
+            const entries: CatalogEntry[] = templates.map(t => this.templateToCatalogEntry(t));
             this._catalog.set(entries);
             this._loaded.set(true);
             // Also populate detail cache

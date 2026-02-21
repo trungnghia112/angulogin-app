@@ -1,7 +1,8 @@
 /**
- * RPA Template Schema v1.0
+ * RPA Template Schema v2.0
  * Standard format for all RPA automation templates.
  * Templates are stored as JSON and loaded dynamically.
+ * v2.0: Added status, changelog, extended step fields.
  */
 
 export interface RpaTemplateVariable {
@@ -119,31 +120,9 @@ export const RPA_PLATFORMS = [
 /** Status of an RPA task execution */
 export type RpaTaskStatus = 'pending' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
 
-/** Enhanced step with executable details */
-export interface ExecutableStep {
-    order: number;
+/** Enhanced step with stricter action typing for the executor */
+export interface ExecutableStep extends RpaTemplateStep {
     action: 'navigate' | 'click' | 'type' | 'scroll' | 'wait' | 'extract' | 'loop' | 'ai' | 'export';
-    description: string;
-    /** URL for navigate action */
-    url?: string;
-    /** Primary CSS selector */
-    selector?: string;
-    /** Fallback selectors if primary fails */
-    fallbackSelectors?: string[];
-    /** Value to type or use */
-    value?: string;
-    /** JavaScript expression to evaluate in page context */
-    jsExpression?: string;
-    /** CSS selector to wait for before executing this step */
-    waitForSelector?: string;
-    /** Max wait time in ms (default: 10000) */
-    timeout?: number;
-    /** Fixed wait in ms */
-    waitMs?: number;
-    /** Human-like delay range [min, max] in ms (default: [2000, 5000]) */
-    humanDelay?: [number, number];
-    /** Number of iterations for loop action */
-    iterations?: number;
 }
 
 /** Log entry from task execution */
