@@ -899,7 +899,8 @@
 
     <!-- Feature 12.2: Mass Proxy Change Dialog -->
     <p-dialog id="home-mass-proxy-dialog" header="Change Proxy for Selected Profiles" [(visible)]="showMassProxyDialog"
-        [modal]="true" [style]="{ width: 'min(480px, 95vw)' }" [draggable]="false" [resizable]="false">
+        [modal]="true" [style]="{ width: 'min(480px, 95vw)' }" [draggable]="false" [resizable]="false"
+        [blockScroll]="true" [focusOnShow]="false">
         <div id="home-mass-proxy-content" class="py-2">
             <p class="text-sm text-muted-color mb-4">
                 Apply proxy to {{ selectedProfiles().length }} selected profile(s).
@@ -928,7 +929,8 @@
                     Proxy</label>
                 <p-select id="home-mass-proxy-select" [options]="proxyService.proxies()"
                     [ngModel]="massProxySelectedId()" (ngModelChange)="massProxySelectedId.set($event)"
-                    optionLabel="name" optionValue="id" placeholder="Choose a saved proxy..." class="w-full">
+                    optionLabel="name" optionValue="id" placeholder="Choose a saved proxy..." [fluid]="true"
+                    appendTo="body">
                     <ng-template pTemplate="selectedItem" let-item>
                         @if (item) {
                         <div class="flex items-center gap-2">
@@ -976,7 +978,8 @@
 
     <!-- Mass Move to Folder Dialog -->
     <p-dialog id="home-mass-move-dialog" header="Move to Folder" [visible]="showMassMoveDialog()"
-        (visibleChange)="showMassMoveDialog.set($event)" [modal]="true" [style]="{ width: '400px' }" [closable]="true">
+        (visibleChange)="showMassMoveDialog.set($event)" [modal]="true" [style]="{ width: '400px' }" [closable]="true"
+        [draggable]="false" [blockScroll]="true" [focusOnShow]="false">
         <div class="flex flex-col gap-3 pt-2">
             <p class="text-sm text-muted-color">
                 Move {{ selectedProfiles().length }} selected profile(s) to:
@@ -1102,7 +1105,8 @@
 
     <!-- Bulk Create Dialog -->
     <p-dialog id="home-bulk-create-dialog" header="Bulk Create Profiles" [(visible)]="showBulkCreateDialog"
-        [modal]="true" [style]="{ width: '440px' }" [closable]="true">
+        [modal]="true" [style]="{ width: '440px' }" [closable]="true" [draggable]="false" [blockScroll]="true"
+        [focusOnShow]="false">
         <div class="flex flex-col gap-4 pt-2">
             <div>
                 <label for="home-bulk-prefix" class="block text-xs font-medium text-color mb-2">Name Prefix</label>
