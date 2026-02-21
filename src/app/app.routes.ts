@@ -69,6 +69,16 @@ export const routes: Routes = [
                         loadComponent: () =>
                             import('./views/pages/automation/rpa-task/rpa-task').then((m) => m.RpaTask),
                     },
+                    {
+                        path: 'my-templates',
+                        loadComponent: () =>
+                            import('./views/pages/automation/my-templates/my-templates').then((m) => m.MyTemplates),
+                    },
+                    {
+                        path: 'template-editor/:id',
+                        loadComponent: () =>
+                            import('./views/pages/automation/template-editor/template-editor').then((m) => m.TemplateEditor),
+                    },
                 ],
             },
             {

@@ -296,6 +296,14 @@ const data = { description: form.value.description || null };
     - Rust command adds new param → Frontend `LaunchBrowserOptions` (or equivalent interface) MUST include it.
     - New `BrowserType` or similar union type → Rust `launch_browser` match + `list_available_browsers` MUST be updated.
     - **Never assume the backend already handles a new value just because the TypeScript type allows it.**
+18. **Mandatory Self-Audit (CRITICAL)**: After completing any feature/code task, ALWAYS perform a self-audit (following `/audit` workflow principles) before marking the task as done. Only conclude a task when:
+    - Build passes with ZERO warnings
+    - Code follows ALL conventions in this file (dark mode, naming, host class, signals, etc.)
+    - No dead code, unused imports, or `console.log` left behind
+    - Security best practices applied (input validation, sanitization, error handling)
+    - Performance rules followed (no unnecessary re-renders, proper cleanup)
+    - Refactor and optimize code BEFORE finishing — never ship sloppy code
+    - Always read `.gemini/GEMINI.md` BEFORE writing any code
 
 ## ⚡ Performance Rules (MANDATORY)
 

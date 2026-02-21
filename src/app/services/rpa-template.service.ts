@@ -35,6 +35,7 @@ interface CachedDetail {
 const CATALOG_CACHE_KEY = 'rpa-catalog-cache';
 const DETAIL_CACHE_KEY = 'rpa-detail-cache';
 const SAVED_IDS_KEY = 'rpa-saved-template-ids';
+const CUSTOM_TEMPLATES_KEY = 'rpa-custom-templates';
 
 /**
  * RPA Template Service — Firestore 2-Tier Architecture
@@ -79,9 +80,155 @@ export class RpaTemplateService {
         return this._catalog().filter(t => ids.has(t.id));
     });
 
+    /** User's custom templates (localStorage, Firestore-ready later) */
+    private readonly _customTemplates = signal<RpaTemplate[]>([]);
+    readonly customTemplates = this._customTemplates.asReadonly();
+
     constructor() {
         this.loadSavedIds();
         this.loadDetailCacheFromStorage();
+        this.loadCustomTemplates();
+    }
+
+    // --- Custom Template CRUD ---
+
+    /** Create or update a custom template */
+    saveCustomTemplate(template: RpaTemplate): void {
+        const templates = [...this._customTemplates()];
+        const idx = templates.findIndex(t => t.id === template.id);
+        const now = new Date().toISOString();
+        const sanitized: RpaTemplate = {
+            ...template,
+            metadata: {
+                ...template.metadata,
+                title: template.metadata.title.trim().slice(0, 100),
+                description: template.metadata.description.trim().slice(0, 500),
+                updatedAt: now,
+                createdAt: idx === -1 ? now : template.metadata.createdAt,
+            },
+        };
+        if (idx >= 0) {
+            templates[idx] = sanitized;
+        } else {
+            templates.push(sanitized);
+        }
+        this._customTemplates.set(templates);
+        this.persistCustomTemplates();
+    }
+
+    /** Delete a custom template by ID */
+    deleteCustomTemplate(id: string): void {
+        const templates = this._customTemplates().filter(t => t.id !== id);
+        this._customTemplates.set(templates);
+        this.persistCustomTemplates();
+    }
+
+    /** Get a single custom template by ID */
+    getCustomTemplate(id: string): RpaTemplate | null {
+        return this._customTemplates().find(t => t.id === id) ?? null;
+    }
+
+    /** Duplicate a template (marketplace or custom) with a new ID */
+    duplicateTemplate(source: RpaTemplate): RpaTemplate {
+        const now = new Date().toISOString();
+        return {
+            ...source,
+            id: this.generateId(),
+            version: '1.0',
+            metadata: {
+                ...source.metadata,
+                title: `${source.metadata.title} (Copy)`.slice(0, 100),
+                createdAt: now,
+                updatedAt: now,
+                author: 'Me',
+            },
+            stats: { usageCount: 0 },
+        };
+    }
+
+    /** Create a blank template scaffold */
+    createBlankTemplate(): RpaTemplate {
+        const now = new Date().toISOString();
+        return {
+            id: this.generateId(),
+            version: '1.0',
+            metadata: {
+                title: '',
+                description: '',
+                longDescription: '',
+                platform: 'Other',
+                platformIcon: 'pi-cog',
+                author: 'Me',
+                tags: [],
+                createdAt: now,
+                updatedAt: now,
+                isPremium: false,
+            },
+            stats: { usageCount: 0 },
+            requirements: { note: '' },
+            overview: '',
+            steps: [],
+            variables: [],
+        };
+    }
+
+    /** Export a template as a downloadable JSON file */
+    exportTemplateAsJson(template: RpaTemplate): void {
+        const json = JSON.stringify(template, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${template.metadata.title.replace(/[^a-zA-Z0-9_-]/g, '_') || 'template'}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    /** Import a template from a JSON file. Returns null on invalid input. */
+    async importTemplateFromFile(file: File): Promise<RpaTemplate | null> {
+        if (file.size > 1_048_576) return null; // 1MB limit
+        try {
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+            if (!this.isValidTemplate(parsed)) return null;
+            // Assign new ID to avoid collisions
+            parsed.id = this.generateId();
+            parsed.metadata.createdAt = new Date().toISOString();
+            parsed.metadata.updatedAt = new Date().toISOString();
+            return parsed as RpaTemplate;
+        } catch {
+            return null;
+        }
+    }
+
+    /** Basic validation for imported JSON */
+    private isValidTemplate(obj: unknown): boolean {
+        if (!obj || typeof obj !== 'object') return false;
+        const t = obj as Record<string, unknown>;
+        if (!t['metadata'] || typeof t['metadata'] !== 'object') return false;
+        const m = t['metadata'] as Record<string, unknown>;
+        if (typeof m['title'] !== 'string' || !m['title']) return false;
+        if (!Array.isArray(t['steps'])) return false;
+        if (!Array.isArray(t['variables'])) return false;
+        return true;
+    }
+
+    /** Generate a unique ID for custom templates */
+    private generateId(): string {
+        return `custom_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    private loadCustomTemplates(): void {
+        try {
+            const raw = localStorage.getItem(CUSTOM_TEMPLATES_KEY);
+            if (raw) this._customTemplates.set(JSON.parse(raw));
+        } catch { /* ignore corrupted data */ }
+    }
+
+    private persistCustomTemplates(): void {
+        try {
+            localStorage.setItem(CUSTOM_TEMPLATES_KEY, JSON.stringify(this._customTemplates()));
+        } catch { /* quota exceeded */ }
     }
 
     /**

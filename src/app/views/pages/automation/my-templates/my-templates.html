@@ -1,0 +1,134 @@
+<!-- Header Bar -->
+<div id="my-templates-header"
+    class="flex items-center justify-between px-6 h-[var(--spacing-header)] shrink-0 border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
+    <div class="flex items-center gap-4">
+        <h1 id="my-templates-title" class="text-xl font-bold text-color m-0">My Templates</h1>
+
+        <!-- Search -->
+        <p-iconfield>
+            <p-inputicon class="pi pi-search" />
+            <input id="my-templates-search" type="text" pInputText placeholder="Search templates..."
+                [value]="searchQuery()" (input)="onSearch($event)" class="w-64" />
+        </p-iconfield>
+    </div>
+    <div class="flex items-center gap-2">
+        <span id="my-templates-count" class="text-sm text-muted-color mr-2">
+            {{ templateCount() }} template{{ templateCount() !== 1 ? 's' : '' }}
+        </span>
+
+        <!-- Import -->
+        <input id="my-templates-import-input" type="file" accept=".json" class="hidden"
+            (change)="onImportFile($event)" #importInput />
+        <p-button id="my-templates-import-btn" icon="pi pi-upload" label="Import" severity="secondary"
+            [outlined]="true" size="small" (click)="importInput.click()" pTooltip="Import JSON template"
+            tooltipPosition="bottom" />
+
+        <!-- Create New -->
+        <p-button id="my-templates-create-btn" icon="pi pi-plus" label="Create" severity="primary" size="small"
+            (click)="createNew()" />
+    </div>
+</div>
+
+<!-- Template Grid -->
+<div id="my-templates-grid" class="flex-1 overflow-y-auto p-6 bg-surface-50 dark:bg-surface-950">
+    @if (filteredTemplates().length === 0) {
+    <div class="flex flex-col items-center justify-center h-64 text-muted-color">
+        @if (templateCount() === 0) {
+        <!-- Empty state -->
+        <div
+            class="w-20 h-20 rounded-2xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center mb-6">
+            <i class="pi pi-file-edit text-4xl text-muted-color"></i>
+        </div>
+        <h2 class="text-lg font-semibold text-color mb-2">No Custom Templates Yet</h2>
+        <p class="text-sm text-muted-color mb-6 max-w-sm text-center">
+            Create your own automation templates or import existing ones from JSON files.
+        </p>
+        <div class="flex items-center gap-3">
+            <p-button id="my-templates-empty-create" icon="pi pi-plus" label="Create Template" severity="primary"
+                (click)="createNew()" />
+            <p-button id="my-templates-empty-import" icon="pi pi-upload" label="Import JSON" severity="secondary"
+                [outlined]="true" (click)="importInput.click()" />
+        </div>
+        } @else {
+        <!-- Search no results -->
+        <i class="pi pi-search text-4xl mb-4"></i>
+        <p class="text-lg font-medium">No templates match your search</p>
+        <p class="text-sm">Try a different keyword</p>
+        }
+    </div>
+    } @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        @for (template of filteredTemplates(); track template.id; let i = $index) {
+        <div [id]="'my-template-card-' + i"
+            class="bg-surface-0 dark:bg-surface-900 rounded-xl border border-surface-100 dark:border-surface-800 p-5 transition-all duration-200 hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5 relative group">
+
+            <!-- Platform icon + Title -->
+            <div class="flex items-start gap-3 mb-3">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                    [style.background-color]="getPlatformColor(template.metadata.platform) + '18'">
+                    <i [class]="'pi ' + template.metadata.platformIcon + ' text-lg'"
+                        [style.color]="getPlatformColor(template.metadata.platform)"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-semibold text-color truncate mb-1">
+                        {{ template.metadata.title || 'Untitled Template' }}
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-medium px-2 py-0.5 rounded-full"
+                            [style.background-color]="getPlatformColor(template.metadata.platform) + '18'"
+                            [style.color]="getPlatformColor(template.metadata.platform)">
+                            {{ template.metadata.platform }}
+                        </span>
+                        <span class="text-xs text-muted-color">
+                            {{ template.steps.length }} steps
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <p class="text-xs text-muted-color leading-relaxed line-clamp-2 m-0 mb-3">
+                {{ template.metadata.description || 'No description' }}
+            </p>
+
+            <!-- Tags -->
+            @if (template.metadata.tags.length > 0) {
+            <div class="flex items-center gap-1 flex-wrap mb-3">
+                @for (tag of template.metadata.tags.slice(0, 3); track tag) {
+                <span
+                    class="text-[10px] px-2 py-0.5 rounded-full bg-surface-100 dark:bg-surface-800 text-muted-color">
+                    #{{ tag }}
+                </span>
+                }
+                @if (template.metadata.tags.length > 3) {
+                <span class="text-[10px] text-muted-color">+{{ template.metadata.tags.length - 3 }}</span>
+                }
+            </div>
+            }
+
+            <!-- Footer: Date + Actions -->
+            <div
+                class="flex items-center justify-between pt-3 border-t border-surface-100 dark:border-surface-800">
+                <span class="text-[11px] text-muted-color">
+                    {{ formatDate(template.metadata.updatedAt) }}
+                </span>
+                <div class="flex items-center gap-1">
+                    <p-button [id]="'my-template-edit-' + i" icon="pi pi-pencil" [rounded]="true" [text]="true"
+                        severity="secondary" size="small" (click)="editTemplate(template)"
+                        pTooltip="Edit" tooltipPosition="top" />
+                    <p-button [id]="'my-template-dup-' + i" icon="pi pi-copy" [rounded]="true" [text]="true"
+                        severity="secondary" size="small" (click)="duplicateTemplate(template)"
+                        pTooltip="Duplicate" tooltipPosition="top" />
+                    <p-button [id]="'my-template-export-' + i" icon="pi pi-download" [rounded]="true"
+                        [text]="true" severity="secondary" size="small" (click)="exportTemplate(template)"
+                        pTooltip="Export JSON" tooltipPosition="top" />
+                    <p-button [id]="'my-template-delete-' + i" icon="pi pi-trash" [rounded]="true" [text]="true"
+                        severity="danger" size="small" (click)="confirmDelete(template)"
+                        pTooltip="Delete" tooltipPosition="top" />
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+    }
+</div>

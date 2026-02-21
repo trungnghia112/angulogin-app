@@ -22,6 +22,7 @@ export class AutomationLayout {
     protected readonly menuItems: AutomationMenuItem[] = [
         { id: 'marketplace', label: 'Marketplace', icon: 'pi-shop', route: './marketplace' },
         { id: 'process', label: 'Process', icon: 'pi-sitemap', route: './process' },
+        { id: 'my-templates', label: 'My Templates', icon: 'pi-file-edit', route: './my-templates' },
         { id: 'task', label: 'Task', icon: 'pi-play-circle', route: './task' },
         { id: 'api-docs', label: 'API Docs', icon: 'pi-book', route: './api-docs' },
         { id: 'task-log', label: 'Task Log', icon: 'pi-history', route: './task-log', badge: 'Soon' },

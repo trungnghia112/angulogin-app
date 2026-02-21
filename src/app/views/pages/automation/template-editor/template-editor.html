@@ -1,0 +1,278 @@
+<!-- Header Bar -->
+<div id="editor-header"
+    class="flex items-center justify-between px-6 h-[var(--spacing-header)] shrink-0 border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
+    <div class="flex items-center gap-3">
+        <p-button id="editor-back-btn" icon="pi pi-arrow-left" [rounded]="true" [text]="true" severity="secondary"
+            (click)="cancel()" pTooltip="Back to My Templates" tooltipPosition="right" />
+        <h1 id="editor-title" class="text-xl font-bold text-color m-0">
+            {{ isNew() ? 'Create Template' : 'Edit Template' }}
+        </h1>
+    </div>
+    <div class="flex items-center gap-2">
+        <!-- JSON Mode Toggle -->
+        <div class="flex items-center gap-2 mr-4">
+            <span class="text-xs text-muted-color">JSON</span>
+            <p-toggleSwitch id="editor-json-toggle" [ngModel]="jsonMode()" (ngModelChange)="toggleJsonMode()" />
+        </div>
+        <p-button id="editor-cancel-btn" label="Cancel" severity="secondary" [outlined]="true" size="small"
+            (click)="cancel()" />
+        <p-button id="editor-save-btn" label="Save Template" icon="pi pi-check" severity="primary" size="small"
+            (click)="save()" [loading]="saving()" [disabled]="!isValid()" />
+    </div>
+</div>
+
+<!-- Editor Content -->
+<div id="editor-content" class="flex-1 overflow-y-auto p-6 bg-surface-50 dark:bg-surface-950">
+    @if (template(); as t) {
+    <div class="max-w-3xl mx-auto flex flex-col gap-6">
+
+        @if (jsonMode()) {
+        <!-- ==================== JSON MODE ==================== -->
+        <div id="editor-json-section"
+            class="p-5 rounded-xl bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700">
+            <h3 class="text-sm font-semibold text-color mb-3">
+                <i class="pi pi-code mr-2 text-primary"></i>JSON Editor
+            </h3>
+            @if (jsonError()) {
+            <div
+                class="mb-3 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400">
+                <i class="pi pi-exclamation-triangle mr-1"></i>{{ jsonError() }}
+            </div>
+            }
+            <textarea id="editor-json-textarea" [ngModel]="jsonText()" (ngModelChange)="onJsonChange($event)"
+                class="w-full font-mono text-sm bg-surface-50 dark:bg-surface-950 text-color border border-surface-200 dark:border-surface-700 rounded-lg p-4 resize-y focus:outline-none focus:ring-2 focus:ring-primary/50"
+                rows="30" spellcheck="false"></textarea>
+        </div>
+        } @else {
+        <!-- ==================== FORM MODE ==================== -->
+
+        <!-- Metadata Section -->
+        <div id="editor-metadata-section"
+            class="p-5 rounded-xl bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700">
+            <h3 class="text-sm font-semibold text-color mb-4">
+                <i class="pi pi-info-circle mr-2 text-primary"></i>Template Info
+            </h3>
+
+            <div class="flex flex-col gap-4">
+                <!-- Title -->
+                <div class="flex flex-col gap-1.5">
+                    <label for="editor-title-input" class="text-xs font-medium text-color">Title
+                        <span class="text-red-500">*</span></label>
+                    <input id="editor-title-input" type="text" pInputText placeholder="e.g. Auto Like Posts"
+                        [ngModel]="t.metadata.title" (ngModelChange)="updateField('title', $event)" />
+                </div>
+
+                <!-- Description -->
+                <div class="flex flex-col gap-1.5">
+                    <label for="editor-desc-input" class="text-xs font-medium text-color">Description</label>
+                    <textarea id="editor-desc-input" pInputText
+                        class="w-full bg-transparent border border-surface-200 dark:border-surface-700 rounded-lg p-3 text-sm text-color resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        placeholder="Brief description of what this template does..." [ngModel]="t.metadata.description"
+                        (ngModelChange)="updateField('description', $event)" rows="3"></textarea>
+                </div>
+
+                <!-- Platform + Author -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1.5">
+                        <label for="editor-platform-select" class="text-xs font-medium text-color">Platform</label>
+                        <p-select id="editor-platform-select" [options]="platformOptions"
+                            [ngModel]="t.metadata.platform" (ngModelChange)="updateField('platform', $event)"
+                            optionLabel="label" optionValue="value" [fluid]="true" />
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label for="editor-author-input" class="text-xs font-medium text-color">Author</label>
+                        <input id="editor-author-input" type="text" pInputText placeholder="Your name"
+                            [ngModel]="t.metadata.author" (ngModelChange)="updateField('author', $event)" />
+                    </div>
+                </div>
+
+                <!-- Tags -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-color">Tags</label>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        @for (tag of t.metadata.tags; track tag) {
+                        <span
+                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                            #{{ tag }}
+                            <button type="button" (click)="removeTag(tag)"
+                                class="cursor-pointer hover:text-red-500 transition-colors bg-transparent border-none p-0 text-inherit"
+                                [attr.aria-label]="'Remove tag ' + tag">
+                                <i class="pi pi-times text-[10px]"></i>
+                            </button>
+                        </span>
+                        }
+                        <div class="flex items-center gap-1">
+                            <input id="editor-tag-input" type="text" pInputText placeholder="Add tag..." class="w-28"
+                                [ngModel]="newTag()" (ngModelChange)="newTag.set($event)" (keydown.enter)="addTag()" />
+                            <p-button id="editor-tag-add-btn" icon="pi pi-plus" [rounded]="true" [text]="true"
+                                severity="secondary" size="small" (click)="addTag()" [disabled]="!newTag().trim()" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overview -->
+                <div class="flex flex-col gap-1.5">
+                    <label for="editor-overview-input" class="text-xs font-medium text-color">Overview</label>
+                    <textarea id="editor-overview-input"
+                        class="w-full bg-transparent border border-surface-200 dark:border-surface-700 rounded-lg p-3 text-sm text-color resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        placeholder="Detailed overview of the template..." [ngModel]="t.overview"
+                        (ngModelChange)="updateOverview($event)" rows="4"></textarea>
+                </div>
+
+                <!-- Requirements Note -->
+                <div class="flex flex-col gap-1.5">
+                    <label for="editor-req-input" class="text-xs font-medium text-color">Requirements Note</label>
+                    <input id="editor-req-input" type="text" pInputText
+                        placeholder="e.g. Requires Facebook account logged in" [ngModel]="t.requirements.note"
+                        (ngModelChange)="updateRequirementsNote($event)" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Steps Section -->
+        <div id="editor-steps-section"
+            class="p-5 rounded-xl bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-semibold text-color m-0">
+                    <i class="pi pi-list mr-2 text-primary"></i>Steps ({{ t.steps.length }})
+                </h3>
+                <p-button id="editor-add-step-btn" icon="pi pi-plus" label="Add Step" severity="secondary"
+                    [outlined]="true" size="small" (click)="addStep()" />
+            </div>
+
+            @if (t.steps.length === 0) {
+            <div
+                class="flex flex-col items-center justify-center py-8 text-center text-muted-color border border-dashed border-surface-200 dark:border-surface-700 rounded-lg">
+                <i class="pi pi-list text-2xl mb-2"></i>
+                <p class="text-sm m-0">No steps yet. Click "Add Step" to begin.</p>
+            </div>
+            } @else {
+            <div class="flex flex-col gap-3">
+                @for (step of t.steps; track step.order; let i = $index) {
+                <div [id]="'editor-step-' + i"
+                    class="p-4 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-100 dark:border-surface-700">
+                    <!-- Step header -->
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-primary">Step {{ step.order }}</span>
+                        <div class="flex items-center gap-1">
+                            <p-button [id]="'editor-step-up-' + i" icon="pi pi-arrow-up" [rounded]="true" [text]="true"
+                                severity="secondary" size="small" (click)="moveStep(i, -1)" [disabled]="i === 0" />
+                            <p-button [id]="'editor-step-down-' + i" icon="pi pi-arrow-down" [rounded]="true"
+                                [text]="true" severity="secondary" size="small" (click)="moveStep(i, 1)"
+                                [disabled]="i === t.steps.length - 1" />
+                            <p-button [id]="'editor-step-delete-' + i" icon="pi pi-trash" [rounded]="true" [text]="true"
+                                severity="danger" size="small" (click)="removeStep(i)" />
+                        </div>
+                    </div>
+                    <!-- Step fields -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[11px] text-muted-color">Action</label>
+                            <p-select [id]="'editor-step-action-' + i" [options]="stepActions" [ngModel]="step.action"
+                                (ngModelChange)="updateStep(i, 'action', $event)" optionLabel="label"
+                                optionValue="value" [fluid]="true" size="small" />
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[11px] text-muted-color">Description</label>
+                            <input [id]="'editor-step-desc-' + i" type="text" pInputText
+                                placeholder="What this step does" [ngModel]="step.description"
+                                (ngModelChange)="updateStep(i, 'description', $event)" />
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[11px] text-muted-color">Selector (CSS)</label>
+                            <input [id]="'editor-step-selector-' + i" type="text" pInputText placeholder=".btn-submit"
+                                [ngModel]="step.selector || ''" (ngModelChange)="updateStep(i, 'selector', $event)" />
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[11px] text-muted-color">Value / URL</label>
+                            <input [id]="'editor-step-value-' + i" type="text" pInputText
+                                placeholder="Value to type or URL" [ngModel]="step.value || step.url || ''"
+                                (ngModelChange)="updateStep(i, step.action === 'navigate' ? 'url' : 'value', $event)" />
+                        </div>
+                    </div>
+                </div>
+                }
+            </div>
+            }
+        </div>
+
+        <!-- Variables Section -->
+        <div id="editor-variables-section"
+            class="p-5 rounded-xl bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-semibold text-color m-0">
+                    <i class="pi pi-sliders-h mr-2 text-primary"></i>Variables ({{ t.variables.length }})
+                </h3>
+                <p-button id="editor-add-var-btn" icon="pi pi-plus" label="Add Variable" severity="secondary"
+                    [outlined]="true" size="small" (click)="addVariable()" />
+            </div>
+
+            @if (t.variables.length === 0) {
+            <div
+                class="flex flex-col items-center justify-center py-8 text-center text-muted-color border border-dashed border-surface-200 dark:border-surface-700 rounded-lg">
+                <i class="pi pi-sliders-h text-2xl mb-2"></i>
+                <p class="text-sm m-0">No variables defined. Variables let users customize template behavior.</p>
+            </div>
+            } @else {
+            <div class="flex flex-col gap-3">
+                @for (variable of t.variables; track $index; let i = $index) {
+                <div [id]="'editor-var-' + i"
+                    class="p-4 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-100 dark:border-surface-700">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold text-primary">Variable {{ i + 1 }}</span>
+                        <p-button [id]="'editor-var-delete-' + i" icon="pi pi-trash" [rounded]="true" [text]="true"
+                            severity="danger" size="small" (click)="removeVariable(i)" />
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[11px] text-muted-color">Name</label>
+                            <input [id]="'editor-var-name-' + i" type="text" pInputText placeholder="username"
+                                [ngModel]="variable.name" (ngModelChange)="updateVariable(i, 'name', $event)" />
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[11px] text-muted-color">Type</label>
+                            <p-select [id]="'editor-var-type-' + i" [options]="variableTypes" [ngModel]="variable.type"
+                                (ngModelChange)="updateVariable(i, 'type', $event)" optionLabel="label"
+                                optionValue="value" [fluid]="true" size="small" />
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[11px] text-muted-color">Required</label>
+                            <div class="flex items-center h-9">
+                                <p-toggleSwitch [id]="'editor-var-required-' + i" [ngModel]="variable.required"
+                                    (ngModelChange)="updateVariable(i, 'required', $event)" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mt-3">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[11px] text-muted-color">Default Value</label>
+                            <input [id]="'editor-var-default-' + i" type="text" pInputText
+                                placeholder="Optional default" [ngModel]="variable.default ?? ''"
+                                (ngModelChange)="updateVariable(i, 'default', $event || undefined)" />
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[11px] text-muted-color">Description</label>
+                            <input [id]="'editor-var-desc-' + i" type="text" pInputText
+                                placeholder="What this variable is for" [ngModel]="variable.description"
+                                (ngModelChange)="updateVariable(i, 'description', $event)" />
+                        </div>
+                    </div>
+                </div>
+                }
+            </div>
+            }
+        </div>
+
+        <!-- Bottom Save Bar -->
+        <div id="editor-bottom-bar"
+            class="flex items-center justify-end gap-3 py-4 border-t border-surface-200 dark:border-surface-700">
+            <p-button id="editor-bottom-cancel" label="Cancel" severity="secondary" [outlined]="true"
+                (click)="cancel()" />
+            <p-button id="editor-bottom-save" label="Save Template" icon="pi pi-check" severity="primary"
+                (click)="save()" [loading]="saving()" [disabled]="!isValid()" />
+        </div>
+
+        }
+    </div>
+    }
+</div>
