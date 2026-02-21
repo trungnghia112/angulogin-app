@@ -52,6 +52,7 @@ import { type ProtectionLevel } from '../../../core/services/settings.service';
 import { DurationPipe } from '../../../core/pipes/duration.pipe';
 import { TimeAgoPipe } from '../../../core/pipes/time-ago.pipe';
 import { FileSizePipe } from '../../../core/pipes/file-size.pipe';
+import { MapPipe } from '../../../core/pipes/map.pipe';
 
 
 
@@ -107,6 +108,7 @@ interface Tab {
         DurationPipe,
         TimeAgoPipe,
         FileSizePipe,
+        MapPipe,
     ],
 })
 export class Home implements OnInit, OnDestroy {
@@ -389,6 +391,16 @@ export class Home implements OnInit, OnDestroy {
     // Feature 11.1: Column settings panel
     protected readonly showColumnSettings = signal(false);
     protected readonly activityLog = this.activityLogService;
+
+    protected readonly typeIconMap: Record<string, string> = {
+        launch: 'pi-play', create: 'pi-plus', delete: 'pi-trash',
+        duplicate: 'pi-copy', edit: 'pi-pencil',
+    };
+
+    protected readonly typeLabelMap: Record<string, string> = {
+        launch: 'Launched', create: 'Created', delete: 'Deleted',
+        duplicate: 'Duplicated', edit: 'Edited',
+    };
 
     // Available tags from all profiles
     protected readonly availableTags = computed(() => {

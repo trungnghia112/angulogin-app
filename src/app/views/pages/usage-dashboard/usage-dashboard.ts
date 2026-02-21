@@ -10,6 +10,7 @@ import { ActivityLogService, ActivityEntry } from '../../../services/activity-lo
 import { Profile } from '../../../models/profile.model';
 import { DurationPipe } from '../../../core/pipes/duration.pipe';
 import { TimeAgoPipe } from '../../../core/pipes/time-ago.pipe';
+import { MapPipe } from '../../../core/pipes/map.pipe';
 
 @Component({
     selector: 'app-usage-dashboard',
@@ -17,7 +18,7 @@ import { TimeAgoPipe } from '../../../core/pipes/time-ago.pipe';
     styleUrl: './usage-dashboard.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
-    imports: [ChartModule, ButtonModule, TooltipModule, TableModule, DurationPipe, TimeAgoPipe],
+    imports: [ChartModule, ButtonModule, TooltipModule, TableModule, DurationPipe, TimeAgoPipe, MapPipe],
 })
 export class UsageDashboard {
     private readonly profileService = inject(ProfileService);
@@ -264,13 +265,15 @@ export class UsageDashboard {
 
 
 
-    getTypeIcon(type: ActivityEntry['type']): string {
-        return this.activityLogService.getTypeIcon(type);
-    }
+    protected readonly typeIconMap: Record<string, string> = {
+        launch: 'pi-play', create: 'pi-plus', delete: 'pi-trash',
+        duplicate: 'pi-copy', edit: 'pi-pencil',
+    };
 
-    getTypeLabel(type: ActivityEntry['type']): string {
-        return this.activityLogService.getTypeLabel(type);
-    }
+    protected readonly typeLabelMap: Record<string, string> = {
+        launch: 'Launched', create: 'Created', delete: 'Deleted',
+        duplicate: 'Duplicated', edit: 'Edited',
+    };
 
     goBack(): void {
         this.router.navigate(['/']);
