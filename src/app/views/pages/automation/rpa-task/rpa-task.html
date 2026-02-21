@@ -58,7 +58,7 @@
                         <div class="text-sm text-surface-700 dark:text-surface-200">{{ task.profileName }}</div>
                     </td>
                     <td class="px-4 py-3 text-center">
-                        <p-tag [value]="task.status" [severity]="getStatusSeverity(task.status)" />
+                        <p-tag [value]="task.status" [severity]="task.status | statusSeverity" />
                     </td>
                     <td class="px-4 py-3 text-center" style="min-width: 140px;">
                         <p-progressbar [value]="task.progress" [showValue]="true" class="w-full" />

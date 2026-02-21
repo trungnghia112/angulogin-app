@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit, DestroyRef } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { StatusSeverityPipe } from '../../../../core/pipes/status-severity.pipe';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -21,7 +22,7 @@ import { RpaTaskStatus } from '../../../../models/rpa-template.model';
     styleUrl: './rpa-task.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
-    imports: [ButtonModule, InputTextModule, TagModule, TooltipModule, DialogModule, SelectModule, ProgressBarModule, FormsModule, DatePipe],
+    imports: [ButtonModule, InputTextModule, TagModule, TooltipModule, DialogModule, SelectModule, ProgressBarModule, FormsModule, DatePipe, StatusSeverityPipe],
 })
 export class RpaTask implements OnInit {
     private readonly executor = inject(RpaExecutorService);
@@ -169,16 +170,7 @@ export class RpaTask implements OnInit {
 
     // --- Helpers ---
 
-    getStatusSeverity(status: RpaTaskStatus): 'success' | 'danger' | 'info' | 'warn' | 'secondary' {
-        switch (status) {
-            case 'running': return 'info';
-            case 'completed': return 'success';
-            case 'failed': return 'danger';
-            case 'paused': return 'warn';
-            case 'cancelled': return 'secondary';
-            default: return 'secondary';
-        }
-    }
+
 
 
 
