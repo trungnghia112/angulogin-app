@@ -70,6 +70,7 @@ pub struct AutoStep {
 #[derive(Deserialize)]
 pub struct ExecuteRequest {
     pub profile_id: String,
+    #[allow(dead_code)]
     pub browser: Option<String>,
     pub steps: Vec<AutoStep>,
     #[serde(default)]
@@ -156,17 +157,17 @@ pub fn spawn_task(
 
 async fn run_task(
     task_id: String,
-    profile_id: String,
+    _profile_id: String,
     steps: Vec<AutoStep>,
     variables: HashMap<String, serde_json::Value>,
     debug_port: u16,
     ws_endpoint: String,
 ) {
-    // Resolve real WebSocket URL if we only have the port
-    let ws_url = if ws_endpoint.contains("/devtools/") {
+    // Resolve page-level WebSocket URL if we only have the port
+    let ws_url = if ws_endpoint.contains("/devtools/page/") {
         ws_endpoint.clone()
     } else {
-        // Fetch from Chrome /json/version
+        // Fetch page target from Chrome /json/list
         match resolve_ws_url(debug_port).await {
             Ok(url) => url,
             Err(e) => {
@@ -341,9 +342,9 @@ fn replace_variables(text: &str, variables: &HashMap<String, serde_json::Value>)
 async fn resolve_ws_url(port: u16) -> Result<String, String> {
     let url = format!("http://127.0.0.1:{}/json/list", port);
 
-    // Retry up to 10 times (1s apart) — browser may need time to bind the port
+    // Retry up to 15 times (1s apart) — browser may need time to bind the port
     let mut last_err = String::new();
-    for attempt in 0..10 {
+    for attempt in 0..15 {
         if attempt > 0 {
             tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
         }
@@ -351,17 +352,41 @@ async fn resolve_ws_url(port: u16) -> Result<String, String> {
             Ok(resp) => {
                 let json: Vec<serde_json::Value> = resp.json().await
                     .map_err(|e| format!("Invalid CDP response: {}", e))?;
-                // Find first "page" type target
-                let page = json.iter()
-                    .find(|entry| entry.get("type").and_then(|t| t.as_str()) == Some("page"));
-                if let Some(page) = page {
-                    return page.get("webSocketDebuggerUrl")
+
+                // Prefer navigable page targets (non-chrome://, non-extension)
+                // Fallback to chrome://newtab if no navigable page exists
+                let page_target = json.iter()
+                    .filter(|entry| {
+                        let t = entry.get("type").and_then(|t| t.as_str()).unwrap_or("");
+                        t == "page" && entry.get("webSocketDebuggerUrl").is_some()
+                    })
+                    .find(|entry| {
+                        let url = entry.get("url").and_then(|u| u.as_str()).unwrap_or("");
+                        !url.starts_with("chrome://")
+                            && !url.starts_with("chrome-extension://")
+                            && !url.starts_with("chrome-untrusted://")
+                    })
+                    .or_else(|| {
+                        // Fallback: chrome://newtab (supports Runtime.evaluate)
+                        json.iter().find(|e| {
+                            e.get("type").and_then(|t| t.as_str()) == Some("page")
+                                && e.get("webSocketDebuggerUrl").is_some()
+                                && e.get("url").and_then(|u| u.as_str())
+                                    .unwrap_or("").contains("newtab")
+                        })
+                    });
+
+                if let Some(page) = page_target {
+                    let ws = page.get("webSocketDebuggerUrl")
                         .and_then(|v| v.as_str())
-                        .map(|s| s.to_string())
-                        .ok_or_else(|| "webSocketDebuggerUrl not found in page target".to_string());
+                        .unwrap();
+                    log::info!("[RPA-API] Resolved page target: {} → {}",
+                        page.get("url").and_then(|u| u.as_str()).unwrap_or("?"), ws);
+                    return Ok(ws.to_string());
                 }
-                last_err = format!("No page target found in {} entries", json.len());
-                log::info!("[RPA-API] No page target yet on port {} (attempt {})", port, attempt + 1);
+
+                last_err = format!("No usable page target in {} entries", json.len());
+                log::info!("[RPA-API] No usable page target yet on port {} (attempt {}, {} entries)", port, attempt + 1, json.len());
             }
             Err(e) => {
                 last_err = format!("Attempt {}: {}", attempt + 1, e);
@@ -369,7 +394,7 @@ async fn resolve_ws_url(port: u16) -> Result<String, String> {
             }
         }
     }
-    Err(format!("Cannot reach CDP on port {} after 10 attempts: {}", port, last_err))
+    Err(format!("Cannot reach CDP on port {} after 15 attempts: {}", port, last_err))
 }
 
 async fn update_task_error(task_id: &str, error: &str) {

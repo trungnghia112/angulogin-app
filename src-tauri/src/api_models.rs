@@ -119,6 +119,7 @@ pub struct CreateProfileData {
 #[derive(Deserialize)]
 pub struct UpdateProfileRequest {
     pub profile_id: String,
+    #[allow(dead_code)]
     pub name: Option<String>,
     pub group_id: Option<String>,
     pub browser: Option<String>,
