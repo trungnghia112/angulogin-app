@@ -195,6 +195,59 @@ export class Automation implements OnInit {
             exampleBody: null,
             exampleResponse: '{\n  "code": 0,\n  "msg": "success",\n  "data": [\n    { "group_id": "ecommerce", "group_name": "ecommerce", "profile_count": 12 },\n    { "group_id": "social", "group_name": "social", "profile_count": 5 }\n  ]\n}',
         },
+        // --- CDP / Automation Endpoints ---
+        {
+            method: 'GET', path: '/api/v1/browser/cdp',
+            description: 'Get CDP WebSocket URL and list open pages for a running profile. Use the wsUrl to connect Puppeteer/Playwright.',
+            auth: true,
+            params: [
+                { name: 'profile_id', type: 'string', required: true, description: 'Profile with a running browser' },
+            ],
+            exampleBody: null,
+            exampleResponse: '{\n  "code": 0,\n  "msg": "success",\n  "data": {\n    "profile_id": "Shop_001",\n    "debug_port": 51000,\n    "ws_endpoint": "ws://127.0.0.1:51000/devtools/browser/abc123",\n    "browser_version": "Chrome/131.0.6778.87",\n    "pages": [\n      { "id": "page1", "url": "https://google.com", "title": "Google", "type": "page" }\n    ]\n  }\n}',
+        },
+        {
+            method: 'POST', path: '/api/v1/automation/execute',
+            description: 'Execute automation steps on a running profile. Returns immediately with a taskId. Steps: navigate, click, type, scroll, wait, evaluate.',
+            auth: true,
+            params: [
+                { name: 'profile_id', type: 'string', required: true, description: 'Profile with a running browser' },
+                { name: 'steps', type: 'array', required: true, description: 'Array of step objects' },
+                { name: 'variables', type: 'object', required: false, description: 'Key-value pairs for {{variable}} replacement' },
+            ],
+            exampleBody: '{\n  "profile_id": "Shop_001",\n  "steps": [\n    { "action": "navigate", "url": "https://google.com", "description": "Go to Google" },\n    { "action": "wait", "waitMs": 2000 },\n    { "action": "type", "selector": "textarea[name=q]", "value": "AnguLogin" },\n    { "action": "click", "selector": "input[name=btnK]" }\n  ],\n  "variables": {}\n}',
+            exampleResponse: '{\n  "code": 0,\n  "msg": "success",\n  "data": {\n    "task_id": "task_abc123def456",\n    "status": "running",\n    "profile_id": "Shop_001",\n    "total_steps": 4\n  }\n}',
+        },
+        {
+            method: 'GET', path: '/api/v1/automation/tasks',
+            description: 'List all automation tasks. Optionally filter by status.',
+            auth: true,
+            params: [
+                { name: 'status', type: 'string', required: false, description: 'Filter: running | completed | failed | cancelled' },
+            ],
+            exampleBody: null,
+            exampleResponse: '{\n  "code": 0,\n  "msg": "success",\n  "data": [\n    {\n      "task_id": "task_abc123def456",\n      "profile_id": "Shop_001",\n      "status": "completed",\n      "current_step": 4,\n      "total_steps": 4,\n      "started_at": "2026-02-21T14:30:00Z"\n    }\n  ]\n}',
+        },
+        {
+            method: 'GET', path: '/api/v1/automation/task',
+            description: 'Get detailed info for a single task including step-by-step logs.',
+            auth: true,
+            params: [
+                { name: 'task_id', type: 'string', required: true, description: 'Task ID from /automation/execute' },
+            ],
+            exampleBody: null,
+            exampleResponse: '{\n  "code": 0,\n  "msg": "success",\n  "data": {\n    "task_id": "task_abc123",\n    "status": "completed",\n    "current_step": 4,\n    "total_steps": 4,\n    "logs": [\n      { "step": 1, "level": "info", "message": "Step 1: Go to Google" },\n      { "step": 2, "level": "info", "message": "Step 2: wait" }\n    ]\n  }\n}',
+        },
+        {
+            method: 'POST', path: '/api/v1/automation/cancel',
+            description: 'Cancel a running automation task.',
+            auth: true,
+            params: [
+                { name: 'task_id', type: 'string', required: true, description: 'Task ID to cancel' },
+            ],
+            exampleBody: '{\n  "task_id": "task_abc123def456"\n}',
+            exampleResponse: '{\n  "code": 0,\n  "msg": "success",\n  "data": { "task_id": "task_abc123def456", "msg": "Cancellation requested" }\n}',
+        },
     ];
 
     ngOnInit(): void {
