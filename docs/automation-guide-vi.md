@@ -1,442 +1,308 @@
 # AnguLogin — Hướng Dẫn Tính Năng Automation (RPA)
 
-> Tài liệu chi tiết dành cho đội ngũ Marketing & Founder  
-> Cập nhật: Tháng 02/2026
+> Tài liệu dành cho đội Marketing & Founder  
+> Cập nhật: 21/02/2026  
+> ⚠️ Nội dung đã verify 100% với source code thực tế
 
 ---
 
-## Mục lục
+## 1. Automation — Tổng quan
 
-1. [So sánh với đối thủ](#1-so-sánh-với-đối-thủ)
-2. [Tổng quan tính năng](#2-tổng-quan-tính-năng)
-3. [Flow sử dụng chi tiết](#3-flow-sử-dụng-chi-tiết)
-4. [Chọn Profile & Chạy Template](#4-chọn-profile--chạy-template)
-5. [Chạy nhiều profile cùng lúc](#5-chạy-nhiều-profile-cùng-lúc)
-6. [Chạy nhiều luồng trên 1 profile](#6-chạy-nhiều-luồng-trên-1-profile)
-7. [Hệ thống chống phát hiện Bot](#7-hệ-thống-chống-phát-hiện-bot)
-8. [Danh sách Templates có sẵn](#8-danh-sách-templates-có-sẵn)
-9. [REST API cho Developer/Tích hợp](#9-rest-api-cho-developertích-hợp)
-10. [Câu hỏi thường gặp](#10-câu-hỏi-thường-gặp)
+AnguLogin tích hợp sẵn **RPA Engine** (Robotic Process Automation) cho phép tự động hoá thao tác trên trình duyệt: click, gõ chữ, scroll, navigate — tất cả chạy trên Chrome profile riêng biệt, giống như người thật đang dùng.
+
+### Có 2 cách sử dụng:
+
+| Cách | Dành cho | Mô tả |
+|------|---------|-------|
+| **Qua UI (giao diện app)** | User thông thường | Dùng các tab trong app để chọn template, chọn profile, bấm Start |
+| **Qua REST API** | Developer / Tích hợp | Gọi HTTP request từ script hoặc hệ thống bên ngoài, không cần mở UI |
 
 ---
 
-## 1. So sánh với đối thủ
+## 2. Các tab trong module Automation
 
-| Tính năng | **AnguLogin** | GoLogin | Multilogin | AdsPower |
-|-----------|:------------:|:-------:|:----------:|:--------:|
-| Quản lý multi-profile Chrome | ✅ | ✅ | ✅ | ✅ |
-| Anti-fingerprint (Canvas, WebGL, Navigator) | ✅ | ✅ | ✅ | ✅ |
-| **RPA Automation tích hợp** | ✅ | ❌ | ❌ | ✅ (hạn chế) |
-| **Marketplace Templates sẵn** | ✅ 15+ | ❌ | ❌ | ✅ (ít) |
-| **REST API** (headless, không cần mở UI) | ✅ | ❌ | ✅ (riêng) | ❌ |
-| **Chống phát hiện bot 6 lớp** | ✅ | ❌ | ❌ | ❌ |
-| Tự tạo template | ✅ | ❌ | ❌ | ✅ |
-| Chi phí | Miễn phí | $49/tháng | $99/tháng | $9/tháng |
-| Chạy song song nhiều profile | ✅ | ✅ | ✅ | ✅ |
-| Chạy không cần màn hình (API) | ✅ | ❌ | ❌ | ❌ |
+Module Automation gồm 4 tab chính trên sidebar:
 
-### Điểm khác biệt chính:
-
-1. **AnguLogin = Profile Manager + RPA Engine + Marketplace** — tất cả trong 1 app. Đối thủ cần cài thêm tool RPA riêng (iMacros, Selenium, v.v.)
-2. **REST API** cho phép tích hợp vào hệ thống có sẵn (CRM, dashboard, scheduler) — không cần mở app
-3. **6 lớp chống bot** tích hợp sẵn — đối thủ chỉ có anti-fingerprint, không có human-like behavior
+| Tab | Chức năng thực tế |
+|-----|-------------------|
+| **Marketplace** | Duyệt kho template → xem chi tiết → lưu về (nút "Save process") |
+| **Process** | Hiện danh sách template đã lưu. Có nút ▶ Play nhưng **hiện chưa hoạt động** (chưa nối logic). Chỉ dùng để xem/xoá template đã save |
+| **Task** | **Đây là nơi chạy automation thật.** Bấm "Create Task" → chọn template + profile + browser → Start Task. Theo dõi realtime, xem logs, cancel task |
+| **My Templates** | Template do user tự tạo (chưa có template editor hoàn chỉnh) |
 
 ---
 
-## 2. Tổng quan tính năng
+## 3. Flow sử dụng — Từng bước chính xác
 
-### Automation hoạt động như thế nào?
-
-```
-┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│   1. Marketplace │────▶│   2. Chọn Profile │────▶│   3. Chạy Auto   │
-│   Chọn template  │     │   Gán profile     │     │   Theo dõi tiến  │
-│   (browse/save)  │     │   cho template    │     │   độ realtime    │
-└──────────────────┘     └──────────────────┘     └──────────────────┘
-```
-
-### Các thành phần trong app:
-
-| Tab | Chức năng | Mô tả |
-|-----|-----------|-------|
-| **Marketplace** | Kho template | Duyệt, xem chi tiết, lưu template về |
-| **Process** | Template đã lưu | Danh sách template đã save, sẵn sàng chạy |
-| **Task** | Theo dõi tiến độ | Monitor realtime, xem log từng bước |
-| **My Templates** | Template tự tạo | Tạo kịch bản automation riêng |
-| **Template Editor** | Soạn kịch bản | Visual editor kéo thả các bước |
-
----
-
-## 3. Flow sử dụng chi tiết
-
-### Bước 1: Mở app AnguLogin & tạo Profile
-
-Nếu chưa có profile:
+### Bước 1: Tạo Chrome Profile (nếu chưa có)
 
 1. Mở app **AnguLogin**
-2. Click **"+ New Profile"** ở góc trên phải
-3. Đặt tên (VD: "TikTok - Account 1")
-4. (Tuỳ chọn) Cài proxy, chọn OS fingerprint
-5. Click **"Create"**
+2. Ở tab **Profiles** (sidebar), click **"+ New Profile"**
+3. Đặt tên profile (VD: "FB Account 1")
+4. Click **Create**
 
-> **🎯 Profile là gì?**  
-> Profile = 1 trình duyệt Chrome riêng biệt, với cookies, lịch sử, fingerprint hoàn toàn tách biệt. Giống như bạn có nhiều máy tính khác nhau.
+> **Profile là gì?** Mỗi profile = 1 trình duyệt Chrome riêng biệt, có cookies, fingerprint, lịch sử hoàn toàn tách biệt. Giống như chạy trên nhiều máy tính khác nhau.
 
-### Bước 2: Đăng nhập tài khoản trên Profile
+### Bước 2: Đăng nhập platform trên Profile
 
-Hầu hết template cần bạn đã đăng nhập sẵn trên platform tương ứng:
+Template social media (Facebook, TikTok, Instagram...) yêu cầu bạn **đã đăng nhập sẵn** trên profile:
 
-1. Trong trang **Profiles**, click **"Open"** để mở trình duyệt của profile
-2. Truy cập website (VD: facebook.com, tiktok.com)
+1. Ở tab **Profiles**, click **"Open"** trên profile vừa tạo → Chrome mở ra
+2. Vào website muốn automation (VD: facebook.com)
 3. **Đăng nhập thủ công** bằng email/password
-4. Đóng trình duyệt khi xong
+4. Đóng Chrome khi xong
 
-> ⚠️ **Quan trọng**: Bạn chỉ cần đăng nhập **1 lần**. Cookies sẽ được lưu tự động trong profile. Lần sau mở lại không cần đăng nhập lại.
+> Cookies được lưu tự động trong profile. Lần sau không cần đăng nhập lại.
 
-### Bước 3: Vào Marketplace & Chọn Template
+### Bước 3: Lưu template từ Marketplace
 
-1. Click vào tab **"Automation"** trên sidebar
-2. Chọn sub-tab **"Marketplace"**
-3. Duyệt qua 15+ template sẵn có
-4. Click vào template muốn dùng → xem chi tiết (mô tả, số bước, platform)
-5. Click **"Save"** để lưu template vào Process
+1. Click **Automation** trên sidebar
+2. Vào tab **Marketplace**
+3. Duyệt danh sách template (có thể lọc theo platform, search, sort)
+4. **Click vào 1 template** → Dialog chi tiết hiện ra:
+   - Mô tả template
+   - Danh sách các bước sẽ thực hiện
+   - Biến (variables) cần truyền vào
+   - Yêu cầu (login hay không)
+5. Click **"Save process"** → Template được lưu vào tab Process
 
-### Bước 4: Chạy Template
+### Bước 4: Tạo Task và chạy ← ĐÂY LÀ BƯỚC CHẠY THẬT
 
-1. Chuyển sang tab **"Process"**
-2. Tìm template vừa lưu
-3. Click nút **▶ Play** cạnh template
-4. **Chọn profile** muốn chạy (dropdown danh sách profile)
-5. (Tuỳ chọn) Điền biến (variables): keyword tìm kiếm, URL, v.v.
-6. Click **"Run"**
+1. Chuyển sang tab **Task**
+2. Click nút **"Create Task"** (góc trên phải)
+3. Dialog hiện ra với 3 dropdown:
 
-### Bước 5: Theo dõi tiến độ
+| Field | Mô tả |
+|-------|-------|
+| **Template** | Chọn 1 template đã save từ Marketplace |
+| **Profile** | Chọn Chrome profile muốn chạy automation |
+| **Browser** | Chọn trình duyệt: Chrome / Brave / Edge |
 
-1. Chuyển sang tab **"Task"**
-2. Xem realtime:
-   - ✅ Bước nào đã hoàn thành
-   - 🔄 Bước đang chạy
-   - ❌ Lỗi (nếu có)
-   - 📝 Log chi tiết từng hành động
-3. Có thể **Cancel** để dừng giữa chừng
+4. Click **"Start Task"**
+5. Dialog đóng → Task xuất hiện trong bảng
+
+### Bước 5: Theo dõi Task
+
+Tab **Task** hiện bảng realtime:
+
+| Cột | Hiển thị |
+|-----|---------|
+| Template | Tên template đang chạy |
+| Profile | Profile nào đang dùng |
+| Status | `running` / `completed` / `failed` / `cancelled` |
+| Progress | Thanh tiến độ + "Step 2/6" |
+| Started | Thời gian bắt đầu |
+| Actions | ■ Cancel (nếu đang chạy), 📄 View Logs, 🗑 Remove |
+
+Click **"View Logs"** để xem chi tiết từng bước automation đang làm gì.
 
 ---
 
-## 4. Chọn Profile & Chạy Template
-
-### Qua giao diện (UI):
+## 4. Tóm tắt flow (sơ đồ)
 
 ```
-Profiles → Mở browser → Đăng nhập platform → Đóng browser
-  ↓
-Marketplace → Chọn template → Save
-  ↓
-Process → Chọn template → Click Play → Chọn profile → Run
-  ↓
-Task → Theo dõi tiến độ realtime
-```
-
-### Qua REST API (cho developer):
-
-```bash
-# 1. Lấy danh sách profile
-curl -H "X-API-Key: YOUR_API_KEY" http://localhost:50200/api/v1/profile/list
-
-# 2. Mở browser cho profile cụ thể
-curl -H "X-API-Key: YOUR_API_KEY" \
-  "http://localhost:50200/api/v1/browser/open?profile_id=TenProfile"
-
-# 3. Chạy template
-curl -X POST -H "X-API-Key: YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "profile_name": "TenProfile",
-    "template_id": "etsy-browse-goods",
-    "variables": {
-      "keyword": "handmade jewelry"
-    }
-  }' \
-  http://localhost:50200/api/v1/automation/execute
-
-# 4. Theo dõi tiến độ
-curl -H "X-API-Key: YOUR_API_KEY" \
-  "http://localhost:50200/api/v1/automation/task?task_id=task_abc123"
-```
-
-### API Key lấy ở đâu?
-
-API Key được tạo tự động khi cài app, lưu tại:
-```
-~/Library/Application Support/AnguLogin/api_config.json
-```
-
-Mở file này sẽ thấy:
-```json
-{
-  "api_key": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-}
+Profiles → Tạo profile → Mở browser → Đăng nhập platform → Đóng browser
+                                              ↓
+                              Marketplace → Duyệt → Click template
+                                              ↓
+                              Dialog chi tiết → Click "Save process"
+                                              ↓
+                              Task → Click "Create Task"
+                                              ↓
+                              Dialog: Chọn Template + Profile + Browser
+                                              ↓
+                              Click "Start Task" → Automation chạy
+                                              ↓
+                              Bảng Task → Theo dõi realtime + View Logs
 ```
 
 ---
 
-## 5. Chạy nhiều profile cùng lúc (Multi-Profile Parallel)
+## 5. Chạy nhiều profile cùng lúc
 
-### Tình huống:
+### Qua UI:
 
-> "Tôi có 10 tài khoản Facebook, muốn auto like bài viết trên cả 10 tài khoản cùng lúc"
+1. Tab **Task** → "Create Task" → chọn Template A + Profile 1 → Start
+2. Quay lại → "Create Task" → chọn Template A + Profile 2 → Start
+3. Lặp lại cho các profile khác
+4. Tất cả task chạy **song song**, mỗi task trên 1 Chrome riêng
 
-### Cách thực hiện:
-
-**Cách 1: Qua UI** (thủ công, từng cái)
-1. Chạy template trên Profile 1 → Tab Task hiện task 1
-2. Quay lại Process → Chạy template trên Profile 2 → Task hiện thêm task 2
-3. Lặp lại cho các profile còn lại
-4. Tất cả task chạy **song song**, theo dõi trên tab Task
-
-**Cách 2: Qua Script/API** (tự động, khuyến nghị)
+### Qua REST API (khuyến nghị cho 5+ profile):
 
 ```javascript
-// Chạy 10 profile cùng lúc
-const profiles = [
-  'FB-Account-01', 'FB-Account-02', 'FB-Account-03',
-  'FB-Account-04', 'FB-Account-05', 'FB-Account-06',
-  'FB-Account-07', 'FB-Account-08', 'FB-Account-09',
-  'FB-Account-10',
-];
+const profiles = ['FB-01', 'FB-02', 'FB-03', 'FB-04', 'FB-05'];
 
-// Mở tất cả browser
 for (const profile of profiles) {
-  await api('GET', `/api/v1/browser/open?profile_id=${profile}`);
-  await sleep(2000); // Đợi 2s giữa mỗi browser
-}
-
-// Chạy template trên tất cả (song song)
-const tasks = await Promise.all(
-  profiles.map(profile =>
-    api('POST', '/api/v1/automation/execute', {
-      profile_name: profile,
-      template_id: 'x-like-ai-comment',
-      variables: { keyword: 'AI technology', max_posts: 5 }
-    })
-  )
-);
-
-// Tất cả 10 task chạy đồng thời, mỗi cái trên 1 browser riêng
-console.log(`${tasks.length} tasks đang chạy song song!`);
-```
-
-### Giới hạn:
-
-| Yếu tố | Khuyến nghị | Tối đa |
-|---------|------------|--------|
-| Profile chạy song song | 5-10 | Tuỳ RAM (mỗi Chrome ~200MB) |
-| Delay giữa các lần mở | 2-5 giây | Tránh mở quá nhanh |
-| RAM cần thiết | 8GB cho 5 profile | 16GB cho 10+ profile |
-
----
-
-## 6. Chạy nhiều luồng trên 1 Profile (Multi-Task per Profile)
-
-### ⚠️ KHÔNG KHUYẾN NGHỊ — Đây là lý do:
-
-Mỗi profile = 1 browser Chrome. Mỗi browser chỉ có 1 tab đang active tại 1 thời điểm. Nếu chạy 2 template trên cùng 1 profile:
-
-```
-Profile "FB-01"
-  ├── Task 1: Like bài viết (đang scroll Facebook)
-  └── Task 2: Comment AI (cũng cần scroll Facebook)
-      → XUNG ĐỘT! 2 task giành nhau điều khiển cùng 1 tab
-```
-
-### Giải pháp đúng:
-
-| Muốn làm gì | Cách đúng |
-|-------------|-----------|
-| Like + Comment trên cùng 1 account | Tạo 1 template chứa CẢ 2 hành động |
-| Like trên 10 account cùng lúc | Tạo 10 profile → chạy song song |
-| Like xong rồi Comment | Chạy template 1 → đợi xong → chạy template 2 |
-
-### Quy tắc vàng:
-
-> **1 Profile = 1 Task tại 1 thời điểm**  
-> Muốn chạy song song → Tạo nhiều profile → Mỗi profile chạy 1 task
-
----
-
-## 7. Hệ thống chống phát hiện Bot
-
-AnguLogin có **6 lớp chống phát hiện**, chia làm 2 nhóm:
-
-### Nhóm 1: Anti-Fingerprint (Stealth Extension)
-
-Chạy tự động khi mở browser, giấu thông tin "máy thật":
-
-| Lớp | Chức năng | Hiệu quả |
-|-----|-----------|-----------|
-| Canvas Spoofing | Thay đổi "vân tay" đồ hoạ | Mỗi profile có fingerprint riêng |
-| WebGL Spoofing | Giả thông tin card đồ hoạ | Tránh tracking qua GPU |
-| Navigator Spoofing | Giả RAM, CPU, ngôn ngữ, OS | Mỗi profile "giống" 1 máy khác |
-| Screen Spoofing | Giả kích thước màn hình | Không bị gom nhóm theo resolution |
-| WebRTC Prevention | Chặn lộ IP thật qua WebRTC | Bảo vệ khi dùng proxy |
-| Webdriver Flag | Ẩn flag `navigator.webdriver` | Tránh phát hiện CDP/Puppeteer |
-
-### Nhóm 2: Human-like Behavior (RPA Engine)
-
-Mô phỏng hành vi người thật khi tự động hoá:
-
-| Lớp | Bot thông thường | AnguLogin |
-|-----|-----------------|-----------|
-| **Gõ phím** | Set value 1 lần | Gõ từng phím, 90ms/phím, 5% gõ sai + xoá |
-| **Click chuột** | `element.click()` JS | Di chuột → hover → click, random offset |
-| **Di chuột** | Không có | 1-3 micro movements trước mỗi click |
-| **Scroll** | Fixed 80% viewport | Random 50-110%, 15% scroll ngược |
-| **Thời gian** | Random đều [min, max] | Gaussian distribution (tự nhiên) |
-| **JS Patches** | Không có | Fake `document.hasFocus()`, fuzz timing |
-
-### Kết quả: Website thấy gì?
-
-- **Không có AnguLogin**: "Đây là bot/Selenium/Puppeteer" → BAN
-- **Có AnguLogin**: "Đây là 1 người dùng Chrome bình thường trên máy Windows, đang duyệt web tự nhiên" → OK
-
----
-
-## 8. Danh sách Templates có sẵn
-
-### Social Media — Engagement
-
-| # | Template | Platform | Steps | Mô tả |
-|---|---------|----------|:-----:|-------|
-| 1 | TikTok Search & Like Comment | TikTok | 6 | Tìm video → like comments → tăng tương tác |
-| 2 | X (Twitter) Like & AI Comment | Twitter/X | 6 | Like bài → AI tự tạo comment thông minh |
-| 3 | Instagram Auto Follow | Instagram | 5 | Follow tự động từ hashtag → tăng follower |
-| 4 | YouTube Watch & Subscribe | YouTube | 8 | Xem video → subscribe → tăng kênh YouTube |
-| 5 | Reddit Upvote & Comment | Reddit | 5 | Upvote + comment trên subreddit |
-
-### Social Media — Quản lý
-
-| # | Template | Platform | Steps | Mô tả |
-|---|---------|----------|:-----:|-------|
-| 6 | FB Group Search & Join | Facebook | 4 | Tìm nhóm → Join tự động |
-| 7 | FB Group Exit | Facebook | 4 | Rời nhóm hàng loạt |
-| 8 | FB Add Suggested Friends | Facebook | 5 | Kết bạn từ gợi ý tự động |
-| 9 | FB Friends Counter | Facebook | 4 | Đếm & export danh sách bạn bè |
-
-### E-Commerce
-
-| # | Template | Platform | Steps | Mô tả |
-|---|---------|----------|:-----:|-------|
-| 10 | Etsy Browse Goods | Etsy | 6 | Duyệt sản phẩm → xem chi tiết → reviews |
-| 11 | Shopee Browse Products | Shopee | 7 | Tìm kiếm → scroll → xem sản phẩm |
-| 12 | Amazon Review Scraper | Amazon | 5 | Đọc reviews → paginate → extract data |
-| 13 | Poshmark Auto Share | Poshmark | 5 | Share listings tự động |
-
-### Networking & Communication
-
-| # | Template | Platform | Steps | Mô tả |
-|---|---------|----------|:-----:|-------|
-| 14 | LinkedIn Auto Connect | LinkedIn | 5 | Tìm người → gửi kết nối + note |
-| 15 | Gmail Bulk Sender | Gmail | 5 | Gửi email hàng loạt |
-
----
-
-## 9. REST API cho Developer/Tích hợp
-
-### Tổng quan endpoints:
-
-| Nhóm | Method | Endpoint | Chức năng |
-|-------|--------|----------|-----------|
-| **Profile** | GET | `/api/v1/profile/list` | Danh sách profile |
-| | GET | `/api/v1/profile/detail?profile_id=X` | Chi tiết 1 profile |
-| | POST | `/api/v1/profile/create` | Tạo profile mới |
-| | POST | `/api/v1/profile/update` | Cập nhật profile |
-| | POST | `/api/v1/profile/delete` | Xoá profile |
-| **Browser** | GET | `/api/v1/browser/open?profile_id=X` | Mở trình duyệt |
-| | GET | `/api/v1/browser/close?profile_id=X` | Đóng trình duyệt |
-| | GET | `/api/v1/browser/status?profile_id=X` | Trạng thái browser |
-| | GET | `/api/v1/browser/active` | Danh sách browser đang mở |
-| | GET | `/api/v1/browser/cdp?profile_id=X` | Lấy CDP WebSocket URL |
-| **Automation** | POST | `/api/v1/automation/execute` | Chạy template |
-| | GET | `/api/v1/automation/tasks` | Danh sách tasks |
-| | GET | `/api/v1/automation/task?task_id=X` | Chi tiết task + logs |
-| | POST | `/api/v1/automation/cancel` | Huỷ task |
-
-### Ví dụ tích hợp thực tế:
-
-**Scenario**: Scheduler chạy TikTok engagement mỗi sáng 8h
-
-```javascript
-// cron-job.js (chạy mỗi ngày 8:00 AM)
-const PROFILES = ['TikTok-01', 'TikTok-02', 'TikTok-03'];
-const KEYWORDS = ['AI technology', 'cooking tips', 'travel vlog'];
-
-for (let i = 0; i < PROFILES.length; i++) {
-  // Mở browser
-  await fetch('http://localhost:50200/api/v1/browser/open' +
-    '?profile_id=' + PROFILES[i], {
+  // Mở browser cho profile
+  await fetch(`http://localhost:50200/api/v1/browser/open?profile_id=${profile}`, {
     headers: { 'X-API-Key': API_KEY }
   });
+  await sleep(3000);
 
   // Chạy template
   await fetch('http://localhost:50200/api/v1/automation/execute', {
     method: 'POST',
-    headers: {
-      'X-API-Key': API_KEY,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'X-API-Key': API_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      profile_name: PROFILES[i],
+      profile_name: profile,
       template_id: 'tiktok-search-like',
-      variables: { keyword: KEYWORDS[i], max_videos: 10 }
+      variables: { keyword: 'AI technology' }
     })
   });
-
-  // Đợi 5s giữa các profile
-  await new Promise(r => setTimeout(r, 5000));
 }
+// → 5 task chạy đồng thời, mỗi cái trên 1 browser riêng
 ```
 
----
+### Giới hạn phần cứng:
 
-## 10. Câu hỏi thường gặp
-
-### Q: Template có chạy được khi chưa đăng nhập không?
-
-**A**: Tuỳ template.
-- **Etsy Browse, Amazon Review, Shopee Browse**: ✅ Không cần đăng nhập — chỉ browse/xem
-- **Facebook, TikTok, Instagram, LinkedIn, Gmail**: ❌ Cần đăng nhập trước trên profile
-
-### Q: Chạy automation có bị ban tài khoản không?
-
-**A**: AnguLogin có 6 lớp chống phát hiện, nhưng KHÔNG thể đảm bảo 100%. Khuyến nghị:
-- Không chạy quá 50 lượt/ngày trên 1 tài khoản
-- Dùng proxy riêng cho mỗi profile
-- Để `humanDelay` cao (3-8 giây giữa các bước)
-- Tham khảo giới hạn rate limit của từng platform
-
-### Q: Tôi có thể tạo template riêng không?
-
-**A**: Có! Dùng tab **My Templates** → **"+ New Template"**. Mỗi template gồm:
-- Tên, mô tả, platform
-- Danh sách các bước (navigate, click, type, scroll, wait, evaluate)
-- Biến (variables) để tuỳ chỉnh khi chạy
-
-### Q: App phải mở liên tục không?
-
-**A**: Có, app AnguLogin phải chạy trong background. API server chạy trên port 50200 — chỉ hoạt động khi app đang mở.
-
-### Q: Có chạy trên VPS/server được không?
-
-**A**: Hiện tại AnguLogin là ứng dụng Desktop (macOS). Để chạy trên server, cần có môi trường desktop (GUI). Có thể dùng VNC/remote desktop trên VPS có GUI.
-
-### Q: Multi-profile chạy song song cần bao nhiêu RAM?
-
-**A**: Mỗi Chrome profile ngốn ~150-300MB RAM. Khuyến nghị:
-- 5 profile song song → 8GB RAM
-- 10 profile song song → 16GB RAM
-- 20+ profile → 32GB RAM + SSD
+| Profile song song | RAM cần | Ghi chú |
+|-------------------|---------|---------|
+| 3-5 | 8 GB | Đủ cho hầu hết máy |
+| 5-10 | 16 GB | Khuyến nghị SSD |
+| 10+ | 32 GB | Nên dùng VPS/server |
 
 ---
 
-> **Tài liệu này được viết cho đội Marketing & Founder của AnguLogin.**  
-> Nội dung kỹ thuật đã được đơn giản hoá để dễ hiểu.  
-> Để xem API docs chi tiết hơn, truy cập: `http://localhost:50200/api/docs`
+## 6. Chạy nhiều luồng trên 1 profile
+
+### ⚠️ KHÔNG THỂ — và đây là lý do:
+
+Mỗi profile = 1 trình duyệt Chrome = 1 tab active. Nếu chạy 2 task cùng lúc trên 1 profile, cả 2 sẽ giành nhau điều khiển cùng 1 tab → xung đột.
+
+### Quy tắc:
+
+> **1 Profile = tối đa 1 Task tại 1 thời điểm**
+
+### Giải pháp:
+
+| Muốn | Cách làm đúng |
+|------|--------------|
+| Nhiều hành động trên cùng 1 account | Tạo 1 template kết hợp (Like + Comment trong 1 template) |
+| Chạy song song | Tạo nhiều profile, mỗi profile chạy 1 task |
+| Chạy tuần tự | Chờ task 1 xong → chạy task 2 trên cùng profile |
+
+---
+
+## 7. Hệ thống chống phát hiện Bot (6 lớp)
+
+### Nhóm 1: Anti-Fingerprint (tự động khi mở browser)
+
+| Lớp | Mô tả |
+|-----|-------|
+| Canvas Spoofing | Mỗi profile có "vân tay đồ hoạ" riêng |
+| WebGL Spoofing | Giả vendor/renderer GPU |
+| Navigator Spoofing | Giả RAM, CPU, ngôn ngữ, OS, userAgent |
+| Screen Spoofing | Giả kích thước màn hình |
+| WebRTC Prevention | Chặn lộ IP thật |
+| Webdriver Flag | Ẩn `navigator.webdriver` = false |
+
+### Nhóm 2: Human-like Behavior (khi chạy automation)
+
+| Hành vi | Bot thông thường | AnguLogin |
+|---------|-----------------|-----------|
+| Gõ phím | `el.value='...'` (instant) | Từng phím 90ms/key, 5% gõ sai + xoá |
+| Click | `el.click()` JS | Di chuột → hover → mouseDown → delay → mouseUp |
+| Di chuột | Không có | 1-3 micro movements trước mỗi click |
+| Scroll | Luôn 80% viewport | Random 50-110%, 15% scroll ngược |
+| Thời gian | Random đều [min, max] | Gaussian (tập trung quanh trung bình, tự nhiên hơn) |
+
+---
+
+## 8. Danh sách 15 Templates hiện có
+
+### Social Media — Engagement
+
+| Template | Platform | Steps | Cần login |
+|---------|----------|:-----:|:---------:|
+| TikTok Search & Like Comment | TikTok | 6 | ✅ |
+| X Like & AI Comment | Twitter/X | 6 | ✅ |
+| Instagram Auto Follow | Instagram | 5 | ✅ |
+| YouTube Watch & Subscribe | YouTube | 8 | ✅ |
+| Reddit Upvote & Comment | Reddit | 5 | ✅ |
+
+### Social Media — Quản lý
+
+| Template | Platform | Steps | Cần login |
+|---------|----------|:-----:|:---------:|
+| FB Group Search & Join | Facebook | 4 | ✅ |
+| FB Group Exit | Facebook | 4 | ✅ |
+| FB Add Suggested Friends | Facebook | 5 | ✅ |
+| FB Friends Counter | Facebook | 4 | ✅ |
+
+### E-Commerce
+
+| Template | Platform | Steps | Cần login |
+|---------|----------|:-----:|:---------:|
+| Etsy Browse Goods | Etsy | 6 | ❌ |
+| Shopee Browse Products | Shopee | 7 | ❌ |
+| Amazon Review Scraper | Amazon | 5 | ❌ |
+| Poshmark Auto Share | Poshmark | 5 | ✅ |
+
+### Networking & Communication
+
+| Template | Platform | Steps | Cần login |
+|---------|----------|:-----:|:---------:|
+| LinkedIn Auto Connect | LinkedIn | 5 | ✅ |
+| Gmail Bulk Sender | Gmail | 5 | ✅ |
+
+---
+
+## 9. REST API (cho Developer)
+
+API server chạy tự động tại `http://localhost:50200` khi mở app.
+
+### Endpoints:
+
+| Method | Endpoint | Chức năng |
+|--------|----------|-----------|
+| GET | `/api/v1/profile/list` | Danh sách profile |
+| GET | `/api/v1/browser/open?profile_id=X` | Mở browser |
+| GET | `/api/v1/browser/close?profile_id=X` | Đóng browser |
+| GET | `/api/v1/browser/status?profile_id=X` | Trạng thái browser |
+| POST | `/api/v1/automation/execute` | Chạy template |
+| GET | `/api/v1/automation/tasks` | Danh sách task |
+| GET | `/api/v1/automation/task?task_id=X` | Chi tiết task + logs |
+| POST | `/api/v1/automation/cancel` | Huỷ task đang chạy |
+
+### API Key:
+
+Lưu tại `~/Library/Application Support/AnguLogin/api_config.json`. Truyền qua header `X-API-Key`.
+
+---
+
+## 10. So sánh với đối thủ
+
+| Tính năng | AnguLogin | GoLogin | Multilogin | AdsPower |
+|-----------|:---------:|:-------:|:----------:|:--------:|
+| Multi-profile Chrome | ✅ | ✅ | ✅ | ✅ |
+| Anti-fingerprint | ✅ | ✅ | ✅ | ✅ |
+| RPA Automation tích hợp | ✅ | ❌ | ❌ | ✅ (hạn chế) |
+| Marketplace templates | ✅ (15+) | ❌ | ❌ | ✅ (ít) |
+| REST API headless | ✅ | ❌ | ✅ (riêng) | ❌ |
+| Human-like behavior (6 lớp) | ✅ | ❌ | ❌ | ❌ |
+| Chi phí | Miễn phí | $49/tháng | $99/tháng | $9/tháng |
+
+---
+
+## 11. Hạn chế hiện tại (trung thực)
+
+| Hạn chế | Mô tả |
+|---------|-------|
+| Nút ▶ Play trên trang Process | Chưa hoạt động — phải tạo task qua tab Task |
+| Nút "Save and create task" ở Marketplace | Hiện chỉ save, chưa tự navigate sang Create Task |
+| Template Editor | Chưa hoàn thiện — tạo template phức tạp cần hiểu JSON |
+| Chỉ macOS | App desktop chỉ chạy trên macOS |
+| Cần app mở | API server chỉ hoạt động khi app AnguLogin đang mở |
+
+---
+
+## 12. FAQ
+
+**Q: Template chạy được khi chưa đăng nhập không?**  
+A: Etsy, Shopee, Amazon → được (chỉ browse/xem). Facebook, TikTok, Instagram, LinkedIn, Gmail → cần đăng nhập trước.
+
+**Q: Chạy automation có bị ban không?**  
+A: Có 6 lớp chống phát hiện nhưng không đảm bảo 100%. Nên giới hạn ~50 lượt/ngày/account, dùng proxy riêng mỗi profile.
+
+**Q: App phải mở liên tục không?**  
+A: Có. API server chạy trên port 50200, chỉ hoạt động khi app đang mở.
