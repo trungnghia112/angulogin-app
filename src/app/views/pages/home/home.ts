@@ -611,6 +611,8 @@ export class Home implements OnInit, OnDestroy {
 
     // Profile actions
     async scanProfiles(): Promise<void> {
+        // Clear tooltip cache on rescan (prevent unbounded growth)
+        this.tooltipCache.clear();
         const path = this.profilesPath();
         if (!path) {
             this.messageService.add({

@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -29,6 +30,7 @@ export class RpaTask implements OnInit {
     private readonly templateService = inject(RpaTemplateService);
     private readonly profileService = inject(ProfileService);
     private readonly route = inject(ActivatedRoute);
+    private readonly destroyRef = inject(DestroyRef);
 
     // --- Tabs & Filters ---
     protected readonly activeTab = signal<'all' | 'active' | 'history'>('all');
@@ -95,7 +97,7 @@ export class RpaTask implements OnInit {
     // --- Actions ---
 
     ngOnInit(): void {
-        this.route.queryParams.subscribe(params => {
+        this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
             const templateId = params['templateId'];
             if (templateId) {
                 this.selectedTemplateId.set(templateId);
@@ -186,12 +188,7 @@ export class RpaTask implements OnInit {
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     }
 
-    getSelectedTemplate(): RpaTemplate | null {
-        const id = this.selectedTemplateId();
-        if (!id) return null;
-        // Template details are fetched async, so we check the cache
-        return null;
-    }
+
 
     onTemplateSelected(): void {
         const id = this.selectedTemplateId();
