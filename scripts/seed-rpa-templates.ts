@@ -6,8 +6,12 @@
  *   npx ts-node scripts/seed-rpa-templates.ts --emulator   # Local emulator (localhost:8080)
  *
  * Creates:
- * 1. rpa-catalog/index — lightweight catalog with all template summaries
+ * 1. rpa-catalog/index  — lightweight catalog with all template summaries
  * 2. rpa-templates/{id} — full detail for each template
+ *
+ * Status detection:
+ * - Templates with selectors/jsExpression/url/waitMs -> "published"
+ * - Templates without implementation details -> "draft" (hidden from marketplace)
  */
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -31,12 +35,29 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
+interface TemplateStep {
+    order: number;
+    action: string;
+    description: string;
+    selector?: string;
+    jsExpression?: string;
+    url?: string;
+    waitMs?: number;
+    fallbackSelectors?: string[];
+    waitForSelector?: string;
+    timeout?: number;
+    humanDelay?: [number, number];
+    iterations?: number;
+    value?: string;
+}
+
 interface Template {
     id: string;
     version: string;
     metadata: {
         title: string;
         description: string;
+        longDescription?: string;
         platform: string;
         platformIcon: string;
         author: string;
@@ -46,10 +67,21 @@ interface Template {
         isPremium: boolean;
     };
     stats: { usageCount: number };
-    requirements: { note: string };
+    requirements: { note: string; extensions?: string[] };
     overview: string;
-    steps: { order: number; action: string; description: string }[];
+    steps: TemplateStep[];
     variables: { name: string; type: string; required: boolean; default?: unknown; description: string }[];
+}
+
+type TemplateStatus = 'published' | 'draft';
+
+/** Detect if a template has real implementation (selectors, JS, URLs) */
+function detectStatus(template: Template): TemplateStatus {
+    return template.steps.some(
+        s => s.selector || s.jsExpression || s.url || s.waitMs,
+    )
+        ? 'published'
+        : 'draft';
 }
 
 async function seed() {
@@ -58,20 +90,33 @@ async function seed() {
 
     console.log(`Found ${templates.length} templates to seed\n`);
 
-    // Build catalog index (lightweight summaries)
-    const catalogEntries = templates.map(t => ({
-        id: t.id,
-        title: t.metadata.title,
-        description: t.metadata.description,
-        platform: t.metadata.platform,
-        platformIcon: t.metadata.platformIcon,
-        author: t.metadata.author,
-        tags: t.metadata.tags,
-        isPremium: t.metadata.isPremium,
-        usageCount: t.stats.usageCount,
-        version: t.version,
-        updatedAt: t.metadata.updatedAt,
-    }));
+    let published = 0;
+    let draft = 0;
+
+    // Build catalog entries with status
+    const catalogEntries = templates.map(t => {
+        const status = detectStatus(t);
+        if (status === 'published') published++;
+        else draft++;
+
+        return {
+            id: t.id,
+            title: t.metadata.title,
+            description: t.metadata.description,
+            platform: t.metadata.platform,
+            platformIcon: t.metadata.platformIcon,
+            author: t.metadata.author,
+            tags: t.metadata.tags,
+            isPremium: t.metadata.isPremium,
+            usageCount: t.stats.usageCount,
+            version: t.version,
+            updatedAt: t.metadata.updatedAt,
+            status,
+        };
+    });
+
+    console.log(`  Published: ${published}`);
+    console.log(`  Draft:     ${draft}\n`);
 
     // Write catalog index (1 document)
     const catalogRef = db.collection('rpa-catalog').doc('index');
@@ -82,19 +127,14 @@ async function seed() {
     });
     console.log('Wrote rpa-catalog/index');
 
-    // Write individual template details
+    // Write individual template details (batched)
     const batch = db.batch();
     for (const t of templates) {
+        const status = detectStatus(t);
         const ref = db.collection('rpa-templates').doc(t.id);
         batch.set(ref, {
-            id: t.id,
-            version: t.version,
-            metadata: t.metadata,
-            stats: t.stats,
-            requirements: t.requirements,
-            overview: t.overview,
-            steps: t.steps,
-            variables: t.variables,
+            ...t,
+            status,
         });
     }
     await batch.commit();
