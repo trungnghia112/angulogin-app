@@ -10,6 +10,7 @@ mod api_server;
 mod api_models;
 mod cdp;
 mod rpa;
+mod rpa_api;
 mod oauth;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

@@ -745,6 +745,114 @@ async fn group_list(
 }
 
 // ---------------------------------------------------------------------------
+// Automation handlers
+// ---------------------------------------------------------------------------
+
+async fn automation_execute(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(body): Json<crate::rpa_api::ExecuteRequest>,
+) -> (StatusCode, Json<ApiResponse<crate::rpa_api::ExecuteResponseData>>) {
+    if let Err(e) = check_auth(&headers, &state.api_key) {
+        return (e.0, Json(ApiResponse::error(-1, "Unauthorized")));
+    }
+
+    if body.steps.is_empty() {
+        return (StatusCode::BAD_REQUEST, Json(ApiResponse::error(-1, "steps array is required and must not be empty")));
+    }
+
+    // Check if browser is running for this profile
+    let (debug_port, ws_endpoint) = {
+        let browsers = state.active_browsers.lock().unwrap();
+        match browsers.get(&body.profile_id) {
+            Some(entry) => entry.clone(),
+            None => return (StatusCode::BAD_REQUEST, Json(ApiResponse::error(-1, format!(
+                "No active browser for profile '{}'. Launch it first via /api/v1/browser/open",
+                body.profile_id
+            )))),
+        }
+    };
+
+    let total_steps = body.steps.len();
+    let task_id = crate::rpa_api::spawn_task(
+        body.profile_id.clone(),
+        body.steps,
+        body.variables,
+        debug_port,
+        ws_endpoint,
+    );
+
+    (StatusCode::OK, Json(ApiResponse::success(crate::rpa_api::ExecuteResponseData {
+        task_id,
+        status: "running".to_string(),
+        profile_id: body.profile_id,
+        total_steps,
+    })))
+}
+
+async fn automation_tasks(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Query(params): Query<crate::rpa_api::TaskListParam>,
+) -> (StatusCode, Json<ApiResponse<Vec<crate::rpa_api::AutoTask>>>) {
+    if let Err(e) = check_auth(&headers, &state.api_key) {
+        return (e.0, Json(ApiResponse::error(-1, "Unauthorized")));
+    }
+
+    let tasks = crate::rpa_api::TASKS.lock().await;
+    let mut list: Vec<crate::rpa_api::AutoTask> = tasks.values().cloned().collect();
+
+    // Filter by status if provided
+    if let Some(ref status) = params.status {
+        list.retain(|t| t.status == *status);
+    }
+
+    // Sort by started_at descending
+    list.sort_by(|a, b| b.started_at.cmp(&a.started_at));
+
+    (StatusCode::OK, Json(ApiResponse::success(list)))
+}
+
+async fn automation_task_detail(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Query(params): Query<crate::rpa_api::TaskIdParam>,
+) -> (StatusCode, Json<ApiResponse<crate::rpa_api::AutoTask>>) {
+    if let Err(e) = check_auth(&headers, &state.api_key) {
+        return (e.0, Json(ApiResponse::error(-1, "Unauthorized")));
+    }
+
+    let task_id = match params.task_id {
+        Some(id) => id,
+        None => return (StatusCode::BAD_REQUEST, Json(ApiResponse::error(-1, "task_id is required"))),
+    };
+
+    let tasks = crate::rpa_api::TASKS.lock().await;
+    match tasks.get(&task_id) {
+        Some(task) => (StatusCode::OK, Json(ApiResponse::success(task.clone()))),
+        None => (StatusCode::NOT_FOUND, Json(ApiResponse::error(-1, format!("Task '{}' not found", task_id)))),
+    }
+}
+
+async fn automation_cancel(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(body): Json<crate::rpa_api::CancelRequest>,
+) -> (StatusCode, Json<ApiResponse<serde_json::Value>>) {
+    if let Err(e) = check_auth(&headers, &state.api_key) {
+        return (e.0, Json(ApiResponse::error(-1, "Unauthorized")));
+    }
+
+    match crate::rpa_api::cancel_task(&body.task_id).await {
+        Ok(()) => (StatusCode::OK, Json(ApiResponse::success(serde_json::json!({
+            "task_id": body.task_id,
+            "msg": "Cancellation requested"
+        })))),
+        Err(e) => (StatusCode::BAD_REQUEST, Json(ApiResponse::error(-1, e))),
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Config persistence
 // ---------------------------------------------------------------------------
 
@@ -820,6 +928,11 @@ pub async fn start(port: u16, api_key: String) {
         .route("/api/v1/proxy/check", get(proxy_check))
         // Group
         .route("/api/v1/group/list", get(group_list))
+        // Automation
+        .route("/api/v1/automation/execute", post(automation_execute))
+        .route("/api/v1/automation/tasks", get(automation_tasks))
+        .route("/api/v1/automation/task", get(automation_task_detail))
+        .route("/api/v1/automation/cancel", post(automation_cancel))
         .layer(cors)
         .with_state(state.clone());
 
