@@ -5,10 +5,11 @@ import { ChartModule } from 'primeng/chart';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { TableModule } from 'primeng/table';
-
 import { ProfileService } from '../../../services/profile.service';
 import { ActivityLogService, ActivityEntry } from '../../../services/activity-log.service';
 import { Profile } from '../../../models/profile.model';
+import { DurationPipe } from '../../../core/pipes/duration.pipe';
+import { TimeAgoPipe } from '../../../core/pipes/time-ago.pipe';
 
 @Component({
     selector: 'app-usage-dashboard',
@@ -16,12 +17,13 @@ import { Profile } from '../../../models/profile.model';
     styleUrl: './usage-dashboard.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
-    imports: [ChartModule, ButtonModule, TooltipModule, TableModule],
+    imports: [ChartModule, ButtonModule, TooltipModule, TableModule, DurationPipe, TimeAgoPipe],
 })
 export class UsageDashboard {
     private readonly profileService = inject(ProfileService);
     private readonly activityLogService = inject(ActivityLogService);
     private readonly router = inject(Router);
+    private readonly durationPipe = inject(DurationPipe);
 
     // Data
     readonly profiles = this.profileService.profiles;
@@ -132,7 +134,7 @@ export class UsageDashboard {
             tooltip: {
                 callbacks: {
                     label: (context: { label?: string; raw?: number }) =>
-                        `${context.label}: ${this.formatMinutes(context.raw || 0)}`
+                        `${context.label}: ${this.durationPipe.transform(context.raw || 0)}`
                 }
             }
         }
@@ -260,17 +262,7 @@ export class UsageDashboard {
         return `${dateStr}: ${day.count} action${s}`;
     }
 
-    formatMinutes(minutes: number): string {
-        if (!minutes) return '0m';
-        if (minutes < 60) return `${Math.round(minutes)}m`;
-        const hours = Math.floor(minutes / 60);
-        const mins = Math.round(minutes % 60);
-        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-    }
 
-    formatTimestamp(timestamp: string): string {
-        return this.activityLogService.formatTimestamp(timestamp);
-    }
 
     getTypeIcon(type: ActivityEntry['type']): string {
         return this.activityLogService.getTypeIcon(type);

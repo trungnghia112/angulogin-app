@@ -67,7 +67,8 @@
                         </div>
                     </td>
                     <td class="px-4 py-3 text-center">
-                        <div class="text-sm text-surface-700 dark:text-surface-200">{{ formatDate(task.startTime) }}
+                        <div class="text-sm text-surface-700 dark:text-surface-200">{{ task.startTime ? (task.startTime
+                            | date:'MMM d, hh:mm a') : '—' }}
                         </div>
                     </td>
                     <td class="px-4 py-3 text-center">
@@ -138,7 +139,7 @@
             [class.dark:bg-red-900]="log.level === 'error'" [class.bg-yellow-50]="log.level === 'warn'"
             [class.dark:bg-yellow-900]="log.level === 'warn'">
             <span class="text-surface-500 dark:text-surface-400 shrink-0">
-                {{ formatDate(log.timestamp) }}
+                {{ log.timestamp | date:'MMM d, hh:mm a' }}
             </span>
             <span class="shrink-0" [class.text-green-600]="log.level === 'success'"
                 [class.text-red-600]="log.level === 'error'" [class.text-yellow-600]="log.level === 'warn'"

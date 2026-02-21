@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -13,7 +14,7 @@ import { RpaTemplateService, CatalogEntry } from '../../../../services/rpa-templ
     styleUrl: './rpa-process.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
-    imports: [ButtonModule, InputTextModule, IconFieldModule, InputIconModule, TooltipModule],
+    imports: [ButtonModule, InputTextModule, IconFieldModule, InputIconModule, TooltipModule, DatePipe],
 })
 export class RpaProcess implements OnInit {
     private readonly templateService = inject(RpaTemplateService);
@@ -49,10 +50,7 @@ export class RpaProcess implements OnInit {
         });
     }
 
-    formatDate(dateStr: string): string {
-        const d = new Date(dateStr);
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
+
 
     getPlatformColor(platform: string): string {
         return this.templateService.getPlatformColor(platform);

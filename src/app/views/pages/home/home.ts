@@ -49,6 +49,8 @@ import { validateProfileName } from '../../../core/utils/validation.util';
 import { ColumnSettingsPanel } from '../../components/column-settings-panel/column-settings-panel';
 import { OnboardingDialog } from '../../components/onboarding-dialog/onboarding-dialog';
 import { type ProtectionLevel } from '../../../core/services/settings.service';
+import { DurationPipe } from '../../../core/pipes/duration.pipe';
+import { TimeAgoPipe } from '../../../core/pipes/time-ago.pipe';
 
 
 
@@ -101,6 +103,8 @@ interface Tab {
         ColumnSettingsPanel,
         DownloadBrowserDialog,
         OnboardingDialog,
+        DurationPipe,
+        TimeAgoPipe,
     ],
 })
 export class Home implements OnInit, OnDestroy {
@@ -108,6 +112,7 @@ export class Home implements OnInit, OnDestroy {
     private readonly profileService = inject(ProfileService);
     private readonly settingsService = inject(SettingsService);
     private readonly activityLogService = inject(ActivityLogService);
+    private readonly durationPipe = inject(DurationPipe);
     protected readonly folderService = inject(FolderService);
     protected readonly proxyService = inject(ProxyService);
     private readonly messageService = inject(MessageService);
@@ -575,7 +580,7 @@ export class Home implements OnInit, OnDestroy {
             lines.push(`Launches: ${profile.metadata.launchCount}`);
         }
         if (profile.metadata?.totalUsageMinutes) {
-            lines.push(`Total usage: ${this.formatMinutes(profile.metadata.totalUsageMinutes)}`);
+            lines.push(`Total usage: ${this.durationPipe.transform(profile.metadata.totalUsageMinutes)}`);
         }
         if (profile.metadata?.lastOpened) {
             const date = new Date(profile.metadata.lastOpened);
@@ -599,15 +604,7 @@ export class Home implements OnInit, OnDestroy {
     }
 
     // Usage Statistics helper
-    formatMinutes(minutes: number): string {
-        if (minutes < 60) return `${minutes} min`;
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        if (hours < 24) return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-        const days = Math.floor(hours / 24);
-        const remainingHours = hours % 24;
-        return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
-    }
+
 
     // Profile actions
     async scanProfiles(): Promise<void> {

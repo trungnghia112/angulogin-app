@@ -37,7 +37,7 @@
                 </div>
                 <div>
                     <p class="text-sm text-muted-color">Total Usage Time</p>
-                    <p class="text-2xl font-bold text-color">{{ formatMinutes(totalUsageMinutes()) }}</p>
+                    <p class="text-2xl font-bold text-color">{{ totalUsageMinutes() | duration }}</p>
                 </div>
             </div>
 
@@ -211,7 +211,7 @@
                             </p>
                         </div>
                     </div>
-                    <span class="text-sm text-muted-color">{{ formatTimestamp(entry.timestamp) }}</span>
+                    <span class="text-sm text-muted-color">{{ entry.timestamp | timeAgo }}</span>
                 </div>
                 }
             </div>

@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -17,7 +18,7 @@ import { RpaTemplateService } from '../../../../services/rpa-template.service';
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
     imports: [
         ButtonModule, InputTextModule, IconFieldModule, InputIconModule,
-        TooltipModule,
+        TooltipModule, DatePipe,
     ],
 })
 export class MyTemplates {
@@ -114,8 +115,5 @@ export class MyTemplates {
         return this.templateService.getPlatformColor(platform);
     }
 
-    formatDate(dateStr: string): string {
-        const d = new Date(dateStr);
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
+
 }

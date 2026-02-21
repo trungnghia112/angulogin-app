@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit, DestroyRef } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -20,10 +21,7 @@ import { RpaTaskStatus } from '../../../../models/rpa-template.model';
     styleUrl: './rpa-task.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
-    imports: [
-        ButtonModule, InputTextModule, TagModule, TooltipModule,
-        DialogModule, SelectModule, ProgressBarModule, FormsModule,
-    ],
+    imports: [ButtonModule, InputTextModule, TagModule, TooltipModule, DialogModule, SelectModule, ProgressBarModule, FormsModule, DatePipe],
 })
 export class RpaTask implements OnInit {
     private readonly executor = inject(RpaExecutorService);
@@ -182,11 +180,7 @@ export class RpaTask implements OnInit {
         }
     }
 
-    formatDate(dateStr: string | null): string {
-        if (!dateStr) return '\u2014';
-        const d = new Date(dateStr);
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    }
+
 
 
 

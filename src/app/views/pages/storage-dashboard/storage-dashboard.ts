@@ -199,7 +199,7 @@ export class StorageDashboard implements OnInit, OnDestroy {
                     type: 'unused',
                     profile,
                     reason: lastOpened
-                        ? `Last used ${this.formatDate(new Date(lastOpened))}`
+                        ? `Last used ${new Date(lastOpened).toLocaleDateString()}`
                         : 'Never used'
                 });
             }
@@ -217,9 +217,7 @@ export class StorageDashboard implements OnInit, OnDestroy {
         return `${mb.toFixed(0)} MB`;
     }
 
-    formatDate(date: Date): string {
-        return date.toLocaleDateString();
-    }
+
 
     goBack(): void {
         this.router.navigate(['/']);

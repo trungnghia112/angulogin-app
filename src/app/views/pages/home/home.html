@@ -266,7 +266,7 @@
                         <span
                             class="inline-flex items-center gap-1 px-2 py-0.5 bg-surface-100 dark:bg-surface-800 rounded text-xs text-color">
                             <i class="pi pi-clock text-[10px] text-muted-color"></i>
-                            {{ formatMinutes(profile.metadata.totalUsageMinutes) }}
+                            {{ profile.metadata.totalUsageMinutes | duration }}
                         </span>
                         } @else {
                         <span class="text-xs text-muted-color">-</span>
@@ -676,7 +676,7 @@
                                 activityLog.getTypeLabel(entry.type) }}</span>
                         </div>
                         <div class="flex items-center gap-2 mt-1 text-xs text-muted-color">
-                            <span>{{ activityLog.formatTimestamp(entry.timestamp) }}</span>
+                            <span>{{ entry.timestamp | timeAgo }}</span>
                             @if (entry.browser) {
                             <span>• {{ entry.browser | titlecase }}</span>
                             }

@@ -17,11 +17,10 @@
         </span>
 
         <!-- Import -->
-        <input id="my-templates-import-input" type="file" accept=".json" class="hidden"
-            (change)="onImportFile($event)" #importInput />
-        <p-button id="my-templates-import-btn" icon="pi pi-upload" label="Import" severity="secondary"
-            [outlined]="true" size="small" (click)="importInput.click()" pTooltip="Import JSON template"
-            tooltipPosition="bottom" />
+        <input id="my-templates-import-input" type="file" accept=".json" class="hidden" (change)="onImportFile($event)"
+            #importInput />
+        <p-button id="my-templates-import-btn" icon="pi pi-upload" label="Import" severity="secondary" [outlined]="true"
+            size="small" (click)="importInput.click()" pTooltip="Import JSON template" tooltipPosition="bottom" />
 
         <!-- Create New -->
         <p-button id="my-templates-create-btn" icon="pi pi-plus" label="Create" severity="primary" size="small"
@@ -35,8 +34,7 @@
     <div class="flex flex-col items-center justify-center h-64 text-muted-color">
         @if (templateCount() === 0) {
         <!-- Empty state -->
-        <div
-            class="w-20 h-20 rounded-2xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center mb-6">
+        <div class="w-20 h-20 rounded-2xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center mb-6">
             <i class="pi pi-file-edit text-4xl text-muted-color"></i>
         </div>
         <h2 class="text-lg font-semibold text-color mb-2">No Custom Templates Yet</h2>
@@ -95,8 +93,7 @@
             @if (template.metadata.tags.length > 0) {
             <div class="flex items-center gap-1 flex-wrap mb-3">
                 @for (tag of template.metadata.tags.slice(0, 3); track tag) {
-                <span
-                    class="text-[10px] px-2 py-0.5 rounded-full bg-surface-100 dark:bg-surface-800 text-muted-color">
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-surface-100 dark:bg-surface-800 text-muted-color">
                     #{{ tag }}
                 </span>
                 }
@@ -107,24 +104,23 @@
             }
 
             <!-- Footer: Date + Actions -->
-            <div
-                class="flex items-center justify-between pt-3 border-t border-surface-100 dark:border-surface-800">
+            <div class="flex items-center justify-between pt-3 border-t border-surface-100 dark:border-surface-800">
                 <span class="text-[11px] text-muted-color">
-                    {{ formatDate(template.metadata.updatedAt) }}
+                    {{ template.metadata.updatedAt | date:'MMM d, y' }}
                 </span>
                 <div class="flex items-center gap-1">
                     <p-button [id]="'my-template-edit-' + i" icon="pi pi-pencil" [rounded]="true" [text]="true"
-                        severity="secondary" size="small" (click)="editTemplate(template)"
-                        pTooltip="Edit" tooltipPosition="top" />
+                        severity="secondary" size="small" (click)="editTemplate(template)" pTooltip="Edit"
+                        tooltipPosition="top" />
                     <p-button [id]="'my-template-dup-' + i" icon="pi pi-copy" [rounded]="true" [text]="true"
-                        severity="secondary" size="small" (click)="duplicateTemplate(template)"
-                        pTooltip="Duplicate" tooltipPosition="top" />
-                    <p-button [id]="'my-template-export-' + i" icon="pi pi-download" [rounded]="true"
-                        [text]="true" severity="secondary" size="small" (click)="exportTemplate(template)"
-                        pTooltip="Export JSON" tooltipPosition="top" />
+                        severity="secondary" size="small" (click)="duplicateTemplate(template)" pTooltip="Duplicate"
+                        tooltipPosition="top" />
+                    <p-button [id]="'my-template-export-' + i" icon="pi pi-download" [rounded]="true" [text]="true"
+                        severity="secondary" size="small" (click)="exportTemplate(template)" pTooltip="Export JSON"
+                        tooltipPosition="top" />
                     <p-button [id]="'my-template-delete-' + i" icon="pi pi-trash" [rounded]="true" [text]="true"
-                        severity="danger" size="small" (click)="confirmDelete(template)"
-                        pTooltip="Delete" tooltipPosition="top" />
+                        severity="danger" size="small" (click)="confirmDelete(template)" pTooltip="Delete"
+                        tooltipPosition="top" />
                 </div>
             </div>
         </div>
