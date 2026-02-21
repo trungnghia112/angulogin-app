@@ -135,14 +135,14 @@ const profiles = ['FB-01', 'FB-02', 'FB-03', 'FB-04', 'FB-05'];
 for (const profile of profiles) {
   // Mở browser cho profile
   await fetch(`http://localhost:50200/api/v1/browser/open?profile_id=${profile}`, {
-    headers: { 'X-API-Key': API_KEY }
+    headers: { 'Authorization': `Bearer ${API_KEY}` }
   });
   await sleep(3000);
 
   // Chạy template
   await fetch('http://localhost:50200/api/v1/automation/execute', {
     method: 'POST',
-    headers: { 'X-API-Key': API_KEY, 'Content-Type': 'application/json' },
+    headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       profile_name: profile,
       template_id: 'tiktok-search-like',
@@ -183,18 +183,40 @@ Mỗi profile = 1 trình duyệt Chrome = 1 tab active. Nếu chạy 2 task cùn
 
 ---
 
-## 7. Hệ thống chống phát hiện Bot (6 lớp)
+## 7. Hệ thống chống phát hiện Bot — Kết quả kiểm chứng thực tế
+
+> Đã test trên 4 trang bot detection ngày 21/02/2026. Kết quả bên dưới.
+
+### Kết quả kiểm tra trên các trang detection
+
+| Trang test | Kết quả | Chi tiết |
+|-----------|---------|----------|
+| **bot.sannysoft.com** | 26/31 PASS | WebDriver ẩn ✅, Selenium ẩn ✅, **Canvas bị phát hiện** ❌ |
+| **browserleaks.com/webrtc** | ✅ PASS | "No Leak", Local IP ẩn, chỉ hiện Public IP |
+| **creepjs** | ⚠️ Partial | 0% headless ✅, 0% stealth ✅, nhưng 31% "like headless" |
+| **pixelscan.net** | ✅ ALL GREEN | Fingerprint "is consistent", "No masking detected", "No automated behavior" |
+
+### Trạng thái từng lớp (đã verify)
+
+| Lớp | Hoạt động? | Bằng chứng |
+|-----|:----------:|------------|
+| WebDriver ẩn | ✅ | Sannysoft: `missing (passed)` |
+| Navigator spoofing | ✅ | Plugins=5, userAgent đúng, languages đúng |
+| WebRTC prevention | ✅ | BrowserLeaks: "No Leak", Local IP = `-` |
+| WebGL spoofing | ✅ | Hiện đúng `Apple M4` — consistent với máy thật |
+| Canvas spoofing | ⚠️ Một phần | Pixelscan: no masking ✅. Sannysoft: phát hiện cross-context hash ❌ |
+| Anti-detection JS | ⚠️ Một phần | CreepJS: 0% stealth ✅ nhưng 31% like headless (có thể do CDP) |
 
 ### Nhóm 1: Anti-Fingerprint (tự động khi mở browser)
 
 | Lớp | Mô tả |
 |-----|-------|
-| Canvas Spoofing | Mỗi profile có "vân tay đồ hoạ" riêng |
+| Canvas Spoofing | Thêm noise vào canvas pixel — qua được Pixelscan nhưng Sannysoft phát hiện hash trùng giữa contexts |
 | WebGL Spoofing | Giả vendor/renderer GPU |
 | Navigator Spoofing | Giả RAM, CPU, ngôn ngữ, OS, userAgent |
 | Screen Spoofing | Giả kích thước màn hình |
-| WebRTC Prevention | Chặn lộ IP thật |
-| Webdriver Flag | Ẩn `navigator.webdriver` = false |
+| WebRTC Prevention | Chặn lộ IP thật — đã verify trên BrowserLeaks |
+| Webdriver Flag | Ẩn `navigator.webdriver` — đã verify trên Sannysoft |
 
 ### Nhóm 2: Human-like Behavior (khi chạy automation)
 
@@ -205,6 +227,11 @@ Mỗi profile = 1 trình duyệt Chrome = 1 tab active. Nếu chạy 2 task cùn
 | Di chuột | Không có | 1-3 micro movements trước mỗi click |
 | Scroll | Luôn 80% viewport | Random 50-110%, 15% scroll ngược |
 | Thời gian | Random đều [min, max] | Gaussian (tập trung quanh trung bình, tự nhiên hơn) |
+
+### ⚠️ Hạn chế đã biết
+
+- **Canvas spoofing**: Qua được Pixelscan nhưng Sannysoft phát hiện. Cần cải thiện randomize per-context
+- **CDP artifacts**: CreepJS phát hiện 31% "like headless" — có thể do Chrome DevTools Protocol connection còn lộ dấu vết
 
 ---
 
@@ -266,7 +293,7 @@ API server chạy tự động tại `http://localhost:50200` khi mở app.
 
 ### API Key:
 
-Lưu tại `~/Library/Application Support/AnguLogin/api_config.json`. Truyền qua header `X-API-Key`.
+Lưu tại `~/Library/Application Support/AnguLogin/api_config.json`. Truyền qua header `Authorization: Bearer <API_KEY>`.
 
 ---
 
