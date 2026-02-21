@@ -11,7 +11,6 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
 use tokio::sync::Mutex;
 
 // ---------------------------------------------------------------------------
@@ -236,8 +235,13 @@ async fn execute_step(
         "navigate" => {
             let url = step.url.as_deref().unwrap_or("about:blank");
             let url = replace_variables(url, variables);
-            let params = serde_json::json!({ "url": url });
-            crate::cdp::send_command(session_id, "Page.navigate", params).await?;
+            // Use Runtime.evaluate for navigation (works on both browser and page targets)
+            let js = format!("window.location.href = '{}'", url.replace('\'', "\\'"));
+            let params = serde_json::json!({
+                "expression": js,
+                "returnByValue": true,
+            });
+            crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
             // Wait for load
             tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
             Ok(())
@@ -335,16 +339,37 @@ fn replace_variables(text: &str, variables: &HashMap<String, serde_json::Value>)
 }
 
 async fn resolve_ws_url(port: u16) -> Result<String, String> {
-    let url = format!("http://127.0.0.1:{}/json/version", port);
-    let resp = reqwest::get(&url)
-        .await
-        .map_err(|e| format!("Cannot reach CDP on port {}: {}", port, e))?;
-    let json: serde_json::Value = resp.json().await
-        .map_err(|e| format!("Invalid CDP response: {}", e))?;
-    json.get("webSocketDebuggerUrl")
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string())
-        .ok_or_else(|| "webSocketDebuggerUrl not found".to_string())
+    let url = format!("http://127.0.0.1:{}/json/list", port);
+
+    // Retry up to 10 times (1s apart) — browser may need time to bind the port
+    let mut last_err = String::new();
+    for attempt in 0..10 {
+        if attempt > 0 {
+            tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+        }
+        match reqwest::get(&url).await {
+            Ok(resp) => {
+                let json: Vec<serde_json::Value> = resp.json().await
+                    .map_err(|e| format!("Invalid CDP response: {}", e))?;
+                // Find first "page" type target
+                let page = json.iter()
+                    .find(|entry| entry.get("type").and_then(|t| t.as_str()) == Some("page"));
+                if let Some(page) = page {
+                    return page.get("webSocketDebuggerUrl")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string())
+                        .ok_or_else(|| "webSocketDebuggerUrl not found in page target".to_string());
+                }
+                last_err = format!("No page target found in {} entries", json.len());
+                log::info!("[RPA-API] No page target yet on port {} (attempt {})", port, attempt + 1);
+            }
+            Err(e) => {
+                last_err = format!("Attempt {}: {}", attempt + 1, e);
+                log::info!("[RPA-API] Waiting for CDP on port {} (attempt {})", port, attempt + 1);
+            }
+        }
+    }
+    Err(format!("Cannot reach CDP on port {} after 10 attempts: {}", port, last_err))
 }
 
 async fn update_task_error(task_id: &str, error: &str) {

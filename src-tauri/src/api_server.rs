@@ -133,29 +133,25 @@ async fn browser_open(
         p
     };
 
-    // Build custom flags with --remote-debugging-port
-    let debug_flag = format!("--remote-debugging-port={}", debug_port);
+    // Use launch_browser_inner with trusted debug_port (bypasses custom_flags security filter)
     let browser = params.browser.unwrap_or_else(|| "chrome".to_string());
 
     // Load profile metadata to get proxy settings
     let meta = commands::get_profile_metadata(profile_path.clone()).unwrap_or_default();
-    let custom_flags = match &meta.custom_flags {
-        Some(existing) => Some(format!("{} {}", existing, debug_flag)),
-        None => Some(debug_flag),
-    };
 
-    // Launch browser via existing command
-    let result = commands::launch_browser(
+    // Launch browser via inner command with trusted debug_port
+    let result = commands::launch_browser_inner(
         profile_path.clone(),
         browser,
         params.open_url.or(meta.launch_url),
         None,       // incognito
         meta.proxy,
-        custom_flags,
+        meta.custom_flags,
         meta.proxy_username,
         meta.proxy_password,
         meta.antidetect_enabled,
         meta.extensions_disabled,
+        Some(debug_port),
     );
 
     match result {

@@ -677,6 +677,11 @@ fn prepare_stealth_extension(profile_path: &str) -> Result<String, String> {
 
 #[tauri::command]
 pub fn launch_browser(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>, custom_flags: Option<String>, proxy_username: Option<String>, proxy_password: Option<String>, antidetect_enabled: Option<bool>, disable_extensions: Option<bool>) -> Result<(), String> {
+    launch_browser_inner(profile_path, browser, url, incognito, proxy_server, custom_flags, proxy_username, proxy_password, antidetect_enabled, disable_extensions, None)
+}
+
+/// Inner implementation with optional trusted debug_port (used by API server).
+pub fn launch_browser_inner(profile_path: String, browser: String, url: Option<String>, incognito: Option<bool>, proxy_server: Option<String>, custom_flags: Option<String>, proxy_username: Option<String>, proxy_password: Option<String>, antidetect_enabled: Option<bool>, disable_extensions: Option<bool>, debug_port: Option<u16>) -> Result<(), String> {
     let path = std::path::Path::new(&profile_path);
     
     // Detect if this is a native Chrome profile (parent has "Local State" file)
@@ -828,6 +833,11 @@ pub fn launch_browser(profile_path: String, browser: String, url: Option<String>
     // Feature 3.4: Disable extensions when requested
     if disable_extensions.unwrap_or(false) {
         args.push("--disable-extensions".to_string());
+    }
+
+    // Trusted debug port (from API server) — injected BEFORE custom_flags filter
+    if let Some(port) = debug_port {
+        args.push(format!("--remote-debugging-port={}", port));
     }
 
     // Security: Sanitize custom flags to block dangerous Chrome flags
