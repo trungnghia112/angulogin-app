@@ -162,7 +162,13 @@ export class RpaExecutorService {
                 try {
                     const result = await this.executeStep(launchResult.sessionId, step, task.variables);
                     if (result) {
-                        this.log(taskId, stepNum, 'success', `Step ${stepNum} OK: ${result}`);
+                        // Detect warning/skeleton results
+                        const isWarning = /\bno\b.*\b(found|element|product|video|button)/i.test(result)
+                            || /\bnot found\b/i.test(result)
+                            || result.startsWith('[SKELETON]')
+                            || result.startsWith('unsupported action');
+                        const level = isWarning ? 'warn' : 'success';
+                        this.log(taskId, stepNum, level, `Step ${stepNum}: ${result}`);
                     } else {
                         this.log(taskId, stepNum, 'success', `Step ${stepNum} completed`);
                     }
@@ -211,6 +217,12 @@ export class RpaExecutorService {
         step: ExecutableStep,
         variables: Record<string, string | number | boolean>,
     ): Promise<string> {
+        // Detect skeleton steps (placeholder without implementation)
+        const hasImplementation = step.selector || step.jsExpression || step.url || step.waitMs;
+        if (!hasImplementation && step.action !== 'loop') {
+            return `[SKELETON] Step not implemented: "${step.description}" — no selector/JS/URL`;
+        }
+
         switch (step.action) {
             case 'navigate':
                 return this.actionNavigate(sessionId, step, variables);

@@ -1196,7 +1196,7 @@
                 "order": 4,
                 "action": "click",
                 "description": "Click Add Friend on suggested profiles",
-                "jsExpression": "(() => { const addBtns = document.querySelectorAll('div[aria-label=\"Add friend\"], button[aria-label=\"Add friend\"], div[role=\"button\"]:has(span:contains(\"Add Friend\")), button:has(span:contains(\"Add\"))'); const count = Math.min(addBtns.length, {{addCount}}); let added = 0; for (let i = 0; i < count; i++) { const btn = addBtns[i]; if (btn && !btn.getAttribute('disabled')) { btn.click(); added++; } } return 'sent ' + added + ' friend requests'; })()",
+                "jsExpression": "(() => { const byAria = document.querySelectorAll('div[aria-label=\"Add friend\"], button[aria-label=\"Add friend\"]'); const byText = [...document.querySelectorAll('div[role=\"button\"], button')].filter(el => { const txt = el.innerText || ''; return txt.includes('Add Friend') || txt.includes('Add friend'); }); const allBtns = [...new Set([...byAria, ...byText])]; const count = Math.min(allBtns.length, {{addCount}}); let added = 0; for (let i = 0; i < count; i++) { const btn = allBtns[i]; if (btn && !btn.getAttribute('disabled')) { btn.click(); added++; } } return 'sent ' + added + ' friend requests of ' + allBtns.length + ' found'; })()",
                 "humanDelay": [
                     3000,
                     6000
