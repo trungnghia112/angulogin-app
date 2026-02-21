@@ -304,6 +304,12 @@ const data = { description: form.value.description || null };
     - Performance rules followed (no unnecessary re-renders, proper cleanup)
     - Refactor and optimize code BEFORE finishing — never ship sloppy code
     - Always read `.gemini/GEMINI.md` BEFORE writing any code
+19. **No Fabrication — Verify Before Describing (CRITICAL)**:
+    - NEVER describe UI flows, button behaviors, or feature capabilities **without first reading the actual source code** (`.html` for template, `.ts` for handlers).
+    - Seeing a button labeled "Play" does NOT mean it works. **Check for `(click)` or `(onClick)` handler in the template.** No handler = dead button = do not describe as functional.
+    - When writing documentation, user guides, or feature descriptions: **every claim must be traceable to a specific line of code**. If you cannot point to the handler/logic, do not write it.
+    - Clearly distinguish between **"what exists"** vs **"what should exist"**. If a feature is not implemented, write "chưa hoạt động" — never describe it as if it works.
+    - When in doubt, **ask the user** rather than assume. Wrong documentation is worse than no documentation.
 
 ## ⚡ Performance Rules (MANDATORY)
 
