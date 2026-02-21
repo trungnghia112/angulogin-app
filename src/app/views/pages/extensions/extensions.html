@@ -4,18 +4,16 @@
         <div class="flex-1">
             <label for="ext-url-input" class="block text-sm font-medium text-color mb-1">Chrome Web Store URL</label>
             <p-iconField iconPosition="left" class="w-full">
-                <p-inputIcon styleClass="pi pi-link" />
-                <input pInputText id="ext-url-input" [(ngModel)]="installUrl" 
-                       placeholder="https://chromewebstore.google.com/detail/..." 
-                       class="w-full" />
+                <p-inputIcon class="pi pi-link" />
+                <input pInputText id="ext-url-input" [(ngModel)]="installUrl"
+                    placeholder="https://chromewebstore.google.com/detail/..." class="w-full" />
             </p-iconField>
-            <p class="text-xs text-muted-color mt-1">Paste the full URL of the extension. Selected profiles will launch directly to this page.</p>
+            <p class="text-xs text-muted-color mt-1">Paste the full URL of the extension. Selected profiles will launch
+                directly to this page.</p>
         </div>
         <div class="pt-6">
-            <p-button label="Open in Selected" icon="pi pi-external-link" 
-                      (click)="onInstall()" 
-                      [loading]="isLaunching()" 
-                      [disabled]="!installUrl() || selectedProfiles().length === 0" />
+            <p-button label="Open in Selected" icon="pi pi-external-link" (click)="onInstall()"
+                [loading]="isLaunching()" [disabled]="!installUrl() || selectedProfiles().length === 0" />
         </div>
     </div>
 </div>
@@ -24,16 +22,16 @@
 <div class="flex-1 overflow-auto p-6">
     <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold">Select Profiles ({{selectedProfiles().length}})</h2>
-        <span class="p-input-icon-left">
-            <i class="pi pi-search"></i>
-            <input pInputText type="text" [(ngModel)]="searchText" placeholder="Search profiles..." class="p-inputtext-sm" />
-        </span>
+        <p-iconField iconPosition="left">
+            <p-inputIcon class="pi pi-search" />
+            <input pInputText type="text" [(ngModel)]="searchText" placeholder="Search profiles..."
+                class="p-inputtext-sm" />
+        </p-iconField>
     </div>
 
     <div class="border border-surface rounded-xl overflow-hidden bg-surface-0 dark:bg-surface-900">
-        <p-table [value]="filteredProfiles()" [(selection)]="selectedProfiles" dataKey="path"
-                 [scrollable]="true" scrollHeight="flex" 
-                 styleClass="p-datatable-sm">
+        <p-table [value]="filteredProfiles()" [(selection)]="selectedProfiles" dataKey="path" [scrollable]="true"
+            scrollHeight="flex" class="p-datatable-sm">
             <ng-template pTemplate="header">
                 <tr>
                     <th style="width: 3rem">
@@ -51,16 +49,17 @@
                     </td>
                     <td class="font-medium">{{ profile.name }}</td>
                     <td>
-                        <i class="pi" [class.pi-google]="!profile.metadata?.browser || profile.metadata?.browser === 'chrome'"
-                           [class.pi-shield]="profile.metadata?.browser === 'brave'"
-                           [class.pi-microsoft]="profile.metadata?.browser === 'edge'"></i>
+                        <i class="pi"
+                            [class.pi-google]="!profile.metadata?.browser || profile.metadata?.browser === 'chrome'"
+                            [class.pi-shield]="profile.metadata?.browser === 'brave'"
+                            [class.pi-microsoft]="profile.metadata?.browser === 'edge'"></i>
                         <span class="ml-2 capitalize">{{ profile.metadata?.browser || 'Chrome' }}</span>
                     </td>
                     <td>
                         @if (profile.isRunning) {
-                            <span class="text-green-500 text-xs font-bold px-2 py-1 bg-green-100 rounded">Running</span>
+                        <span class="text-green-500 text-xs font-bold px-2 py-1 bg-green-100 rounded">Running</span>
                         } @else {
-                            <span class="text-muted-color text-xs">Offline</span>
+                        <span class="text-muted-color text-xs">Offline</span>
                         }
                     </td>
                 </tr>

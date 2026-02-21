@@ -3,11 +3,11 @@
     class="flex items-center justify-between px-6 h-[var(--spacing-header)] shrink-0 border-b border-surface-100 dark:border-surface-800 bg-surface-0 dark:bg-surface-900">
     <div class="flex items-center gap-4">
         <h1 class="text-xl font-bold text-color m-0">Process</h1>
-        <span class="p-input-icon-left">
-            <i class="pi pi-search"></i>
+        <p-iconField iconPosition="left">
+            <p-inputIcon class="pi pi-search" />
             <input id="rpa-process-search" type="text" pInputText placeholder="Search processes..."
                 [value]="searchQuery()" (input)="onSearch($event)" class="w-56" />
-        </span>
+        </p-iconField>
     </div>
     <div class="flex items-center gap-2">
         <p-button id="rpa-process-import" label="Import" icon="pi pi-upload" severity="secondary" size="small" />

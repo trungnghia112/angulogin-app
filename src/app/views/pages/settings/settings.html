@@ -161,7 +161,7 @@
                         <label class="text-sm font-medium text-muted-color">Default Browser Engine</label>
                         <p-selectButton [options]="browserOptions" [ngModel]="settingsService.general().defaultBrowser"
                             optionLabel="label" optionValue="value" (onChange)="updateGeneral('defaultBrowser', $event)"
-                            styleClass="w-full">
+                            class="w-full">
                             <ng-template let-item pTemplate>
                                 <div class="flex items-center justify-center gap-2 w-full">
                                     <i [class]="item.icon"></i>
@@ -178,7 +178,7 @@
                         <label class="text-sm font-medium text-muted-color">After Launching Profile</label>
                         <p-selectButton [options]="launchOptions" [ngModel]="settingsService.general().onLaunch"
                             optionLabel="label" optionValue="value" (onChange)="updateGeneral('onLaunch', $event)"
-                            styleClass="w-full">
+                            class="w-full">
                             <ng-template let-item pTemplate>
                                 <div class="flex items-center justify-center gap-2 w-full">
                                     <i [class]="item.icon"></i>
@@ -488,7 +488,8 @@
                             <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="secondary"
                                 (click)="apiPortEditing.set(false)" pTooltip="Cancel" />
                             } @else {
-                            <span class="text-sm font-mono text-color bg-surface-100 dark:bg-surface-800 px-3 py-1.5 rounded-lg">{{
+                            <span
+                                class="text-sm font-mono text-color bg-surface-100 dark:bg-surface-800 px-3 py-1.5 rounded-lg">{{
                                 apiService.port() }}</span>
                             <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
                                 size="small" (click)="apiPortEditing.set(true)" pTooltip="Edit" />
@@ -527,8 +528,7 @@
                 </div>
 
                 <!-- Key Display -->
-                <div
-                    class="flex items-center gap-3 px-4 py-3 bg-surface-50 dark:bg-surface-800/50 rounded-lg mb-4">
+                <div class="flex items-center gap-3 px-4 py-3 bg-surface-50 dark:bg-surface-800/50 rounded-lg mb-4">
                     <i class="pi pi-key text-muted-color"></i>
                     <span class="flex-1 font-mono text-sm text-color select-all">
                         {{ apiKeyVisible() ? apiService.apiKey() : getMaskedKey() }}
@@ -555,22 +555,26 @@
 
                 <div class="flex flex-col gap-3">
                     <div class="flex items-center gap-3 text-sm">
-                        <span class="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded font-mono text-xs font-semibold">GET</span>
+                        <span
+                            class="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded font-mono text-xs font-semibold">GET</span>
                         <span class="font-mono text-muted-color">/api/v1/status</span>
                         <span class="text-xs text-muted-color ml-auto">Health check (public)</span>
                     </div>
                     <div class="flex items-center gap-3 text-sm">
-                        <span class="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded font-mono text-xs font-semibold">GET</span>
+                        <span
+                            class="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded font-mono text-xs font-semibold">GET</span>
                         <span class="font-mono text-muted-color">/api/v1/browser/open</span>
                         <span class="text-xs text-muted-color ml-auto">Open profile + CDP</span>
                     </div>
                     <div class="flex items-center gap-3 text-sm">
-                        <span class="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded font-mono text-xs font-semibold">GET</span>
+                        <span
+                            class="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded font-mono text-xs font-semibold">GET</span>
                         <span class="font-mono text-muted-color">/api/v1/profile/list</span>
                         <span class="text-xs text-muted-color ml-auto">List all profiles</span>
                     </div>
                     <div class="flex items-center gap-3 text-sm">
-                        <span class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono text-xs font-semibold">POST</span>
+                        <span
+                            class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono text-xs font-semibold">POST</span>
                         <span class="font-mono text-muted-color">/api/v1/profile/create</span>
                         <span class="text-xs text-muted-color ml-auto">Create new profile</span>
                     </div>
@@ -578,7 +582,8 @@
 
                 <div class="mt-5 p-4 bg-surface-50 dark:bg-surface-800/50 rounded-lg">
                     <p class="text-xs text-muted-color mb-2">Example cURL:</p>
-                    <code class="text-xs font-mono text-color leading-relaxed block">curl -H "Authorization: Bearer &lt;key&gt;" {{ apiService.connectionUrl() }}/api/v1/profile/list</code>
+                    <code
+                        class="text-xs font-mono text-color leading-relaxed block">curl -H "Authorization: Bearer &lt;key&gt;" {{ apiService.connectionUrl() }}/api/v1/profile/list</code>
                 </div>
             </section>
 

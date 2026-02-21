@@ -1,6 +1,8 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
 import { RpaTemplateService, CatalogEntry } from '../../../../services/rpa-template.service';
 
@@ -10,7 +12,7 @@ import { RpaTemplateService, CatalogEntry } from '../../../../services/rpa-templ
     styleUrl: './rpa-process.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
-    imports: [ButtonModule, InputTextModule, TooltipModule],
+    imports: [ButtonModule, InputTextModule, IconFieldModule, InputIconModule, TooltipModule],
 })
 export class RpaProcess implements OnInit {
     private readonly templateService = inject(RpaTemplateService);
