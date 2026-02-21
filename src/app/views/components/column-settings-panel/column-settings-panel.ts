@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
-import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { ColumnConfigService } from '../../../core/services/column-config.service';

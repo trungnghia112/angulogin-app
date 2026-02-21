@@ -1,4 +1,4 @@
-import { Component, inject, computed, ChangeDetectionStrategy, signal, HostListener } from '@angular/core';
+import { Component, inject, computed, ChangeDetectionStrategy, signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { Router } from '@angular/router';

@@ -12,7 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { RpaExecutorService } from '../../../../services/rpa-executor.service';
 import { RpaTemplateService } from '../../../../services/rpa-template.service';
 import { ProfileService } from '../../../../services/profile.service';
-import { RpaTaskExecution, RpaTemplate, RpaTaskStatus } from '../../../../models/rpa-template.model';
+import { RpaTaskStatus } from '../../../../models/rpa-template.model';
 
 @Component({
     selector: 'app-rpa-task',

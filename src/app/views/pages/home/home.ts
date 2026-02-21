@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { HomeSidebar } from './home-sidebar/home-sidebar';
-import { ProfileToolbar, SortByType, ViewModeType } from './profile-toolbar/profile-toolbar';
+import { ProfileToolbar } from './profile-toolbar/profile-toolbar';
 import { ProfileEditDialog, ProfileEditData } from './profile-edit-dialog/profile-edit-dialog';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -31,7 +31,7 @@ import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { Select } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { MenuModule } from 'primeng/menu';
-import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ProfileService } from '../../../services/profile.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { ActivityLogService } from '../../../services/activity-log.service';
@@ -44,7 +44,7 @@ import { DownloadBrowserDialog } from './download-browser-dialog/download-browse
 import { ColumnConfigService } from '../../../core/services/column-config.service';
 import { GeoIpService } from '../../../services/geoip.service';
 import { ScheduleService, type ScheduleEntry } from '../../../services/schedule.service';
-import { BrowserType, Profile } from '../../../models/profile.model';
+import { Profile } from '../../../models/profile.model';
 import { validateProfileName } from '../../../core/utils/validation.util';
 import { ColumnSettingsPanel } from '../../components/column-settings-panel/column-settings-panel';
 import { OnboardingDialog } from '../../components/onboarding-dialog/onboarding-dialog';

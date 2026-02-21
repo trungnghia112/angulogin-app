@@ -3,8 +3,8 @@
  * This data is used when Tauri runtime is not available.
  */
 
-import { Profile, ProfileMetadata, BrowserType } from '../models/profile.model';
-import { Folder, ProfileStatus, ProfileTag, ProfileProxy } from '../models/folder.model';
+import { Profile, BrowserType } from '../models/profile.model';
+import { Folder, ProfileTag, ProfileProxy } from '../models/folder.model';
 
 // ============================================================================
 // MOCK PROFILES - Diverse data for testing all UI states

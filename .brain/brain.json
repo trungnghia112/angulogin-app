@@ -2,7 +2,7 @@
     "meta": {
         "schema_version": "1.1.0",
         "awf_version": "4.1.2",
-        "updated_at": "2026-02-21T13:37:00+07:00"
+        "updated_at": "2026-02-22T00:45:00+07:00"
     },
     "project": {
         "name": "AnguLogin",
@@ -80,6 +80,8 @@
         "rpa_marketplace": "src/app/views/pages/automation/rpa-marketplace/rpa-marketplace.ts",
         "firestore_rules": "firestore.rules",
         "seed_script": "scripts/seed-rpa-templates.ts",
+        "admin_claim_script": "scripts/set-admin-claim.ts",
+        "automation_guide": "docs/automation-guide-vi.md",
         "auth_service": "src/app/services/auth.service.ts",
         "plan_service": "src/app/services/plan.service.ts",
         "user_model": "src/app/core/models/user.model.ts",
@@ -361,20 +363,24 @@
             "description": "Page at /fingerprint-checker with external checker links, embedded preview, and Launch & Check button"
         },
         {
-            "name": "RPA Marketplace",
+            "name": "RPA Marketplace + Admin System",
             "status": "implemented",
-            "description": "Template marketplace for RPA automation scripts with Firestore backend",
+            "description": "Template marketplace for RPA automation scripts with Firestore backend and admin publish system",
             "includes": [
                 "Firestore 2-tier: catalog index (1 read/session) + detail docs (1 read/click)",
-                "15 pre-built templates: TikTok, Facebook, Instagram, LinkedIn, Amazon, etc.",
+                "15 templates: 13 published + 2 draft (Reddit, Amazon)",
                 "Platform filtering, search, sort (popular/recent/name)",
                 "Template detail dialog with steps, variables, tags",
                 "Save to process library (localStorage, future: Firestore user doc)",
                 "3-layer fallback: Firestore → localStorage → bundled asset",
                 "Version-based detail caching (0 reads if version unchanged)",
-                "Process page: view/remove saved templates",
-                "Task page: view/manage automation tasks (mock data)",
-                "Automation sidebar layout with sub-navigation",
+                "Template status lifecycle: draft → published → deprecated",
+                "Admin publish system: publishTemplate(), seedAllTemplates(), date-based versioning",
+                "Admin Panel: separate web project (NOT in Tauri app) on Firebase Hosting",
+                "Firestore rules: admin write (token.admin custom claim), public read",
+                "Seed script with auto status detection (selector presence → published)",
+                "Admin claim script (set-admin-claim.ts) for Firebase Custom Claims",
+                "ExecutableStep extends RpaTemplateStep (DRY, no field duplication)",
                 "Seed script for uploading templates to Firestore"
             ]
         },
@@ -673,6 +679,13 @@
             "App rebranded from 'Chrome Profile Manager' to 'AnguLogin' — all source files, paths, and configs updated",
             "Firestore rules: rpa-catalog + rpa-templates = public read, admin-only write",
             "RPA templates use CatalogEntry (lightweight) for grid, full RpaTemplate (detail) for dialog",
+            "ExecutableStep extends RpaTemplateStep — no duplicate fields between model and executor",
+            "RPA template admin: Admin Panel is separate web project, NOT embedded in Tauri app",
+            "RPA element targeting: coded selectors are industry standard 2025-2026 (confirmed by UiPath, Playwright, Selenium)",
+            "RPA selectors: multi-tier fallback (CSS → ARIA → text → JS expression)",
+            "RPA coordinates/image recognition: deprecated by industry, only for legacy Citrix apps",
+            "RPA record & replay: assistive tool for generating selectors, not a replacement",
+            "RPA AI-native agents: too expensive for batch operations ($150/mo at 100 profiles)",
             "Auth pages use split-screen layout: left branding panel + right form panel",
             "Auth pages use host: { class: 'block min-h-screen' } (not flex-1 like app pages)",
             "Google sign-in button uses real SVG logo, not PrimeIcon",

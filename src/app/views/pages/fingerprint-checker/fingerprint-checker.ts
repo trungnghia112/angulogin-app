@@ -3,7 +3,6 @@ import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { CamoufoxService, Fingerprint } from '../../../services/camoufox.service';
-import { invoke } from '@tauri-apps/api/core';
 import { appDataDir } from '@tauri-apps/api/path';
 
 interface CheckerLink {
