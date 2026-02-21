@@ -49,6 +49,8 @@ pub struct AutoStep {
     pub url: Option<String>,
     #[serde(default)]
     pub selector: Option<String>,
+    #[serde(rename = "fallbackSelectors", default)]
+    pub fallback_selectors: Option<Vec<String>>,
     #[serde(default)]
     pub value: Option<String>,
     #[serde(default)]
@@ -61,6 +63,10 @@ pub struct AutoStep {
     pub iterations: Option<u32>,
     #[serde(rename = "humanDelay", default)]
     pub human_delay: Option<[u64; 2]>,
+    #[serde(rename = "waitForSelector", default)]
+    pub wait_for_selector: Option<String>,
+    #[serde(default)]
+    pub timeout: Option<u64>,
 }
 
 // ---------------------------------------------------------------------------
@@ -236,15 +242,43 @@ async fn execute_step(
         "navigate" => {
             let url = step.url.as_deref().unwrap_or("about:blank");
             let url = replace_variables(url, variables);
-            // Use Runtime.evaluate for navigation (works on both browser and page targets)
             let js = format!("window.location.href = '{}'", url.replace('\'', "\\'"));
             let params = serde_json::json!({
                 "expression": js,
                 "returnByValue": true,
             });
             crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
-            // Wait for load
+            // Wait for page load
             tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
+
+            // waitForSelector: poll DOM until selector appears
+            if let Some(ref wfs) = step.wait_for_selector {
+                let wfs = replace_variables(wfs, variables);
+                let timeout = step.timeout.unwrap_or(15000);
+                let deadline = std::time::Instant::now() + std::time::Duration::from_millis(timeout);
+                let selectors: Vec<&str> = wfs.split(',').map(|s| s.trim()).collect();
+                let js_check = selectors.iter()
+                    .map(|s| format!("document.querySelector('{}')", s.replace('\'', "\\'")))
+                    .collect::<Vec<_>>()
+                    .join(" || ");
+                let poll_js = format!("!!({js_check})");
+                loop {
+                    let params = serde_json::json!({
+                        "expression": &poll_js,
+                        "returnByValue": true,
+                    });
+                    if let Ok(resp) = crate::cdp::send_command(session_id, "Runtime.evaluate", params).await {
+                        if resp.get("result").and_then(|r| r.get("value")).and_then(|v| v.as_bool()) == Some(true) {
+                            break;
+                        }
+                    }
+                    if std::time::Instant::now() > deadline {
+                        log::warn!("[RPA] waitForSelector timed out: {}", wfs);
+                        break;
+                    }
+                    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+                }
+            }
             Ok(())
         }
         "click" => {
@@ -256,27 +290,29 @@ async fn execute_step(
                     "awaitPromise": true,
                 });
                 crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
-            } else if let Some(ref sel) = step.selector {
-                let sel = replace_variables(sel, variables);
-                let js = format!("document.querySelector('{}')?.click()", sel);
-                let params = serde_json::json!({
-                    "expression": js,
-                    "returnByValue": true,
-                });
-                crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
+            } else {
+                let sel = resolve_selector(session_id, step, variables).await;
+                if let Some(sel) = sel {
+                    let js = format!("document.querySelector('{}')?.click()", sel);
+                    let params = serde_json::json!({
+                        "expression": js,
+                        "returnByValue": true,
+                    });
+                    crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
+                }
             }
             Ok(())
         }
         "type" => {
             let value = step.value.as_deref().unwrap_or("");
             let value = replace_variables(value, variables);
-            if let Some(ref sel) = step.selector {
-                let sel = replace_variables(sel, variables);
-                // Focus + set value + fire input event
+            let sel = resolve_selector(session_id, step, variables).await;
+            if let Some(sel) = sel {
+                // Focus + set value + fire input event + submit on Enter
                 let js = format!(
-                    r#"(() => {{ const el = document.querySelector('{}'); if (el) {{ el.focus(); el.value = '{}'; el.dispatchEvent(new Event('input', {{ bubbles: true }})); return 'typed'; }} return 'not found'; }})()"#,
-                    sel.replace('\'', "\\'"),
-                    value.replace('\'', "\\'"),
+                    r#"(() => {{ const el = document.querySelector('{sel}'); if (el) {{ el.focus(); el.value = '{val}'; el.dispatchEvent(new Event('input', {{ bubbles: true }})); el.dispatchEvent(new Event('change', {{ bubbles: true }})); el.dispatchEvent(new KeyboardEvent('keydown', {{ key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }})); return 'typed'; }} return 'not found'; }})()"#,
+                    sel = sel.replace('\'', "\\'"),
+                    val = value.replace('\'', "\\'"),
                 );
                 let params = serde_json::json!({
                     "expression": js,
@@ -287,15 +323,26 @@ async fn execute_step(
             Ok(())
         }
         "scroll" => {
-            let iterations = step.iterations.unwrap_or(3);
-            for _ in 0..iterations {
-                let js = "window.scrollBy(0, window.innerHeight * 0.8)";
+            if let Some(ref expr) = step.js_expression {
+                // Custom scroll via jsExpression (e.g. scroll to reviews section)
+                let expr = replace_variables(expr, variables);
                 let params = serde_json::json!({
-                    "expression": js,
+                    "expression": expr,
                     "returnByValue": true,
                 });
                 crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
-                tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+            } else {
+                // Default: scroll down by viewport height
+                let iterations = step.iterations.unwrap_or(3);
+                for _ in 0..iterations {
+                    let js = "window.scrollBy(0, window.innerHeight * 0.8)";
+                    let params = serde_json::json!({
+                        "expression": js,
+                        "returnByValue": true,
+                    });
+                    crate::cdp::send_command(session_id, "Runtime.evaluate", params).await?;
+                    tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+                }
             }
             Ok(())
         }
@@ -323,6 +370,49 @@ async fn execute_step(
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/// Try primary selector, then fallbacks. Returns the first selector that finds an element.
+async fn resolve_selector(
+    session_id: &str,
+    step: &AutoStep,
+    variables: &HashMap<String, serde_json::Value>,
+) -> Option<String> {
+    // Try primary selector first
+    if let Some(ref sel) = step.selector {
+        let sel = replace_variables(sel, variables);
+        if check_selector_exists(session_id, &sel).await {
+            return Some(sel);
+        }
+    }
+    // Try fallback selectors
+    if let Some(ref fallbacks) = step.fallback_selectors {
+        for fb in fallbacks {
+            let fb = replace_variables(fb, variables);
+            if check_selector_exists(session_id, &fb).await {
+                log::info!("[RPA] Primary selector not found, using fallback: {}", fb);
+                return Some(fb);
+            }
+        }
+    }
+    // Return primary selector even if not found (let the action handle it)
+    step.selector.as_ref().map(|s| replace_variables(s, variables))
+}
+
+/// Check if a CSS selector matches any element in the page
+async fn check_selector_exists(session_id: &str, selector: &str) -> bool {
+    let js = format!("!!document.querySelector('{}')", selector.replace('\'', "\\'"));
+    let params = serde_json::json!({
+        "expression": js,
+        "returnByValue": true,
+    });
+    match crate::cdp::send_command(session_id, "Runtime.evaluate", params).await {
+        Ok(resp) => resp.get("result")
+            .and_then(|r| r.get("value"))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false),
+        Err(_) => false,
+    }
+}
 
 fn replace_variables(text: &str, variables: &HashMap<String, serde_json::Value>) -> String {
     let mut result = text.to_string();
