@@ -200,11 +200,11 @@
                             'bg-purple-500/20 text-purple-500': entry.type === 'duplicate',
                             'bg-orange-500/20 text-orange-500': entry.type === 'edit'
                         }">
-                            <i [class]="'pi ' + (entry.type | map:typeIconMap:'pi-circle')"></i>
+                            <i [class]="'pi ' + (entry.type | lookup:typeIconMap:'pi-circle')"></i>
                         </div>
                         <div>
                             <p class="font-medium text-color">{{ entry.profileName }}</p>
-                            <p class="text-sm text-muted-color">{{ entry.type | map:typeLabelMap:entry.type }}
+                            <p class="text-sm text-muted-color">{{ entry.type | lookup:typeLabelMap:entry.type }}
                                 @if (entry.browser) {
                                 with {{ entry.browser }}
                                 }

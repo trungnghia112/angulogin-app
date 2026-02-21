@@ -665,7 +665,7 @@
                         'bg-purple-500/20 text-purple-500': entry.type === 'duplicate',
                         'bg-yellow-500/20 text-yellow-500': entry.type === 'edit'
                     }">
-                        <i [class]="'pi ' + (entry.type | map:typeIconMap:'pi-circle')"></i>
+                        <i [class]="'pi ' + (entry.type | lookup:typeIconMap:'pi-circle')"></i>
                     </div>
                     <!-- Content -->
                     <div class="flex-1 min-w-0">
@@ -673,7 +673,7 @@
                             <span class="font-medium text-color truncate">{{ entry.profileName }}</span>
                             <span
                                 class="text-xs px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-700 text-muted-color">{{
-                                entry.type | map:typeLabelMap:entry.type }}</span>
+                                entry.type | lookup:typeLabelMap:entry.type }}</span>
                         </div>
                         <div class="flex items-center gap-2 mt-1 text-xs text-muted-color">
                             <span>{{ entry.timestamp | timeAgo }}</span>

@@ -10,7 +10,7 @@ import { ActivityLogService, ActivityEntry } from '../../../services/activity-lo
 import { Profile } from '../../../models/profile.model';
 import { DurationPipe } from '../../../core/pipes/duration.pipe';
 import { TimeAgoPipe } from '../../../core/pipes/time-ago.pipe';
-import { MapPipe } from '../../../core/pipes/map.pipe';
+import { LookupPipe } from '../../../core/pipes/lookup.pipe';
 
 @Component({
     selector: 'app-usage-dashboard',
@@ -18,7 +18,7 @@ import { MapPipe } from '../../../core/pipes/map.pipe';
     styleUrl: './usage-dashboard.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { class: 'flex-1 flex flex-col min-h-0 overflow-hidden' },
-    imports: [ChartModule, ButtonModule, TooltipModule, TableModule, DurationPipe, TimeAgoPipe, MapPipe],
+    imports: [ChartModule, ButtonModule, TooltipModule, TableModule, DurationPipe, TimeAgoPipe, LookupPipe],
 })
 export class UsageDashboard {
     private readonly profileService = inject(ProfileService);

@@ -52,7 +52,7 @@ import { type ProtectionLevel } from '../../../core/services/settings.service';
 import { DurationPipe } from '../../../core/pipes/duration.pipe';
 import { TimeAgoPipe } from '../../../core/pipes/time-ago.pipe';
 import { FileSizePipe } from '../../../core/pipes/file-size.pipe';
-import { MapPipe } from '../../../core/pipes/map.pipe';
+import { LookupPipe } from '../../../core/pipes/lookup.pipe';
 
 
 
@@ -108,7 +108,7 @@ interface Tab {
         DurationPipe,
         TimeAgoPipe,
         FileSizePipe,
-        MapPipe,
+        LookupPipe,
     ],
 })
 export class Home implements OnInit, OnDestroy {
